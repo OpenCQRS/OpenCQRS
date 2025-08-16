@@ -4,9 +4,12 @@
 
 ## Complete rewrite in progress for version 7
 
-It was made private when it had **681 stars** and made public again for archive purposes. Legacy code [here](https://github.com/OpenCQRS/OpenCQRS/tree/main/legacy).
+It was made private when it had **681 stars** and made public again to make the legacy code and documentation available if needed.
 
-Migration guideline from OpenCQRS 6 to OpenCQRS 7 will be provided alongside any necessary scripts.
+If required, a migration guideline from OpenCQRS 6 to OpenCQRS 7 will be provided alongside any necessary scripts.
+
+- Legacy code [here](https://github.com/OpenCQRS/OpenCQRS/tree/main/legacy).
+- Legacy documentation [here](https://github.com/OpenCQRS/OpenCQRS/blob/main/legacy/docs/index.md).
 
 ## Legacy Packages
 
