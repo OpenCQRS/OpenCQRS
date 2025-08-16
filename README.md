@@ -4,7 +4,9 @@
 
 ## Complete rewrite in progress for Version 7
 
-It was made private in APril 2023 when it had **681 stars** and made public again for archive purposes
+It was made private when it had **681 stars** and made public again for archive purposes. Legacy code [here](https://github.com/OpenCQRS/OpenCQRS/tree/main/legacy).
+
+Migration guideline from OpenCQRS 6 to OpenCQRS 7 will be provided alongside any necessary scritps.
 
 ## Legacy Packages
 
