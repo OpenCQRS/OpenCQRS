@@ -6,7 +6,7 @@ Its advanced features are ideal for Domain Driven Design (DDD), Command Query Re
 
 With OpenCQRS you can automatically dispatch events to a message bus (Service Bus or RabbitMQ), validate your commands before they are sent to the command handler and automatically cache the result of your queries (Memory or Redis).
 
-**Repository**: [https://github.com/lucabriguglia/OpenCQRS](https://github.com/lucabriguglia/OpenCQRS)
+**Repository**: [https://github.com/lucabriguglia/OpenCQRS](https://github.com/OpenCQRS/OpenCQRS/legacy)
 
 ## Documentation
 
