@@ -1,5 +1,3 @@
 namespace OpenCqrs.Streams;
 
-public interface IStreamRequest<out TResponse>
-{
-}
+public interface IStreamRequest<out TResponse>;
