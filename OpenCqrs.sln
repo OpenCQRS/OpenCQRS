@@ -25,45 +25,45 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs", "src\OpenCqrs\OpenCqrs.csproj", "{E70FB190-16A9-4C74-86B0-766A135FE556}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs", "legacy\src\OpenCqrs\OpenCqrs.csproj", "{E70FB190-16A9-4C74-86B0-766A135FE556}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF", "src\OpenCqrs.Store.EF\OpenCqrs.Store.EF.csproj", "{1A11F0DD-BF65-4A0C-B61F-FD89646F2554}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF", "legacy\src\OpenCqrs.Store.EF\OpenCqrs.Store.EF.csproj", "{1A11F0DD-BF65-4A0C-B61F-FD89646F2554}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.SqlServer", "src\OpenCqrs.Store.EF.SqlServer\OpenCqrs.Store.EF.SqlServer.csproj", "{62C4D2A3-C7D4-41AC-A1AD-2CC2E2F38AFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.SqlServer", "legacy\src\OpenCqrs.Store.EF.SqlServer\OpenCqrs.Store.EF.SqlServer.csproj", "{62C4D2A3-C7D4-41AC-A1AD-2CC2E2F38AFB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.MySql", "src\OpenCqrs.Store.EF.MySql\OpenCqrs.Store.EF.MySql.csproj", "{150521FC-AC83-409B-9D45-D9CA73E1DCA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.MySql", "legacy\src\OpenCqrs.Store.EF.MySql\OpenCqrs.Store.EF.MySql.csproj", "{150521FC-AC83-409B-9D45-D9CA73E1DCA3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.PostgreSql", "src\OpenCqrs.Store.EF.PostgreSql\OpenCqrs.Store.EF.PostgreSql.csproj", "{C5CADA65-356F-4FDA-A1F6-1C22786D42EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.PostgreSql", "legacy\src\OpenCqrs.Store.EF.PostgreSql\OpenCqrs.Store.EF.PostgreSql.csproj", "{C5CADA65-356F-4FDA-A1F6-1C22786D42EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.Sqlite", "src\OpenCqrs.Store.EF.Sqlite\OpenCqrs.Store.EF.Sqlite.csproj", "{1A1F277E-F7B6-4CE8-BC00-0B92DCB4F977}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.Sqlite", "legacy\src\OpenCqrs.Store.EF.Sqlite\OpenCqrs.Store.EF.Sqlite.csproj", "{1A1F277E-F7B6-4CE8-BC00-0B92DCB4F977}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.Cosmos.Sql", "src\OpenCqrs.Store.Cosmos.Sql\OpenCqrs.Store.Cosmos.Sql.csproj", "{C7FC8979-2A4B-419B-9D30-C125D45C1FC9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.Cosmos.Sql", "legacy\src\OpenCqrs.Store.Cosmos.Sql\OpenCqrs.Store.Cosmos.Sql.csproj", "{C7FC8979-2A4B-419B-9D30-C125D45C1FC9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.Cosmos.Mongo", "src\OpenCqrs.Store.Cosmos.Mongo\OpenCqrs.Store.Cosmos.Mongo.csproj", "{95CB07E0-A387-4ED6-AC91-4FDA7D83979D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.Cosmos.Mongo", "legacy\src\OpenCqrs.Store.Cosmos.Mongo\OpenCqrs.Store.Cosmos.Mongo.csproj", "{95CB07E0-A387-4ED6-AC91-4FDA7D83979D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Tests", "test\OpenCqrs.Tests\OpenCqrs.Tests.csproj", "{BA0FB58E-B8AA-4DC3-95FF-49540C00074D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Tests", "legacy\test\OpenCqrs.Tests\OpenCqrs.Tests.csproj", "{BA0FB58E-B8AA-4DC3-95FF-49540C00074D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.ServiceBus", "src\OpenCqrs.Bus.ServiceBus\OpenCqrs.Bus.ServiceBus.csproj", "{C3467348-3A8B-4558-B954-6A124E187FC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.ServiceBus", "legacy\src\OpenCqrs.Bus.ServiceBus\OpenCqrs.Bus.ServiceBus.csproj", "{C3467348-3A8B-4558-B954-6A124E187FC3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.InMemory", "src\OpenCqrs.Store.EF.InMemory\OpenCqrs.Store.EF.InMemory.csproj", "{15940312-6446-4FD6-B886-49BAC6589D73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.InMemory", "legacy\src\OpenCqrs.Store.EF.InMemory\OpenCqrs.Store.EF.InMemory.csproj", "{15940312-6446-4FD6-B886-49BAC6589D73}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.RabbitMQ", "src\OpenCqrs.Bus.RabbitMQ\OpenCqrs.Bus.RabbitMQ.csproj", "{BFF4E920-0653-41ED-AB20-4DB9EECD63A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.RabbitMQ", "legacy\src\OpenCqrs.Bus.RabbitMQ\OpenCqrs.Bus.RabbitMQ.csproj", "{BFF4E920-0653-41ED-AB20-4DB9EECD63A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.ServiceBus.Tests", "test\OpenCqrs.Bus.ServiceBus.Tests\OpenCqrs.Bus.ServiceBus.Tests.csproj", "{781016AA-A751-440D-8F02-A73AA128281A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Bus.ServiceBus.Tests", "legacy\test\OpenCqrs.Bus.ServiceBus.Tests\OpenCqrs.Bus.ServiceBus.Tests.csproj", "{781016AA-A751-440D-8F02-A73AA128281A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{FF129AB8-1B8D-4BAA-AB1F-39D2FA497397}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.NoEventSourcing", "samples\OpenCqrs.Sample.NoEventSourcing\OpenCqrs.Sample.NoEventSourcing.csproj", "{7FC48BED-63CC-4BD0-8A90-27DD4AF7CDCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.NoEventSourcing", "legacy\samples\OpenCqrs.Sample.NoEventSourcing\OpenCqrs.Sample.NoEventSourcing.csproj", "{7FC48BED-63CC-4BD0-8A90-27DD4AF7CDCB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.EventSourcing", "samples\OpenCqrs.Sample.EventSourcing\OpenCqrs.Sample.EventSourcing.csproj", "{99E0EA26-E961-40A1-A580-BCB255B37838}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.EventSourcing", "legacy\samples\OpenCqrs.Sample.EventSourcing\OpenCqrs.Sample.EventSourcing.csproj", "{99E0EA26-E961-40A1-A580-BCB255B37838}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.UI", "src\OpenCqrs.UI\OpenCqrs.UI.csproj", "{698A5F31-4E71-46EF-A93F-8B80AAA62F77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.UI", "legacy\src\OpenCqrs.UI\OpenCqrs.UI.csproj", "{698A5F31-4E71-46EF-A93F-8B80AAA62F77}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Validation.FluentValidation", "src\OpenCqrs.Validation.FluentValidation\OpenCqrs.Validation.FluentValidation.csproj", "{EC89F18E-266A-4C33-8E70-9F3AB331BB6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Validation.FluentValidation", "legacy\src\OpenCqrs.Validation.FluentValidation\OpenCqrs.Validation.FluentValidation.csproj", "{EC89F18E-266A-4C33-8E70-9F3AB331BB6C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Caching.Memory", "src\OpenCqrs.Caching.Memory\OpenCqrs.Caching.Memory.csproj", "{4AA061EE-6DBE-464B-B467-08BDA68D9F40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Caching.Memory", "legacy\src\OpenCqrs.Caching.Memory\OpenCqrs.Caching.Memory.csproj", "{4AA061EE-6DBE-464B-B467-08BDA68D9F40}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Caching.Redis", "src\OpenCqrs.Caching.Redis\OpenCqrs.Caching.Redis.csproj", "{60755BA7-4F80-4AEC-8B0E-32414C1C6553}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Caching.Redis", "legacy\src\OpenCqrs.Caching.Redis\OpenCqrs.Caching.Redis.csproj", "{60755BA7-4F80-4AEC-8B0E-32414C1C6553}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{1282A8FB-D7A5-4562-8B9B-1C27B83EE580}"
 	ProjectSection(SolutionItems) = preProject
@@ -96,9 +96,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "img", "img", "{05D6EE8E-C35
 		docs\assets\img\SendCommandFlow.svg = docs\assets\img\SendCommandFlow.svg
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.CommandSequence", "samples\OpenCqrs.Sample.CommandSequence\OpenCqrs.Sample.CommandSequence.csproj", "{6DB19E10-1942-44CC-B592-01A34CEE8C77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Sample.CommandSequence", "legacy\samples\OpenCqrs.Sample.CommandSequence\OpenCqrs.Sample.CommandSequence.csproj", "{6DB19E10-1942-44CC-B592-01A34CEE8C77}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.Cosmos", "src\OpenCqrs.Store.EF.Cosmos\OpenCqrs.Store.EF.Cosmos.csproj", "{E11E8FAB-DE31-4702-8459-2ECCE463EE14}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCqrs.Store.EF.Cosmos", "legacy\src\OpenCqrs.Store.EF.Cosmos\OpenCqrs.Store.EF.Cosmos.csproj", "{E11E8FAB-DE31-4702-8459-2ECCE463EE14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "legacy", "legacy", "{BF89EBA1-AE4B-4BDC-98C1-A620E977CAE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -218,6 +220,10 @@ Global
 		{05D6EE8E-C356-4BF1-A015-90471F4E682E} = {7883593A-6225-4485-8EAE-E4EF3B799285}
 		{6DB19E10-1942-44CC-B592-01A34CEE8C77} = {FF129AB8-1B8D-4BAA-AB1F-39D2FA497397}
 		{E11E8FAB-DE31-4702-8459-2ECCE463EE14} = {A9692D21-8091-4A3F-8F7C-54B821EFDF97}
+		{1282A8FB-D7A5-4562-8B9B-1C27B83EE580} = {BF89EBA1-AE4B-4BDC-98C1-A620E977CAE5}
+		{FF129AB8-1B8D-4BAA-AB1F-39D2FA497397} = {BF89EBA1-AE4B-4BDC-98C1-A620E977CAE5}
+		{A9692D21-8091-4A3F-8F7C-54B821EFDF97} = {BF89EBA1-AE4B-4BDC-98C1-A620E977CAE5}
+		{54E87113-D720-41C2-A0DE-C4D61FB15AE5} = {BF89EBA1-AE4B-4BDC-98C1-A620E977CAE5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {154500C3-9A83-4F15-9D78-E1C285AD80AE}
