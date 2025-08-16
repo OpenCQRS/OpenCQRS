@@ -85,7 +85,7 @@ public static class ServiceCollectionExtensions
             var assembly = type.Assembly;
             
             var domainEvents = assembly.GetImplementationsOf<IDomainEvent>();
-            var streamViews = assembly.GetImplementationsOf<IStreamView>();
+            var streamViews = assembly.GetImplementationsOf<IAggregate>();
             
             foreach (var domainEvent in domainEvents)
             {
@@ -99,7 +99,7 @@ public static class ServiceCollectionExtensions
             
             foreach (var streamView in streamViews)
             {
-                var streamViewType = streamView.GetType().GetCustomAttribute<StreamViewType>();
+                var streamViewType = streamView.GetType().GetCustomAttribute<AggregateType>();
                 if (streamViewType is null)
                 {
                     continue;

@@ -18,6 +18,7 @@ public abstract class DomainEvent : IDomainEvent
     public string? Source { get; set; }
 }
 
+[AttributeUsage(AttributeTargets.Class)]
 public class DomainEventType(string name, byte version = 1) : Attribute
 {
     public string Name { get; } = name;
