@@ -5,9 +5,9 @@
     <Authors>Luca Briguglia</Authors>
     <Copyright>Copyright Luca Briguglia</Copyright>
     <Product>OpenCQRS</Product>
-    <PackageProjectUrl>https://github.com/lucabriguglia/OpenCQRS</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/OpenCQRS/OpenCQRS</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/lucabriguglia/OpenCQRS</RepositoryUrl>
+    <RepositoryUrl>https://github.com/OpenCQRS/OpenCQRS</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
