@@ -1,24 +1,12 @@
-# AUGUST 2025 UPDATE: Complete rewrite in progress for Version 7
-
-IT WAS MADE PRIVATE IN APRIL 2023 WHEN IT HAD **681 STARS** AND THEN MADE PUBLIC AGAIN FOR ARCHIVE PURPOSES
-
 # OpenCQRS
 
-[![.Build](https://github.com/lucabriguglia/OpenCQRS/actions/workflows/dotnet.yml/badge.svg)](https://github.com/lucabriguglia/OpenCQRS/actions/workflows/dotnet.yml)
+.NET framework for DDD, CQRS and Event Sourcing.
 
-OpenCQRS is a .NET 6 framework that can be used to create a simple and clean design by enforcing single responsibility and separation of concerns.
+## Complete rewrite in progress for Version 7
 
-Its advanced features are ideal for Domain Driven Design (DDD), Command Query Responsibilty Segragation (CQRS) and Event Sourcing.
+It was made private in APril 2023 when it had **681 stars** and made public again for archive purposes
 
-With OpenCQRS you can automatically dispatch events to a message bus (Service Bus or RabbitMQ), validate your commands before they are sent to the command handler (FluentValidation) and automatically cache the result of your queries (Memory or Redis).
-
-**Full Documentation**: [OpenCQRS Wiki](https://lucabriguglia.github.io/OpenCQRS).
-
-## Main Flow
-
-![Send Command Flow](docs/assets/img/SendCommandFlow.svg)
-
-## Packages
+## Legacy Packages
 
 ### Main
 
