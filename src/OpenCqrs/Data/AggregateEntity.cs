@@ -29,13 +29,13 @@ public static class AggregateEntityExtensions
     
     public static T ToAggregate<T>(this AggregateEntity aggregateEntity) where T : IAggregate
     {
-        var typeFound = TypeBindings.StreamViewBindings.TryGetValue(aggregateEntity.ToBindingKey(), out var viewType);
+        var typeFound = TypeBindings.AggregateBindings.TryGetValue(aggregateEntity.ToBindingKey(), out var aggregateType);
         
         if (typeFound is false)
         {
             throw new InvalidOperationException($"Aggregate type {aggregateEntity.TypeName} not found in TypeBindings");
         }
         
-        return (T)JsonConvert.DeserializeObject(aggregateEntity.Data, viewType!, JsonSerializerSettings)!;
+        return (T)JsonConvert.DeserializeObject(aggregateEntity.Data, aggregateType!, JsonSerializerSettings)!;
     }
 }

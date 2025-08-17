@@ -64,32 +64,32 @@ public static class AggregateExtensions
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new InvalidOperationException($"Stream view {aggregate.GetType().Name} does not have an AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have an AggregateType attribute.");
         }
         return aggregateType;
     }
     
-    public static AggregateEntity ToViewEntity(this IAggregate streamView, IStreamId streamId, IAggregateKey viewKey, int viewVersion, int latestEventSequence)
+    public static AggregateEntity ToAggregateEntity(this IAggregate aggregate, IStreamId streamId, IAggregateKey aggregateKey, int aggregateVersion, int latestEventSequence)
     {
-        var eventTypeAttribute = streamView.GetType().GetCustomAttribute<AggregateType>();
+        var eventTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (eventTypeAttribute == null)
         {
-            throw new InvalidOperationException($"View {streamView.GetType().Name} does not have a ViewType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
         
-        streamView.StreamId = streamId.Id;
-        streamView.AggregateId = viewKey.Id;
-        streamView.LatestEventSequence = latestEventSequence;
+        aggregate.StreamId = streamId.Id;
+        aggregate.AggregateId = aggregateKey.Id;
+        aggregate.LatestEventSequence = latestEventSequence;
         
         return new AggregateEntity
         {
-            Id = viewKey.ToDatabaseId(eventTypeAttribute.Version),
+            Id = aggregateKey.ToDatabaseId(eventTypeAttribute.Version),
             StreamId = streamId.Id,
-            Version = viewVersion,
+            Version = aggregateVersion,
             LatestEventSequence = latestEventSequence,
             TypeName = eventTypeAttribute.Name,
             TypeVersion = eventTypeAttribute.Version,
-            Data = JsonConvert.SerializeObject(streamView)
+            Data = JsonConvert.SerializeObject(aggregate)
         };
     }
 }

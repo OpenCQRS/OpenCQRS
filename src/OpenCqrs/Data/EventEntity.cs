@@ -10,8 +10,6 @@ public class EventEntity : IAuditableEntity, IBindableEntity
     public int Sequence { get; set; }
     public string Data { get; set; } = null!;
     public DateTimeOffset TimeStamp { get; set; }
-    public string? UserId { get; set; }
-    public string? Source { get; set; }
     
     public DateTimeOffset CreatedDate { get; set; }
     public string? CreatedBy { get; set; }
@@ -29,7 +27,7 @@ public static class EventEntityExtensions
         ContractResolver = new PrivateSetterContractResolver()
     };
     
-    public static DomainEvent ToDomainEvent(this EventEntity eventEntity)
+    public static IDomainEvent ToDomainEvent(this EventEntity eventEntity)
     {
         var typeFound = TypeBindings.DomainEventBindings.TryGetValue(eventEntity.ToBindingKey(), out var eventType);
         
@@ -38,6 +36,6 @@ public static class EventEntityExtensions
             throw new InvalidOperationException($"Event type {eventEntity.TypeName} not found in TypeBindings");
         }
         
-        return (DomainEvent)JsonConvert.DeserializeObject(eventEntity.Data, eventType!, JsonSerializerSettings)!;
+        return (IDomainEvent)JsonConvert.DeserializeObject(eventEntity.Data, eventType!, JsonSerializerSettings)!;
     }
 }

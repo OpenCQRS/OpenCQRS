@@ -8,7 +8,7 @@ public interface IAggregateKey
 
 public interface IAggregateKey<TAggregate> : IAggregateKey where TAggregate : IAggregate;
 
-public static class ViewKeyExtensions
+public static class AggregateKeyExtensions
 {
     public static string ToDatabaseId(this IAggregateKey aggregateKey, byte version) => 
         $"{aggregateKey.Id}|v:{version}";

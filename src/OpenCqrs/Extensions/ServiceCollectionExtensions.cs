@@ -40,14 +40,14 @@ public static class ServiceCollectionExtensions
     private static void AddTypeBindings(IEnumerable<Type> types)
     {
         var domainEventBindings = new Dictionary<string, Type>();
-        var streamViewBindings = new Dictionary<string, Type>();
+        var aggregateBindings = new Dictionary<string, Type>();
         
         foreach (var type in types)
         {
             var assembly = type.Assembly;
             
             var domainEvents = assembly.GetImplementationsOf<IDomainEvent>();
-            var streamViews = assembly.GetImplementationsOf<IAggregate>();
+            var aggregates = assembly.GetImplementationsOf<IAggregate>();
             
             foreach (var domainEvent in domainEvents)
             {
@@ -59,18 +59,18 @@ public static class ServiceCollectionExtensions
                 domainEventBindings.Add(TypeBindings.GetTypeBindingKey(domainEventType.Name, domainEventType.Version), domainEvent.GetType());
             }
             
-            foreach (var streamView in streamViews)
+            foreach (var aggregate in aggregates)
             {
-                var streamViewType = streamView.GetType().GetCustomAttribute<AggregateType>();
-                if (streamViewType is null)
+                var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
+                if (aggregateType is null)
                 {
                     continue;
                 }
-                streamViewBindings.Add(TypeBindings.GetTypeBindingKey(streamViewType.Name, streamViewType.Version), streamView.GetType());
+                aggregateBindings.Add(TypeBindings.GetTypeBindingKey(aggregateType.Name, aggregateType.Version), aggregate.GetType());
             }
         }
         
         TypeBindings.DomainEventBindings = domainEventBindings;
-        TypeBindings.StreamViewBindings = streamViewBindings;
+        TypeBindings.AggregateBindings = aggregateBindings;
     }
 }
