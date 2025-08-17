@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
+using OpenCqrs.Data;
 
 namespace OpenCqrs.Domain;
 
@@ -66,5 +67,29 @@ public static class AggregateExtensions
             throw new InvalidOperationException($"Stream view {aggregate.GetType().Name} does not have an AggregateType attribute.");
         }
         return aggregateType;
+    }
+    
+    public static AggregateEntity ToViewEntity(this IAggregate streamView, IStreamId streamId, IAggregateKey viewKey, int viewVersion, int latestEventSequence)
+    {
+        var eventTypeAttribute = streamView.GetType().GetCustomAttribute<AggregateType>();
+        if (eventTypeAttribute == null)
+        {
+            throw new InvalidOperationException($"View {streamView.GetType().Name} does not have a ViewType attribute.");
+        }
+        
+        streamView.StreamId = streamId.Id;
+        streamView.AggregateId = viewKey.Id;
+        streamView.LatestEventSequence = latestEventSequence;
+        
+        return new AggregateEntity
+        {
+            Id = viewKey.ToDatabaseId(eventTypeAttribute.Version),
+            StreamId = streamId.Id,
+            Version = viewVersion,
+            LatestEventSequence = latestEventSequence,
+            TypeName = eventTypeAttribute.Name,
+            TypeVersion = eventTypeAttribute.Version,
+            Data = JsonConvert.SerializeObject(streamView)
+        };
     }
 }
