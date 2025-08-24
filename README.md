@@ -1,10 +1,8 @@
 # OpenCQRS
 
-.NET framework for DDD, CQRS and Event Sourcing.
+.NET framework implementing DDD, Event Sourcing, and CQRS. I'm currently revamping the project with a complete rewrite of the codebase. OpenCQRS 7 will be extremely flexible and expandable. First beta expected by September 2025.
 
-### Time to revamp the project. Complete rewrite in progress for version 7 (first beta expected to be released by September 2025).
-
-The project was made private when it had **681 stars** and made public again to make the legacy code and documentation available if needed.
+Note: the project was made private when it had **681 stars** and made public again in preparationof version 7.
 
 - Legacy code [here](https://github.com/OpenCQRS/OpenCQRS/tree/main/legacy).
 - Legacy documentation [here](https://github.com/OpenCQRS/OpenCQRS/blob/main/legacy/docs/index.md).
