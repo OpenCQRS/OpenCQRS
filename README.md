@@ -126,7 +126,7 @@ All features are implemented as extension methods on the DbContext, allowing sea
 
 ```C#
 [AggregateType("Order")]
-puclic class Order : Aggregate
+puclic class OrderAggregate : Aggregate
 {
     public override Type[] EventTypeFilter { get; } =
     [
@@ -134,16 +134,16 @@ puclic class Order : Aggregate
     ];
         
     public Guid OrderId { get; private set; }
-    public Guid CustomerId { get; private set; }
+    public decimal Amount { get; private set; }
 
     public Order() { }
 
-    public Order(Guid orderId, Guid customerId)
+    public Order(Guid orderId, decimal amount)
     {
         Add(new OrderPlaced
         {
             OrderId = orderId,
-            CustomerId = customerId
+            Amount = amount
         };);
     }
 
@@ -159,15 +159,15 @@ puclic class Order : Aggregate
     private bool Apply(OrderPlaced @event)
     {
         OrderId = @event.OrderId;
-        CustomerId = @event.CustomerId;
+        Amount = @event.Amount;
 
         return true;
     }
 }
 
-var streamId = new StreamId(customerId);
-var aggregateId = new AggregateId(orderId);
-var aggregate = new Order(orderId, customerId);
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
 // The save aggregate extension method stores the new events and the snapshot of the aggregate to the latest state
 var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
