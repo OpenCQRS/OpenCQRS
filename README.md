@@ -1,59 +1,189 @@
 # OpenCQRS
 
-.NET framework for DDD, CQRS and Event Sourcing.
+.NET framework implementing DDD, Event Sourcing, and CQRS. OpenCQRS 7 is a revamped version of the project with a complete rewrite of the codebase. 
 
-## Complete rewrite in progress for version 7
+OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Entity Framework Core with any relational database providers (work for a separate Cosmos DB provider is underway).
 
-It was made private when it had **681 stars** and made public again to make the legacy code and documentation available if needed.
+_Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
-If required, a migration guideline from OpenCQRS 6 to OpenCQRS 7 will be provided alongside any necessary scripts.
+## Packages
 
-- Legacy code [here](https://github.com/OpenCQRS/OpenCQRS/tree/main/legacy).
-- Legacy documentation [here](https://github.com/OpenCQRS/OpenCQRS/blob/main/legacy/docs/index.md).
+| Package                                                                                                                                               | Beta 1                                                                                                                                                          |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
+| [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
+| [OpenCqrs.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)          |
+| [OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) |
 
-## Legacy Packages
+## Simple mediator
 
-### Main
+Three kinds of requests can be sent through the dispatcher:
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs](https://www.nuget.org/packages/OpenCqrs) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs) |
+### Commands
 
-### Store Providers
+```C#
+public class DoSomething : ICommand
+{
+}
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs.Store.Cosmos.Mongo](https://www.nuget.org/packages/OpenCqrs.Store.Cosmos.Mongo) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.Cosmos.Mongo) |
-| [OpenCqrs.Store.Cosmos.Sql](https://www.nuget.org/packages/OpenCqrs.Store.Cosmos.Sql) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.Cosmos.Sql) |
-| [OpenCqrs.Store.EF.MySql](https://www.nuget.org/packages/OpenCqrs.Store.EF.MySql) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.MySql) |
-| [OpenCqrs.Store.EF.PostgreSql](https://www.nuget.org/packages/OpenCqrs.Store.EF.PostgreSql) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.PostgreSql) |
-| [OpenCqrs.Store.EF.Sqlite](https://www.nuget.org/packages/OpenCqrs.Store.EF.Sqlite) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.Sqlite) |
-| [OpenCqrs.Store.EF.SqlServer](https://www.nuget.org/packages/OpenCqrs.Store.EF.SqlServer) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.SqlServer) |
-| [OpenCqrs.Store.EF.InMemory](https://www.nuget.org/packages/OpenCqrs.Store.EF.InMemory) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.InMemory) |
-| [OpenCqrs.Store.EF.Cosmos](https://www.nuget.org/packages/OpenCqrs.Store.EF.Cosmos) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Store.EF.Cosmos) |
+public class DoSomethingHandler : ICommandHandler<DoSomething>
+{
+    private readonly IMyService _myService;
 
-### Bus Providers
+    public DoSomethingHandler(IMyService myService)
+    {
+        _myService = myService;
+    }
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs.Bus.ServiceBus](https://www.nuget.org/packages/OpenCqrs.Bus.ServiceBus) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Bus.ServiceBus) |
-| [OpenCqrs.Bus.RabbitMQ](https://www.nuget.org/packages/OpenCqrs.Bus.RabbitMQ) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Bus.RabbitMQ) |
+    public async Task<Result> Handle(DoSomething command)
+    {
+        await _myService.MyMethod();
 
-### Validation Providers
+        return Result.Ok();
+    }
+}
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs.Validation.FluentValidation](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation) |
+await _dispatcher.Send(new DoSomething());
+```
 
-### Caching Providers
+### Queries
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs.Caching.Memory](https://www.nuget.org/packages/OpenCqrs.Caching.Memory) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Memory) |
-| [OpenCqrs.Caching.Redis](https://www.nuget.org/packages/OpenCqrs.Caching.Redis) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Redis) |
+```C#
+public class Something
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
 
-### Misc
+public class GetSomething : IQuery<Something>
+{
+    public int Id { get; set; }
+}
 
-| Package | Latest Stable |
-| --- | --- |
-| [OpenCqrs.UI](https://www.nuget.org/packages/OpenCqrs.UI) | [![Nuget Package](https://img.shields.io/badge/nuget-6.5.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.UI) |
+public class GetSomethingQueryHandler : IQueryHandler<GetSomething, Something>
+{
+    private readonly MyDbContext _dbContext;
+
+    public GetProductsHandler(MyDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+        
+    public Task<Result<Something>> Handle(GetSomething query)
+    {
+        return _dbContext.Somethings.FirstOrDefaultAsync(s => s.Id == query.Id);
+    }
+}
+
+var something = await _dispatcher.Get(new GetSomething { Id = 123 });
+```
+
+### Events
+
+```C#
+public class SomethingHappened : IEvent
+{
+}
+
+public class SomethingHappenedHandlerOne : IEventHandler<SomethingHappened>
+{
+    private readonly IServiceOne _serviceOne;
+
+    public SomethingHappenedHandlerOne(IServiceOne serviceOne)
+    {
+        _serviceOne = serviceOne;
+    }
+
+    public Task<Result> Handle(SomethingHappened @event)
+    {
+        return _serviceOne.DoSomethingElse();
+    }
+}
+
+public class SomethingHappenedHandlerTwo : IEventHandler<SomethingHappened>
+{
+    private readonly IServiceTwo _serviceTwo;
+
+    public SomethingHappenedHandlerTwo(IServiceTwo serviceTwo)
+    {
+        _serviceTwo = serviceTwo;
+    }
+
+    public Task<Result> Handle(SomethingHappened @event)
+    {
+        return _serviceTwo.DoSomethingElse();
+    }
+}
+
+await _dispatcher.Publish(new SomethingHappened());
+```
+
+## Event Sourcing with Entity Framework Core
+
+All features are implemented as extension methods on the DbContext, allowing seamless integration with your existing DbContext implementations. IdentityDbContext from ASP.NET Core Identity is also supported.
+
+```C#
+[AggregateType("Order")]
+puclic class Order : Aggregate
+{
+    public override Type[] EventTypeFilter { get; } =
+    [
+        typeof(OrderPlaced) // Only events of this type will be loaded for the aggregate from the event stream
+    ];
+        
+    public Guid OrderId { get; private set; }
+    public Guid CustomerId { get; private set; }
+
+    public Order() { }
+
+    public Order(Guid orderId, Guid customerId)
+    {
+        Add(new OrderPlaced
+        {
+            OrderId = orderId,
+            CustomerId = customerId
+        };);
+    }
+
+    protected override bool Apply<TDomainEvent>(TDomainEvent domainEvent)
+    {
+        return domainEvent switch
+        {
+            OrderPlaced @event => Apply(@event)
+            _ => false
+        };
+    }
+
+    private bool Apply(OrderPlaced @event)
+    {
+        OrderId = @event.OrderId;
+        CustomerId = @event.CustomerId;
+
+        return true;
+    }
+}
+
+var streamId = new StreamId(customerId);
+var aggregateId = new AggregateId(orderId);
+var aggregate = new Order(orderId, customerId);
+
+var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+```
+
+## Event Sourcing with Cosmos DB
+
+_Work in progress_
+
+## Full Documentation
+
+- [Installation](docs/Installation)
+- [Configuration](docs/Configuration)
+- [Basics](docs/Basics)
+    - [Commands](docs/Commands)
+    - [Events](docs/Events)
+    - [Queries](docs/Queries)
+- [Event Sourcing](docs/Event-Sourcing)
+    - [Entity Framework Core](docs/Entity-Framework-Core)
+- [Release Notes](docs/Release-Notes)
+
+_[Legacy documentation here (OpenCQRS 6.x)](docs-6.x/index.md)_
