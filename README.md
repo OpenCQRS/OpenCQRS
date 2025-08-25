@@ -167,6 +167,7 @@ var streamId = new StreamId(customerId);
 var aggregateId = new AggregateId(orderId);
 var aggregate = new Order(orderId, customerId);
 
+// The save aggregate extension method stores the new events and the snapshot of the aggregate to the latest state
 var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
 
