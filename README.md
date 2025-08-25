@@ -179,14 +179,14 @@ _Work in progress_
 
 ## Full Documentation
 
-- [Installation](docs/Installation)
-- [Configuration](docs/Configuration)
-- [Basics](docs/Basics)
-    - [Commands](docs/Commands)
-    - [Events](docs/Events)
-    - [Queries](docs/Queries)
-- [Event Sourcing](docs/Event-Sourcing)
-    - [Entity Framework Core](docs/Entity-Framework-Core)
-- [Release Notes](docs/Release-Notes)
+- [Installation](docs/Installation.md)
+- [Configuration](docs/Configuration.md)
+- [Basics](docs/Basics.md)
+    - [Commands](docs/Commands.md)
+    - [Events](docs/Events.md)
+    - [Queries](docs/Queries.md)
+- [Event Sourcing](docs/Event-Sourcing.md)
+    - [Entity Framework Core](docs/Entity-Framework-Core.md)
+- [Release Notes](docs/Release-Notes.md)
 
 _[Legacy documentation here (OpenCQRS 6.x)](docs-6.x/index.md)_
