@@ -104,7 +104,7 @@ public static partial class IDomainDbContextExtensions
     /// }
     /// </code>
     /// </example>
-    public static async Task<Result> Save(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
+    public static async Task<Result> SaveDomainEvents(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
     {
         try
         {
