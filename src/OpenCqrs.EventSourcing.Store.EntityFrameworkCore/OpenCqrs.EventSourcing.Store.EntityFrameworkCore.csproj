@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>OpenCqrs.EventSourcing.Store.EntityFrameworkCore</PackageId>
+        <IsPackable>true</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
