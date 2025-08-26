@@ -31,16 +31,18 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 
 ### SaveAggregate
 Saves an aggregate to the event store with optimistic concurrency control, persisting all uncommitted domain events and updating the aggregate snapshot.
+
+**New aggregate**
 ```C#
-// New aggregate
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
 var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
+
+**Update existing aggregate**
 ```C#
-// Update existing aggregate
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
@@ -82,8 +84,8 @@ var saveDomainEventsResult = await dbContext.SaveDomainEvents(streamId, domainEv
 ### Save
 Saves all pending changes in the domain database context to the underlying data store. This method provides a simple way to persist tracked entity changes without additional event sourcing logic, suitable for scenarios where entities have been explicitly tracked.
 ```C#
-// Track aggregates and domain events
-// ...
+// ...track aggregates and domain events...
+
 var item = new ItemEntity
 {
     Id = Guid.NewGuid(),
@@ -122,7 +124,7 @@ aggregate.UpdateAmount(amount: 15.00m);
 
 await dbContext.TrackAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
 
-// Additional entity changes
+// ...additional entity changes...
 
 var saveResult = await dbContext.Save();
 ```
@@ -148,7 +150,7 @@ var domainEvents = new DomainEvent[]
 };
 await dbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence: latestEventSequence);
 
-// Additional entity changes
+// ...additional entity changes...
 
 var saveResult = await dbContext.Save();
 ```
