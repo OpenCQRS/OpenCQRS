@@ -9,7 +9,7 @@ public class AggregateEntityConfiguration : IEntityTypeConfiguration<AggregateEn
     public void Configure(EntityTypeBuilder<AggregateEntity> builder)
     {
         builder
-            .ToTable(name: "Aggregates")
+            .ToTable(name: "DomainAggregates")
             .HasKey(aggregateEntity => aggregateEntity.Id);
 
         builder

@@ -9,7 +9,7 @@ public class AggregateEventEntityConfiguration : IEntityTypeConfiguration<Aggreg
     public void Configure(EntityTypeBuilder<AggregateEventEntity> builder)
     {
         builder
-            .ToTable(name: "AggregateEvents")
+            .ToTable(name: "DomainAggregateEvents")
             .HasKey(aggregateEventEntity => new { aggregateEventEntity.AggregateId, aggregateEventEntity.EventId });
 
         builder
