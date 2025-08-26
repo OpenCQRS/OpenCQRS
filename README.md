@@ -187,6 +187,9 @@ _Work in progress_
 - Command sequence
 - Message bus integration with Azure Service Bus/RabbitMQ
 - Automatic command validation with FluentValidation
+- More extensions for domain events and event entities in the Entity Framework Core store provider
+- Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
+- Custom table names for EntityFrameworkCore store provider
 
 ## Full Documentation
 
