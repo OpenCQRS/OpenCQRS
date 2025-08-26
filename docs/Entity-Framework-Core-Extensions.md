@@ -43,9 +43,9 @@ var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, a
 // Update existing aggregate
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
-var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
 
-var aggregateResult = await dbContext.GetAggregate<OrderAggregate>(streamId, aggregateId, cancellationToken: cancellationToken);
+var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
 if (!aggregateResult.IsSuccess)
 {
     return aggregateResult.Error;
@@ -57,21 +57,121 @@ aggregate.UpdateAmount(amount: 15.00m);
 var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
 ```
 
-| Method               | Description                                                                                                                                                                                                                                                             |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **SaveAggregate**    | Saves an aggregate to the event store with optimistic concurrency control, persisting all uncommitted domain events and updating the aggregate snapshot.                                                                                                                |
-| **SaveDomainEvents** | Saves an array of domain events to the event store with optimistic concurrency control, bypassing aggregate persistence. This method is ideal for scenarios where events are generated outside traditional aggregate workflows.                                         |
-| **Save**             | Saves all pending changes in the domain database context to the underlying data store. This method provides a simple way to persist tracked entity changes without additional event sourcing logic, suitable for scenarios where entities have been explicitly tracked. |
-| **UpdateAggregate**  | Updates an existing aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.                                                                                                                                |
+### SaveDomainEvents
+Saves an array of domain events to the event store with optimistic concurrency control, bypassing aggregate persistence. This method is ideal for scenarios where events are generated outside traditional aggregate workflows.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
 
+var domainEvents = new DomainEvent[]
+{
+    new OrderPlaced
+    {
+        OrderId = orderId,
+        Amount = 25.45m
+    },
+    new OrderShipped
+    {
+        OrderId = orderId,
+        ShippedDate = _timeProvider.GetUtcNow()
+    }
+};
+var saveDomainEventsResult = await dbContext.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: latestEventSequence);
+```
+
+### Save
+Saves all pending changes in the domain database context to the underlying data store. This method provides a simple way to persist tracked entity changes without additional event sourcing logic, suitable for scenarios where entities have been explicitly tracked.
+```C#
+// Track aggregates and domain events
+// ...
+var item = new ItemEntity
+{
+    Id = Guid.NewGuid(),
+    Name = "Sample Item",
+    Price = 9.99m
+};
+dbContext.Items.Add(item);
+var saveResult = await dbContext.Save();
+```
+
+### UpdateAggregate
+Updates an existing aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var updateAggregateResult = await dbContext.UpdateAggregate(streamId, aggregateId);
+```
+<a name="tracking"></a>
 ## Tracking
 
-| Method                 | Description                                                                                                                                                                                                               |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **TrackAggregate**     | Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker without persisting to the database, preparing all necessary entities for subsequent save operations.                    |
-| **TrackDomainEvents**  | Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation. |
-| **TrackEventEntities** | Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.                                                          |
+### TrackAggregate
+Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker without persisting to the database, preparing all necessary entities for subsequent save operations.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
 
+var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+if (!aggregateResult.IsSuccess)
+{
+    return aggregateResult.Error;
+}
+aggregate = aggregateResult.Value;
+
+aggregate.UpdateAmount(amount: 15.00m);
+
+await dbContext.TrackAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
+
+// Additional entity changes
+
+var saveResult = await dbContext.Save();
+```
+
+### TrackDomainEvents
+Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
+
+var domainEvents = new DomainEvent[]
+{
+    new OrderPlaced
+    {
+        OrderId = orderId,
+        Amount = 25.45m
+    },
+    new OrderShipped
+    {
+        OrderId = orderId,
+        ShippedDate = _timeProvider.GetUtcNow()
+    }
+};
+await dbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence: latestEventSequence);
+
+// Additional entity changes
+
+var saveResult = await dbContext.Save();
+```
+
+### TrackEventEntities
+Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var orderAggregateId = new OrderAggregateId(orderId);
+var anotherAggregateId = new AnotherAggregateId(orderId);
+var aggregate = new OrderAggregate(orderId, amount: 25.45m);
+
+var trackAggregateResult = await dbContext.TrackAggregate(streamId, orderAggregateId, aggregate, expectedEventSequence: 0);
+if (!trackAggregateResult.IsSuccess)
+{
+    return trackResult.Error;
+}
+// Track same event entities for a different aggregate
+await dbContext.TrackEventEntities(streamId, anotherAggregateId, trackAggregateResult.Value.EventEntities!, expectedEventSequence: 0);
+
+var saveResult = await dbContext.Save();
+```
+<a name="retrieving-aggregates-and-domain-events"></a>
 ## Retrieving Aggregates and Domain Events
 
 | Method                                | Description                                                                                                                                                                                                                                                                                    |
