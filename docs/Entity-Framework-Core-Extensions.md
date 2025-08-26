@@ -11,7 +11,7 @@ The Entity Framework Core store provider offers a variety of built-in extension 
   - [Track Aggregate](#track-aggregate)
   - [Track Domain Events](#track-domain-events)
   - [Track Event Entities](#track-event-entities)
-- [Retrieving Aggregates and Domain Events](#retrieving-aggregate-and-domain-events)
+- [Retrieving Aggregates and Domain Events](#retrieving-aggregates-and-domain-events)
   - [Get Aggregate](#get-aggregate)
   - [Get In-Memory Aggregate](#get-in-memory-aggregate)
   - [Get Domain Events](#get-domain-events)
@@ -280,12 +280,69 @@ var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
 var latestEventSequence = await dbContext.GetLatestEventSequence(streamId, eventTypes);
 ```
 
+<a name="retrieving-database-entities"></a>
 ## Retrieving Database Entities
 
-| Method                                 | Description                                                                                                                                                                                                        |
-|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GetEventEntities**                   | Retrieves all event entities from a specified stream, with optional filtering by event types.                                                                                                                      |
-| **GetEventEntitiesFromSequence**       | Retrieves a list of event entities from the specified stream starting from a given sequence number, with optional filtering by event types.                                                                        |
-| **GetEventEntitiesUpToSequence**       | Retrieves event entities from a specified stream up to and including a specific sequence number, with optional filtering by event types.                                                                           |
-| **GetEventEntitiesAppliedToAggregate** | Retrieves all event entities that have been applied to a specific aggregate instance, providing a complete audit trail of changes that contributed to the aggregate's current state.                               |
-| **GetAggregateEventEntities**          | Retrieves all aggregate-event relationship entities associated with a specific aggregate instance, providing complete visibility into the many-to-many relationships between the aggregate and its applied events. |
+<a name="get-event-entities"></a>
+### Get Event Entities
+Retrieves all event entities from a specified stream, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var eventEntitiesResult = await dbContext.GetEventEntities(streamId);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var eventEntitiesResult = await dbContext.GetEventEntities(streamId, eventTypes);
+```
+
+<a name="get-event-entities-from-sequence"></a>
+### Get Event Entities From Sequence
+Retrieves a list of event entities from the specified stream starting from a given sequence number, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var eventEntitiesResult = await dbContext.GetEventEntitiesFromSequence(streamId, fromSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var eventEntitiesResult = await dbContext.GetEventEntitiesFromSequence(streamId, fromSequence, eventTypes);
+```
+
+<a name="get-event-entities-up-to-sequence"></a>
+### Get Event Entities Up To Sequence
+Retrieves event entities from a specified stream up to and including a specific sequence number, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToSequence = 10;
+var eventEntitiesResult = await dbContext.GetEventEntitiesUpToSequence(streamId, upToSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToSequence = 10;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var eventEntitiesResult = await dbContext.GetEventEntitiesUpToSequence(streamId, upToSequence, eventTypes);
+```
+
+<a name="get-event-entities-applied-to-aggregate"></a>
+### Get Event Entities Applied To Aggregate
+Retrieves all event entities that have been applied to a specific aggregate instance, providing a complete audit trail of changes that contributed to the aggregate's current state.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var eventEntitiesResult = await dbContext.GetEventEntitiesAppliedToAggregate(streamId, aggregateId);
+```
+
+<a name="get-aggregate-event-entities"></a>
+### Get Aggregate Event Entities
+Retrieves all aggregate-event relationship entities associated with a specific aggregate instance, providing complete visibility into the many-to-many relationships between the aggregate and its applied events.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregateEventEntitiesResult = await dbContext.GetAggregateEventEntities(streamId, aggregateId);
+```
