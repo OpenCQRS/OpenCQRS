@@ -45,8 +45,14 @@ public class ApplicationDbContext(
 }
 
 // Register the db context with the provider of your choice
+services
+    .AddScoped(sp => new DbContextOptionsBuilder<DomainDbContext>()
+        .UseSqlite(connectionString)
+        .UseApplicationServiceProvider(sp)
+        .Options);
+    
 services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 ```
 
 OpenCQRS also supports ASP.NET Core Identity. Install the **OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity** package and use the IdentityDomainDbContext in your application:
@@ -72,6 +78,12 @@ services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Register the db context with the provider of your choice
+services
+    .AddScoped(sp => new DbContextOptionsBuilder<DomainDbContext>()
+        .UseSqlite(connectionString)
+        .UseApplicationServiceProvider(sp)
+        .Options);
+
 services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 ```
