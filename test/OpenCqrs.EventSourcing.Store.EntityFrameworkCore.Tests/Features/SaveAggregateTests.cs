@@ -146,8 +146,8 @@ public class SaveAggregateTests : TestBase
 
         await using var dbContext = Shared.CreateTestDbContext();
 
-        var trackResult = await dbContext.TrackWithAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
-        await dbContext.TrackWithEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
+        var trackResult = await dbContext.TrackAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
+        await dbContext.TrackEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
         await dbContext.Save();
 
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);

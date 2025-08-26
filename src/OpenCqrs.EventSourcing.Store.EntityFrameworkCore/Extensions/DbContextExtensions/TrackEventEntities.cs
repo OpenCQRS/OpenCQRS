@@ -217,7 +217,7 @@ public static partial class IDomainDbContextExtensions
     /// }
     /// </code>
     /// </example>
-    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackWithEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         if (eventEntities.Count == 0)
         {

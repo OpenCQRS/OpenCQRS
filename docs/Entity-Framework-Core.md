@@ -34,11 +34,11 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 
 ### Tracking
 
-| Method                     | Description                                                                                                                                                                                                               |
-|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **TrackWithAggregate**     | Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker without persisting to the database, preparing all necessary entities for subsequent save operations.                    |
-| **TrackWithDomainEvents**  | Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation. |
-| **TrackWithEventEntities** | Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.                                                          |
+| Method                 | Description                                                                                                                                                                                                               |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **TrackAggregate**     | Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker without persisting to the database, preparing all necessary entities for subsequent save operations.                    |
+| **TrackDomainEvents**  | Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation. |
+| **TrackEventEntities** | Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.                                                          |
 
 ### Retrieving Aggregates and Domain Events
 

@@ -119,7 +119,7 @@ public static partial class IDomainDbContextExtensions
     {
         try
         {
-            var trackResult = await domainDbContext.TrackWithAggregate(streamId, aggregateId, aggregate, expectedEventSequence, cancellationToken);
+            var trackResult = await domainDbContext.TrackAggregate(streamId, aggregateId, aggregate, expectedEventSequence, cancellationToken);
             if (trackResult.IsNotSuccess)
             {
                 return trackResult.Failure!;

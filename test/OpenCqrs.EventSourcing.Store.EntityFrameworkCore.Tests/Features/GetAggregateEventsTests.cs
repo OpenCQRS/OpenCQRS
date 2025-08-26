@@ -75,8 +75,8 @@ public class GetAggregateEventsTests : TestBase
 
         var appliedDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         timeProvider.SetUtcNow(appliedDate);
-        var trackResult = await dbContext.TrackWithAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
-        await dbContext.TrackWithEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
+        var trackResult = await dbContext.TrackAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
+        await dbContext.TrackEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
         await dbContext.Save();
 
         var result = await dbContext.GetAggregateEventEntities(testAggregate2Key);

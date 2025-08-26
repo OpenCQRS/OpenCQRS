@@ -108,7 +108,7 @@ public static partial class IDomainDbContextExtensions
     {
         try
         {
-            var trackResult = await domainDbContext.TrackWithDomainEvents(streamId, domainEvents, expectedEventSequence, cancellationToken);
+            var trackResult = await domainDbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence, cancellationToken);
             if (trackResult.IsNotSuccess)
             {
                 return trackResult.Failure!;

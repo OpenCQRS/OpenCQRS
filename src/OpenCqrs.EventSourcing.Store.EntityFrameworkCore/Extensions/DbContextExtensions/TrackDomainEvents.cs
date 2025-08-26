@@ -216,7 +216,7 @@ public static partial class IDomainDbContextExtensions
     /// }
     /// </code>
     /// </example>
-    public static async Task<Result<List<EventEntity>>> TrackWithDomainEvents(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
+    public static async Task<Result<List<EventEntity>>> TrackDomainEvents(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
     {
         if (domainEvents.Length == 0)
         {
