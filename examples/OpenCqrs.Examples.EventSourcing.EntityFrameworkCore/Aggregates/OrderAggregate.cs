@@ -10,7 +10,7 @@ public class OrderAggregate : Aggregate
     [
         typeof(OrderPlacedEvent)
     ];
-        
+
     public Guid OrderId { get; private set; }
     public decimal Amount { get; private set; }
 

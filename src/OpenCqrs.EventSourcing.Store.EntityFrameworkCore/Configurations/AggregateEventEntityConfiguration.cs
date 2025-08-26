@@ -15,7 +15,7 @@ public class AggregateEventEntityConfiguration : IEntityTypeConfiguration<Aggreg
         builder
             .Property(aggregateEventEntity => aggregateEventEntity.AppliedDate)
             .IsRequired();
-        
+
         builder
             .HasOne(aggregateEventEntity => aggregateEventEntity.Aggregate)
             .WithMany()

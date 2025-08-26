@@ -24,6 +24,6 @@ internal abstract class QueryHandlerWrapperBase<TResult>
     {
         return serviceProvider.GetService<THandler>();
     }
-    
+
     public abstract Task<Result<TResult>> Handle(IQuery<TResult> query, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }

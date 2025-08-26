@@ -20,7 +20,7 @@ public class CommandResponse
 
         Result = result;
     }
-    
+
     public CommandResponse(IEnumerable<INotification> notifications, object? result = null)
     {
         Notifications = notifications;

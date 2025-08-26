@@ -66,15 +66,18 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
 
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
 
-        if (result is not {IsSuccess: true, Value: CommandResponse commandResponse} || commandResponse.Notifications == null || !commandResponse.Notifications.Any())
+        if (result is not { IsSuccess: true, Value: CommandResponse commandResponse }
+            || commandResponse.Notifications == null
+            || !commandResponse.Notifications.Any())
         {
             return result;
         }
 
-        foreach (var notification in commandResponse.Notifications)
-        {
-            await publisher.Publish(notification, cancellationToken);
-        }
+        var tasks = commandResponse.Notifications
+            .Select(notification => publisher.Publish(notification, cancellationToken))
+            .ToList();
+
+        await Task.WhenAll(tasks);
 
         return result;
     }

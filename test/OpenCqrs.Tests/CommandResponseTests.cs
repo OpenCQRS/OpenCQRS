@@ -9,7 +9,7 @@ public class CommandResponseTests
     public void Test()
     {
         // TODO
-        
+
         true.Should().BeTrue();
     }
 }
