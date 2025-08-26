@@ -202,15 +202,83 @@ var aggregateId = new OrderAggregateId(orderId);
 var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
 ```
 
-| Method                                | Description                                                                                                                                                                                                                                                                                    |
-|---------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GetAggregate**                      | Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.                                                                                                                                                                                     |
-| **GetInMemoryAggregate**              | Reconstructs an aggregate entirely from events without using snapshots, providing a pure event-sourced view of the aggregate state.                                                                                                                                                            |
-| **GetDomainEvents**                   | Retrieves all domain events from a specified stream, with optional filtering by event types.                                                                                                                                                                                                   |
-| **GetDomainEventsFromSequence**       | Retrieves domain events from a specified stream starting from a specific sequence number onwards, with optional filtering by event types.                                                                                                                                                      |
-| **GetDomainEventsUpToSequence**       | Retrieves domain events from a specified stream up to and including a specific sequence number, with optional filtering by event types.                                                                                                                                                        |
-| **GetDomainEventsAppliedToAggregate** | Retrieves all domain events that have been applied to a specific aggregate instance, using the explicit aggregate-event relationship tracking. This method provides precise access to the events that actually contributed to an aggregate's current state.                                    |
-| **GetLatestEventSequence**            | Retrieves the latest event sequence number for a specified stream, with optional filtering by event types. This method provides the current position in an event stream, essential for optimistic concurrency control and determining where to append new events in event sourcing operations. |
+<a name="get-in-memory-aggregate"></a>
+### Get In-Memory Aggregate
+Reconstructs an aggregate entirely from events without using snapshots, providing a pure event-sourced view of the aggregate state.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregateResult = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
+```
+
+<a name="get-domain-events"></a>
+### Get Domain Events
+Retrieves all domain events from a specified stream, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var domainEventsResult = await dbContext.GetDomainEvents(streamId);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await dbContext.GetDomainEvents(streamId, eventTypes);
+```
+
+<a name="get-domain-events-from-sequence"></a>
+### Get Domain Events From Sequence
+Retrieves domain events from a specified stream starting from a specific sequence number onwards, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var domainEventsResult = await dbContext.GetDomainEventsFromSequence(streamId, fromSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await dbContext.GetDomainEventsFromSequence(streamId, fromSequence, eventTypes);
+```
+
+<a name="get-domain-events-up-to-sequence"></a>
+### Get Domain Events Up To Sequence
+Retrieves domain events from a specified stream up to and including a specific sequence number, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToSequence = 10;
+var domainEventsResult = await dbContext.GetDomainEventsUpToSequence(streamId, upToSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToSequence = 10;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await dbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypes);
+```
+
+<a name="get-domain-events-applied-to-aggregate"></a>
+### Get Domain Events Applied To Aggregate
+Retrieves all domain events that have been applied to a specific aggregate instance, using the explicit aggregate-event relationship tracking. This method provides precise access to the events that actually contributed to an aggregate's current state.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var domainEventsResult = await dbContext.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
+```
+
+<a name="get-latest-event-sequence"></a>
+### Get Latest Event Sequence
+Retrieves the latest event sequence number for a specified stream, with optional filtering by event types. This method provides the current position in an event stream, essential for optimistic concurrency control and determining where to append new events in event sourcing operations.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var latestEventSequence = await dbContext.GetLatestEventSequence(streamId);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var latestEventSequence = await dbContext.GetLatestEventSequence(streamId, eventTypes);
+```
 
 ## Retrieving Database Entities
 
