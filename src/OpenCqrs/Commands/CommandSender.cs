@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
+using OpenCqrs.Notifications;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Commands;
@@ -19,7 +20,7 @@ namespace OpenCqrs.Commands;
 /// });
 /// </code>
 /// </example>
-public class CommandSender(IServiceProvider serviceProvider) : ICommandSender
+public class CommandSender(IServiceProvider serviceProvider, IPublisher publisher) : ICommandSender
 {
     private static readonly ConcurrentDictionary<Type, object?> CommandHandlerWrappers = new();
 
@@ -64,6 +65,16 @@ public class CommandSender(IServiceProvider serviceProvider) : ICommandSender
             Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
 
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
+
+        if (result is not {IsSuccess: true, Value: CommandResponse commandResponse} || commandResponse.Notifications == null || !commandResponse.Notifications.Any())
+        {
+            return result;
+        }
+
+        foreach (var notification in commandResponse.Notifications)
+        {
+            await publisher.Publish(notification, cancellationToken);
+        }
 
         return result;
     }
