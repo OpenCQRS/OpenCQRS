@@ -1,5 +1,10 @@
 # Release Notes
 
+## OpenCQRS 7.0.0-beta.3
+_**Released 26/08/2025**_
+- Rename track methods in the Entity Framework Core store provider
+- Rename database tables in the Entity Framework Core store provider
+
 ## OpenCQRS 7.0.0-beta.2
 _**Released 26/08/2025**_
 - Replace events with notifications
