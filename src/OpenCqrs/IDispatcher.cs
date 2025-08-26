@@ -1,5 +1,5 @@
 ﻿using OpenCqrs.Commands;
-using OpenCqrs.Events;
+using OpenCqrs.Notifications;
 using OpenCqrs.Queries;
 using OpenCqrs.Results;
 
@@ -44,11 +44,11 @@ public interface IDispatcher
     Task<Result<TResult>> Get<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Publishes an event to all registered handlers that can process the specified event type.
+    /// Publishes a notification to all registered handlers that can process the specified notification type.
     /// </summary>
-    /// <typeparam name="TNotification">The type of event to publish.</typeparam>
-    /// <param name="event">The event instance to be published.</param>
+    /// <typeparam name="TNotification">The type of notification to publish.</typeparam>
+    /// <param name="notification">The notification instance to be published.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>A collection of <see cref="Result"/> objects indicating the success or failure of each event handler.</returns>
-    Task<IEnumerable<Result>> Publish<TNotification>(IEvent @event, CancellationToken cancellationToken = default) where TNotification : IEvent;
+    /// <returns>A collection of <see cref="Result"/> objects indicating the success or failure of each notification handler.</returns>
+    Task<IEnumerable<Result>> Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
 }

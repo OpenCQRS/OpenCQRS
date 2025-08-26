@@ -10,7 +10,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Packages
 
-| Package                                                                                                                                               | Beta 1                                                                                                                                                          |
+| Package                                                                                                                                               | Beta 2                                                                                                                                                          |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
 | [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
@@ -80,14 +80,14 @@ public class GetSomethingQueryHandler : IQueryHandler<GetSomething, Something>
 var something = await _dispatcher.Get(new GetSomething { Id = 123 });
 ```
 
-### Events
+### Notifications
 
 ```C#
-public class SomethingHappened : IEvent
+public class SomethingHappened : INotifcation
 {
 }
 
-public class SomethingHappenedHandlerOne : IEventHandler<SomethingHappened>
+public class SomethingHappenedHandlerOne : INotifcationHandler<SomethingHappened>
 {
     private readonly IServiceOne _serviceOne;
 
@@ -96,13 +96,13 @@ public class SomethingHappenedHandlerOne : IEventHandler<SomethingHappened>
         _serviceOne = serviceOne;
     }
 
-    public Task<Result> Handle(SomethingHappened @event)
+    public Task<Result> Handle(SomethingHappened notification)
     {
         return _serviceOne.DoSomethingElse();
     }
 }
 
-public class SomethingHappenedHandlerTwo : IEventHandler<SomethingHappened>
+public class SomethingHappenedHandlerTwo : INotifcationHandler<SomethingHappened>
 {
     private readonly IServiceTwo _serviceTwo;
 
@@ -111,7 +111,7 @@ public class SomethingHappenedHandlerTwo : IEventHandler<SomethingHappened>
         _serviceTwo = serviceTwo;
     }
 
-    public Task<Result> Handle(SomethingHappened @event)
+    public Task<Result> Handle(SomethingHappened notification)
     {
         return _serviceTwo.DoSomethingElse();
     }
