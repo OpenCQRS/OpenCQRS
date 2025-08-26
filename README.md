@@ -6,6 +6,8 @@
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Entity Framework Core with any relational database providers (work for a separate Cosmos DB provider is underway).
 
+Missing features from OpenCQRS 6.x will be added in due course.
+
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
 ## Packages
