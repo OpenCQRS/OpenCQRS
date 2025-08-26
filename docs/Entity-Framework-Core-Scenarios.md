@@ -2,8 +2,17 @@
 
 Some common scenarios when using Event Sourcing with Entity Framework Core.
 
+- [Events handled by a single aggregate](#1)
+    - [Save aggregate with events](#1.1)
+    - [Track aggregate with events + other tracking + save changes](#1.2)
+- [Events handled by multiple aggregates](#2)
+    - [Track the main aggregate with events + track additional aggregates + other tracking + save changes](#2.1)
+    - [Track events + track aggregates + other tracking + save changes](#2.2)
+
+<a name="1"></a>
 ## 1. Events handled by a single aggregate
 
+<a name="1.1"></a>
 ### 1.1 Save aggregate with events
 
 **New aggregate**
@@ -33,6 +42,7 @@ aggregate.UpdateAmount(amount: 15.00m);
 var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
 ```
 
+<a name="1.2"></a>
 ### 1.2 Track aggregate with events + other tracking + save changes
 
 **New aggregate**
@@ -70,8 +80,10 @@ await dbContext.TrackAggregate(streamId, aggregateId, aggregate, expectedEventSe
 var saveResult = await dbContext.Save();
 ```
 
+<a name="2"></a>
 ## 2 Events handled by multiple aggregates
 
+<a name="2.1"></a>
 ### 2.1 Track the main aggregate with events + track additional aggregates + other tracking + save changes
 
 **New stream**
@@ -123,6 +135,7 @@ await dbContext.TrackEventEntities(streamId, anotherAggregateId, trackAggregateR
 var saveResult = await dbContext.Save();
 ```
 
+<a name="2.2"></a>
 ### 2.2 Track events + track aggregates + other tracking + save changes
 
 **New stream**
