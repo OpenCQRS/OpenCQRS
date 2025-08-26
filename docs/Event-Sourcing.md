@@ -1,10 +1,8 @@
 # Event Sourcing
 
-Configure your streams, domain events, and aggregates:
 - [Domain](Domain)
-
-Store Providers:
-- [Entity Framework Core](Entity-Framework-Core)
-  - [Extensions](Entity-Framework-Core-Extensions)
-  - [Scenarios](Entity-Framework-Core-Scenarios)
-- [Cosmos DB](Cosmos) 
+- [Store Providers](Store-Providers)
+  - [Entity Framework Core](Entity-Framework-Core)
+    - [Extensions](Entity-Framework-Core-Extensions)
+    - [Scenarios](Entity-Framework-Core-Scenarios)
+  - [Cosmos DB](Cosmos)
