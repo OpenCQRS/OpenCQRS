@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs.Commands;
-using OpenCqrs.Events;
+using OpenCqrs.Notifications;
 using OpenCqrs.Queries;
 
 namespace OpenCqrs.Extensions;
@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
             .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)))
             .AsImplementedInterfaces()
             .WithScopedLifetime()
-            .AddClasses(classes => classes.AssignableTo(typeof(IEventHandler<>)))
+            .AddClasses(classes => classes.AssignableTo(typeof(INotificationHandler<>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
             .AddClasses(classes => classes.AssignableTo(typeof(IValidator<>)))
