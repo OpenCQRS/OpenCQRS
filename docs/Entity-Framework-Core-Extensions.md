@@ -30,7 +30,7 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 ## Saving
 
 <a name="save-aggregate"></a>
-### SaveAggregate
+### Save Aggregate
 Saves an aggregate to the event store with optimistic concurrency control, persisting all uncommitted domain events and updating the aggregate snapshot.
 
 **New aggregate**
@@ -61,7 +61,7 @@ var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, a
 ```
 
 <a name="save-domain-events"></a>
-### SaveDomainEvents
+### Save Domain Events
 Saves an array of domain events to the event store with optimistic concurrency control, bypassing aggregate persistence. This method is ideal for scenarios where events are generated outside traditional aggregate workflows.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -100,7 +100,7 @@ var saveResult = await dbContext.Save();
 ```
 
 <a name="update-aggregate"></a>
-### UpdateAggregate
+### Update Aggregate
 Updates an existing aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -111,7 +111,7 @@ var updateAggregateResult = await dbContext.UpdateAggregate(streamId, aggregateI
 ## Tracking
 
 <a name="track-aggregate"></a>
-### TrackAggregate
+### Track Aggregate
 Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker without persisting to the database, preparing all necessary entities for subsequent save operations.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -135,7 +135,7 @@ var saveResult = await dbContext.Save();
 ```
 
 <a name="track-domain-events"></a>
-### TrackDomainEvents
+### Track Domain Events
 Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -162,7 +162,7 @@ var saveResult = await dbContext.Save();
 ```
 
 <a name="track-event-entities"></a>
-### TrackEventEntities
+### Track Event Entities
 Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -184,7 +184,7 @@ var saveResult = await dbContext.Save();
 ## Retrieving Aggregates and Domain Events
 
 <a name="get-aggregate"></a>
-### GetAggregate
+### Get Aggregate
 Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.
 
 If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
