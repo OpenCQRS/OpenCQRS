@@ -179,6 +179,15 @@ var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, exp
 
 _Work in progress_
 
+## Upcoming Features
+
+- Event Sourcing with Cosmos DB
+- Custom handlers/services per command/query/notification
+- Caching queries with Memory/Redis
+- Command sequence
+- Message bus integration with Azure Service Bus/RabbitMQ
+- Automatic command validation with FluentValidation
+
 ## Full Documentation
 
 - [Installation](docs/Installation.md)
