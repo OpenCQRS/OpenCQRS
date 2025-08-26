@@ -183,6 +183,25 @@ var saveResult = await dbContext.Save();
 <a name="retrieving-aggregates-and-domain-events"></a>
 ## Retrieving Aggregates and Domain Events
 
+<a name="get-aggregate"></a>
+### GetAggregate
+Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.
+
+If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
+
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+```
+
+Optionally, it can be forced to apply any new domain events that occurred after the snapshot was created. This is useful when you want to ensure the aggregate is up to date with the latest events. If new events are found, the aggregate snapshot is updated automatically.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
+```
+
 | Method                                | Description                                                                                                                                                                                                                                                                                    |
 |---------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **GetAggregate**                      | Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.                                                                                                                                                                                     |
