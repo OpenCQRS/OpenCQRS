@@ -2,7 +2,60 @@
 
 The Entity Framework Core store provider offers a variety of built-in extension methods of the DbContext to facilitate interaction with aggregates and events. Since the store provider is based purely on the DbContext, it's extremily easy to create your own extensions to create any kind of reporting. Below is a categorized list of the built-in methods:
 
-### Saving
+- [Saving](#saving)
+  - [Save Aggregate](#save-aggregate)
+  - [Save Domain Events](#save-domain-events)
+  - [Save](#save)
+  - [Update Aggregate](#update-aggregate)
+- [Tracking](#tracking)
+  - [Track Aggregate](#track-aggregate)
+  - [Track Domain Events](#track-domain-events)
+  - [Track Event Entities](#track-event-entities)
+- [Retrieving Aggregates and Domain Events](#retrieving-aggregate-and-domain-events)
+  - [Get Aggregate](#get-aggregate)
+  - [Get In-Memory Aggregate](#get-in-memory-aggregate)
+  - [Get Domain Events](#get-domain-events)
+  - [Get Domain Events From Sequence](#get-domain-events-from-sequence)
+  - [Get Domain Events Up To Sequence](#get-domain-events-up-to-sequence)
+  - [Get Domain Events Applied To Aggregate](#get-domain-events-applied-to-aggregate)
+  - [Get Latest Event Sequence](#get-latest-event-sequence)
+- [Retrieving Database Entities](#retrieving-database-entities)
+  - [Get Event Entities](#get-event-entities)
+  - [Get Event Entities From Sequence](#get-event-entities-from-sequence)
+  - [Get Event Entities Up To Sequence](#get-event-entities-up-to-sequence)
+  - [Get Event Entities Applied To Aggregate](#get-event-entities-applied-to-aggregate)
+  - [Get Aggregate Event Entities](#get-aggregate-event-entities)
+
+<a name="saving"></a>
+## Saving
+
+### SaveAggregate
+Saves an aggregate to the event store with optimistic concurrency control, persisting all uncommitted domain events and updating the aggregate snapshot.
+```C#
+// New aggregate
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregate = new OrderAggregate(orderId, amount: 25.45m);
+
+var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+```
+```C#
+// Update existing aggregate
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+
+var aggregateResult = await dbContext.GetAggregate<OrderAggregate>(streamId, aggregateId, cancellationToken: cancellationToken);
+if (!aggregateResult.IsSuccess)
+{
+    return aggregateResult.Error;
+}
+aggregate = aggregateResult.Value;
+
+aggregate.UpdateAmount(amount: 15.00m);
+
+var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
+```
 
 | Method               | Description                                                                                                                                                                                                                                                             |
 |----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -11,7 +64,7 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 | **Save**             | Saves all pending changes in the domain database context to the underlying data store. This method provides a simple way to persist tracked entity changes without additional event sourcing logic, suitable for scenarios where entities have been explicitly tracked. |
 | **UpdateAggregate**  | Updates an existing aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.                                                                                                                                |
 
-### Tracking
+## Tracking
 
 | Method                 | Description                                                                                                                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -19,7 +72,7 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 | **TrackDomainEvents**  | Tracks an array of domain events in the Entity Framework change tracker without persisting to the database, preparing event entities for later save operations with proper sequencing and concurrency control validation. |
 | **TrackEventEntities** | Tracks an aggregate's state changes based on a list of event entities, applying only events that the aggregate can handle and updating its snapshot accordingly.                                                          |
 
-### Retrieving Aggregates and Domain Events
+## Retrieving Aggregates and Domain Events
 
 | Method                                | Description                                                                                                                                                                                                                                                                                    |
 |---------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -31,7 +84,7 @@ The Entity Framework Core store provider offers a variety of built-in extension 
 | **GetDomainEventsAppliedToAggregate** | Retrieves all domain events that have been applied to a specific aggregate instance, using the explicit aggregate-event relationship tracking. This method provides precise access to the events that actually contributed to an aggregate's current state.                                    |
 | **GetLatestEventSequence**            | Retrieves the latest event sequence number for a specified stream, with optional filtering by event types. This method provides the current position in an event stream, essential for optimistic concurrency control and determining where to append new events in event sourcing operations. |
 
-### Retrieving Database Entities
+## Retrieving Database Entities
 
 | Method                                 | Description                                                                                                                                                                                                        |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
