@@ -181,7 +181,6 @@ _Work in progress_
 
 ## Upcoming Features
 
-- Event Sourcing with Cosmos DB
 - Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
 - Command sequence
@@ -189,6 +188,7 @@ _Work in progress_
 - Automatic command validation with FluentValidation
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
+- Event Sourcing with Cosmos DB
 - Custom table names for EntityFrameworkCore store provider
 
 ## Full Documentation
