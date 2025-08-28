@@ -1,42 +1,16 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
-using OpenCqrs.Commands;
-using OpenCqrs.Notifications;
-using OpenCqrs.Queries;
 using OpenCqrs.Tests.Models.Commands;
-using OpenCqrs.Tests.Models.Commands.Handlers;
-using OpenCqrs.Tests.Models.Notifications;
-using OpenCqrs.Tests.Models.Notifications.Handlers;
 using Xunit;
 
-namespace OpenCqrs.Tests;
+namespace OpenCqrs.Tests.Features;
 
-public class CommandResponseTests
+public class CommandResponseTests : TestBase
 {
-    private readonly IDispatcher _dispatcher;
-    
-    public CommandResponseTests()
-    {
-        var serviceProvider = new ServiceCollection()
-            .AddSingleton<ICommandHandler<DoSomething, CommandResponse>, DoSomethingHandler>()
-            .AddSingleton<ICommandHandler<DoMore, CommandResponse>, DoMoreHandler>()
-            .AddSingleton<INotificationHandler<SomethingHappened>, SomethingHappenedHandlerOne>()
-            .AddSingleton<INotificationHandler<SomethingHappened>, SomethingHappenedHandlerTwo>()
-            .AddSingleton<INotificationHandler<SomethingElseHappened>, SomethingElseHappenedHandler>()
-            .BuildServiceProvider();
-
-        var publisher = new Publisher(serviceProvider);
-        var commandSender = new CommandSender(serviceProvider, publisher);
-        
-        _dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), publisher);
-    }
-    
     [Fact]
     public async Task SendAndPublish_Should_Call_NotificationHandlers_For_CommandResponse_With_SingleNotification()
     {
-        var result = await _dispatcher.SendAndPublish(new DoSomething("TestName"));
+        var result = await Dispatcher.SendAndPublish(new DoSomething("TestName"));
 
         using (new AssertionScope())
         {
@@ -54,7 +28,7 @@ public class CommandResponseTests
     [Fact]
     public async Task SendAndPublish_Should_Call_NotificationHandlers_For_CommandResponse_With_MultipleNotifications_And_MultipleResults()
     {
-        var result = await _dispatcher.SendAndPublish(new DoMore("TestName"));
+        var result = await Dispatcher.SendAndPublish(new DoMore("TestName"));
 
         using (new AssertionScope())
         {
