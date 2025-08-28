@@ -3,6 +3,7 @@
 - [Simple commands](#simple-commands)
 - [Commands with a result](#commands-with-results)
 - [Commands that publish notifications](#commands-with-notifications)
+- [Commands validation](Command-Validation)
 
 <a name="simple-commands"></a>
 ## Simple commands
@@ -153,5 +154,32 @@ The result will contain the command result and all results from the notification
             "Error": null
         }
     ]
+}
+```
+
+<a name="commands-with-validation"></a>
+## Commands validation
+
+You can validate commands automatically before they are sent to the command handler. The validation is made by the validation provider registered (e.g., FluentValidation).
+
+Just use the optional `validateCommand` parameter in any of the dispatcher methods:
+
+```C#
+var result = await _dispatcher.Send(command, validateCommand: true);
+var result = await _dispatcher.SendAndPublish(command, validateCommand: true);
+```
+If the command is not valid, the command handler will not be called and the result will contain the validation errors:
+
+```C#
+{
+    "IsSuccess": false,
+    "Value": null,
+    "Error": {
+        "Message": "Validation failed",
+        "Details": [
+            "Name must not be empty",
+            "Age must be greater than 0"
+        ]
+    }
 }
 ```
