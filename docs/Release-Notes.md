@@ -3,6 +3,7 @@
 ## OpenCQRS 7.0.0-beta.4
 _**Released ???**_
 - Send and publish methods that automatically publish notifications on the back of a successfully processed command
+- Automatically validate commands before they are sent to the command handler
 - ???
 
 ## OpenCQRS 7.0.0-beta.3

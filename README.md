@@ -185,7 +185,6 @@ _Work in progress_
 - Caching queries with Memory/Redis
 - Command sequence
 - Message bus integration with Azure Service Bus/RabbitMQ
-- Automatic command validation with FluentValidation
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
 - Event Sourcing with Cosmos DB
