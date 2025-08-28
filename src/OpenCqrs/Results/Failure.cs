@@ -1,7 +1,4 @@
-﻿using FluentValidation.Results;
-using OpenCqrs.Extensions;
-
-namespace OpenCqrs.Results;
+﻿namespace OpenCqrs.Results;
 
 /// <summary>
 /// Represents a failed operation result containing detailed error information.
@@ -151,31 +148,6 @@ public static class FailureExtensions
     /// </example>
     public static Failure WithDescription(this Failure failure, string description, IEnumerable<string> items) =>
         failure with { Description = $"{description}: {string.Join(", ", items)}" };
-
-    /// <summary>
-    /// Returns a new failure instance with a description generated from FluentValidation results.
-    /// </summary>
-    /// <param name="failure">The failure instance to modify.</param>
-    /// <param name="validationResult">The FluentValidation result containing validation errors.</param>
-    /// <returns>A new <see cref="Failure"/> instance with a description containing all validation errors.</returns>
-    /// <example>
-    /// <code>
-    /// public Result&lt;User&gt; ValidateAndCreateUser(CreateUserRequest request)
-    /// {
-    ///     var validationResult = _validator.Validate(request);
-    ///     if (!validationResult.IsValid)
-    ///     {
-    ///         return new Failure(ErrorCode.BadRequest)
-    ///             .WithTitle("Validation Failed")
-    ///             .WithDescription(validationResult);
-    ///     }
-    ///     
-    ///     // Create user...
-    /// }
-    /// </code>
-    /// </example>
-    public static Failure WithDescription(this Failure failure, ValidationResult validationResult) =>
-        failure with { Description = validationResult.Errors.ToErrorMessage() };
 
     /// <summary>
     /// Returns a new failure instance with the specified error type.
