@@ -179,7 +179,9 @@ var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, exp
 
 _Work in progress_
 
-## Upcoming Features
+## Upcoming features for version 7.0.0
+
+The following features are going to be implemented before the release of version 7.0.0:
 
 - Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
