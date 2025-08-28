@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICommandSender, CommandSender>();
         services.AddScoped<IQueryProcessor, QueryProcessor>();
         services.AddScoped<IPublisher, Publisher>();
-        
+
         var typeList = types.ToList();
 
         services.Scan(s => s

@@ -33,7 +33,7 @@ public class AggregateEntityConfiguration : IEntityTypeConfiguration<AggregateEn
         builder
             .Property(aggregateEntity => aggregateEntity.UpdatedDate)
             .IsRequired();
-        
+
         builder
             .Property(aggregateEntity => aggregateEntity.UpdatedBy)
             .HasMaxLength(255);

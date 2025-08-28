@@ -35,6 +35,14 @@ public interface IDispatcher
     Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Sends a command for processing and publishes any corresponding notifications.
+    /// </summary>
+    /// <param name="command">The command instance to be sent for processing.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the notification publishing results.</returns>
+    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Executes a query and returns the requested data.
     /// </summary>
     /// <typeparam name="TResult">The type of data expected from the query.</typeparam>

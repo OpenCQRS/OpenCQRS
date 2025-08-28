@@ -13,9 +13,9 @@ public class PlaceOrderCommandHandler(MyStoreDbContext dbContext) : ICommandHand
     {
         var customerStreamId = new CustomerStreamId(command.CustomerId);
         var orderAggregateId = new OrderAggregateId(command.OrderId);
-        
+
         var orderAggregate = new OrderAggregate(command.OrderId, command.Amount);
-        
+
         return await dbContext.SaveAggregate(customerStreamId, orderAggregateId, orderAggregate, expectedEventSequence: 0, cancellationToken);
     }
 }

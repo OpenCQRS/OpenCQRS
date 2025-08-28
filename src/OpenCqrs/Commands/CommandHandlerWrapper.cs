@@ -24,6 +24,6 @@ internal abstract class CommandHandlerWrapperBase<TResult>
     {
         return serviceProvider.GetService<THandler>();
     }
-    
+
     public abstract Task<Result<TResult>> Handle(ICommand<TResult> command, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }
