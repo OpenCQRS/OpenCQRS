@@ -1,4 +1,4 @@
-# OpenCQRS
+# OpenCQRS&trade;
 
 [![.Build](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml/badge.svg)](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml)
 
@@ -6,7 +6,7 @@
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Entity Framework Core with any relational database providers (work for a separate Cosmos DB provider is underway).
 
-Missing features from OpenCQRS 6.x will be added in due course.
+All features from OpenCQRS 6.x are being added to OpenCQRS 7 beta versions.
 
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
@@ -181,7 +181,7 @@ _Work in progress_
 
 ## Upcoming Features
 
-- Event Sourcing with Cosmos DB
+- Automatic pubblication of notifications (events) on the back of a processed command
 - Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
 - Command sequence
@@ -189,6 +189,7 @@ _Work in progress_
 - Automatic command validation with FluentValidation
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
+- Event Sourcing with Cosmos DB
 - Custom table names for EntityFrameworkCore store provider
 
 ## Full Documentation
