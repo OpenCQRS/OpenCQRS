@@ -77,8 +77,7 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the results of all published notifications.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the command is null.</exception>
     /// <exception cref="Exception">Thrown when no appropriate handler is found for the command type.</exception>
-    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command,
-        CancellationToken cancellationToken = default)
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 

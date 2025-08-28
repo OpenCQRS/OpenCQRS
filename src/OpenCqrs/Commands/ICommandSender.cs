@@ -43,6 +43,5 @@ public interface ICommandSender
     /// <param name="cancellationToken">A cancellation token to cancel the operation if necessary.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the command processing result
     /// and a collection of results from the published notifications.</returns>
-    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command,
-        CancellationToken cancellationToken = default);
+    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default);
 }

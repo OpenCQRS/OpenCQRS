@@ -49,8 +49,7 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing
     /// and the results of the published notifications.</returns
-    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command,
-        CancellationToken cancellationToken = default)
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default)
     {
         return await commandSender.SendAndPublish(command, cancellationToken);
     }
