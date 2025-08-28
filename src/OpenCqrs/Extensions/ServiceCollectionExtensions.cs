@@ -1,8 +1,8 @@
-﻿using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs.Commands;
 using OpenCqrs.Notifications;
 using OpenCqrs.Queries;
+using OpenCqrs.Validation;
 
 namespace OpenCqrs.Extensions;
 
@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICommandSender, CommandSender>();
         services.AddScoped<IQueryProcessor, QueryProcessor>();
         services.AddScoped<IPublisher, Publisher>();
+        services.AddScoped<IValidationService, ValidationService>();
 
         var typeList = types.ToList();
 
@@ -31,9 +32,6 @@ public static class ServiceCollectionExtensions
             .AsImplementedInterfaces()
             .WithScopedLifetime()
             .AddClasses(classes => classes.AssignableTo(typeof(INotificationHandler<>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(classes => classes.AssignableTo(typeof(IValidator<>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
     }

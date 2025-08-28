@@ -41,10 +41,9 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
         ArgumentNullException.ThrowIfNull(command);
 
         var handler = serviceProvider.GetService<ICommandHandler<TCommand>>();
-
         if (handler is null)
         {
-            throw new Exception("Command handler not found.");
+            throw new Exception($"Command handler for {typeof(TCommand).Name} not found.");
         }
 
         return await handler.Handle(command, cancellationToken);
@@ -67,6 +66,11 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
         var handler = (CommandHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
             Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
 
+        if (handler is null)
+        {
+            throw new Exception($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
+        }
+        
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
 
         return result;
@@ -89,6 +93,11 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
         var handler = (CommandHandlerWrapperBase<CommandResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
             Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(CommandResponse))))!;
 
+        if (handler is null)
+        {
+            throw new Exception($"Command handler for {typeof(ICommand<CommandResponse>).Name} not found.");
+        }
+        
         var commandResult = await handler.Handle(command, serviceProvider, cancellationToken);
 
         if (commandResult.IsNotSuccess
