@@ -58,4 +58,8 @@ public class FluentValidationTests : TestBase
             result.Failure.Should().BeNull();
         }
     }
+    
+    // TODO: Send and publish - failure
+    
+    // TODO: Send and publish - ok
 }
