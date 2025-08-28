@@ -7,6 +7,7 @@ using OpenCqrs.Tests.Models.Commands;
 using OpenCqrs.Tests.Models.Commands.Handlers;
 using OpenCqrs.Tests.Models.Notifications;
 using OpenCqrs.Tests.Models.Notifications.Handlers;
+using OpenCqrs.Validation;
 
 namespace OpenCqrs.Tests;
 
@@ -25,8 +26,8 @@ public abstract class TestBase
             .BuildServiceProvider();
 
         var publisher = new Publisher(serviceProvider);
-        var commandSender = new CommandSender(serviceProvider, publisher);
-        
+        var commandSender = new CommandSender(serviceProvider, Substitute.For<IValidationService>(), publisher);
+
         Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), publisher);
     }
 }

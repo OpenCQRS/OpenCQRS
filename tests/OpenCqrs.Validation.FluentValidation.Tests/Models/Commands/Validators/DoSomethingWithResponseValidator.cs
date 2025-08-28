@@ -2,9 +2,9 @@
 
 namespace OpenCqrs.Validation.FluentValidation.Tests.Models.Commands.Validators;
 
-public class DoSomethingValidator : AbstractValidator<DoSomething>
+public class DoSomethingWithResponseValidator : AbstractValidator<DoSomethingWithResponse>
 {
-    public DoSomethingValidator()
+    public DoSomethingWithResponseValidator()
     {
         RuleFor(c => c.Name).NotEmpty().WithMessage("Name is required.");
     }

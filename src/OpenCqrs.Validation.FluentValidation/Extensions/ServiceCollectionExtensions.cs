@@ -8,7 +8,7 @@ public static class ServiceCollectionExtensions
     public static void AddOpenCqrsFluentValidation(this IServiceCollection services, params Type[] types)
     {
         ArgumentNullException.ThrowIfNull(services);
-        
+
         services.AddScoped<IValidationProvider, FluentValidationProvider>();
 
         var typeList = types.ToList();

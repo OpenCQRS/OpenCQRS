@@ -18,13 +18,13 @@ public class CommandResponseTests : TestBase
             result.CommandResult.Value.Should().NotBeNull();
             result.CommandResult.Value.Notifications.Should().NotBeNull();
             result.CommandResult.Value.Notifications.Count().Should().Be(1);
-            
+
             result.NotificationResults.Should().NotBeNull();
             result.NotificationResults.Count().Should().Be(2);
             result.NotificationResults.All(r => r.IsSuccess).Should().BeTrue();
         }
     }
-    
+
     [Fact]
     public async Task SendAndPublish_Should_Call_NotificationHandlers_For_CommandResponse_With_MultipleNotifications_And_MultipleResults()
     {
@@ -36,7 +36,7 @@ public class CommandResponseTests : TestBase
             result.CommandResult.Value.Should().NotBeNull();
             result.CommandResult.Value.Notifications.Should().NotBeNull();
             result.CommandResult.Value.Notifications.Count().Should().Be(2);
-            
+
             result.NotificationResults.Should().NotBeNull();
             result.NotificationResults.Count().Should().Be(3);
             result.NotificationResults.Count(r => r.IsSuccess).Should().Be(2);

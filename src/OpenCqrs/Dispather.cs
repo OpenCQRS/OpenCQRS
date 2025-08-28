@@ -22,11 +22,12 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// </summary>
     /// <typeparam name="TRequest">The type of command to send.</typeparam>
     /// <param name="command">The command instance to be processed.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
-    public async Task<Result> Send<TRequest>(TRequest command, CancellationToken cancellationToken = default) where TRequest : ICommand
+    public async Task<Result> Send<TRequest>(TRequest command, bool validateCommand = false, CancellationToken cancellationToken = default) where TRequest : ICommand
     {
-        return await commandSender.Send(command, cancellationToken);
+        return await commandSender.Send(command, validateCommand, cancellationToken);
     }
 
     /// <summary>
@@ -34,11 +35,12 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// </summary>
     /// <typeparam name="TResponse">The type of response expected from the command.</typeparam>
     /// <param name="command">The command instance to be processed.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
-    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
+    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
-        return await commandSender.Send(command, cancellationToken);
+        return await commandSender.Send(command, validateCommand, cancellationToken);
     }
 
     /// <summary>
@@ -46,12 +48,13 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// and returns the combined results.
     /// </summary>
     /// <param name="command">The command instance to be processed.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing
     /// and the results of the published notifications.</returns
-    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default)
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
-        return await commandSender.SendAndPublish(command, cancellationToken);
+        return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
     }
 
     /// <summary>

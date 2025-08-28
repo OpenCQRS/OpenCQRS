@@ -17,13 +17,18 @@ public abstract class TestBase
     protected TestBase()
     {
         var serviceProvider = new ServiceCollection()
+            .AddSingleton<IValidationService, ValidationService>()
+            .AddSingleton<IValidationProvider, FluentValidationProvider>()
             .AddSingleton<ICommandHandler<DoSomething>, DoSomethingHandler>()
+            .AddSingleton<ICommandHandler<DoSomethingWithResponse, string>, DoSomethingWithResponseHandler>()
             .AddSingleton<IValidator<DoSomething>, DoSomethingValidator>()
+            .AddSingleton<IValidator<DoSomethingWithResponse>, DoSomethingWithResponseValidator>()
             .BuildServiceProvider();
 
-        var publisher = new Publisher(serviceProvider);
-        var commandSender = new CommandSender(serviceProvider, publisher);
-        
-        Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), publisher);
+        var fluentValidationProvider = new FluentValidationProvider(serviceProvider);
+        var validationService = new ValidationService(fluentValidationProvider);
+        var commandSender = new CommandSender(serviceProvider, validationService, Substitute.For<IPublisher>());
+
+        Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), Substitute.For<IPublisher>());
     }
 }

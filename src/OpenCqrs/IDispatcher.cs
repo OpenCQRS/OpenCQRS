@@ -21,26 +21,29 @@ public interface IDispatcher
     /// </summary>
     /// <typeparam name="TCommand">The type of command to send.</typeparam>
     /// <param name="command">The command instance to be processed.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
-    Task<Result> Send<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : ICommand;
+    Task<Result> Send<TCommand>(TCommand command, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
 
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>
     /// <typeparam name="TResponse">The type of response expected from the command.</typeparam>
     /// <param name="command">The command instance to be processed.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
-    Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default);
+    Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a command for processing and publishes any corresponding notifications.
     /// </summary>
     /// <param name="command">The command instance to be sent for processing.</param>
+    /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the notification publishing results.</returns>
-    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, CancellationToken cancellationToken = default);
+    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a query and returns the requested data.
