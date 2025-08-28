@@ -90,7 +90,7 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
 
         if (commandResult.IsNotSuccess
             || commandResult.Value?.Notifications == null
-            || !commandResult.Value?.Notifications.Any() is false)
+            || commandResult.Value?.Notifications.Any() is false)
         {
             return new SendAndPublishResponse(commandResult, NotificationResults: []);
         }
