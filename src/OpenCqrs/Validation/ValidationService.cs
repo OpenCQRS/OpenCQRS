@@ -21,7 +21,7 @@ public class ValidationService(IValidationProvider validationProvider) : IValida
 
     private static string BuildErrorMessage(IEnumerable<ValidationError> validationErrors)
     {
-        var errorsText = validationErrors.Select(ve => $"\r\n - {ve.ErrorMessage}").ToArray();
-        return $"Validation failed: {string.Join("", errorsText)}";
+        var errorMessages = validationErrors.Select(ve => ve.ErrorMessage).ToArray();
+        return $"Validation failed with errors: {string.Join("; ", errorMessages)}";
     }
 }

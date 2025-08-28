@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace OpenCqrs.Tests.Models.Commands.Validators;
+namespace OpenCqrs.Validation.FluentValidation.Tests.Models.Commands.Validators;
 
 public class DoSomethingValidator : AbstractValidator<DoSomething>
 {

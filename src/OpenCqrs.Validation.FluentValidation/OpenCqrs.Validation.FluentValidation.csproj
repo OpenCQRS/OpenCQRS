@@ -12,4 +12,8 @@
       <ProjectReference Include="..\OpenCqrs\OpenCqrs.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" Version="12.0.0" />
+    </ItemGroup>
+
 </Project>
