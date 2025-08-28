@@ -21,28 +21,42 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// Sends a command that does not expect a response value to its corresponding handler for processing.
     /// </summary>
     /// <typeparam name="TRequest">The type of command to send.</typeparam>
-    /// <param name="request">The command instance to be processed.</param>
+    /// <param name="command">The command instance to be processed.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
-    public async Task<Result> Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : ICommand
+    public async Task<Result> Send<TRequest>(TRequest command, CancellationToken cancellationToken = default) where TRequest : ICommand
     {
-        return await commandSender.Send(request, cancellationToken);
+        return await commandSender.Send(command, cancellationToken);
     }
 
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>
     /// <typeparam name="TResponse">The type of response expected from the command.</typeparam>
-    /// <param name="request">The command instance to be processed.</param>
+    /// <param name="command">The command instance to be processed.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
-    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> request, CancellationToken cancellationToken = default)
+    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
     {
-        return await commandSender.Send(request, cancellationToken);
+        return await commandSender.Send(command, cancellationToken);
     }
 
     /// <summary>
-    /// Executes a query and returns the requested data.
+    /// Sends a command for processing, publishes any associated notifications,
+    /// and returns the combined results.
+    /// </summary>
+    /// <param name="command">The command instance to be processed.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing
+    /// and the results of the published notifications.</returns
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command,
+        CancellationToken cancellationToken = default)
+    {
+        return await commandSender.SendAndPublish(command, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a query and returns the commanded data.
     /// </summary>
     /// <typeparam name="TResult">The type of data expected from the query.</typeparam>
     /// <param name="query">The query instance to be executed.</param>

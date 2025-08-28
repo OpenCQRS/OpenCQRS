@@ -54,7 +54,7 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
     /// <param name="command">The command instance to be processed.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when command is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the command is null.</exception>
     public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -66,19 +66,42 @@ public class CommandSender(IServiceProvider serviceProvider, IPublisher publishe
 
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
 
-        if (result is not { IsSuccess: true, Value: CommandResponse commandResponse }
-            || commandResponse.Notifications == null
-            || !commandResponse.Notifications.Any())
+        return result;
+    }
+
+    /// <summary>
+    /// Sends a command to its corresponding handler for processing and publishes any resulting notifications.
+    /// </summary>
+    /// <param name="command">The command instance to be processed.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the results of all published notifications.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the command is null.</exception>
+    /// <exception cref="Exception">Thrown when no appropriate handler is found for the command type.</exception>
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        var commandType = command.GetType();
+
+        var handler = (CommandHandlerWrapperBase<CommandResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+            Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(CommandResponse))))!;
+
+        var commandResult = await handler.Handle(command, serviceProvider, cancellationToken);
+
+        if (commandResult.IsNotSuccess
+            || commandResult.Value?.Notifications == null
+            || !commandResult.Value?.Notifications.Any() is false)
         {
-            return result;
+            return new SendAndPublishResponse(commandResult, NotificationResults: []);
         }
 
-        var tasks = commandResponse.Notifications
+        var tasks = commandResult.Value!.Notifications
             .Select(notification => publisher.Publish(notification, cancellationToken))
             .ToList();
 
-        await Task.WhenAll(tasks);
+        var notificationsResults = await Task.WhenAll(tasks);
 
-        return result;
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
 }
