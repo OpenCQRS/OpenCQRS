@@ -181,7 +181,6 @@ _Work in progress_
 
 ## Upcoming Features
 
-- Automatic pubblication of notifications (events) on the back of a processed command
 - Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
 - Command sequence
