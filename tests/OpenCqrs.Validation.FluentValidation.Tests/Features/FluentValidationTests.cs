@@ -58,8 +58,30 @@ public class FluentValidationTests : TestBase
             result.Failure.Should().BeNull();
         }
     }
-    
-    // TODO: Send and publish - failure
-    
-    // TODO: Send and publish - ok
+
+    [Fact]
+    public async Task SendAndPublish_Should_Validate_The_Command_And_Return_Failure_If_Command_Is_Not_Valid()
+    {
+        var result = await Dispatcher.SendAndPublish(command: new DoSomethingWithCommandResponse(Name: string.Empty), validateCommand: true);
+
+        using (new AssertionScope())
+        {
+            result.CommandResult.IsSuccess.Should().BeFalse();
+            result.CommandResult.Failure.Should().NotBeNull();
+            result.CommandResult.Failure.Title.Should().Be("Validation Failed");
+            result.CommandResult.Failure.Description.Should().Be("Validation failed with errors: Name is required.");
+        }
+    }
+
+    [Fact]
+    public async Task SendAndPublish_Should_Validate_The_Command_And_Return_Success_If_Command_Is_Valid()
+    {
+        var result = await Dispatcher.SendAndPublish(command: new DoSomethingWithCommandResponse(Name: "Test Name"), validateCommand: true);
+
+        using (new AssertionScope())
+        {
+            result.CommandResult.IsSuccess.Should().BeTrue();
+            result.CommandResult.Failure.Should().BeNull();
+        }
+    }
 }

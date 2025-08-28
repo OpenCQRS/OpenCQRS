@@ -21,8 +21,10 @@ public abstract class TestBase
             .AddSingleton<IValidationProvider, FluentValidationProvider>()
             .AddSingleton<ICommandHandler<DoSomething>, DoSomethingHandler>()
             .AddSingleton<ICommandHandler<DoSomethingWithResponse, string>, DoSomethingWithResponseHandler>()
+            .AddSingleton<ICommandHandler<DoSomethingWithCommandResponse, CommandResponse>, DoSomethingWithCommandResponseHandler>()
             .AddSingleton<IValidator<DoSomething>, DoSomethingValidator>()
             .AddSingleton<IValidator<DoSomethingWithResponse>, DoSomethingWithResponseValidator>()
+            .AddSingleton<IValidator<DoSomethingWithCommandResponse>, DoSomethingWithCommandResponseValidator>()
             .BuildServiceProvider();
 
         var fluentValidationProvider = new FluentValidationProvider(serviceProvider);

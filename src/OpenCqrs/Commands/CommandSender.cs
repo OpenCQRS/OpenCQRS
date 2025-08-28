@@ -110,6 +110,15 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        if (validateCommand)
+        {
+            var validationResult = await validationService.Validate(command);
+            if (validationResult.IsNotSuccess)
+            {
+                return new SendAndPublishResponse(CommandResult: validationResult, NotificationResults: []);
+            }
+        }
+
         var commandType = command.GetType();
 
         var handler = (CommandHandlerWrapperBase<CommandResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
