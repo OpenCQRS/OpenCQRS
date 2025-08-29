@@ -152,6 +152,19 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
 
+    /// <summary>
+    /// Sends a sequence of commands to their respective handlers for processing.
+    /// </summary>
+    /// <param name="command">The sequence of commands to be processed.</param>
+    /// <param name="validateCommands">Specifies whether the commands should be validated before processing.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a collection of <see cref="Result{object}"/>, each representing the outcome of processing a command in the sequence.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the method is not yet implemented.</exception>
+    public Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     private static Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
     {
         return CompiledPublishers.GetOrAdd(notificationType, type =>

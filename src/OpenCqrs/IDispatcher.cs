@@ -46,6 +46,15 @@ public interface IDispatcher
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Sends a sequence of commands to their respective handlers for processing.
+    /// </summary>
+    /// <param name="command">The command sequence to be processed.</param>
+    /// <param name="validateCommands">Indicates whether the commands should be validated before processing.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task that represents an asynchronous operation. The task result contains a collection of <see cref="Result{TValue}"/> objects, representing the outcome for each command in the sequence.</returns>
+    Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Executes a query and returns the requested data.
     /// </summary>
     /// <typeparam name="TResult">The type of data expected from the query.</typeparam>

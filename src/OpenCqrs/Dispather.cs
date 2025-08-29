@@ -58,6 +58,19 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     }
 
     /// <summary>
+    /// Sends a sequence of commands to their corresponding handlers for processing and returns the results for each command.
+    /// </summary>
+    /// <param name="command">The command sequence to be processed.</param>
+    /// <param name="validateCommands">A boolean indicating whether the commands within the sequence should be validated before processing.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
+    /// <returns>A task representing an asynchronous operation that returns a collection of <see cref="Result{TValue}"/> objects for each command processed.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
+    public Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
     /// Executes a query and returns the commanded data.
     /// </summary>
     /// <typeparam name="TResult">The type of data expected from the query.</typeparam>
