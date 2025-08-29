@@ -11,7 +11,7 @@ public abstract class CommandSequence<TResponse> : ICommandSequence<TResponse>
     /// Adds the command to the sequence collection.
     /// </summary>
     /// <param name="command">The command.</param>
-    protected void AddCommand(ICommand<TResponse> command)
+    public void AddCommand(ICommand<TResponse> command)
     {
         _commands.Add(command);
     }
