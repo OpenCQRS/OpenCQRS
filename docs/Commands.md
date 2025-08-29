@@ -3,8 +3,8 @@
 - [Simple commands](#simple-commands)
 - [Commands with a result](#commands-with-results)
 - [Commands that publish notifications](#commands-with-notifications)
-- [Commands validation](Command-Validation)
-- [Command sequence](Command-Sequence)
+- [Commands validation](#commands-validation)
+- [Command sequence](#command-sequence)
 
 <a name="simple-commands"></a>
 ## Simple commands
@@ -158,7 +158,7 @@ The result will contain the command result and all results from the notification
 }
 ```
 
-<a name="commands-with-validation"></a>
+<a name="commands-validation"></a>
 ## Commands validation
 
 You can validate commands automatically before they are sent to the command handler. The validation is made by the validation provider registered (e.g., FluentValidation).
