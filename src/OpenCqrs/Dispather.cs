@@ -62,12 +62,12 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// </summary>
     /// <param name="command">The command sequence to be processed.</param>
     /// <param name="validateCommands">A boolean indicating whether the commands within the sequence should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">When true, stops processing remaining commands in the sequence if any command fails. When false, continues processing all commands regardless of individual failures.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
     /// <returns>A task representing an asynchronous operation that returns a collection of <see cref="Result{TValue}"/> objects for each command processed.</returns>
-    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    public Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await commandSender.Send(command, validateCommands, stopProcessingOnFirstFailure, cancellationToken);
     }
 
     /// <summary>

@@ -157,10 +157,10 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
     /// </summary>
     /// <param name="command">The sequence of commands to be processed.</param>
     /// <param name="validateCommands">Specifies whether the commands should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">When true, stops processing remaining commands in the sequence if any command fails. When false, continues processing all commands regardless of individual failures.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a collection of <see cref="Result{object}"/>, each representing the outcome of processing a command in the sequence.</returns>
-    /// <exception cref="NotImplementedException">Thrown when the method is not yet implemented.</exception>
-    public Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
