@@ -24,7 +24,7 @@ public class CommandSequenceTests : TestBase
             results[1].Value.Should().BeNull();
 
             results[2].IsSuccess.Should().BeTrue();
-            results[2].Value.Should().Be("Third command result; First: First command result; Second: NULL");
+            results[2].Value.Should().Be("Third command result; First command result, NULL");
         }
     }
 

@@ -3,9 +3,9 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.Tests.Models.Commands.Handlers;
 
-public class SecondCommandInSequenceHandler : ICommandHandler<SecondCommandInSequence, string>
+public class SecondCommandInSequenceHandler : ICommandSequenceHandler<SecondCommandInSequence, string>
 {
-    public async Task<Result<string>> Handle(SecondCommandInSequence command, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> Handle(SecondCommandInSequence command, IEnumerable<Result<string>> previousCommandResults, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
 
