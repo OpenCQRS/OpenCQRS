@@ -56,7 +56,7 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     {
         return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
     }
-    
+
     public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
         return await commandSender.Send(commandSequence, validateCommands, stopProcessingOnFirstFailure, cancellationToken);

@@ -47,6 +47,6 @@ public interface ICommandSender
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the command processing result
     /// and a collection of results from the published notifications.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
-    
+
     Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
 }

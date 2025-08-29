@@ -151,12 +151,35 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
-    
-    public Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
+
+    public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(commandSequence);
-        
-        throw new NotImplementedException();
+
+        var commandResults = new List<Result<TResponse>>();
+
+        foreach (var command in commandSequence.Commands)
+        {
+            var commandType = command.GetType();
+
+            var handler = (CommandSequenceHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+                Activator.CreateInstance(typeof(CommandSequenceHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
+
+            if (handler is null)
+            {
+                throw new Exception($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
+            }
+
+            var commandResult = await handler.Handle(command, commandResults, serviceProvider, cancellationToken);
+            commandResults.Add(commandResult);
+
+            if (stopProcessingOnFirstFailure && commandResult.IsNotSuccess)
+            {
+                break;
+            }
+        }
+
+        return commandResults;
     }
 
     private static Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
