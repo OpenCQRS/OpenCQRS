@@ -179,17 +179,20 @@ var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, exp
 
 _Work in progress_
 
-## Upcoming features for version 7.0.0
+## Roadmap
 
-The following features are going to be implemented before the release of version 7.0.0:
+### OpenCQRS 7.0.0
 
-- Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
 - Message bus integration with Azure Service Bus/RabbitMQ
+- Event Sourcing with Cosmos DB
+
+### OpenCQRS 7.1.0
+
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
-- Event Sourcing with Cosmos DB
 - Custom table names for EntityFrameworkCore store provider
+- Custom handlers/services per command/query/notification
 
 ## Full Documentation
 
