@@ -84,4 +84,8 @@ public class FluentValidationTests : TestBase
             result.CommandResult.Failure.Should().BeNull();
         }
     }
+    
+    // TODO: Validate command sequence - success
+    
+    // TODO: Validate command sequence - failure
 }
