@@ -152,8 +152,10 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
     
-    public Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(commandSequence);
+        
         throw new NotImplementedException();
     }
 
