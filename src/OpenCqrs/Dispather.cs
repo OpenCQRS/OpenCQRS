@@ -51,10 +51,24 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// <param name="validateCommand"></param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing
-    /// and the results of the published notifications.</returns
+    /// and the results of the published notifications.</returns>
     public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
         return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends a sequence of commands to their corresponding handlers for processing, capturing results for each command.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of the response returned by each command in the sequence.</typeparam>
+    /// <param name="commandSequence">The sequence of commands to be processed.</param>
+    /// <param name="validateCommands">Indicates whether the commands should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">Indicates whether to halt further command processing if a failure occurs.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task that represents the asynchronous operation, containing a collection of results for each command in the sequence.</returns>
+    public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
+    {
+        return await commandSender.Send(commandSequence, validateCommands, stopProcessingOnFirstFailure, cancellationToken);
     }
 
     /// <summary>

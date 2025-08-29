@@ -4,6 +4,7 @@
 _**Released ???**_
 - Send and publish methods that automatically publish notifications on the back of a successfully processed command
 - Automatically validate commands before they are sent to the command handler
+- Command sequences that allow to chain multiple commands in a specific order
 - ???
 
 ## OpenCQRS 7.0.0-beta.3

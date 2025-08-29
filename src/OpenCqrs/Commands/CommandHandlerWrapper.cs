@@ -10,19 +10,19 @@ internal class CommandHandlerWrapper<TCommand, TResponse> : CommandHandlerWrappe
         var handler = GetHandler<ICommandHandler<TCommand, TResponse>>(serviceProvider);
         if (handler == null)
         {
-            throw new Exception("Command handler not found.");
+            throw new Exception($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
         return await handler.Handle((TCommand)command, cancellationToken);
     }
 }
 
-internal abstract class CommandHandlerWrapperBase<TResult>
+internal abstract class CommandHandlerWrapperBase<TResponse>
 {
     protected static THandler? GetHandler<THandler>(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetService<THandler>();
     }
 
-    public abstract Task<Result<TResult>> Handle(ICommand<TResult> command, IServiceProvider serviceProvider, CancellationToken cancellationToken);
+    public abstract Task<Result<TResponse>> Handle(ICommand<TResponse> command, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }

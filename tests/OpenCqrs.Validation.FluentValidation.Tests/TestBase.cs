@@ -22,9 +22,13 @@ public abstract class TestBase
             .AddSingleton<ICommandHandler<DoSomething>, DoSomethingHandler>()
             .AddSingleton<ICommandHandler<DoSomethingWithResponse, string>, DoSomethingWithResponseHandler>()
             .AddSingleton<ICommandHandler<DoSomethingWithCommandResponse, CommandResponse>, DoSomethingWithCommandResponseHandler>()
+            .AddSingleton<ICommandSequenceHandler<FirstCommandInSequence, string>, FirstCommandInSequenceHandler>()
+            .AddSingleton<ICommandSequenceHandler<SecondCommandInSequence, string>, SecondCommandInSequenceHandler>()
             .AddSingleton<IValidator<DoSomething>, DoSomethingValidator>()
             .AddSingleton<IValidator<DoSomethingWithResponse>, DoSomethingWithResponseValidator>()
             .AddSingleton<IValidator<DoSomethingWithCommandResponse>, DoSomethingWithCommandResponseValidator>()
+            .AddSingleton<IValidator<FirstCommandInSequence>, FirstCommandInSequenceValidator>()
+            .AddSingleton<IValidator<SecondCommandInSequence>, SecondCommandInSequenceValidator>()
             .BuildServiceProvider();
 
         var fluentValidationProvider = new FluentValidationProvider(serviceProvider);

@@ -84,4 +84,59 @@ public class FluentValidationTests : TestBase
             result.CommandResult.Failure.Should().BeNull();
         }
     }
+
+    [Fact]
+    public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Return_Success_If_Commands_Are_Valid()
+    {
+        var commandSequence = new TestCommandSequence();
+        commandSequence.AddCommand(new FirstCommandInSequence(Name: "Test Name"));
+        commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
+        var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true);
+        var results = sendResult.ToList();
+
+        using (new AssertionScope())
+        {
+            results.Count.Should().Be(2);
+            results[0].IsSuccess.Should().BeTrue();
+            results[0].Failure.Should().BeNull();
+            results[1].IsSuccess.Should().BeTrue();
+            results[1].Failure.Should().BeNull();
+        }
+    }
+
+    [Fact]
+    public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Return_Failure_If_Commands_Are_Not_Valid()
+    {
+        var commandSequence = new TestCommandSequence();
+        commandSequence.AddCommand(new FirstCommandInSequence(Name: string.Empty));
+        commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
+        var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true);
+        var results = sendResult.ToList();
+
+        using (new AssertionScope())
+        {
+            results.Count.Should().Be(2);
+            results[0].IsSuccess.Should().BeFalse();
+            results[0].Failure.Should().NotBeNull();
+            results[1].IsSuccess.Should().BeTrue();
+            results[1].Failure.Should().BeNull();
+        }
+    }
+
+    [Fact]
+    public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Stop_Processing_On_First_Failure()
+    {
+        var commandSequence = new TestCommandSequence();
+        commandSequence.AddCommand(new FirstCommandInSequence(Name: string.Empty));
+        commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
+        var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true, stopProcessingOnFirstFailure: true);
+        var results = sendResult.ToList();
+
+        using (new AssertionScope())
+        {
+            results.Count.Should().Be(1);
+            results[0].IsSuccess.Should().BeFalse();
+            results[0].Failure.Should().NotBeNull();
+        }
+    }
 }

@@ -152,6 +152,62 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
 
+    /// <summary>
+    /// Sends a sequence of commands for processing and returns their respective results.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of response expected from each command in the sequence.</typeparam>
+    /// <param name="commandSequence">The sequence of commands to be processed.</param>
+    /// <param name="validateCommands">Specifies whether the commands should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">Specifies whether to stop processing commands if a failure occurs.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A collection of <see cref="Result{TResponse}"/> objects representing the outcome of each processed command.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the command sequence is null.</exception>
+    public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(commandSequence);
+
+        var commandResults = new List<Result<TResponse>>();
+
+        foreach (var command in commandSequence.Commands)
+        {
+            if (validateCommands)
+            {
+                var validationResult = await validationService.Validate(command);
+                if (validationResult.IsNotSuccess)
+                {
+                    commandResults.Add(validationResult);
+
+                    if (stopProcessingOnFirstFailure)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+            }
+
+            var commandType = command.GetType();
+
+            var handler = (CommandSequenceHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+                Activator.CreateInstance(typeof(CommandSequenceHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
+
+            if (handler is null)
+            {
+                throw new Exception($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
+            }
+
+            var commandResult = await handler.Handle(command, commandResults, serviceProvider, cancellationToken);
+            commandResults.Add(commandResult);
+
+            if (stopProcessingOnFirstFailure && commandResult.IsNotSuccess)
+            {
+                break;
+            }
+        }
+
+        return commandResults;
+    }
+
     private static Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
     {
         return CompiledPublishers.GetOrAdd(notificationType, type =>
