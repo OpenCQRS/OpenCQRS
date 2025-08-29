@@ -56,5 +56,5 @@ public interface ICommandSender
     /// <param name="stopProcessingOnFirstFailure">When true, stops processing remaining commands in the sequence if any command fails. When false, continues processing all commands regardless of individual failures.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation, containing an enumerable of <see cref="Result{object}"/> that represent the outcome of each processed command in the sequence.</returns>
-    Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
 }

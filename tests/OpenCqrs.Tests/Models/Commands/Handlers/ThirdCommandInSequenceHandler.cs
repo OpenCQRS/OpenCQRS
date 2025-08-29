@@ -3,12 +3,12 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.Tests.Models.Commands.Handlers;
 
-public class ThirdCommandInSequenceHandler : ICommandHandler<ThirdCommandInSequence>
+public class ThirdCommandInSequenceHandler : ICommandHandler<ThirdCommandInSequence, string>
 {
-    public async Task<Result> Handle(ThirdCommandInSequence command, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> Handle(ThirdCommandInSequence command, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
-        
-        return Result.Ok();
+
+        return "Third command result";
     }
 }

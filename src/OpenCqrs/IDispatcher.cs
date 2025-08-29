@@ -53,7 +53,7 @@ public interface IDispatcher
     /// <param name="stopProcessingOnFirstFailure">When true, stops processing remaining commands in the sequence if any command fails. When false, continues processing all commands regardless of individual failures.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task that represents an asynchronous operation. The task result contains a collection of <see cref="Result{TValue}"/> objects, representing the outcome for each command in the sequence.</returns>
-    Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a query and returns the requested data.

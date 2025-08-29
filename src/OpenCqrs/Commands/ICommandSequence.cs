@@ -2,7 +2,7 @@
 
 namespace OpenCqrs.Commands;
 
-public interface ICommandSequence
+public interface ICommandSequence<TResponse>
 {
-    ReadOnlyCollection<ICommand> Commands { get; }
+    ReadOnlyCollection<ICommand<TResponse>> Commands { get; }
 }

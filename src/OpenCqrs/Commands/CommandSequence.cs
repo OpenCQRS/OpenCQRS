@@ -2,16 +2,16 @@
 
 namespace OpenCqrs.Commands;
 
-public abstract class CommandSequence : ICommandSequence
+public abstract class CommandSequence<TResponse> : ICommandSequence<TResponse>
 {
-    private readonly List<ICommand> _commands = [];
-    public ReadOnlyCollection<ICommand> Commands => _commands.AsReadOnly();
+    private readonly List<ICommand<TResponse>> _commands = [];
+    public ReadOnlyCollection<ICommand<TResponse>> Commands => _commands.AsReadOnly();
 
     /// <summary>
     /// Adds the command to the sequence collection.
     /// </summary>
     /// <param name="command">The command.</param>
-    protected void AddCommand(ICommand command)
+    protected void AddCommand(ICommand<TResponse> command)
     {
         _commands.Add(command);
     }

@@ -65,7 +65,7 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// <param name="stopProcessingOnFirstFailure">When true, stops processing remaining commands in the sequence if any command fails. When false, continues processing all commands regardless of individual failures.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
     /// <returns>A task representing an asynchronous operation that returns a collection of <see cref="Result{TValue}"/> objects for each command processed.</returns>
-    public async Task<IEnumerable<Result<object>>> Send(ICommandSequence command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> command, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
         return await commandSender.Send(command, validateCommands, stopProcessingOnFirstFailure, cancellationToken);
     }

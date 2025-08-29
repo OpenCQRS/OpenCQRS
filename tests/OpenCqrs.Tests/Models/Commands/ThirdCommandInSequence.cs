@@ -2,4 +2,4 @@
 
 namespace OpenCqrs.Tests.Models.Commands;
 
-public record ThirdCommandInSequence : ICommand;
+public record ThirdCommandInSequence : ICommand<string>;
