@@ -5,7 +5,7 @@ namespace OpenCqrs.Commands;
 
 internal class CommandSequenceHandlerWrapper<TCommand, TResponse> : CommandSequenceHandlerWrapperBase<TResponse> where TCommand : ICommand<TResponse>
 {
-    public override async Task<Result<TResponse>> Handle(ICommand<TResponse> command, IEnumerable<Result<TResponse>> previousCommandResults, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    public override async Task<Result<TResponse>> Handle(ICommand<TResponse> command, IEnumerable<Result<TResponse>> previousResults, IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
         var handler = GetHandler<ICommandSequenceHandler<TCommand, TResponse>>(serviceProvider);
         if (handler == null)
@@ -13,7 +13,7 @@ internal class CommandSequenceHandlerWrapper<TCommand, TResponse> : CommandSeque
             throw new Exception($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
-        return await handler.Handle((TCommand)command, previousCommandResults, cancellationToken);
+        return await handler.Handle((TCommand)command, previousResults, cancellationToken);
     }
 }
 
@@ -24,5 +24,5 @@ internal abstract class CommandSequenceHandlerWrapperBase<TResponse>
         return serviceProvider.GetService<THandler>();
     }
 
-    public abstract Task<Result<TResponse>> Handle(ICommand<TResponse> command, IEnumerable<Result<TResponse>> previousCommandResults, IServiceProvider serviceProvider, CancellationToken cancellationToken);
+    public abstract Task<Result<TResponse>> Handle(ICommand<TResponse> command, IEnumerable<Result<TResponse>> previousResults, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }

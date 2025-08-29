@@ -185,7 +185,6 @@ The following features are going to be implemented before the release of version
 
 - Custom handlers/services per command/query/notification
 - Caching queries with Memory/Redis
-- Command sequence
 - Message bus integration with Azure Service Bus/RabbitMQ
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider

@@ -4,6 +4,7 @@
 - [Commands with a result](#commands-with-results)
 - [Commands that publish notifications](#commands-with-notifications)
 - [Commands validation](Command-Validation)
+- [Command sequence](Command-Sequence)
 
 <a name="simple-commands"></a>
 ## Simple commands
@@ -182,4 +183,84 @@ If the command is not valid, the command handler will not be called and the resu
         ]
     }
 }
+```
+
+<a name="command-sequence"></a>
+## Command sequence
+
+It's possible to create a sequence of commands that will be executed in the specified order.
+
+Create the command sequence for commands with a common result type:
+
+```C#
+public class FirstCommand : ICommand<string>
+{
+}
+
+public class SecondCommand : ICommand<string>
+{
+}
+
+public class ThirdCommand : ICommand<string>
+{
+}
+
+public class MyCommandSequence : CommandSequence<string>
+{
+    public MyCommandSequence()
+    {
+        AddCommand(new FirstCommand());
+        AddCommand(new SecondCommand());
+        AddCommand(new ThirdCommand());
+    }
+}
+```
+
+And respective handlers that implement the **ISequenceCommandHandlerAsync&lt;ICommand&lt;TResponse&gt;, TResponse&gt;** interface.
+
+The results of all previous commands in the sequence are passed to each handler as an enumerable:
+
+```C#
+public class FirstCommandHandler : ISequenceCommandHandlerAsync<FirstCommand, string>
+{
+    public Task<Result<string>> HandleAsync(FirstCommand command, IEnumerable<Result<string>> previousResults)
+    {
+        return Task.FromResult(Result.Ok("First result"));
+    }
+}
+
+public class SecondCommandHandler : ISequenceCommandHandlerAsync<SecondCommand, string>
+{
+    public Task<Result<string>> HandleAsync(SecondCommand command, IEnumerable<Result<string>> previousResults)
+    {
+        return Task.FromResult(Result.Ok("Second result"));
+    }
+}
+
+public class ThirdCommandHandler : ISequenceCommandHandlerAsync<ThirdCommand, string>
+{
+    public Task<Result<string>> HandleAsync(ThirdCommand command, IEnumerable<Result<string>> previousResults)
+    {
+        return Task.FromResult(Result.Ok("Third result"));
+    }
+}
+```
+Finally, send the command sequence using the dispatcher:
+
+```C#
+var commandSequence = new MyCommandSequence();
+var sequenceResult = await _dispatcher.SendSequence(commandSequence);
+```
+
+The sequence result will contain the result of each command executed in the sequence.
+You can optionally stop the execution of the sequence if a command fails by using the `stopOnFirstFailure` parameter (default is false):
+
+```C#
+var sequenceResult = await _dispatcher.SendSequence(commandSequence, stopOnFirstFailure: true);
+```
+
+Every command can also be validated before being sent to the respective command handler by using the `validateCommands` parameter (default is false):
+
+```C#
+var sequenceResult = await _dispatcher.SendSequence(commandSequence, validateCommands: true);
 ```
