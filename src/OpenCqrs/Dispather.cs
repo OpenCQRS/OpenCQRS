@@ -81,14 +81,7 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     {
         return await queryProcessor.Get(query, cancellationToken);
     }
-
-    /// <summary>
-    /// Publishes an notification to all registered handlers that can process the specified notification type.
-    /// </summary>
-    /// <typeparam name="TNotification">The type of notification to publish.</typeparam>
-    /// <param name="notification">The notification instance to be published.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>A collection of <see cref="Result"/> objects indicating the success or failure of each notification handler.</returns>
+    
     public async Task<IEnumerable<Result>> Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
     {
         return await publisher.Publish(notification, cancellationToken);

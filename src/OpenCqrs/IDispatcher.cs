@@ -63,13 +63,6 @@ public interface IDispatcher
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> containing the query result on success or failure information.</returns>
     Task<Result<TResult>> Get<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Publishes a notification to all registered handlers that can process the specified notification type.
-    /// </summary>
-    /// <typeparam name="TNotification">The type of notification to publish.</typeparam>
-    /// <param name="notification">The notification instance to be published.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>A collection of <see cref="Result"/> objects indicating the success or failure of each notification handler.</returns>
+    
     Task<IEnumerable<Result>> Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
 }
