@@ -152,6 +152,16 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
     }
 
+    /// <summary>
+    /// Sends a sequence of commands for processing and returns their respective results.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of response expected from each command in the sequence.</typeparam>
+    /// <param name="commandSequence">The sequence of commands to be processed.</param>
+    /// <param name="validateCommands">Specifies whether the commands should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">Specifies whether to stop processing commands if a failure occurs.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A collection of <see cref="Result{TResponse}"/> objects representing the outcome of each processed command.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the command sequence is null.</exception>
     public async Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(commandSequence);

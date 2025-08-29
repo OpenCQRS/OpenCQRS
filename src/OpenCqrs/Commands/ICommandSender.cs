@@ -48,5 +48,14 @@ public interface ICommandSender
     /// and a collection of results from the published notifications.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a sequence of commands to their corresponding handlers for processing and retrieves their results.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of the response expected from processing the command sequence.</typeparam>
+    /// <param name="commandSequence">The sequence of commands to process.</param>
+    /// <param name="validateCommands">Indicates whether each command in the sequence should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">Indicates whether processing should stop if a command in the sequence fails.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a collection of <see cref="Result{TResponse}"/> instances indicating the outcomes of processing each command in the sequence.</returns>
     Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
 }

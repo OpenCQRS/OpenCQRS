@@ -45,6 +45,15 @@ public interface IDispatcher
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the notification publishing results.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a sequence of commands to their respective handlers for processing, allowing sequential execution with optional validation and error handling.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of response that is expected from the command sequence execution.</typeparam>
+    /// <param name="commandSequence">The sequence of commands to be processed.</param>
+    /// <param name="validateCommands">Indicates whether each command in the sequence should be validated before processing.</param>
+    /// <param name="stopProcessingOnFirstFailure">Specifies whether to halt execution if a command in the sequence fails.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests during processing.</param>
+    /// <returns>A task that represents the asynchronous operation. The result contains a collection of <see cref="Result{TResponse}"/> instances representing the outcomes of processing each command in the sequence.</returns>
     Task<IEnumerable<Result<TResponse>>> Send<TResponse>(ICommandSequence<TResponse> commandSequence, bool validateCommands = false, bool stopProcessingOnFirstFailure = false, CancellationToken cancellationToken = default);
 
     /// <summary>
