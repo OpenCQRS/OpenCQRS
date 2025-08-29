@@ -9,6 +9,6 @@ public class SecondCommandInSequenceHandler : ICommandSequenceHandler<SecondComm
     {
         await Task.CompletedTask;
 
-        return new Failure();
+        return "Second command result";
     }
 }

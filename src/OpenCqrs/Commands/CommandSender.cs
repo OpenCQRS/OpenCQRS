@@ -160,6 +160,22 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         foreach (var command in commandSequence.Commands)
         {
+            if (validateCommands)
+            {
+                var validationResult = await validationService.Validate(command);
+                if (validationResult.IsNotSuccess)
+                {
+                    commandResults.Add(validationResult);
+
+                    if (stopProcessingOnFirstFailure)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+            }
+
             var commandType = command.GetType();
 
             var handler = (CommandSequenceHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>

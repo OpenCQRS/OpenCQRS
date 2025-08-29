@@ -84,7 +84,7 @@ public class FluentValidationTests : TestBase
             result.CommandResult.Failure.Should().BeNull();
         }
     }
-    
+
     [Fact]
     public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Return_Success_If_Commands_Are_Valid()
     {
@@ -93,7 +93,7 @@ public class FluentValidationTests : TestBase
         commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
         var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true);
         var results = sendResult.ToList();
-        
+
         using (new AssertionScope())
         {
             results.Count.Should().Be(2);
@@ -103,7 +103,7 @@ public class FluentValidationTests : TestBase
             results[1].Failure.Should().BeNull();
         }
     }
-    
+
     [Fact]
     public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Return_Failure_If_Commands_Are_Not_Valid()
     {
@@ -112,7 +112,7 @@ public class FluentValidationTests : TestBase
         commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
         var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true);
         var results = sendResult.ToList();
-        
+
         using (new AssertionScope())
         {
             results.Count.Should().Be(2);
@@ -122,7 +122,7 @@ public class FluentValidationTests : TestBase
             results[1].Failure.Should().BeNull();
         }
     }
-    
+
     [Fact]
     public async Task Send_Command_Sequence_Should_Validate_The_Commands_And_Stop_Processing_On_First_Failure()
     {
@@ -131,7 +131,7 @@ public class FluentValidationTests : TestBase
         commandSequence.AddCommand(new SecondCommandInSequence(Name: "Test Name"));
         var sendResult = await Dispatcher.Send(commandSequence, validateCommands: true, stopProcessingOnFirstFailure: true);
         var results = sendResult.ToList();
-        
+
         using (new AssertionScope())
         {
             results.Count.Should().Be(1);
