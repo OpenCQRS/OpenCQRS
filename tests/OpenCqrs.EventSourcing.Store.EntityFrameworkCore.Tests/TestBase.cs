@@ -6,6 +6,8 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests;
 
 public abstract class TestBase
 {
+    protected readonly IDomainService DomainService;
+    
     protected TestBase()
     {
         TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
@@ -20,5 +22,8 @@ public abstract class TestBase
             {"TestAggregate1|v:1", typeof(TestAggregate1)},
             {"TestAggregate2|v:1", typeof(TestAggregate2)}
         };
+        
+        var dbContext = Shared.CreateTestDbContext();
+        DomainService = new EntityFrameworkCoreDomainService(dbContext);
     }
 }

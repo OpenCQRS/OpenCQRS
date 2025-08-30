@@ -19,8 +19,8 @@ public class SaveAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
         
-        await CosmosDomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var saveResult = await CosmosDomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
         using (new AssertionScope())
         {
@@ -131,7 +131,7 @@ public class SaveAggregateTests : TestBase
         var aggregateId = new TestAggregate2Id(id);
         var aggregate = new TestAggregate2(id, "Test Name", "Test Description");
         
-        await CosmosDomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
         var domainEvents = new IDomainEvent[]
         {
@@ -140,13 +140,13 @@ public class SaveAggregateTests : TestBase
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         };
-        await CosmosDomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
 
-        var aggregateToUpdateResult = await CosmosDomainService.GetAggregate(streamId, aggregateId);
+        var aggregateToUpdateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
-        await CosmosDomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
 
-        var aggregateResult = await CosmosDomainService.GetAggregate(streamId, aggregateId);
+        var aggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

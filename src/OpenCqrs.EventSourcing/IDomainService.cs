@@ -3,7 +3,7 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing;
 
-public interface IDomainService
+public interface IDomainService : IDisposable
 {
     Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
     Task<List<IDomainEvent>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);

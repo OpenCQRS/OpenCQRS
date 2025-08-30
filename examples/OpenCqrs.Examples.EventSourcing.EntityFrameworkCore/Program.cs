@@ -7,10 +7,12 @@ using Microsoft.Extensions.Logging;
 using OpenCqrs;
 using OpenCqrs.EventSourcing.Extensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore;
+using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Commands;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Data;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Queries;
 using OpenCqrs.Extensions;
+using OpenCqrs.Validation.FluentValidation.Extensions;
 
 var serviceProvider = ConfigureServices();
 
@@ -55,6 +57,8 @@ IServiceProvider ConfigureServices()
 
     services.AddOpenCqrs(typeof(Program));
     services.AddOpenCqrsEventSourcing(typeof(Program));
+    services.AddOpenCqrsEntityFrameworkCore<MyStoreDbContext>();
+    services.AddOpenCqrsFluentValidation();
 
     return services.BuildServiceProvider();
 }

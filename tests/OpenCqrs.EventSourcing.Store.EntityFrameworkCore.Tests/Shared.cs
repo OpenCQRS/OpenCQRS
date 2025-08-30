@@ -37,4 +37,15 @@ public static class Shared
         httpContextAccessor.HttpContext.Returns(context);
         return httpContextAccessor;
     }
+
+    public static IDomainService CreateDomainService(FakeTimeProvider timeProvider, IHttpContextAccessor createHttpContextAccessor)
+    {
+        var dbContext = new TestDbContext(CreateContextOptions(), timeProvider, CreateHttpContextAccessor());
+        return new EntityFrameworkCoreDomainService(dbContext);
+    }
+    
+    public static IDomainService CreateDomainService(IDomainDbContext domainDbContext)
+    {
+        return new EntityFrameworkCoreDomainService(domainDbContext);
+    }
 }

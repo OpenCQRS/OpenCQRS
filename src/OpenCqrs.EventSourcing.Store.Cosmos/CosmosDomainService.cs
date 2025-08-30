@@ -58,4 +58,6 @@ public class CosmosDomainService(ICosmosClientConnection cosmosClientConnection)
     {
         throw new NotImplementedException();
     }
+
+    public void Dispose() => _cosmosClient.Dispose();
 }
