@@ -124,7 +124,11 @@ await _dispatcher.Publish(new SomethingHappened());
 
 ## Event Sourcing with Entity Framework Core
 
-All features are implemented as extension methods on the DbContext, allowing seamless integration with your existing DbContext implementations. IdentityDbContext from ASP.NET Core Identity is also supported.
+You can either use the `IDomainService` interface to access the event-sourcing functionalities or directly use them from your DbContext that inherits from `DomainDbContext` or `IdentityDomainDbContext`.
+
+All features are implemented as extension methods on the `IDomainDbContext` interface, allowing seamless integration with your existing DbContext implementations.
+
+IdentityDbContext from ASP.NET Core Identity is also supported.
 
 ```C#
 [AggregateType("Order")]
@@ -171,7 +175,9 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
-// The save aggregate extension method stores the new events and the snapshot of the aggregate to the latest state
+// Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
+var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+// or
 var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
 

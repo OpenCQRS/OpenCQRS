@@ -21,10 +21,9 @@ public class GetInMemoryAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var getAggregateResult = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

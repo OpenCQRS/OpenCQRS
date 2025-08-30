@@ -1,6 +1,8 @@
 # Entity Framework Core
 
-The OpenCQRS Entity Framework Core store provider enables event sourcing persistence using Entity Framework Core. This provider offers a comprehensive set of extension methods for managing aggregates and events.
+The OpenCQRS Entity Framework Core store provider enables event sourcing persistence using Entity Framework Core.
+
+You can either use the `IDomainService` interface to access the event sourcing functionalities or directly use them from your DbContext that inherits from `DomainDbContext` or `IdentityDomainDbContext`.
 
 All features are implemented as extension methods on the `IDomainDbContext` interface, allowing seamless integration with your existing DbContext implementations.
 
@@ -15,5 +17,5 @@ The event sourcing functionalities can used with the following Entity Framework 
 
 OpenCQRS also provides support for IdentityDbContext from ASP.NET Core Identity, allowing you to integrate event sourcing with user management and authentication features.
 
-- [Extensions](Entity-Framework-Core-Extensions)
 - [Scenarios](Entity-Framework-Core-Scenarios)
+- [Extensions](Entity-Framework-Core-Extensions)

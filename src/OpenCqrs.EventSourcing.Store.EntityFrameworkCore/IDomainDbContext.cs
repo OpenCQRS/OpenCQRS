@@ -128,7 +128,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore;
 /// }
 /// </code>
 /// </example>
-public interface IDomainDbContext
+public interface IDomainDbContext : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// Gets or sets the DbSet for aggregate entities, providing access to aggregate snapshot storage.

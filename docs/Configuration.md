@@ -29,7 +29,9 @@ To use the event sourcing features, you need to install and register the event s
 ```C#
 services.AddOpenCqrsEventSourcing();
 ```
-Then, you need to register a store provider. The only one currently available is Entity Framework Core, but different database providers are supported. After installing the required package (**OpenCqrs.EventSourcing.Store.EntityFrameworkCore**), you can create or update your own db context and register the database provider:
+Then, you need to register a store provider.
+### Entity Framework Core Store Provider
+After installing the required package (**OpenCqrs.EventSourcing.Store.EntityFrameworkCore**), you can create or update your own db context and register the database provider:
 ```C#
 // Your db context that inherits from DomainDbContext
 public class ApplicationDbContext(
@@ -55,6 +57,9 @@ services
     
 services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
+// Register the event sourcing store provider
+services.AddOpenCqrsEntityFrameworkCore<ApplicationDbContext>();
 ```
 OpenCQRS also supports ASP.NET Core Identity. Install the **OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity** package and use the IdentityDomainDbContext in your application:
 ```C#
@@ -86,4 +91,13 @@ services
 
 services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
+// Register the event sourcing store provider
+services.AddOpenCqrsEntityFrameworkCore<ApplicationDbContext>();
+```
+
+### Cosmo DB Store Provider
+After installing the required package (**OpenCqrs.EventSourcing.Store.Cosmos**), you can register the Cosmo DB store provider:
+```C#
+// TODO: Add code example for Cosmos DB store provider
 ```

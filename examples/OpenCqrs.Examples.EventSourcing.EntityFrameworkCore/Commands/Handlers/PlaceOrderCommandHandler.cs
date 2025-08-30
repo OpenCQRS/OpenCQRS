@@ -1,13 +1,12 @@
 ﻿using OpenCqrs.Commands;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
+using OpenCqrs.EventSourcing;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Aggregates;
-using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Data;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Streams;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Commands.Handlers;
 
-public class PlaceOrderCommandHandler(MyStoreDbContext dbContext) : ICommandHandler<PlaceOrderCommand>
+public class PlaceOrderCommandHandler(IDomainService domainService) : ICommandHandler<PlaceOrderCommand>
 {
     public async Task<Result> Handle(PlaceOrderCommand command, CancellationToken cancellationToken = default)
     {
@@ -16,6 +15,6 @@ public class PlaceOrderCommandHandler(MyStoreDbContext dbContext) : ICommandHand
 
         var orderAggregate = new OrderAggregate(command.OrderId, command.Amount);
 
-        return await dbContext.SaveAggregate(customerStreamId, orderAggregateId, orderAggregate, expectedEventSequence: 0, cancellationToken);
+        return await domainService.SaveAggregate(customerStreamId, orderAggregateId, orderAggregate, expectedEventSequence: 0, cancellationToken);
     }
 }

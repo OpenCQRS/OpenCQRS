@@ -21,6 +21,8 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
+var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+// or
 var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
 
@@ -30,6 +32,8 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
 
+var aggregateResult = await domainService.GetAggregate(streamId, aggregateId);
+// or
 var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
 if (!aggregateResult.IsSuccess)
 {
@@ -39,6 +43,8 @@ aggregate = aggregateResult.Value;
 
 aggregate.UpdateAmount(amount: 15.00m);
 
+var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
+// or
 var saveAggregateResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
 ```
 

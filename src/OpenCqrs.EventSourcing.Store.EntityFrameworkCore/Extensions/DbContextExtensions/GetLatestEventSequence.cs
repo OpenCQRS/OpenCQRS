@@ -122,6 +122,6 @@ public static partial class IDomainDbContextExtensions
             .Select(eventEntity => eventEntity.Sequence)
             .ToListAsync(cancellationToken);
 
-        return sequences.Count > 0 ? sequences.Last() : 0;
+        return sequences.Count;
     }
 }

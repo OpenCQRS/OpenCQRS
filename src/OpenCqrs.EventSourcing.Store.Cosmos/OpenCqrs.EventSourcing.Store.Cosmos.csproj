@@ -7,4 +7,13 @@
         <PackageId>OpenCqrs.EventSourcing.Store.Cosmos</PackageId>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.53.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OpenCqrs.EventSourcing\OpenCqrs.EventSourcing.csproj" />
+      <ProjectReference Include="..\OpenCqrs\OpenCqrs.csproj" />
+    </ItemGroup>
+
 </Project>
