@@ -7,27 +7,26 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
 public static class AggregateExtensions
 {
-    public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId,
-        IAggregateId aggregateId, int newLatestEventSequence, DateTimeOffset timeStamp)
+    public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence, DateTimeOffset timeStamp)
     {
-        var eventTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (eventTypeAttribute == null)
+        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateTypeAttribute == null)
         {
             throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(eventTypeAttribute.Version);
+        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version);
         aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateDocument
         {
-            Id = aggregateId.ToIdWithTypeVersion(eventTypeAttribute.Version),
+            Id = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
-            TypeName = eventTypeAttribute.Name,
-            TypeVersion = eventTypeAttribute.Version,
+            TypeName = aggregateTypeAttribute.Name,
+            TypeVersion = aggregateTypeAttribute.Version,
             Data = JsonConvert.SerializeObject(aggregate),
             CreatedDate = timeStamp,
             CreatedBy = null, // TODO: Set created by

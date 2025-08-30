@@ -4,6 +4,9 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
 public class AggregateEventDocument : DocumentBase, IApplicableDocument
 {
+    [JsonProperty("id")]
+    public string Id { get; set; } = null!;
+    
     [JsonProperty("aggregateId")]
     public string AggregateId { get; set; } = null!;
 

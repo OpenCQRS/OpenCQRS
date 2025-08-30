@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Cosmos;
+﻿using System.Reflection;
+using Microsoft.Azure.Cosmos;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
@@ -102,6 +103,12 @@ public class CosmosDomainService : IDomainService
                 );
             }
         
+            var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
+            if (aggregateTypeAttribute == null)
+            {
+                throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            }
+            
             var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
             var timeStamp = _timeProvider.GetUtcNow();
             
@@ -114,8 +121,9 @@ public class CosmosDomainService : IDomainService
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
+                    Id = Guid.NewGuid().ToString(),
                     StreamId = streamId.Id,
-                    AggregateId = aggregateId.Id,
+                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
                     EventId = eventDocument.Id,
                     AppliedDate = timeStamp
                 };
