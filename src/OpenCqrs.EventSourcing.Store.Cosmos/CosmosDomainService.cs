@@ -1,17 +1,21 @@
 ﻿using Microsoft.Azure.Cosmos;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
+using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
+using OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
 public class CosmosDomainService : IDomainService
 {
+    private readonly TimeProvider _timeProvider;
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
     
-    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection)
+    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider)
     {
+        _timeProvider = timeProvider;
         _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
     }
@@ -85,18 +89,51 @@ public class CosmosDomainService : IDomainService
         {
             return Result.Ok();
         }
-        
-        var latestEventSequence = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
-        if (latestEventSequence != expectedEventSequence)
+
+        try
         {
-            return new Failure
-            (
-                Title: "Concurrency exception",
-                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-            );
-        }
+            var latestEventSequence = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+            if (latestEventSequence != expectedEventSequence)
+            {
+                return new Failure
+                (
+                    Title: "Concurrency exception",
+                    Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
+                );
+            }
         
-        throw new NotImplementedException();
+            var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
+            var timeStamp = _timeProvider.GetUtcNow();
+            
+            var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
+
+            foreach (var @event in aggregate.UncommittedEvents)
+            {
+                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence, timeStamp);
+                batch.CreateItem(eventDocument);
+
+                var aggregateEventDocument = new AggregateEventDocument
+                {
+                    StreamId = streamId.Id,
+                    AggregateId = aggregateId.Id,
+                    EventId = eventDocument.Id,
+                    AppliedDate = timeStamp
+                };
+                batch.CreateItem(aggregateEventDocument);
+            }
+            
+            batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate, timeStamp));
+            
+            var transactionalBatchResponse = await batch.ExecuteAsync(cancellationToken);
+            return !transactionalBatchResponse.IsSuccessStatusCode 
+                ? new Failure(Title: "Cosmos batch failed", Description: transactionalBatchResponse.ErrorMessage) 
+                : Result.Ok();
+        }
+        catch (Exception e)
+        {
+            // TODO: Handle failure
+            throw;
+        }
     }
 
     public Task<Result> SaveDomainEvents(IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)

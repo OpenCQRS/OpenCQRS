@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Time.Testing;
 using OpenCqrs.EventSourcing;
 using OpenCqrs.EventSourcing.Store.Cosmos;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
@@ -16,7 +17,8 @@ public abstract class TestBase
         const string databaseName = "OpenCQRS";
         const string containerName = "Domain";
         var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions{ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct});
-        DomainService = new CosmosDomainService(cosmosClientConnection);
+        var timeProvider = new FakeTimeProvider();
+        DomainService = new CosmosDomainService(cosmosClientConnection, timeProvider);
         
         var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
