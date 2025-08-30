@@ -1,6 +1,5 @@
 using Newtonsoft.Json;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.Cosmos;
 
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 

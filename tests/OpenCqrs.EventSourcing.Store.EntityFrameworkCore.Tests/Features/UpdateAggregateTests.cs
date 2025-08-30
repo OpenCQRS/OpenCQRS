@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Streams;

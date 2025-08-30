@@ -5,9 +5,9 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddOpenCqrsEntityFrameworkCore<T>(this IServiceCollection services) where T : IDomainDbContext
+    public static void AddOpenCqrsEntityFrameworkCore<TDbContext>(this IServiceCollection services) where TDbContext : IDomainDbContext
     {
+        services.AddScoped<IDomainDbContext>(serviceProvider => serviceProvider.GetRequiredService<TDbContext>());
         services.TryAddScoped<IDomainService, EntityFrameworkCoreDomainService>();
-        services.AddScoped<IDomainDbContext>(provider => provider.GetRequiredService<T>());
     }
 }
