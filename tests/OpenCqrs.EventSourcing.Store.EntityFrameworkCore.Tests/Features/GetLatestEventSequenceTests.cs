@@ -14,8 +14,7 @@ public class GetLatestEventSequenceTests : TestBase
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        var latestEventSequence = await dbContext.GetLatestEventSequence(streamId);
+        var latestEventSequence = await DomainService.GetLatestEventSequence(streamId);
 
         latestEventSequence.Should().Be(0);
     }

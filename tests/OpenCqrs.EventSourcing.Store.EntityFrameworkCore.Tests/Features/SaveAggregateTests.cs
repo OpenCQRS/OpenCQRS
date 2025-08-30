@@ -218,7 +218,7 @@ public class SaveAggregateTests : TestBase
         timeProvider.SetUtcNow(now);
         var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor());
         var domainService = Shared.CreateDomainService(dbContext);
-        
+
         await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);

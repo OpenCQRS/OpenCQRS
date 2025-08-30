@@ -43,7 +43,7 @@ public static class Shared
         var dbContext = new TestDbContext(CreateContextOptions(), timeProvider, CreateHttpContextAccessor());
         return new EntityFrameworkCoreDomainService(dbContext);
     }
-    
+
     public static IDomainService CreateDomainService(IDomainDbContext domainDbContext)
     {
         return new EntityFrameworkCoreDomainService(domainDbContext);

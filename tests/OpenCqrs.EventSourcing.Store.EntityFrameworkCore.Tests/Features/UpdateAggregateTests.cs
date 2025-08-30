@@ -20,13 +20,9 @@ public class UpdateAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-
-        dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
-        await dbContext.Save();
-
-        var updatedAggregateResult = await dbContext.UpdateAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveDomainEvents(streamId, [new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")], expectedEventSequence: 1);
+        var updatedAggregateResult = await DomainService.UpdateAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

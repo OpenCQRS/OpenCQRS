@@ -9,6 +9,6 @@ public static class ServiceCollectionExtensions
 {
     public static void AddOpenCqrsCosmos(this IServiceCollection services, string endpoint, string authKey, string databaseName, CosmosClientOptions? clientOptions = null)
     {
-        services.TryAddSingleton<ICosmosClientConnection>(new  CosmosClientConnection(endpoint, authKey, databaseName, clientOptions));
+        services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, clientOptions));
     }
 }

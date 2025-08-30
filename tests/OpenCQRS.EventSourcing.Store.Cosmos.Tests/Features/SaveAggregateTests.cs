@@ -18,7 +18,7 @@ public class SaveAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
@@ -130,7 +130,7 @@ public class SaveAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate2Id(id);
         var aggregate = new TestAggregate2(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
         var domainEvents = new IDomainEvent[]
