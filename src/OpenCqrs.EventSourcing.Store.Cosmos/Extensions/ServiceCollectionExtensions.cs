@@ -7,11 +7,12 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddOpenCqrsCosmos(this IServiceCollection services, string endpoint, string authKey, string databaseName, CosmosClientOptions? clientOptions = null)
+    public static void AddOpenCqrsCosmos(this IServiceCollection services, string endpoint, string authKey, string databaseName, string containerName, CosmosClientOptions? clientOptions = null)
     {
-        services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, clientOptions));
+        // TODO: Add options pattern
         
-        // TODO: Container names
+        services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, containerName, clientOptions));
+        
         // TODO: Container throughput (shared or dedicated)
     }
 }

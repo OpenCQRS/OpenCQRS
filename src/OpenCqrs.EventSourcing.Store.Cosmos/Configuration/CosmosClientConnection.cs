@@ -6,4 +6,5 @@ public record CosmosClientConnection(
     string Endpoint,
     string AuthKey,
     string DatabaseName,
+    string ContainerName,
     CosmosClientOptions? ClientOptions = null) : ICosmosClientConnection;

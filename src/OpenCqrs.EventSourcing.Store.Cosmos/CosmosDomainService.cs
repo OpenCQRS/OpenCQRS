@@ -5,9 +5,16 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
-public class CosmosDomainService(ICosmosClientConnection cosmosClientConnection) : IDomainService
+public class CosmosDomainService : IDomainService
 {
-    private readonly CosmosClient _cosmosClient = new(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
+    private readonly CosmosClient _cosmosClient;
+    private readonly Container _container;
+    
+    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection)
+    {
+        _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
+        _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
+    }
 
     public Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
