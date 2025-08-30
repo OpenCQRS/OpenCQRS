@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 using OpenCqrs.Results;
@@ -128,9 +129,9 @@ public static partial class IDomainDbContextExtensions
         return aggregateEntity;
     }
 
-    private static List<AggregateEventEntity> TrackAggregateEventEntities(this IDomainDbContext domainDbContext, AggregateEntity aggregateEntity, List<EventEntity> eventEntities)
+    private static List<AggregateEventEntityForEfCore> TrackAggregateEventEntities(this IDomainDbContext domainDbContext, AggregateEntity aggregateEntity, List<EventEntity> eventEntities)
     {
-        var aggregateEventEntities = eventEntities.Select(eventEntity => new AggregateEventEntity { AggregateId = aggregateEntity.Id, EventId = eventEntity.Id }).ToList();
+        var aggregateEventEntities = eventEntities.Select(eventEntity => new AggregateEventEntityForEfCore { AggregateId = aggregateEntity.Id, EventId = eventEntity.Id }).ToList();
         domainDbContext.AggregateEvents.AddRange(aggregateEventEntities);
         return aggregateEventEntities;
     }

@@ -1,4 +1,5 @@
-﻿using OpenCqrs.EventSourcing.Domain;
+﻿using OpenCqrs.EventSourcing.Data;
+using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 using OpenCqrs.Results;
 
@@ -217,7 +218,7 @@ public static partial class IDomainDbContextExtensions
     /// }
     /// </code>
     /// </example>
-    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntityForEfCore>? AggregateEventEntities)>> TrackEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         if (eventEntities.Count == 0)
         {

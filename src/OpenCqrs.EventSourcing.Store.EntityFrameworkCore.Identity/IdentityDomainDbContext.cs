@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Configurations;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
@@ -35,7 +36,7 @@ public abstract class IdentityDomainDbContext(
 
     public DbSet<AggregateEntity> Aggregates { get; set; } = null!;
     public DbSet<EventEntity> Events { get; set; } = null!;
-    public DbSet<AggregateEventEntity> AggregateEvents { get; set; } = null!;
+    public DbSet<AggregateEventEntityForEfCore> AggregateEvents { get; set; } = null!;
 
     public void DetachAggregate<TAggregate>(IAggregateId aggregateId, TAggregate aggregate) where TAggregate : IAggregate
     {

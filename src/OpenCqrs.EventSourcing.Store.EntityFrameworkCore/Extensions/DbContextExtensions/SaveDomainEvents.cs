@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
+using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;

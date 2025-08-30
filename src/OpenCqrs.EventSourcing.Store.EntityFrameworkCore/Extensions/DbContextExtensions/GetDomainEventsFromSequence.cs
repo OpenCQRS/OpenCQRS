@@ -1,5 +1,5 @@
-﻿using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
+﻿using OpenCqrs.EventSourcing.Data;
+using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 

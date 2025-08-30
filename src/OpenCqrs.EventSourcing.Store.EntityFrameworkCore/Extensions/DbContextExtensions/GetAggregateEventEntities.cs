@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 using OpenCqrs.Results;
@@ -300,7 +301,7 @@ public static partial class IDomainDbContextExtensions
     /// }
     /// </code>
     /// </example>
-    public static async Task<Result<List<AggregateEventEntity>>> GetAggregateEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<List<AggregateEventEntityForEfCore>>> GetAggregateEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)

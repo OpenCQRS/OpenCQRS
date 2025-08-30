@@ -1,9 +1,10 @@
 using Newtonsoft.Json;
 using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.EventSourcing.Store.Cosmos;
 
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 
-namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
+namespace OpenCqrs.EventSourcing.Data;
 
 /// <summary>
 /// Represents the database entity for storing domain events in an Entity Framework Core event store.

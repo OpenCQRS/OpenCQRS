@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
+using OpenCqrs.EventSourcing.Data;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Configurations;
 
