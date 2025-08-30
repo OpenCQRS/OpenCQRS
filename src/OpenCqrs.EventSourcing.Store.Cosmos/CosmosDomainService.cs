@@ -5,7 +5,7 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
-public class CosmosDataStore(ICosmosClientConnection cosmosClientConnection) : ICosmosDataStore
+public class CosmosDomainService(ICosmosClientConnection cosmosClientConnection) : IDomainService
 {
     private readonly CosmosClient _cosmosClient = new(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
 

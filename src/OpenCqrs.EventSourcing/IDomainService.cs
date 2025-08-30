@@ -1,9 +1,9 @@
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.Results;
 
-namespace OpenCqrs.EventSourcing.Store.Cosmos;
+namespace OpenCqrs.EventSourcing;
 
-public interface ICosmosDataStore
+public interface IDomainService
 {
     Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
     Task<List<IDomainEvent>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);

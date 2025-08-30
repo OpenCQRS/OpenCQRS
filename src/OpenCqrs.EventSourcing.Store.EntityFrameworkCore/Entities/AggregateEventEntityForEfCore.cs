@@ -1,6 +1,4 @@
-﻿// ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
-
-using OpenCqrs.EventSourcing.Data;
+﻿using OpenCqrs.EventSourcing.Data;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
