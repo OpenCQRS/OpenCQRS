@@ -5,24 +5,34 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
 public class AggregateDocument : DocumentBase, IAuditableDocument, IEditableDocument, IBindableDocument
 {
+    [JsonProperty("id")]
     public string Id { get; set; } = null!;
     
+    [JsonProperty("version")]
     public int Version { get; set; }
 
+    [JsonProperty("latestEventSequence")]
     public int LatestEventSequence { get; set; }
 
+    [JsonProperty("data")]
     public string Data { get; set; } = null!;
 
+    [JsonProperty("createdDate")]
     public DateTimeOffset CreatedDate { get; set; }
 
+    [JsonProperty("createdBy")]
     public string? CreatedBy { get; set; }
 
+    [JsonProperty("updatedDate")]
     public DateTimeOffset UpdatedDate { get; set; }
 
+    [JsonProperty("updatedBy")]
     public string? UpdatedBy { get; set; }
 
+    [JsonProperty("typeName")]
     public string TypeName { get; set; } = null!;
 
+    [JsonProperty("typeVersion")]
     public int TypeVersion { get; set; }
 }
 
