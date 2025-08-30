@@ -46,13 +46,56 @@ public class CosmosDomainService : IDomainService
         throw new NotImplementedException();
     }
 
-    public Task<int> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<int> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        QueryDefinition queryDefinition;
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.streamId = @streamId AND c.type = 'event'";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id);
+        }
+        else
+        {
+            var domainEventTypeKeys = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+            
+            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.aggregateId = @aggregateId AND c.type = 'event' AND ARRAY_CONTAINS(@eventTypes, c.eventType)";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@eventTypes", domainEventTypeKeys);
+        }
+        
+        using var iterator = _container.GetItemQueryIterator<int>(queryDefinition);
+        var count = 0;
+        while (iterator.HasMoreResults)
+        {
+          var response = await iterator.ReadNextAsync(cancellationToken);
+          count += response.FirstOrDefault();
+        }
+
+        return count;
     }
 
-    public Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
+    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
     {
+        if (!aggregate.UncommittedEvents.Any())
+        {
+            return Result.Ok();
+        }
+        
+        var latestEventSequence = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+        if (latestEventSequence != expectedEventSequence)
+        {
+            return new Failure
+            (
+                Title: "Concurrency exception",
+                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
+            );
+        }
+        
         throw new NotImplementedException();
     }
 

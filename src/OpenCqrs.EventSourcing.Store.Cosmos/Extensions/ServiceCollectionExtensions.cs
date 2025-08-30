@@ -14,5 +14,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, containerName, clientOptions));
         
         // TODO: Container throughput (shared or dedicated)
+        
+        // TODO: ContainerProperties with partition key, indexing policy, etc.
     }
 }
