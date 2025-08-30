@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Configurations;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
@@ -221,7 +220,7 @@ public abstract class DomainDbContext(
     /// A <see cref="DbSet{AggregateEventEntity}"/> that enables CRUD operations on aggregate-event relationships,
     /// facilitating efficient navigation between aggregates and events in the event sourcing system.
     /// </value>
-    public DbSet<AggregateEventEntityForEfCore> AggregateEvents { get; set; } = null!;
+    public DbSet<AggregateEventEntity> AggregateEvents { get; set; } = null!;
 
     /// <summary>
     /// Detaches the specified aggregate entity from the Entity Framework change tracker to prevent

@@ -1,4 +1,4 @@
-﻿namespace OpenCqrs.EventSourcing.Data;
+﻿namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 public interface IApplicableEntity
 {

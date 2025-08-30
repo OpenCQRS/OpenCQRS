@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OpenCqrs.EventSourcing.Data;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
@@ -431,7 +430,7 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// </code>
     /// </example>
-    DbSet<AggregateEventEntityForEfCore> AggregateEvents { get; set; }
+    DbSet<AggregateEventEntity> AggregateEvents { get; set; }
 
     /// <summary>
     /// Asynchronously saves all changes made in the context to the database with support for cancellation.

@@ -4,9 +4,9 @@ using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Configurations;
 
-public class AggregateEventEntityConfiguration : IEntityTypeConfiguration<AggregateEventEntityForEfCore>
+public class AggregateEventEntityConfiguration : IEntityTypeConfiguration<AggregateEventEntity>
 {
-    public void Configure(EntityTypeBuilder<AggregateEventEntityForEfCore> builder)
+    public void Configure(EntityTypeBuilder<AggregateEventEntity> builder)
     {
         builder
             .ToTable(name: "DomainAggregateEvents")

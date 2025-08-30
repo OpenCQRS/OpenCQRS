@@ -1,4 +1,4 @@
-namespace OpenCqrs.EventSourcing.Data;
+namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 /// <summary>
 /// Defines the contract for entities that require creation audit trail functionality in the Entity Framework Core event store.

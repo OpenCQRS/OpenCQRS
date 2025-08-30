@@ -1,6 +1,6 @@
 using OpenCqrs.EventSourcing.Domain;
 
-namespace OpenCqrs.EventSourcing.Data;
+namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 /// <summary>
 /// Defines the contract for entities that support type binding functionality in the Entity Framework Core event store.

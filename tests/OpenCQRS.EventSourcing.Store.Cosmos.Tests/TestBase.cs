@@ -10,7 +10,10 @@ public abstract class TestBase
 
     protected TestBase()
     {
-        var cosmosClientConnection = new CosmosClientConnection(Endpoint: "https://localhost:8081", AuthKey: "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", DatabaseName: "OpenCQRS");
+        const string endpoint = "https://localhost:8081";
+        const string authKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        const string databaseName = "OpenCQRS";
+        var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName);
         DomainService = new CosmosDomainService(cosmosClientConnection);
     }
 }

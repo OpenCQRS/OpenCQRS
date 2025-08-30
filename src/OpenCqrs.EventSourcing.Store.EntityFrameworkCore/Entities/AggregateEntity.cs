@@ -3,7 +3,7 @@ using OpenCqrs.EventSourcing.Domain;
 
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 
-namespace OpenCqrs.EventSourcing.Data;
+namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 /// <summary>
 /// Represents the database entity for storing serialized aggregate snapshots in an Entity Framework Core event store.
