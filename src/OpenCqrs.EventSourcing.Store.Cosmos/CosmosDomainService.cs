@@ -261,9 +261,18 @@ public class CosmosDomainService : IDomainService
             batch.UpsertItem(aggregateDocument);
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !batchResponse.IsSuccessStatusCode
-                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage)
-                : Result.Ok();
+            if (batchResponse.IsSuccessStatusCode)
+            {
+                return Result.Ok();
+            }
+
+            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
+            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error saving the aggregate",
+                Description: "There was an error when saving the aggregate"
+            );
         }
         catch (Exception ex)
         {
@@ -315,9 +324,18 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !batchResponse.IsSuccessStatusCode
-                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage)
-                : Result.Ok();
+            if (batchResponse.IsSuccessStatusCode)
+            {
+                return Result.Ok();
+            }
+
+            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
+            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error saving the aggregate",
+                Description: "There was an error when saving the aggregate"
+            );
         }
         catch (Exception ex)
         {
