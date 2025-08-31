@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 using OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
+using OpenCqrs.Extensions;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
@@ -12,13 +14,15 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos;
 public class CosmosDomainService : IDomainService
 {
     private readonly TimeProvider _timeProvider;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
     private readonly ICosmosDataStore _cosmosDataStore;
 
-    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, ICosmosDataStore cosmosDataStore)
+    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
+        _httpContextAccessor = httpContextAccessor;
         _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
         _cosmosDataStore = cosmosDataStore;
@@ -70,10 +74,12 @@ public class CosmosDomainService : IDomainService
         var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
 
         var timeStamp = _timeProvider.GetUtcNow();
+        var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
+        
         aggregateDocument.CreatedDate = timeStamp;
-        aggregateDocument.CreatedBy = null; // TODO: Set created by
+        aggregateDocument.CreatedBy = currentUserNameIdentifier;
         aggregateDocument.UpdatedDate = timeStamp;
-        aggregateDocument.UpdatedBy = null; // TODO: Set updated by
+        aggregateDocument.UpdatedBy = currentUserNameIdentifier;
 
         try
         {
@@ -203,14 +209,15 @@ public class CosmosDomainService : IDomainService
             var aggregateIsNew = currentAggregateVersion == 0;
 
             var timeStamp = _timeProvider.GetUtcNow();
-
+            var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
+            
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in aggregate.UncommittedEvents)
             {
                 var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
                 eventDocument.CreatedDate = timeStamp;
-                eventDocument.CreatedBy = null; // TODO: Set created by
+                eventDocument.CreatedBy = currentUserNameIdentifier;
                 batch.CreateItem(eventDocument);
 
                 var aggregateEventDocument = new AggregateEventDocument
@@ -226,11 +233,11 @@ public class CosmosDomainService : IDomainService
 
             var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
             aggregateDocument.UpdatedDate = timeStamp;
-            aggregateDocument.UpdatedBy = null; // TODO: Set updated by
+            aggregateDocument.UpdatedBy = currentUserNameIdentifier;
             if (aggregateIsNew)
             {
                 aggregateDocument.CreatedDate = timeStamp;
-                aggregateDocument.CreatedBy = null; // TODO: Set created by
+                aggregateDocument.CreatedBy = currentUserNameIdentifier;
             }
             else
             {
@@ -248,7 +255,7 @@ public class CosmosDomainService : IDomainService
                 else
                 {
                     aggregateDocument.CreatedDate = timeStamp;
-                    aggregateDocument.CreatedBy = null; // TODO: Set created by
+                    aggregateDocument.CreatedBy = currentUserNameIdentifier;
                 }
             }
             batch.UpsertItem(aggregateDocument);
@@ -295,14 +302,15 @@ public class CosmosDomainService : IDomainService
             }
 
             var timeStamp = _timeProvider.GetUtcNow();
-
+            var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
+            
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in domainEvents)
             {
                 var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
                 eventDocument.CreatedDate = timeStamp;
-                eventDocument.CreatedBy = null; // TODO: Set created by
+                eventDocument.CreatedBy = currentUserNameIdentifier;
                 batch.CreateItem(eventDocument);
             }
 

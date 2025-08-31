@@ -1,5 +1,8 @@
-﻿using Microsoft.Azure.Cosmos;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Time.Testing;
+using NSubstitute;
 using OpenCqrs.EventSourcing;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos;
@@ -37,10 +40,29 @@ public abstract class TestBase
         var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions { ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct });
         TimeProvider = new FakeTimeProvider();
         CosmosDataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider);
-        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, CosmosDataStore);
+        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, CreateHttpContextAccessor(), CosmosDataStore);
 
         var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
         databaseResponse.Database.CreateContainerIfNotExistsAsync(containerName, "/streamId", throughput: 400);
+    }
+    
+    private static IHttpContextAccessor CreateHttpContextAccessor()
+    {
+        var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
+        var context = new DefaultHttpContext();
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, "TestUser")
+        };
+
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        context.User = principal;
+
+        httpContextAccessor.HttpContext.Returns(context);
+        return httpContextAccessor;
     }
 }
