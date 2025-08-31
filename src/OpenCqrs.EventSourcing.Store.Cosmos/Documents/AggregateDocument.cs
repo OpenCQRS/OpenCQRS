@@ -8,8 +8,8 @@ public class AggregateDocument : IAuditableDocument, IEditableDocument, IBindabl
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
     
-    [JsonProperty("type")]
-    public static string Type => DocumentType.Aggregate;
+    [JsonProperty("documentType")]
+    public static string DocumentType => Documents.DocumentType.Aggregate;
     
     [JsonProperty("id")]
     public string Id { get; set; } = null!;

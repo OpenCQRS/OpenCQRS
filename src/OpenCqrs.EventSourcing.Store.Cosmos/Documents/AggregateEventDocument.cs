@@ -7,8 +7,8 @@ public class AggregateEventDocument : IApplicableDocument
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
     
-    [JsonProperty("type")]
-    public static string Type => DocumentType.AggregateEvent;
+    [JsonProperty("documentType")]
+    public static string DocumentType => Documents.DocumentType.AggregateEvent;
     
     [JsonProperty("id")]
     public string Id { get; set; } = null!;

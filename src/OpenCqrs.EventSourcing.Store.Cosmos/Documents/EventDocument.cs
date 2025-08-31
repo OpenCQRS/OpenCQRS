@@ -8,8 +8,8 @@ public class EventDocument : IAuditableDocument, IBindableDocument
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
     
-    [JsonProperty("type")]
-    public static string Type => DocumentType.Event;
+    [JsonProperty("documentType")]
+    public static string DocumentType => Documents.DocumentType.Event;
     
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
