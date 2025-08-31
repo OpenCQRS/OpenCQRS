@@ -165,7 +165,7 @@ public class GetAggregateTests : TestBase
         using (new AssertionScope())
         {
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(2);
             aggregateEntity.LatestEventSequence.Should().Be(2);
         }

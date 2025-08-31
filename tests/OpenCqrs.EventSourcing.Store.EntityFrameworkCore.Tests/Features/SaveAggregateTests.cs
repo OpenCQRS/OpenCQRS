@@ -55,12 +55,12 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(1);
             aggregateEntity.LatestEventSequence.Should().Be(1);
 
             eventEntity.Should().NotBeNull();
-            eventEntity.TypeName.Should().Be("TestAggregateCreated");
+            eventEntity.EventType.Should().Be("TestAggregateCreated:1");
             eventEntity.Sequence.Should().Be(1);
         }
     }
@@ -88,14 +88,14 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(2);
             aggregateEntity.LatestEventSequence.Should().Be(2);
 
             eventEntities.Count.Should().Be(2);
-            eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
+            eventEntities[0].EventType.Should().Be("TestAggregateCreated:1");
             eventEntities[0].Sequence.Should().Be(1);
-            eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventEntities[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventEntities[1].Sequence.Should().Be(2);
         }
     }
@@ -119,14 +119,14 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(2);
             aggregateEntity.LatestEventSequence.Should().Be(2);
 
             eventEntities.Count.Should().Be(2);
-            eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
+            eventEntities[0].EventType.Should().Be("TestAggregateCreated:1");
             eventEntities[0].Sequence.Should().Be(1);
-            eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventEntities[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventEntities[1].Sequence.Should().Be(2);
         }
     }

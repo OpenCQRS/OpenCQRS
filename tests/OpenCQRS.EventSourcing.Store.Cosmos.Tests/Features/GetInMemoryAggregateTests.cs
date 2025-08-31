@@ -53,7 +53,7 @@ public class GetInMemoryAggregateTests : TestBase
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
         await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
-        
+
         var getAggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
 
         using (new AssertionScope())

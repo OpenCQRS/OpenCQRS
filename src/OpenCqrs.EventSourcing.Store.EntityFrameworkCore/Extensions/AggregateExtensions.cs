@@ -135,8 +135,7 @@ public static class AggregateExtensions
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
-            TypeName = aggregateTypeAttribute.Name,
-            TypeVersion = aggregateTypeAttribute.Version,
+            AggregateType = TypeBindings.GetTypeBindingKey(aggregateTypeAttribute.Name, aggregateTypeAttribute.Version),
             Data = JsonConvert.SerializeObject(aggregate)
         };
     }

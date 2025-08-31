@@ -18,7 +18,7 @@ public class EventEntityConfiguration : IEntityTypeConfiguration<EventEntity>
             .IsRequired();
 
         builder
-            .Property(eventEntity => eventEntity.TypeName)
+            .Property(eventEntity => eventEntity.EventType)
             .HasMaxLength(255)
             .IsRequired();
 
@@ -39,7 +39,7 @@ public class EventEntityConfiguration : IEntityTypeConfiguration<EventEntity>
             .HasDatabaseName("IX_Events_StreamId_Sequence");
 
         builder
-            .HasIndex(eventEntity => new { eventEntity.StreamId, eventEntity.TypeName, eventEntity.TypeVersion })
-            .HasDatabaseName("IX_Events_StreamId_Type");
+            .HasIndex(eventEntity => eventEntity.EventType)
+            .HasDatabaseName("IX_Events_EventType");
     }
 }

@@ -236,7 +236,13 @@ public static partial class IDomainDbContextExtensions
         var eventEntitiesHandledByTheAggregate = new Dictionary<int, EventEntity>();
         for (var i = 0; i < eventEntities.Count; i++)
         {
-            if (aggregate.IsDomainEventHandled(eventEntities[i].ToDomainEventType()))
+            var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventEntities[i].EventType, out var eventType);
+            if (typeFound is false)
+            {
+                throw new InvalidOperationException($"Event type {eventEntities[i].EventType} not found in TypeBindings");
+            }
+
+            if (aggregate.IsDomainEventHandled(eventType!))
             {
                 eventEntitiesHandledByTheAggregate.Add(i + 1, eventEntities[i]);
             }

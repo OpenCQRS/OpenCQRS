@@ -200,8 +200,7 @@ public static class DomainEventExtensions
             Id = $"{streamId.Id}:{sequence}",
             StreamId = streamId.Id,
             Sequence = sequence,
-            TypeName = domainEventTypeAttribute.Name,
-            TypeVersion = domainEventTypeAttribute.Version,
+            EventType = TypeBindings.GetTypeBindingKey(domainEventTypeAttribute.Name, domainEventTypeAttribute.Version),
             Data = JsonConvert.SerializeObject(domainEvent)
         };
     }

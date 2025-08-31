@@ -54,7 +54,7 @@ public class GetInMemoryAggregateTests : TestBase
         await using var dbContext = Shared.CreateTestDbContext();
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
-        
+
         var getAggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
 
         using (new AssertionScope())
