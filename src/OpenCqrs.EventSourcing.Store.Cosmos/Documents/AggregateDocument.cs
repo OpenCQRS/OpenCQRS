@@ -3,7 +3,7 @@ using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
-public class AggregateDocument : IBindableDocument
+public class AggregateDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
