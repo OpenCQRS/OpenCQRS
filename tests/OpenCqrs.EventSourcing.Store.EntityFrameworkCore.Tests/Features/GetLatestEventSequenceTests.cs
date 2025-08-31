@@ -16,7 +16,7 @@ public class GetLatestEventSequenceTests : TestBase
 
         var latestEventSequence = await DomainService.GetLatestEventSequence(streamId);
 
-        latestEventSequence.Should().Be(0);
+        latestEventSequence.Value.Should().Be(0);
     }
 
     [Fact]

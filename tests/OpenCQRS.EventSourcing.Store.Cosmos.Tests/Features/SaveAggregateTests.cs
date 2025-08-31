@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
 using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.EventSourcing.Store.Cosmos;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Streams;
@@ -33,14 +34,14 @@ public class SaveAggregateTests : TestBase
     }
 
     // [Fact]
-    // public async Task GivenNewAggregateSaved_ThenAggregateAndEventEntitiesAreStored()
+    // public async Task GivenNewAggregateSaved_ThenAggregateAndEventDocumentsAreStored()
     // {
     //     var id = Guid.NewGuid().ToString();
     //     var streamId = new TestStreamId(id);
     //     var aggregateId = new TestAggregate1Id(id);
     //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
     //
-    //     var saveResult = await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+    //     var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
     //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
     //     var eventEntity = await CosmosDataStore.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
     //
@@ -58,7 +59,7 @@ public class SaveAggregateTests : TestBase
     //         eventEntity.Sequence.Should().Be(1);
     //     }
     // }
-    //
+
     // [Fact]
     // public async Task GivenAggregateIsUpdated_ThenAggregateEntityVersionIncreasesAndAllEventEntitiesAreStored()
     // {

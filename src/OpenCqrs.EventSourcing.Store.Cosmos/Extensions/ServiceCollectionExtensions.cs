@@ -10,13 +10,13 @@ public static class ServiceCollectionExtensions
     public static void AddOpenCqrsCosmos(this IServiceCollection services, string endpoint, string authKey, string databaseName, string containerName, CosmosClientOptions? clientOptions = null)
     {
         // TODO: Add options pattern
-        
+
         services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, containerName, clientOptions));
         services.TryAddScoped<IDomainService, CosmosDomainService>();
         services.TryAddScoped<ICosmosDataStore, CosmosDataStore>();
-        
+
         // TODO: Container throughput (shared or dedicated)
-        
+
         // TODO: ContainerProperties with partition key, indexing policy, etc.
     }
 }

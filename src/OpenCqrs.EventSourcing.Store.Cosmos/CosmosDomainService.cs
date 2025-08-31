@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Azure.Cosmos;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
@@ -14,7 +15,7 @@ public class CosmosDomainService : IDomainService
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
     private readonly ICosmosDataStore _cosmosDataStore;
-    
+
     public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
@@ -25,40 +26,33 @@ public class CosmosDomainService : IDomainService
 
     public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
+        var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
+        if (aggregateDocumentResult.IsNotSuccess)
         {
-            return new Failure
-            (
-                Title: "Aggregate type not found",
-                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
-            );
+            return aggregateDocumentResult.Failure!;
         }
-        
-        try
+
+        if (aggregateDocumentResult.Value != null)
         {
-            var aggregateDocumentId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
-            var response = await _container.ReadItemAsync<AggregateDocument>(aggregateDocumentId, new PartitionKey(streamId.Id), cancellationToken: cancellationToken);
-            if (response.Resource != null)
+            var currentAggregate = aggregateDocumentResult.Value.ToAggregate<TAggregate>();
+
+            if (!applyNewDomainEvents)
             {
-                var currentAggregate = response.Resource.ToAggregate<TAggregate>();
-
-                if (!applyNewDomainEvents)
-                {
-                    return currentAggregate;
-                }
-
-                return await UpdateAggregate(streamId, aggregateId, cancellationToken);
+                return currentAggregate;
             }
-        }
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            // Aggregate document doesn't exist, continue to create new one
+
+            return await UpdateAggregate(streamId, aggregateId, cancellationToken);
         }
 
         var aggregate = new TAggregate();
 
-        var eventDocuments = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        var eventDocuments = eventDocumentsResult.Value!.ToList();
+
         if (eventDocuments.Count == 0)
         {
             return aggregate;
@@ -82,10 +76,12 @@ public class CosmosDomainService : IDomainService
         }
         catch (Exception ex)
         {
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when creating the aggregate", tags: new ActivityTagsCollection(tags!)));
             return new Failure
             (
-                Title: "Error saving aggregate",
-                Description: $"There was an error when creating the aggregate snapshot: {ex.Message}"
+                Title: "Error creating the aggregate",
+                Description: "There was an error when creating the aggregate"
             );
         }
 
@@ -117,7 +113,7 @@ public class CosmosDomainService : IDomainService
         throw new NotImplementedException();
     }
 
-    public async Task<int> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<int>> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
         var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
@@ -141,16 +137,29 @@ public class CosmosDomainService : IDomainService
                 .WithParameter("@eventTypes", domainEventTypeKeys);
         }
 
-        using var iterator = _container.GetItemQueryIterator<int?>(queryDefinition);
-
-        if (!iterator.HasMoreResults)
+        try
         {
-            return 0;
-        }
+            using var iterator = _container.GetItemQueryIterator<int?>(queryDefinition);
 
-        var response = await iterator.ReadNextAsync(cancellationToken);
-        var result = response.FirstOrDefault();
-        return result ?? 0;
+            if (!iterator.HasMoreResults)
+            {
+                return 0;
+            }
+
+            var response = await iterator.ReadNextAsync(cancellationToken);
+            var result = response.FirstOrDefault();
+            return result ?? 0;
+        }
+        catch (Exception ex)
+        {
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the latest event sequence", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error retrieving the latest event sequence",
+                Description: "There was an error when retrieving the latest event sequence"
+            );
+        }
     }
 
     public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
@@ -162,7 +171,13 @@ public class CosmosDomainService : IDomainService
 
         try
         {
-            var latestEventSequence = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+            var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+            if (latestEventSequenceResult.IsNotSuccess)
+            {
+                return latestEventSequenceResult.Failure!;
+            }
+            var latestEventSequence = latestEventSequenceResult.Value;
+
             if (latestEventSequence != expectedEventSequence)
             {
                 return new Failure
@@ -171,16 +186,16 @@ public class CosmosDomainService : IDomainService
                     Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
                 );
             }
-        
+
             var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
             if (aggregateTypeAttribute == null)
             {
                 throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
             }
-            
+
             var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
             var timeStamp = _timeProvider.GetUtcNow();
-            
+
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in aggregate.UncommittedEvents)
@@ -198,18 +213,23 @@ public class CosmosDomainService : IDomainService
                 };
                 batch.CreateItem(aggregateEventDocument);
             }
-            
+
             batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate, timeStamp));
-            
+
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !batchResponse.IsSuccessStatusCode 
-                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage) 
+            return !batchResponse.IsSuccessStatusCode
+                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage)
                 : Result.Ok();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            // TODO: Handle failure
-            throw;
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error saving the aggregate",
+                Description: "There was an error when saving the aggregate"
+            );
         }
     }
 
@@ -219,10 +239,15 @@ public class CosmosDomainService : IDomainService
         {
             return Result.Ok();
         }
-        
+
         try
         {
-            var latestEventSequence = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+            var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+            if (latestEventSequenceResult.IsNotSuccess)
+            {
+                return latestEventSequenceResult.Failure!;
+            }
+            var latestEventSequence = latestEventSequenceResult.Value;
             if (latestEventSequence != expectedEventSequence)
             {
                 return new Failure
@@ -231,9 +256,9 @@ public class CosmosDomainService : IDomainService
                     Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
                 );
             }
-            
+
             var timeStamp = _timeProvider.GetUtcNow();
-            
+
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in domainEvents)
@@ -241,16 +266,21 @@ public class CosmosDomainService : IDomainService
                 var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence, timeStamp);
                 batch.CreateItem(eventDocument);
             }
-            
+
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !batchResponse.IsSuccessStatusCode 
-                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage) 
+            return !batchResponse.IsSuccessStatusCode
+                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage)
                 : Result.Ok();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            // TODO: Handle failure
-            throw;
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when saving the domain events", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error saving the domain events",
+                Description: "There was an error when saving the domain events"
+            );
         }
     }
 

@@ -257,7 +257,7 @@ public class AggregateEventEntity : IApplicableEntity
     /// </code>
     /// </example>
     public DateTimeOffset AppliedDate { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the navigation property to the associated aggregate entity.
     /// Enables Entity Framework to automatically load aggregate data when querying through this relationship.
