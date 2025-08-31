@@ -118,10 +118,10 @@ public class CosmosDataStore : ICosmosDataStore
         var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
         if (!filterEventTypes)
         {
-            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence > @sequence AND c.documentType = @documentType ORDER BY c.sequence";
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence >= @fromSequence AND c.documentType = @documentType ORDER BY c.sequence";
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
-                .WithParameter("@sequence", fromSequence)
+                .WithParameter("@fromSequence", fromSequence)
                 .WithParameter("@documentType", DocumentType.Event);
         }
         else
@@ -130,10 +130,10 @@ public class CosmosDataStore : ICosmosDataStore
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
 
-            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence > @sequence AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence >= @fromSequence AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
-                .WithParameter("@sequence", fromSequence)
+                .WithParameter("@fromSequence", fromSequence)
                 .WithParameter("@documentType", DocumentType.Event)
                 .WithParameter("@eventTypes", domainEventTypeKeys);
         }
