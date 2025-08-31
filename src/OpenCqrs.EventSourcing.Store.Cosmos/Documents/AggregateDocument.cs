@@ -3,7 +3,7 @@ using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
-public class AggregateDocument : IAuditableDocument, IEditableDocument, IBindableDocument
+public class AggregateDocument : IBindableDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
@@ -11,6 +11,9 @@ public class AggregateDocument : IAuditableDocument, IEditableDocument, IBindabl
     [JsonProperty("documentType")]
     public static string DocumentType => Documents.DocumentType.Aggregate;
 
+    [JsonProperty("aggregateType")]
+    public string AggregateType { get; set; } = null!;
+    
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
 
@@ -34,12 +37,6 @@ public class AggregateDocument : IAuditableDocument, IEditableDocument, IBindabl
 
     [JsonProperty("updatedBy")]
     public string? UpdatedBy { get; set; }
-
-    [JsonProperty("typeName")]
-    public string TypeName { get; set; } = null!;
-
-    [JsonProperty("typeVersion")]
-    public int TypeVersion { get; set; }
 }
 
 public static class AggregateDocumentExtensions
@@ -51,10 +48,10 @@ public static class AggregateDocumentExtensions
 
     public static T ToAggregate<T>(this AggregateDocument aggregateDocument) where T : IAggregate
     {
-        var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateDocument.GetTypeBindingKey(), out var aggregateType);
+        var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateDocument.AggregateType, out var aggregateType);
         if (typeFound is false)
         {
-            throw new InvalidOperationException($"Aggregate type {aggregateDocument.TypeName} not found in TypeBindings");
+            throw new InvalidOperationException($"Aggregate type {aggregateDocument.AggregateType} not found in TypeBindings");
         }
 
         var aggregate = (T)JsonConvert.DeserializeObject(aggregateDocument.Data, aggregateType!, JsonSerializerSettings)!;

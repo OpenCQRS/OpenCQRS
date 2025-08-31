@@ -3,7 +3,7 @@ using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
-public class EventDocument : IAuditableDocument, IBindableDocument
+public class EventDocument : IBindableDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
@@ -28,12 +28,6 @@ public class EventDocument : IAuditableDocument, IBindableDocument
 
     [JsonProperty("createdBy")]
     public string? CreatedBy { get; set; }
-
-    [JsonProperty("typeName")]
-    public string TypeName { get; set; } = null!;
-
-    [JsonProperty("typeVersion")]
-    public int TypeVersion { get; set; }
 }
 
 public static class EventDocumentExtensions
@@ -48,7 +42,7 @@ public static class EventDocumentExtensions
         var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventDocument.EventType, out var eventType);
         if (typeFound is false)
         {
-            throw new InvalidOperationException($"Event type {eventDocument.TypeName} not found in TypeBindings");
+            throw new InvalidOperationException($"Event type {eventDocument.EventType} not found in TypeBindings");
         }
 
         return (IDomainEvent)JsonConvert.DeserializeObject(eventDocument.Data, eventType!, JsonSerializerSettings)!;

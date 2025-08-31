@@ -2,7 +2,7 @@
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
-public class AggregateEventDocument : IApplicableDocument
+public class AggregateEventDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
