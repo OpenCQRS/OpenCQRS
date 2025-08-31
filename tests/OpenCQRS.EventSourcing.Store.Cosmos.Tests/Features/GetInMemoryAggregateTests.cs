@@ -38,7 +38,39 @@ public class GetInMemoryAggregateTests : TestBase
         }
     }
 
-    // TODO: Up to sequence - aggregate document
+    [Fact]
+    public async Task GivenAggregateDoesExist_ThenTheInMemoryAggregateUpToSequenceIsReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+
+        var domainEvents = new IDomainEvent[]
+        {
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        
+        var getAggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
+
+        using (new AssertionScope())
+        {
+            getAggregateResult.IsSuccess.Should().BeTrue();
+
+            getAggregateResult.Value.Should().NotBeNull();
+
+            getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.Version.Should().Be(1);
+
+            getAggregateResult.Value.Id.Should().Be(aggregate.Id);
+            getAggregateResult.Value.Name.Should().Be(aggregate.Name);
+            getAggregateResult.Value.Description.Should().Be(aggregate.Description);
+        }
+    }
 
     [Fact]
     public async Task GivenAggregateDoesNotExist_WhenEventsHandledByTheAggregateTypeAreStored_ThenTheInMemoryAggregateIsReturned()
@@ -73,7 +105,38 @@ public class GetInMemoryAggregateTests : TestBase
         }
     }
 
-    // TODO: Up to sequence - no aggregate document
+    [Fact]
+    public async Task GivenAggregateDoesNotExist_WhenEventsHandledByTheAggregateTypeAreStored_ThenTheInMemoryAggregateUpToSequenceIsReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+
+        var domainEvents = new IDomainEvent[]
+        {
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+
+        var aggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+
+        using (new AssertionScope())
+        {
+            aggregateResult.IsSuccess.Should().BeTrue();
+
+            aggregateResult.Value.Should().NotBeNull();
+            aggregateResult.Value.StreamId.Should().Be(streamId.Id);
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.Version.Should().Be(1);
+            aggregateResult.Value.Id.Should().Be(id);
+            aggregateResult.Value.Name.Should().Be("Test Name");
+            aggregateResult.Value.Description.Should().Be("Test Description");
+
+            aggregateDocument.Value.Should().BeNull();
+        }
+    }
 
     [Fact]
     public async Task GivenAggregateDoesNotExist_WhenNoEventsAreStored_TheDefaultAggregateIsReturned()
