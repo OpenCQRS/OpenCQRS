@@ -68,7 +68,7 @@ public class CosmosDomainService : IDomainService
 
         var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDoc => eventDoc.Sequence).Last().Sequence;
         var timeStamp = _timeProvider.GetUtcNow();
-        var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate, timeStamp);
+        var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
 
         try
         {
@@ -194,6 +194,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
+            var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
             var timeStamp = _timeProvider.GetUtcNow();
 
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
@@ -214,7 +215,7 @@ public class CosmosDomainService : IDomainService
                 batch.CreateItem(aggregateEventDocument);
             }
 
-            batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate, timeStamp));
+            batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate));
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
             return !batchResponse.IsSuccessStatusCode

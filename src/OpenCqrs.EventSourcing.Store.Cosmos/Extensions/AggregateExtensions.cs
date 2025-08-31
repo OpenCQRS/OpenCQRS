@@ -7,7 +7,7 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
 public static class AggregateExtensions
 {
-    public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence, DateTimeOffset timeStamp)
+    public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence)
     {
         var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateTypeAttribute == null)
@@ -27,11 +27,7 @@ public static class AggregateExtensions
             LatestEventSequence = newLatestEventSequence,
             TypeName = aggregateTypeAttribute.Name,
             TypeVersion = aggregateTypeAttribute.Version,
-            Data = JsonConvert.SerializeObject(aggregate),
-            CreatedDate = timeStamp,
-            CreatedBy = null, // TODO: Set created by
-            UpdatedDate = timeStamp,
-            UpdatedBy = null // TODO: Set updated by
+            Data = JsonConvert.SerializeObject(aggregate)
         };
     }
 }

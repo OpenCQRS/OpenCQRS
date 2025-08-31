@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.Cosmos;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
 using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Streams;
@@ -60,69 +59,69 @@ public class SaveAggregateTests : TestBase
         }
     }
 
-    // [Fact]
-    // public async Task GivenAggregateIsUpdated_ThenAggregateEntityVersionIncreasesAndAllEventEntitiesAreStored()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //     var aggregateId = new TestAggregate1Id(id);
-    //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    //     
-    //     await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    //     var updatedAggregateResult = await CosmosDataStore.GetAggregate(streamId, aggregateId);
-    //     aggregate = updatedAggregateResult.Value!;
-    //     aggregate.Update("Updated Name", "Updated Description");
-    //
-    //     var saveResult = await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
-    //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
-    //     var eventEntities = await CosmosDataStore.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         saveResult.IsSuccess.Should().BeTrue();
-    //
-    //         aggregateEntity.Should().NotBeNull();
-    //         aggregateEntity.TypeName.Should().Be("TestAggregate1");
-    //         aggregateEntity.Version.Should().Be(2);
-    //         aggregateEntity.LatestEventSequence.Should().Be(2);
-    //
-    //         eventEntities.Count.Should().Be(2);
-    //         eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
-    //         eventEntities[0].Sequence.Should().Be(1);
-    //         eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
-    //         eventEntities[1].Sequence.Should().Be(2);
-    //     }
-    // }
-    //
-    // [Fact]
-    // public async Task GivenNewAggregateSaved_WhenMultipleEventsAdded_ThenAggregateAndAllEventEntitiesAreStored()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //     var aggregateId = new TestAggregate1Id(id);
-    //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    //     aggregate.Update("Updated Name", "Updated Description");
-    //     
-    //     var saveResult = await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
-    //     var eventEntities = await CosmosDataStore.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         saveResult.IsSuccess.Should().BeTrue();
-    //
-    //         aggregateEntity.Should().NotBeNull();
-    //         aggregateEntity.TypeName.Should().Be("TestAggregate1");
-    //         aggregateEntity.Version.Should().Be(2);
-    //         aggregateEntity.LatestEventSequence.Should().Be(2);
-    //
-    //         eventEntities.Count.Should().Be(2);
-    //         eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
-    //         eventEntities[0].Sequence.Should().Be(1);
-    //         eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
-    //         eventEntities[1].Sequence.Should().Be(2);
-    //     }
-    // }
+    [Fact]
+    public async Task GivenAggregateIsUpdated_ThenAggregateDocumentVersionIncreasesAndAllEventDocumentsAreStored()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+        
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
+        aggregate = updatedAggregateResult.Value!;
+        aggregate.Update("Updated Name", "Updated Description");
+    
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
+        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+    
+        using (new AssertionScope())
+        {
+            saveResult.IsSuccess.Should().BeTrue();
+    
+            aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.TypeName.Should().Be("TestAggregate1");
+            aggregateDocument.Value.Version.Should().Be(2);
+            aggregateDocument.Value.LatestEventSequence.Should().Be(2);
+    
+            eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].TypeName.Should().Be("TestAggregateCreated");
+            eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventDocuments.Value[1].Sequence.Should().Be(2);
+        }
+    }
+    
+    [Fact]
+    public async Task GivenNewAggregateSaved_WhenMultipleEventsAdded_ThenAggregateAndAllEventDocumentsAreStored()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+        aggregate.Update("Updated Name", "Updated Description");
+        
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+    
+        using (new AssertionScope())
+        {
+            saveResult.IsSuccess.Should().BeTrue();
+    
+            aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.TypeName.Should().Be("TestAggregate1");
+            aggregateDocument.Value.Version.Should().Be(2);
+            aggregateDocument.Value.LatestEventSequence.Should().Be(2);
+    
+            eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].TypeName.Should().Be("TestAggregateCreated");
+            eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventDocuments.Value[1].Sequence.Should().Be(2);
+        }
+    }
 
     [Fact]
     public async Task GivenEventsNotHandledByTheAggregateStored_WhenAggregateIsUpdated_ThenLastEventSequenceIsGreaterThenAggregateVersion()
@@ -166,70 +165,68 @@ public class SaveAggregateTests : TestBase
         }
     }
 
-    // [Fact]
-    // public async Task GivenNewAggregateSaved_ThenAuditablePropertiesArePopulated()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //     var aggregateId = new TestAggregate1Id(id);
-    //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    //     var now = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
-    //
-    //     var timeProvider = new FakeTimeProvider();
-    //     timeProvider.SetUtcNow(now);
-    //
-    //     await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
-    //     var eventEntity = await CosmosDataStore.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         aggregateEntity.Should().NotBeNull();
-    //         aggregateEntity.CreatedBy.Should().Be("TestUser");
-    //         aggregateEntity.CreatedDate.Should().Be(now);
-    //         aggregateEntity.UpdatedBy.Should().Be("TestUser");
-    //         aggregateEntity.UpdatedDate.Should().Be(now);
-    //
-    //         eventEntity.Should().NotBeNull();
-    //         eventEntity.CreatedBy.Should().Be("TestUser");
-    //         eventEntity.CreatedDate.Should().Be(now);
-    //     }
-    // }
-    //
-    // [Fact]
-    // public async Task GivenAggregateUpdated_ThenAuditablePropertiesArePopulated()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //     var aggregateId = new TestAggregate1Id(id);
-    //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    //
-    //     var timeProvider = new FakeTimeProvider();
-    //
-    //     var createDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
-    //     timeProvider.SetUtcNow(createDate);
-    //     await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    //
-    //     var updateDate = new DateTime(2024, 6, 15, 18, 0, 0, DateTimeKind.Utc);
-    //     timeProvider.SetUtcNow(updateDate);
-    //     var aggregateToUpdateResult = await CosmosDataStore.GetAggregate(streamId, aggregateId);
-    //     aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
-    //     await CosmosDataStore.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
-    //
-    //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
-    //     var eventEntity = await CosmosDataStore.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         aggregateEntity.Should().NotBeNull();
-    //         aggregateEntity.CreatedBy.Should().Be("TestUser");
-    //         aggregateEntity.CreatedDate.Should().Be(createDate);
-    //         aggregateEntity.UpdatedBy.Should().Be("TestUser");
-    //         aggregateEntity.UpdatedDate.Should().Be(updateDate);
-    //
-    //         eventEntity.Should().NotBeNull();
-    //         eventEntity.CreatedBy.Should().Be("TestUser");
-    //         eventEntity.CreatedDate.Should().Be(createDate);
-    //     }
-    // }
+    [Fact]
+    public async Task GivenNewAggregateSaved_ThenAuditablePropertiesArePopulated()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+        var now = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+    
+        TimeProvider.SetUtcNow(now);
+    
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+    
+        using (new AssertionScope())
+        {
+            aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.CreatedBy.Should().Be("TestUser");
+            aggregateDocument.Value.CreatedDate.Should().Be(now);
+            aggregateDocument.Value.UpdatedBy.Should().Be("TestUser");
+            aggregateDocument.Value.UpdatedDate.Should().Be(now);
+    
+            eventDocuments.Value.Should().NotBeNull();
+            eventDocuments.Value[0].Should().NotBeNull();
+            eventDocuments.Value[0].CreatedBy.Should().Be("TestUser");
+            eventDocuments.Value[0].CreatedDate.Should().Be(now);
+        }
+    }
+    
+    [Fact]
+    public async Task GivenAggregateUpdated_ThenAuditablePropertiesArePopulated()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+        
+        var createDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+        TimeProvider.SetUtcNow(createDate);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+    
+        var updateDate = new DateTime(2024, 6, 15, 18, 0, 0, DateTimeKind.Utc);
+        TimeProvider.SetUtcNow(updateDate);
+        var aggregateToUpdateResult = await DomainService.GetAggregate(streamId, aggregateId);
+        aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
+    
+        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+    
+        using (new AssertionScope())
+        {
+            aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.CreatedBy.Should().Be("TestUser");
+            aggregateDocument.Value.CreatedDate.Should().Be(createDate);
+            aggregateDocument.Value.UpdatedBy.Should().Be("TestUser");
+            aggregateDocument.Value.UpdatedDate.Should().Be(updateDate);
+    
+            eventDocuments.Value.Should().NotBeNull();
+            eventDocuments.Value[0].CreatedBy.Should().Be("TestUser");
+            eventDocuments.Value[0].CreatedDate.Should().Be(createDate);
+        }
+    }
 }

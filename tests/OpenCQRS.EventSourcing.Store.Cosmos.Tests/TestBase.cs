@@ -13,6 +13,7 @@ public abstract class TestBase
 {
     protected readonly IDomainService DomainService;
     protected readonly ICosmosDataStore CosmosDataStore;
+    protected readonly FakeTimeProvider TimeProvider;
 
     protected TestBase()
     {
@@ -34,9 +35,9 @@ public abstract class TestBase
         const string databaseName = "OpenCQRS";
         const string containerName = "Domain";
         var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions { ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct });
-        var timeProvider = new FakeTimeProvider();
-        CosmosDataStore = new CosmosDataStore(cosmosClientConnection, timeProvider);
-        DomainService = new CosmosDomainService(cosmosClientConnection, timeProvider, CosmosDataStore);
+        TimeProvider = new FakeTimeProvider();
+        CosmosDataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider);
+        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, CosmosDataStore);
 
         var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
