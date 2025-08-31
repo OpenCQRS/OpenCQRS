@@ -7,13 +7,13 @@ public class EventDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
-    
+
     [JsonProperty("documentType")]
     public static string DocumentType => Documents.DocumentType.Event;
-    
+
     [JsonProperty("eventType")]
     public string EventType { get; set; } = null!;
-    
+
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
 

@@ -163,6 +163,58 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    public async Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
+    {
+        QueryDefinition queryDefinition;
+
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence <= @upToSequence AND c.documentType = @documentType ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@upToSequence", upToSequence)
+                .WithParameter("@documentType", DocumentType.Event);
+        }
+        else
+        {
+            var domainEventTypeKeys = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence <= @upToSequence AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@upToSequence", upToSequence)
+                .WithParameter("@documentType", DocumentType.Event)
+                .WithParameter("@eventTypes", domainEventTypeKeys);
+        }
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error retrieving the event documents",
+                Description: "There was an error when retrieving the event documents"
+            );
+        }
+
+        return eventDocuments;
+    }
+
     public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = aggregateDocument.ToAggregate<TAggregate>();

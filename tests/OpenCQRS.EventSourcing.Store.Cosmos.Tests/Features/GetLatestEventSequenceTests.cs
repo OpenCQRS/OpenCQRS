@@ -28,7 +28,7 @@ public class GetLatestEventSequenceTests : TestBase
         aggregate.Update("Updated Name", "Updated Description");
         aggregate.Update("Updated Name 2", "Updated Description 2");
         aggregate.Update("Updated Name 3", "Updated Description 3");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var latestEventSequence = await DomainService.GetLatestEventSequence(streamId);
 

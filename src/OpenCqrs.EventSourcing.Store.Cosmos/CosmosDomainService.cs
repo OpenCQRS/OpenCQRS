@@ -119,9 +119,41 @@ public class CosmosDomainService : IDomainService
         throw new NotImplementedException();
     }
 
-    public Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        throw new NotImplementedException();
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType is null)
+        {
+            return new Failure
+            (
+                Title: "Aggregate type not found",
+                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
+            );
+        }
+
+        var aggregate = new TAggregate();
+
+        var eventDocumentsResult = upToSequence > 0
+            ? await _cosmosDataStore.GetEventDocumentsUpToSequence(streamId, upToSequence.Value, aggregate.EventTypeFilter, cancellationToken)
+            : await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
+
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        var eventDocuments = eventDocumentsResult.Value!.ToList();
+
+        if (eventDocuments.Count == 0)
+        {
+            return aggregate;
+        }
+
+        aggregate.StreamId = streamId.Id;
+        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+        aggregate.LatestEventSequence = eventDocuments.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
+        aggregate.Apply(eventDocuments.Select(eventEntity => eventEntity.ToDomainEvent()));
+
+        return aggregate;
     }
 
     public async Task<Result<int>> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
@@ -196,8 +228,8 @@ public class CosmosDomainService : IDomainService
             );
         }
 
-        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateTypeAttribute == null)
+        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
         {
             throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
@@ -222,9 +254,9 @@ public class CosmosDomainService : IDomainService
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version)}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
                     StreamId = streamId.Id,
-                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
+                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
                     EventId = eventDocument.Id,
                     AppliedDate = timeStamp
                 };

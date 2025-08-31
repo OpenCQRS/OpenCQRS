@@ -13,7 +13,7 @@ public class AggregateDocument
 
     [JsonProperty("aggregateType")]
     public string AggregateType { get; set; } = null!;
-    
+
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
 

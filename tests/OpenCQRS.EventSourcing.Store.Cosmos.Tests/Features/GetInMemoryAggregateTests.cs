@@ -1,20 +1,17 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.EntityFrameworkCore;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Streams;
+using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
+using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
+using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Streams;
 using Xunit;
 
-namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
+namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests.Features;
 
 public class GetInMemoryAggregateTests : TestBase
 {
     [Fact]
-    public async Task GivenAggregateDoesExist_ThenTheAggregateIsReturned()
+    public async Task GivenAggregateDoesExist_ThenTheInMemoryAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -35,29 +32,30 @@ public class GetInMemoryAggregateTests : TestBase
             getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
             getAggregateResult.Value.Version.Should().Be(1);
 
-            getAggregateResult.Value.Id.Should().Be(id);
+            getAggregateResult.Value.Id.Should().Be(aggregate.Id);
             getAggregateResult.Value.Name.Should().Be(aggregate.Name);
             getAggregateResult.Value.Description.Should().Be(aggregate.Description);
         }
     }
 
-    // TODO: Up to sequence - aggregate entity
+    // TODO: Up to sequence - aggregate document
 
     [Fact]
-    public async Task GivenAggregateDoesNotExist_WhenEventsHandledByTheAggregateTypeAreStored_TheNewAggregateIsReturned()
+    public async Task GivenAggregateDoesNotExist_WhenEventsHandledByTheAggregateTypeAreStored_ThenTheInMemoryAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
+        var domainEvents = new IDomainEvent[]
+        {
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
 
-        dbContext.Add(new TestAggregateCreatedEvent(id, "Test Name", "Test Description").ToEventEntity(streamId, sequence: 1));
-        dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
-        await dbContext.SaveChangesAsync();
-
-        var aggregateResult = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -71,11 +69,11 @@ public class GetInMemoryAggregateTests : TestBase
             aggregateResult.Value.Name.Should().Be("Updated Name");
             aggregateResult.Value.Description.Should().Be("Updated Description");
 
-            aggregateEntity.Should().BeNull();
+            aggregateDocument.Value.Should().BeNull();
         }
     }
 
-    // TODO: Up to sequence - no aggregate entity
+    // TODO: Up to sequence - no aggregate document
 
     [Fact]
     public async Task GivenAggregateDoesNotExist_WhenNoEventsAreStored_TheDefaultAggregateIsReturned()
@@ -84,9 +82,7 @@ public class GetInMemoryAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        var result = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
+        var result = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -104,11 +100,13 @@ public class GetInMemoryAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        dbContext.Add(new SomethingHappenedEvent(Something: "Something").ToEventEntity(streamId, sequence: 1));
-        await dbContext.SaveChangesAsync();
+        var domainEvents = new IDomainEvent[]
+        {
+            new SomethingHappenedEvent(Something: "Something")
+        };
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
 
-        var result = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
+        var result = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

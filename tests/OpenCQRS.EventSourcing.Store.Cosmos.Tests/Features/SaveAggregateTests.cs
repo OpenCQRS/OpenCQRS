@@ -41,8 +41,8 @@ public class SaveAggregateTests : TestBase
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
-        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await DataStore.GetEventDocuments(streamId);
 
         using (new AssertionScope())
         {
@@ -73,8 +73,8 @@ public class SaveAggregateTests : TestBase
         aggregate.Update("Updated Name", "Updated Description");
 
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
-        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
-        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await DataStore.GetEventDocuments(streamId);
 
         using (new AssertionScope())
         {
@@ -103,8 +103,8 @@ public class SaveAggregateTests : TestBase
         aggregate.Update("Updated Name", "Updated Description");
 
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
-        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await DataStore.GetEventDocuments(streamId);
 
         using (new AssertionScope())
         {
@@ -177,8 +177,8 @@ public class SaveAggregateTests : TestBase
         TimeProvider.SetUtcNow(now);
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
-        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await DataStore.GetEventDocuments(streamId);
 
         using (new AssertionScope())
         {
@@ -213,8 +213,8 @@ public class SaveAggregateTests : TestBase
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
         await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
 
-        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
-        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await DataStore.GetEventDocuments(streamId);
 
         using (new AssertionScope())
         {

@@ -15,7 +15,7 @@ namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests;
 public abstract class TestBase
 {
     protected readonly IDomainService DomainService;
-    protected readonly ICosmosDataStore CosmosDataStore;
+    protected readonly ICosmosDataStore DataStore;
     protected readonly FakeTimeProvider TimeProvider;
 
     protected TestBase()
@@ -40,8 +40,8 @@ public abstract class TestBase
         var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions { ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct });
         TimeProvider = new FakeTimeProvider();
         var httpContextAccessor = CreateHttpContextAccessor();
-        CosmosDataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider, httpContextAccessor);
-        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, httpContextAccessor, CosmosDataStore);
+        DataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider, httpContextAccessor);
+        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, httpContextAccessor, DataStore);
 
         var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
