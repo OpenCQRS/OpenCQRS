@@ -135,9 +135,9 @@ public class CosmosDomainService : IDomainService
             
             batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate, timeStamp));
             
-            var transactionalBatchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !transactionalBatchResponse.IsSuccessStatusCode 
-                ? new Failure(Title: "Cosmos batch failed", Description: transactionalBatchResponse.ErrorMessage) 
+            var batchResponse = await batch.ExecuteAsync(cancellationToken);
+            return !batchResponse.IsSuccessStatusCode 
+                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage) 
                 : Result.Ok();
         }
         catch (Exception e)
@@ -176,9 +176,9 @@ public class CosmosDomainService : IDomainService
                 batch.CreateItem(eventDocument);
             }
             
-            var transactionalBatchResponse = await batch.ExecuteAsync(cancellationToken);
-            return !transactionalBatchResponse.IsSuccessStatusCode 
-                ? new Failure(Title: "Cosmos batch failed", Description: transactionalBatchResponse.ErrorMessage) 
+            var batchResponse = await batch.ExecuteAsync(cancellationToken);
+            return !batchResponse.IsSuccessStatusCode 
+                ? new Failure(Title: "Cosmos batch failed", Description: batchResponse.ErrorMessage) 
                 : Result.Ok();
         }
         catch (Exception e)
