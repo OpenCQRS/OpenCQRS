@@ -12,6 +12,8 @@ public static class ServiceCollectionExtensions
         // TODO: Add options pattern
         
         services.TryAddSingleton<ICosmosClientConnection>(new CosmosClientConnection(endpoint, authKey, databaseName, containerName, clientOptions));
+        services.TryAddScoped<IDomainService, CosmosDomainService>();
+        services.TryAddScoped<ICosmosDataStore, CosmosDataStore>();
         
         // TODO: Container throughput (shared or dedicated)
         

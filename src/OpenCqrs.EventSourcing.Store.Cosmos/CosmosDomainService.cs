@@ -13,17 +13,83 @@ public class CosmosDomainService : IDomainService
     private readonly TimeProvider _timeProvider;
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
+    private readonly ICosmosDataStore _cosmosDataStore;
     
-    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider)
+    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
         _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
+        _cosmosDataStore = cosmosDataStore;
     }
 
-    public Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        throw new NotImplementedException();
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType is null)
+        {
+            return new Failure
+            (
+                Title: "Aggregate type not found",
+                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
+            );
+        }
+        
+        try
+        {
+            var aggregateDocumentId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+            var response = await _container.ReadItemAsync<AggregateDocument>(aggregateDocumentId, new PartitionKey(streamId.Id), cancellationToken: cancellationToken);
+            if (response.Resource != null)
+            {
+                var currentAggregate = response.Resource.ToAggregate<TAggregate>();
+
+                if (!applyNewDomainEvents)
+                {
+                    return currentAggregate;
+                }
+
+                return await UpdateAggregate(streamId, aggregateId, cancellationToken);
+            }
+        }
+        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Aggregate document doesn't exist, continue to create new one
+        }
+
+        var aggregate = new TAggregate();
+
+        var eventDocuments = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
+        if (eventDocuments.Count == 0)
+        {
+            return aggregate;
+        }
+
+        var domainEvents = eventDocuments.Select(eventDoc => eventDoc.ToDomainEvent()).ToList();
+        aggregate.Apply(domainEvents);
+
+        if (aggregate.Version == 0)
+        {
+            return aggregate;
+        }
+
+        var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDoc => eventDoc.Sequence).Last().Sequence;
+        var timeStamp = _timeProvider.GetUtcNow();
+        var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate, timeStamp);
+
+        try
+        {
+            await _container.CreateItemAsync(aggregateDocument, new PartitionKey(streamId.Id), cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return new Failure
+            (
+                Title: "Error saving aggregate",
+                Description: $"There was an error when creating the aggregate snapshot: {ex.Message}"
+            );
+        }
+
+        return aggregate;
     }
 
     public Task<List<IDomainEvent>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
