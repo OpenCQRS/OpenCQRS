@@ -75,7 +75,7 @@ public class CosmosDomainService : IDomainService
 
         var timeStamp = _timeProvider.GetUtcNow();
         var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
-        
+
         aggregateDocument.CreatedDate = timeStamp;
         aggregateDocument.CreatedBy = currentUserNameIdentifier;
         aggregateDocument.UpdatedDate = timeStamp;
@@ -210,7 +210,7 @@ public class CosmosDomainService : IDomainService
 
             var timeStamp = _timeProvider.GetUtcNow();
             var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
-            
+
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in aggregate.UncommittedEvents)
@@ -303,7 +303,7 @@ public class CosmosDomainService : IDomainService
 
             var timeStamp = _timeProvider.GetUtcNow();
             var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
-            
+
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in domainEvents)

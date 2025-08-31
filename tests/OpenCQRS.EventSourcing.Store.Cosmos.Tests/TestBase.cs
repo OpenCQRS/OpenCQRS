@@ -46,7 +46,7 @@ public abstract class TestBase
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
         databaseResponse.Database.CreateContainerIfNotExistsAsync(containerName, "/streamId", throughput: 400);
     }
-    
+
     private static IHttpContextAccessor CreateHttpContextAccessor()
     {
         var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
