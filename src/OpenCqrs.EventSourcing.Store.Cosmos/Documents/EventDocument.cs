@@ -7,10 +7,13 @@ public class EventDocument : IAuditableDocument, IBindableDocument
 {
     [JsonProperty("streamId")]
     public string StreamId { get; set; } = null!;
-
+    
     [JsonProperty("documentType")]
     public static string DocumentType => Documents.DocumentType.Event;
-
+    
+    [JsonProperty("eventType")]
+    public string EventType { get; set; } = null!;
+    
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
 
@@ -42,7 +45,7 @@ public static class EventDocumentExtensions
 
     public static IDomainEvent ToDomainEvent(this EventDocument eventDocument)
     {
-        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventDocument.GetTypeBindingKey(), out var eventType);
+        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventDocument.EventType, out var eventType);
         if (typeFound is false)
         {
             throw new InvalidOperationException($"Event type {eventDocument.TypeName} not found in TypeBindings");
