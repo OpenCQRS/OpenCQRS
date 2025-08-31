@@ -7,7 +7,7 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
 public static class DomainEventExtensions
 {
-    public static EventDocument ToEventDocument(this IDomainEvent domainEvent, IStreamId streamId, int sequence, DateTimeOffset timeStamp)
+    public static EventDocument ToEventDocument(this IDomainEvent domainEvent, IStreamId streamId, int sequence)
     {
         var domainEventTypeAttribute = domainEvent.GetType().GetCustomAttribute<DomainEventType>();
         if (domainEventTypeAttribute == null)
@@ -22,9 +22,7 @@ public static class DomainEventExtensions
             Sequence = sequence,
             TypeName = domainEventTypeAttribute.Name,
             TypeVersion = domainEventTypeAttribute.Version,
-            Data = JsonConvert.SerializeObject(domainEvent),
-            CreatedDate = timeStamp,
-            CreatedBy = null // TODO: Set created by
+            Data = JsonConvert.SerializeObject(domainEvent)
         };
     }
 }

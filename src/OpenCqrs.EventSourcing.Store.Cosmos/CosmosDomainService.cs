@@ -67,8 +67,13 @@ public class CosmosDomainService : IDomainService
         }
 
         var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDoc => eventDoc.Sequence).Last().Sequence;
-        var timeStamp = _timeProvider.GetUtcNow();
         var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
+
+        var timeStamp = _timeProvider.GetUtcNow();
+        aggregateDocument.CreatedDate = timeStamp;
+        aggregateDocument.CreatedBy = null; // TODO: Set created by
+        aggregateDocument.UpdatedDate = timeStamp;
+        aggregateDocument.UpdatedBy = null; // TODO: Set updated by
 
         try
         {
@@ -162,7 +167,7 @@ public class CosmosDomainService : IDomainService
         }
     }
 
-    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
+    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         if (!aggregate.UncommittedEvents.Any())
         {
@@ -195,13 +200,17 @@ public class CosmosDomainService : IDomainService
 
             var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
             var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
+            var aggregateIsNew = currentAggregateVersion == 0;
+
             var timeStamp = _timeProvider.GetUtcNow();
 
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in aggregate.UncommittedEvents)
             {
-                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence, timeStamp);
+                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
+                eventDocument.CreatedDate = timeStamp;
+                eventDocument.CreatedBy = null; // TODO: Set created by
                 batch.CreateItem(eventDocument);
 
                 var aggregateEventDocument = new AggregateEventDocument
@@ -215,7 +224,34 @@ public class CosmosDomainService : IDomainService
                 batch.CreateItem(aggregateEventDocument);
             }
 
-            batch.UpsertItem(aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate));
+            var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
+            aggregateDocument.UpdatedDate = timeStamp;
+            aggregateDocument.UpdatedBy = null; // TODO: Set updated by
+            if (aggregateIsNew)
+            {
+                aggregateDocument.CreatedDate = timeStamp;
+                aggregateDocument.CreatedBy = null; // TODO: Set created by
+            }
+            else
+            {
+                var existingAggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
+                if (existingAggregateDocumentResult.IsNotSuccess)
+                {
+                    return existingAggregateDocumentResult.Failure!;
+                }
+                var existingAggregateDocument = existingAggregateDocumentResult.Value;
+                if (existingAggregateDocument != null)
+                {
+                    aggregateDocument.CreatedDate = existingAggregateDocument.CreatedDate;
+                    aggregateDocument.CreatedBy = existingAggregateDocument.CreatedBy;
+                }
+                else
+                {
+                    aggregateDocument.CreatedDate = timeStamp;
+                    aggregateDocument.CreatedBy = null; // TODO: Set created by
+                }
+            }
+            batch.UpsertItem(aggregateDocument);
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
             return !batchResponse.IsSuccessStatusCode
@@ -264,7 +300,9 @@ public class CosmosDomainService : IDomainService
 
             foreach (var @event in domainEvents)
             {
-                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence, timeStamp);
+                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
+                eventDocument.CreatedDate = timeStamp;
+                eventDocument.CreatedBy = null; // TODO: Set created by
                 batch.CreateItem(eventDocument);
             }
 
