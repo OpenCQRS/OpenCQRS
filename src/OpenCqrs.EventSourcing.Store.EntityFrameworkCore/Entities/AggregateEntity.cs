@@ -145,7 +145,7 @@ public class AggregateEntity : IAuditableEntity, IEditableEntity, IBindableEntit
     /// A string representing the logical name of the aggregate type. This should match the
     /// Name property from the <see cref="AggregateType"/> attribute on the aggregate class.
     /// </value>
-    public string TypeName { get; set; } = null!;
+    public string TypeName { get; set; } = null!; // TODO: Replace with aggregate type
 
     /// <summary>
     /// Gets or sets the version of the aggregate type schema as defined in the <see cref="AggregateType"/> attribute.
