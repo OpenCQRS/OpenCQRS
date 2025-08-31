@@ -298,4 +298,9 @@ public class CosmosDataStore : ICosmosDataStore
             );
         }
     }
+
+    public void Dispose()
+    {
+        _cosmosClient.Dispose();
+    }
 }

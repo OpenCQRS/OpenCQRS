@@ -4,7 +4,7 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
-public interface ICosmosDataStore
+public interface ICosmosDataStore : IDisposable
 {
     Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
