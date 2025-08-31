@@ -180,37 +180,37 @@ public class CosmosDomainService : IDomainService
             return Result.Ok();
         }
 
+        var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+        if (latestEventSequenceResult.IsNotSuccess)
+        {
+            return latestEventSequenceResult.Failure!;
+        }
+        var latestEventSequence = latestEventSequenceResult.Value;
+
+        if (latestEventSequence != expectedEventSequence)
+        {
+            return new Failure
+            (
+                Title: "Concurrency exception",
+                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
+            );
+        }
+
+        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateTypeAttribute == null)
+        {
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+        }
+
+        var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
+        var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
+        var aggregateIsNew = currentAggregateVersion == 0;
+
+        var timeStamp = _timeProvider.GetUtcNow();
+        var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
+
         try
         {
-            var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
-            if (latestEventSequenceResult.IsNotSuccess)
-            {
-                return latestEventSequenceResult.Failure!;
-            }
-            var latestEventSequence = latestEventSequenceResult.Value;
-
-            if (latestEventSequence != expectedEventSequence)
-            {
-                return new Failure
-                (
-                    Title: "Concurrency exception",
-                    Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-                );
-            }
-
-            var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-            if (aggregateTypeAttribute == null)
-            {
-                throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
-            }
-
-            var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
-            var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
-            var aggregateIsNew = currentAggregateVersion == 0;
-
-            var timeStamp = _timeProvider.GetUtcNow();
-            var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
-
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in aggregate.UncommittedEvents)
@@ -293,26 +293,26 @@ public class CosmosDomainService : IDomainService
             return Result.Ok();
         }
 
+        var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+        if (latestEventSequenceResult.IsNotSuccess)
+        {
+            return latestEventSequenceResult.Failure!;
+        }
+        var latestEventSequence = latestEventSequenceResult.Value;
+        if (latestEventSequence != expectedEventSequence)
+        {
+            return new Failure
+            (
+                Title: "Concurrency exception",
+                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
+            );
+        }
+
+        var timeStamp = _timeProvider.GetUtcNow();
+        var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
+
         try
         {
-            var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
-            if (latestEventSequenceResult.IsNotSuccess)
-            {
-                return latestEventSequenceResult.Failure!;
-            }
-            var latestEventSequence = latestEventSequenceResult.Value;
-            if (latestEventSequence != expectedEventSequence)
-            {
-                return new Failure
-                (
-                    Title: "Concurrency exception",
-                    Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-                );
-            }
-
-            var timeStamp = _timeProvider.GetUtcNow();
-            var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
-
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             foreach (var @event in domainEvents)
@@ -349,9 +349,30 @@ public class CosmosDomainService : IDomainService
         }
     }
 
-    public Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        throw new NotImplementedException();
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType is null)
+        {
+            return new Failure
+            (
+                Title: "Aggregate type not found",
+                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
+            );
+        }
+
+        var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
+        if (aggregateDocumentResult.IsNotSuccess)
+        {
+            return aggregateDocumentResult.Failure!;
+        }
+        var aggregateDocument = aggregateDocumentResult.Value;
+        if (aggregateDocument is null)
+        {
+            return new TAggregate();
+        }
+
+        return await _cosmosDataStore.UpdateAggregate(streamId, aggregateId, aggregateDocument, cancellationToken);
     }
 
     public void Dispose() => _cosmosClient.Dispose();

@@ -39,8 +39,9 @@ public abstract class TestBase
         const string containerName = "Domain";
         var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions { ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct });
         TimeProvider = new FakeTimeProvider();
-        CosmosDataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider);
-        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, CreateHttpContextAccessor(), CosmosDataStore);
+        var httpContextAccessor = CreateHttpContextAccessor();
+        CosmosDataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider, httpContextAccessor);
+        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, httpContextAccessor, CosmosDataStore);
 
         var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
         var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
