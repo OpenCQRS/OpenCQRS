@@ -276,7 +276,7 @@ public static partial class IDomainDbContextExtensions
             .Select(b => b.Key).ToList();
 
         return await domainDbContext.Events.AsNoTracking()
-            .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventEntity.Sequence <= upToSequence && domainEventTypeKeys.Contains($"{eventEntity.TypeName}|v:{eventEntity.TypeVersion}"))
+            .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventEntity.Sequence <= upToSequence && domainEventTypeKeys.Contains($"{eventEntity.TypeName}:{eventEntity.TypeVersion}"))
             .OrderBy(eventEntity => eventEntity.Sequence)
             .ToListAsync(cancellationToken);
     }

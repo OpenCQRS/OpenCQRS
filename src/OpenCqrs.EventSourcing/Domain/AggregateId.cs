@@ -117,15 +117,15 @@ public static class AggregateIdExtensions
     /// <param name="aggregateId">The base aggregate identifier.</param>
     /// <param name="aggregateTypeVersion">The version number of the aggregate type.</param>
     /// <returns>
-    /// A string that combines the aggregate ID with the type version in the format "id|v:version".
+    /// A string that combines the aggregate ID with the type version in the format "id:version".
     /// </returns>
     /// <example>
     /// <code>
     /// var orderId = new OrderId(Guid.NewGuid());
     /// 
     /// // Create versioned identifiers
-    /// var v1Id = orderId.ToIdWithTypeVersion(1); // "guid|v:1"
-    /// var v2Id = orderId.ToIdWithTypeVersion(2); // "guid|v:2"
+    /// var v1Id = orderId.ToIdWithTypeVersion(1); // "guid:1"
+    /// var v2Id = orderId.ToIdWithTypeVersion(2); // "guid:2"
     /// 
     /// // Usage in event store queries
     /// var v1Events = await eventStore.GetEventsAsync(v1Id);
@@ -145,5 +145,5 @@ public static class AggregateIdExtensions
     /// </code>
     /// </example>
     public static string ToIdWithTypeVersion(this IAggregateId aggregateId, byte aggregateTypeVersion) =>
-        $"{aggregateId.Id}|v:{aggregateTypeVersion}";
+        $"{aggregateId.Id}:{aggregateTypeVersion}";
 }

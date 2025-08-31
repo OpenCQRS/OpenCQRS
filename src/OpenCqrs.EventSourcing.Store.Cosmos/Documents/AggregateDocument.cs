@@ -3,8 +3,14 @@ using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
-public class AggregateDocument : DocumentBase, IAuditableDocument, IEditableDocument, IBindableDocument
+public class AggregateDocument : IAuditableDocument, IEditableDocument, IBindableDocument
 {
+    [JsonProperty("streamId")]
+    public string StreamId { get; set; } = null!;
+    
+    [JsonProperty("type")]
+    public static string Type => DocumentType.Aggregate;
+    
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
     

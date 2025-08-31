@@ -17,7 +17,7 @@ public static class DomainEventExtensions
 
         return new EventDocument
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = $"{streamId.Id}:{sequence}",
             StreamId = streamId.Id,
             Sequence = sequence,
             TypeName = domainEventTypeAttribute.Name,

@@ -57,9 +57,10 @@ public class CosmosDomainService : IDomainService
         var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
         if (!filterEventTypes)
         {
-            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.streamId = @streamId AND c.type = 'event'";
+            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.streamId = @streamId AND c.type = @documentType";
             queryDefinition = new QueryDefinition(sql)
-                .WithParameter("@streamId", streamId.Id);
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@documentType", DocumentType.Event);
         }
         else
         {
@@ -67,9 +68,10 @@ public class CosmosDomainService : IDomainService
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
             
-            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.aggregateId = @aggregateId AND c.type = 'event' AND ARRAY_CONTAINS(@eventTypes, c.eventType)";
+            const string sql = "SELECT VALUE COUNT(1) FROM c WHERE c.streamId = @streamId AND c.type = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType)";
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@documentType", DocumentType.Event)
                 .WithParameter("@eventTypes", domainEventTypeKeys);
         }
         
@@ -121,7 +123,7 @@ public class CosmosDomainService : IDomainService
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version)}:{eventDocument.Id}",
                     StreamId = streamId.Id,
                     AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
                     EventId = eventDocument.Id,

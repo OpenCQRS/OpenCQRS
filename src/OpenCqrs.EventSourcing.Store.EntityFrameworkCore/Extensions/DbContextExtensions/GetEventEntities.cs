@@ -182,7 +182,7 @@ public static partial class IDomainDbContextExtensions
 
         var domainEventTypeKeys = eventTypeFilter!.Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType)).Select(b => b.Key).ToList();
         return await domainDbContext.Events.AsNoTracking()
-            .Where(eventEntity => eventEntity.StreamId == streamId.Id && domainEventTypeKeys.Contains($"{eventEntity.TypeName}|v:{eventEntity.TypeVersion}"))
+            .Where(eventEntity => eventEntity.StreamId == streamId.Id && domainEventTypeKeys.Contains($"{eventEntity.TypeName}:{eventEntity.TypeVersion}"))
             .OrderBy(eventEntity => eventEntity.Sequence)
             .ToListAsync(cancellationToken);
     }

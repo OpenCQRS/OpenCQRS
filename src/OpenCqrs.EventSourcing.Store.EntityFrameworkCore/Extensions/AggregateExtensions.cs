@@ -108,7 +108,7 @@ public static class AggregateExtensions
     /// var entity = orderAggregate.ToAggregateEntity(streamId, aggregateId, 0);
     /// 
     /// // The entity will have:
-    /// // - Id: "{orderId}|v:1" (versioned identifier)
+    /// // - Id: "{orderId}:1" (versioned identifier)
     /// // - StreamId: streamId.Id
     /// // - TypeName: "Order"
     /// // - TypeVersion: 1

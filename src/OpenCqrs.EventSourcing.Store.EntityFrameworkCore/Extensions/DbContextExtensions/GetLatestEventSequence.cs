@@ -118,7 +118,7 @@ public static partial class IDomainDbContextExtensions
 
         var sequences = await domainDbContext.Events.AsNoTracking()
             .OrderBy(eventEntity => eventEntity.Sequence)
-            .Where(eventEntity => eventEntity.StreamId == streamId.Id && domainEventTypeKeys.Contains($"{eventEntity.TypeName}|v:{eventEntity.TypeVersion}"))
+            .Where(eventEntity => eventEntity.StreamId == streamId.Id && domainEventTypeKeys.Contains($"{eventEntity.TypeName}:{eventEntity.TypeVersion}"))
             .Select(eventEntity => eventEntity.Sequence)
             .ToListAsync(cancellationToken);
 
