@@ -33,32 +33,32 @@ public class SaveAggregateTests : TestBase
         }
     }
 
-    // [Fact]
-    // public async Task GivenNewAggregateSaved_ThenAggregateAndEventDocumentsAreStored()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //     var aggregateId = new TestAggregate1Id(id);
-    //     var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    //
-    //     var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    //     var aggregateEntity = await CosmosDataStore.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
-    //     var eventEntity = await CosmosDataStore.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         saveResult.IsSuccess.Should().BeTrue();
-    //
-    //         aggregateEntity.Should().NotBeNull();
-    //         aggregateEntity.TypeName.Should().Be("TestAggregate1");
-    //         aggregateEntity.Version.Should().Be(1);
-    //         aggregateEntity.LatestEventSequence.Should().Be(1);
-    //
-    //         eventEntity.Should().NotBeNull();
-    //         eventEntity.TypeName.Should().Be("TestAggregateCreated");
-    //         eventEntity.Sequence.Should().Be(1);
-    //     }
-    // }
+    [Fact]
+    public async Task GivenNewAggregateSaved_ThenAggregateAndEventDocumentsAreStored()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+    
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var aggregateDocument = await CosmosDataStore.GetAggregateDocument(streamId, aggregateId);
+        var eventDocuments = await CosmosDataStore.GetEventDocuments(streamId);
+    
+        using (new AssertionScope())
+        {
+            saveResult.IsSuccess.Should().BeTrue();
+    
+            aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.TypeName.Should().Be("TestAggregate1");
+            aggregateDocument.Value.Version.Should().Be(1);
+            aggregateDocument.Value.LatestEventSequence.Should().Be(1);
+    
+            eventDocuments.Value.Should().NotBeNull();
+            eventDocuments.Value[0].TypeName.Should().Be("TestAggregateCreated");
+            eventDocuments.Value[0].Sequence.Should().Be(1);
+        }
+    }
 
     // [Fact]
     // public async Task GivenAggregateIsUpdated_ThenAggregateEntityVersionIncreasesAndAllEventEntitiesAreStored()
