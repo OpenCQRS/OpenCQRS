@@ -21,7 +21,7 @@ public class GetDomainEventsTests : TestBase
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var domainEvents = await DomainService.GetDomainEvents(streamId);
 
-        domainEvents.Count.Should().Be(4);
+        domainEvents.Value!.Count.Should().Be(4);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class GetDomainEventsTests : TestBase
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var domainEvents = await DomainService.GetDomainEventsUpToSequence(streamId, upToSequence: 3);
 
-        domainEvents.Count.Should().Be(3);
+        domainEvents.Value!.Count.Should().Be(3);
     }
 
     [Fact]
@@ -55,6 +55,6 @@ public class GetDomainEventsTests : TestBase
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var domainEvents = await DomainService.GetDomainEventsFromSequence(streamId, fromSequence: 3);
 
-        domainEvents.Count.Should().Be(2);
+        domainEvents.Value!.Count.Should().Be(2);
     }
 }

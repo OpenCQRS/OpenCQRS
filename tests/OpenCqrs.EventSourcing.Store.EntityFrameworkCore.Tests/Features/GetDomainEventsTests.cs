@@ -22,7 +22,7 @@ public class GetDomainEventsTests : TestBase
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var domainEvents = await DomainService.GetDomainEvents(streamId);
 
-        domainEvents.Count.Should().Be(4);
+        domainEvents.Value!.Count.Should().Be(4);
     }
 
     [Fact]

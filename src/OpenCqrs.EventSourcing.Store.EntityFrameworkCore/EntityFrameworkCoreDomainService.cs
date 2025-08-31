@@ -11,7 +11,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents, cancellationToken);
     }
 
-    public async Task<List<IDomainEvent>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IDomainEvent>>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEvents(streamId, eventTypeFilter, cancellationToken);
     }
@@ -21,12 +21,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsAppliedToAggregate(aggregateId, cancellationToken);
     }
 
-    public async Task<List<IDomainEvent>> GetDomainEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsFromSequence(streamId, fromSequence, eventTypeFilter, cancellationToken);
     }
 
-    public async Task<List<IDomainEvent>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
     }
