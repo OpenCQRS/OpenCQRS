@@ -10,7 +10,7 @@ Some common scenarios when using Event Sourcing.
   - [Existing aggregate](#2.2)
 
 <a name="1"></a>
-## 1. Events handled by a single aggregate
+## 1 Events handled by a single aggregate
 
 <a name="1.1"></a>
 ### 1.1 New aggregate
