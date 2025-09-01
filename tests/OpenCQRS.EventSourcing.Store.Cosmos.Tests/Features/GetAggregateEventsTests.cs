@@ -79,7 +79,7 @@ public class GetAggregateEventsTests : TestBase
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
-    
+
         var date1 = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date1);
         var domainEvents = new IDomainEvent[]
@@ -88,13 +88,13 @@ public class GetAggregateEventsTests : TestBase
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
         await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
-    
+
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
         await DomainService.GetAggregate(streamId, aggregateId);
-    
+
         var result = await DataStore.GetAggregateEventDocuments(streamId, aggregateId);
-    
+
         using (new AssertionScope())
         {
             result.IsSuccess.Should().BeTrue();
@@ -104,7 +104,7 @@ public class GetAggregateEventsTests : TestBase
             result.Value.Last().AppliedDate.Should().Be(date2);
         }
     }
-    
+
     [Fact]
     public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     {
@@ -112,11 +112,11 @@ public class GetAggregateEventsTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-    
+
         var date1 = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date1);
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    
+
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
         var domainEvents = new IDomainEvent[]
@@ -124,12 +124,12 @@ public class GetAggregateEventsTests : TestBase
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
         await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
-    
+
         var date3 = new DateTime(2024, 6, 10, 14, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date3);
         await DomainService.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
         var result = await DataStore.GetAggregateEventDocuments(streamId, aggregateId);
-    
+
         using (new AssertionScope())
         {
             result.IsSuccess.Should().BeTrue();
@@ -139,7 +139,7 @@ public class GetAggregateEventsTests : TestBase
             result.Value.Last().AppliedDate.Should().Be(date3);
         }
     }
-    
+
     [Fact]
     public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
     {
@@ -151,7 +151,7 @@ public class GetAggregateEventsTests : TestBase
         var date1 = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date1);
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-    
+
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
         var domainEvents = new IDomainEvent[]
@@ -159,12 +159,12 @@ public class GetAggregateEventsTests : TestBase
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
         await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
-    
+
         var date3 = new DateTime(2024, 6, 10, 14, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date3);
         await DomainService.UpdateAggregate(streamId, aggregateId);
         var result = await DataStore.GetAggregateEventDocuments(streamId, aggregateId);
-    
+
         using (new AssertionScope())
         {
             result.IsSuccess.Should().BeTrue();

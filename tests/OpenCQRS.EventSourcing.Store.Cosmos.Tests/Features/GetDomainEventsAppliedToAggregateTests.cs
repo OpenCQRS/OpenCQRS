@@ -32,7 +32,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
         await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
 
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(aggregateId);
+        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

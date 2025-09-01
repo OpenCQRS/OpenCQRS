@@ -139,9 +139,26 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
-    public Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        throw new NotImplementedException();
+        var aggregateEventDocumentsResult = await _cosmosDataStore.GetAggregateEventDocuments(streamId, aggregateId, cancellationToken);
+        if (aggregateEventDocumentsResult.IsNotSuccess)
+        {
+            return aggregateEventDocumentsResult.Failure!;
+        }
+        var aggregateEventDocuments = aggregateEventDocumentsResult.Value!;
+        if (aggregateEventDocuments.Count == 0)
+        {
+            return new List<IDomainEvent>();
+        }
+
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregateEventDocuments.Select(ae => ae.EventId).ToArray(), cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        var eventDocuments = eventDocumentsResult.Value!;
+        return eventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)

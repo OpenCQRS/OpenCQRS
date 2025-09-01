@@ -154,6 +154,39 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    public async Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds, CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventIds, c.id) ORDER BY c.sequence";
+        var queryDefinition = new QueryDefinition(sql)
+            .WithParameter("@streamId", streamId.Id)
+            .WithParameter("@documentType", DocumentType.Event)
+            .WithParameter("@eventIds", eventIds);
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error retrieving the event documents",
+                Description: "There was an error when retrieving the event documents"
+            );
+        }
+
+        return eventDocuments;
+    }
+
     public async Task<Result<List<EventDocument>>> GetEventDocumentsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
