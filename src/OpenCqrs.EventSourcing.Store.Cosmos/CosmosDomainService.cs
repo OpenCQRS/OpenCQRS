@@ -244,7 +244,10 @@ public class CosmosDomainService : IDomainService
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<int?>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<int?>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
 
             if (!iterator.HasMoreResults)
             {

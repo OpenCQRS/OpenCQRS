@@ -83,7 +83,11 @@ public class CosmosDataStore : ICosmosDataStore
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<AggregateEventDocument>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<AggregateEventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
@@ -133,7 +137,11 @@ public class CosmosDataStore : ICosmosDataStore
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
@@ -166,7 +174,11 @@ public class CosmosDataStore : ICosmosDataStore
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
@@ -218,7 +230,11 @@ public class CosmosDataStore : ICosmosDataStore
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
@@ -270,7 +286,11 @@ public class CosmosDataStore : ICosmosDataStore
 
         try
         {
-            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition);
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new  PartitionKey(streamId.Id)
+            });
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
