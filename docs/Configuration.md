@@ -99,5 +99,28 @@ services.AddOpenCqrsEntityFrameworkCore<ApplicationDbContext>();
 ### Cosmo DB Store Provider
 After installing the required package (**OpenCqrs.EventSourcing.Store.Cosmos**), you can register the Cosmo DB store provider:
 ```C#
-// TODO: Add code example for Cosmos DB store provider
+services.AddOpenCqrsCosmos(options =>
+{
+    // Required
+    options.Endpoint = "your-cosmosdb-endpoint";
+    
+    // Required
+    options.AuthKey = "your-cosmosdb-auth-key";
+    
+    // Optional, default is "OpenCQRS"
+    options.DatabaseName = "your-database-name"; 
+    
+    // Optional, default is "Domain"
+    options.ContainerName = "your-container-name"; 
+    
+    // Optional, default is new CosmosClientOptions()
+    // with ApplicationName set to "OpenCqrs"
+    // and ConnectionMode set to ConnectionMode.Direct
+    options.ClientOptions = new CosmosClientOptions(); 
+});
+ ```
+
+You can use the `CosmosSetup` helper to create the database and the container if they do not exist:
+```C#
+cosmosSetup.CreateDatabaseAndContainerIfNotExist(throughput = 400);
 ```

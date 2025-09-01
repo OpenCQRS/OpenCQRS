@@ -47,7 +47,7 @@ public abstract class TestBase
         DomainService = new CosmosDomainService(optionsSubstitute, TimeProvider, httpContextAccessor, DataStore);
 
         var cosmosSetup = new CosmosSetup(optionsSubstitute);
-        _ = cosmosSetup.CreateDatabaseAndContainer();
+        _ = cosmosSetup.CreateDatabaseAndContainerIfNotExist();
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()

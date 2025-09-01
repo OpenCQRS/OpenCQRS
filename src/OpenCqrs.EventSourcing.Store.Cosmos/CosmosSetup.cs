@@ -7,7 +7,7 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
 public class CosmosSetup(IOptions<CosmosOptions> cosmosOptions)
 {
-    public async Task<Container> CreateDatabaseAndContainer(int throughput = 400)
+    public async Task<Container> CreateDatabaseAndContainerIfNotExist(int throughput = 400)
     {
         var cosmosClient = new CosmosClient(cosmosOptions.Value.Endpoint, cosmosOptions.Value.AuthKey, cosmosOptions.Value.ClientOptions);
         var databaseResponse = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosOptions.Value.DatabaseName);
