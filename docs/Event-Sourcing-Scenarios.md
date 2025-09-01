@@ -10,10 +10,10 @@ Some common scenarios when using Event Sourcing.
   - [Existing aggregate](#2.2)
 
 <a name="1"></a>
-## 1 Events handled by a single aggregate
+## Events handled by a single aggregate
 
 <a name="1.1"></a>
-### 1.1 New aggregate
+### New aggregate
 
 Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 ```C#
@@ -44,7 +44,7 @@ var aggregate = await domainService.GetAggregate(streamId, aggregateId);
 ```
 
 <a name="1.2"></a>
-### 1.2 Existing aggregate
+### Existing aggregate
 
 Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 ```C#
@@ -86,10 +86,10 @@ var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, ap
 ```
 
 <a name="2"></a>
-## 2 Events handled by multiple aggregates
+## Events handled by multiple aggregates
 
 <a name="2.1"></a>
-### 2.1 New aggregates
+### New aggregates
 
 Save the first aggregate with new event(s) and the snapshot of the other aggregate to the latest state
 ```C#
@@ -128,7 +128,7 @@ var anotherAggregate = await domainService.GetAggregate(streamId, anotherAggrega
 ```
 
 <a name="2.2"></a>
-### 2.2 Existing aggregate
+### Existing aggregates
 
 Save the first aggregate with new event(s) and the snapshot of the other aggregate to the latest state
 ```C#
