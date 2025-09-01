@@ -50,13 +50,18 @@ public class CosmosDomainService : IDomainService
 
         var aggregate = new TAggregate();
 
+        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
+        {
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+        }
+
         var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
         if (eventDocumentsResult.IsNotSuccess)
         {
             return eventDocumentsResult.Failure!;
         }
         var eventDocuments = eventDocumentsResult.Value!.ToList();
-
         if (eventDocuments.Count == 0)
         {
             return aggregate;
@@ -64,7 +69,6 @@ public class CosmosDomainService : IDomainService
 
         var domainEvents = eventDocuments.Select(eventDoc => eventDoc.ToDomainEvent()).ToList();
         aggregate.Apply(domainEvents);
-
         if (aggregate.Version == 0)
         {
             return aggregate;
@@ -76,14 +80,42 @@ public class CosmosDomainService : IDomainService
         var timeStamp = _timeProvider.GetUtcNow();
         var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
 
-        aggregateDocument.CreatedDate = timeStamp;
-        aggregateDocument.CreatedBy = currentUserNameIdentifier;
-        aggregateDocument.UpdatedDate = timeStamp;
-        aggregateDocument.UpdatedBy = currentUserNameIdentifier;
-
         try
         {
-            await _container.CreateItemAsync(aggregateDocument, new PartitionKey(streamId.Id), cancellationToken: cancellationToken);
+            var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
+
+            aggregateDocument.CreatedDate = timeStamp;
+            aggregateDocument.CreatedBy = currentUserNameIdentifier;
+            aggregateDocument.UpdatedDate = timeStamp;
+            aggregateDocument.UpdatedBy = currentUserNameIdentifier;
+            batch.CreateItem(aggregateDocument);
+
+            foreach (var eventDocument in eventDocuments)
+            {
+                var aggregateEventDocument = new AggregateEventDocument
+                {
+                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
+                    StreamId = streamId.Id,
+                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+                    EventId = eventDocument.Id,
+                    AppliedDate = timeStamp
+                };
+                batch.CreateItem(aggregateEventDocument);
+            }
+
+            var batchResponse = await batch.ExecuteAsync(cancellationToken);
+            if (batchResponse.IsSuccessStatusCode)
+            {
+                return aggregate;
+            }
+
+            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
+            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when creating the aggregate", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error creating the aggregate",
+                Description: "There was an error when creating the aggregate"
+            );
         }
         catch (Exception ex)
         {
@@ -95,8 +127,6 @@ public class CosmosDomainService : IDomainService
                 Description: "There was an error when creating the aggregate"
             );
         }
-
-        return aggregate;
     }
 
     public async Task<Result<List<IDomainEvent>>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
@@ -260,24 +290,6 @@ public class CosmosDomainService : IDomainService
         {
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
-            foreach (var @event in aggregate.UncommittedEvents)
-            {
-                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
-                eventDocument.CreatedDate = timeStamp;
-                eventDocument.CreatedBy = currentUserNameIdentifier;
-                batch.CreateItem(eventDocument);
-
-                var aggregateEventDocument = new AggregateEventDocument
-                {
-                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
-                    StreamId = streamId.Id,
-                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
-                    EventId = eventDocument.Id,
-                    AppliedDate = timeStamp
-                };
-                batch.CreateItem(aggregateEventDocument);
-            }
-
             var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
             aggregateDocument.UpdatedDate = timeStamp;
             aggregateDocument.UpdatedBy = currentUserNameIdentifier;
@@ -306,6 +318,24 @@ public class CosmosDomainService : IDomainService
                 }
             }
             batch.UpsertItem(aggregateDocument);
+
+            foreach (var @event in aggregate.UncommittedEvents)
+            {
+                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
+                eventDocument.CreatedDate = timeStamp;
+                eventDocument.CreatedBy = currentUserNameIdentifier;
+                batch.CreateItem(eventDocument);
+
+                var aggregateEventDocument = new AggregateEventDocument
+                {
+                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
+                    StreamId = streamId.Id,
+                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+                    EventId = eventDocument.Id,
+                    AppliedDate = timeStamp
+                };
+                batch.CreateItem(aggregateEventDocument);
+            }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
             if (batchResponse.IsSuccessStatusCode)

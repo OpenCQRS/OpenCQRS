@@ -17,7 +17,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
@@ -44,7 +44,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregate = updatedAggregateResult.Value!;
@@ -76,7 +76,7 @@ public class GetAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
         aggregate.Update("Updated Name", "Updated Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
@@ -120,7 +120,7 @@ public class GetAggregateTests : TestBase
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
-        
+
         var domainEvents = new IDomainEvent[]
         {
             new SomethingHappenedEvent(Something: "Something")
@@ -203,7 +203,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
         var domainEvents = new IDomainEvent[]

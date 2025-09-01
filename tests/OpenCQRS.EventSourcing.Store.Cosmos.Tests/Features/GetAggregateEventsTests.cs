@@ -48,33 +48,31 @@ public class GetAggregateEventsTests : TestBase
         }
     }
 
-    // [Fact]
-    // public async Task GivenStoredEventForAnAggregateIsAppliedInAnotherAggregate_ThenOnlyAggregateEventsAppliedAreReturned()
-    // {
-    //     var id = Guid.NewGuid().ToString();
-    //     var streamId = new TestStreamId(id);
-    //
-    //     var testAggregate1Key = new TestAggregate1Id(id);
-    //     var testAggregate2Key = new TestAggregate2Id(id);
-    //     var testAggregate1 = new TestAggregate1(id, "Test Name", "Test Description");
-    //
-    //     var appliedDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
-    //     TimeProvider.SetUtcNow(appliedDate);
-    //     var trackResult = await dbContext.TrackAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
-    //     await dbContext.TrackEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
-    //     await dbContext.Save();
-    //
-    //     var result = await dbContext.GetAggregateEventEntities(testAggregate2Key);
-    //
-    //     using (new AssertionScope())
-    //     {
-    //         result.IsSuccess.Should().BeTrue();
-    //         result.Value.Should().NotBeNull();
-    //         result.Value.Count.Should().Be(1);
-    //         result.Value.First().AppliedDate.Should().Be(appliedDate);
-    //     }
-    // }
-    //
+    [Fact]
+    public async Task GivenStoredEventForAnAggregateIsAppliedInAnotherAggregate_ThenOnlyAggregateEventsAppliedAreReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+
+        var testAggregate1Key = new TestAggregate1Id(id);
+        var testAggregate2Key = new TestAggregate2Id(id);
+        var testAggregate1 = new TestAggregate1(id, "Test Name", "Test Description");
+
+        var appliedDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+        TimeProvider.SetUtcNow(appliedDate);
+        await DomainService.SaveAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
+        await DomainService.GetAggregate(streamId, testAggregate2Key);
+        var result = await DataStore.GetAggregateEventDocuments(streamId, testAggregate2Key);
+
+        using (new AssertionScope())
+        {
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value.Count.Should().Be(1);
+            result.Value.First().AppliedDate.Should().Be(appliedDate);
+        }
+    }
+
     // [Fact]
     // public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndAppliedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     // {

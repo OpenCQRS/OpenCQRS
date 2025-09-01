@@ -72,15 +72,15 @@ public class CosmosDataStore : ICosmosDataStore
                 Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
             );
         }
-        
+
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
         var queryDefinition = new QueryDefinition(sql)
             .WithParameter("@streamId", streamId.Id)
             .WithParameter("@aggregateId", aggregateId.ToIdWithTypeVersion(aggregateType.Version))
             .WithParameter("@documentType", DocumentType.AggregateEvent);
-        
+
         var aggregateEventDocuments = new List<AggregateEventDocument>();
-        
+
         try
         {
             using var iterator = _container.GetItemQueryIterator<AggregateEventDocument>(queryDefinition);
@@ -100,7 +100,7 @@ public class CosmosDataStore : ICosmosDataStore
                 Description: "There was an error when retrieving the aggregate event documents"
             );
         }
-        
+
         return aggregateEventDocuments;
     }
 
@@ -283,7 +283,6 @@ public class CosmosDataStore : ICosmosDataStore
 
         var newDomainEvents = newEventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
         aggregate.Apply(newDomainEvents);
-
         if (aggregate.Version == currentAggregateVersion)
         {
             return aggregate;
@@ -297,6 +296,13 @@ public class CosmosDataStore : ICosmosDataStore
         {
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
+            var aggregateDocumentToUpdate = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
+            aggregateDocumentToUpdate.CreatedDate = aggregateDocument.CreatedDate;
+            aggregateDocumentToUpdate.CreatedBy = aggregateDocument.CreatedBy;
+            aggregateDocumentToUpdate.UpdatedDate = timeStamp;
+            aggregateDocumentToUpdate.UpdatedBy = currentUserNameIdentifier;
+            batch.UpsertItem(aggregateDocumentToUpdate);
+
             foreach (var eventDocument in newEventDocuments)
             {
                 var aggregateEventDocument = new AggregateEventDocument
@@ -309,12 +315,6 @@ public class CosmosDataStore : ICosmosDataStore
                 };
                 batch.CreateItem(aggregateEventDocument);
             }
-
-            var aggregateDocumentToUpdate = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
-            aggregateDocumentToUpdate.CreatedDate = aggregateDocument.CreatedDate;
-            aggregateDocumentToUpdate.CreatedBy = aggregateDocument.CreatedBy;
-            aggregateDocumentToUpdate.UpdatedDate = timeStamp;
-            aggregateDocumentToUpdate.UpdatedBy = currentUserNameIdentifier;
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
             if (batchResponse.IsSuccessStatusCode)
