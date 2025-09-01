@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
@@ -18,12 +19,12 @@ public class CosmosDataStore : ICosmosDataStore
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
 
-    public CosmosDataStore(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor)
+    public CosmosDataStore(IOptions<CosmosOptions> options, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor)
     {
         _timeProvider = timeProvider;
         _httpContextAccessor = httpContextAccessor;
-        _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
-        _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
+        _cosmosClient = new CosmosClient(options.Value.Endpoint, options.Value.AuthKey, options.Value.ClientOptions);
+        _container = _cosmosClient.GetContainer(options.Value.DatabaseName, options.Value.ContainerName);
     }
 
     public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()

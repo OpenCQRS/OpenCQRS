@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using OpenCqrs.EventSourcing;
@@ -32,20 +33,24 @@ public abstract class TestBase
             {"TestAggregate1:1", typeof(TestAggregate1)},
             {"TestAggregate2:1", typeof(TestAggregate2)}
         };
+        
+        var cosmosOptions = new CosmosOptions
+        {
+            Endpoint = "https://localhost:8081",
+            AuthKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+        };
 
-        const string endpoint = "https://localhost:8081";
-        const string authKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-        const string databaseName = "OpenCQRS";
-        const string containerName = "Domain";
-        var cosmosClientConnection = new CosmosClientConnection(endpoint, authKey, databaseName, containerName, new CosmosClientOptions { ApplicationName = "OpenCQRS", ConnectionMode = ConnectionMode.Direct });
+        var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
+        optionsSubstitute.Value.Returns(cosmosOptions);
+        
         TimeProvider = new FakeTimeProvider();
         var httpContextAccessor = CreateHttpContextAccessor();
-        DataStore = new CosmosDataStore(cosmosClientConnection, TimeProvider, httpContextAccessor);
-        DomainService = new CosmosDomainService(cosmosClientConnection, TimeProvider, httpContextAccessor, DataStore);
+        DataStore = new CosmosDataStore(optionsSubstitute, TimeProvider, httpContextAccessor);
+        DomainService = new CosmosDomainService(optionsSubstitute, TimeProvider, httpContextAccessor, DataStore);
 
-        var cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
-        var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName).GetAwaiter().GetResult();
-        databaseResponse.Database.CreateContainerIfNotExistsAsync(containerName, "/streamId", throughput: 400);
+        var cosmosClient = new CosmosClient(cosmosOptions.Endpoint, cosmosOptions.AuthKey, cosmosOptions.ClientOptions);
+        var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosOptions.DatabaseName).GetAwaiter().GetResult();
+        databaseResponse.Database.CreateContainerIfNotExistsAsync(cosmosOptions.ContainerName, "/streamId", throughput: 400);
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()

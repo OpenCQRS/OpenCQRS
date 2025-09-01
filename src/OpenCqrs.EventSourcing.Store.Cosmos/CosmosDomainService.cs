@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
@@ -19,12 +20,12 @@ public class CosmosDomainService : IDomainService
     private readonly Container _container;
     private readonly ICosmosDataStore _cosmosDataStore;
 
-    public CosmosDomainService(ICosmosClientConnection cosmosClientConnection, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
+    public CosmosDomainService(IOptions<CosmosOptions> options, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
         _httpContextAccessor = httpContextAccessor;
-        _cosmosClient = new CosmosClient(cosmosClientConnection.Endpoint, cosmosClientConnection.AuthKey, cosmosClientConnection.ClientOptions);
-        _container = _cosmosClient.GetContainer(cosmosClientConnection.DatabaseName, cosmosClientConnection.ContainerName);
+        _cosmosClient = new CosmosClient(options.Value.Endpoint, options.Value.AuthKey, options.Value.ClientOptions);
+        _container = _cosmosClient.GetContainer(options.Value.DatabaseName, options.Value.ContainerName);
         _cosmosDataStore = cosmosDataStore;
     }
 
