@@ -14,6 +14,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
 | [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
+| [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                       |
 | [OpenCqrs.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)          |
 | [OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) |
 
@@ -218,10 +219,10 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
   - [Domain Service](docs/Domain-Service.md)
   - [Scenarios](docs/Event-Sourcing-Scenarios.md)
   - [Store Providers](docs/Store-Providers.md)
+    - [Cosmos DB](docs/Cosmos.md)
     - [Entity Framework Core](docs/Entity-Framework-Core.md)
       - [Extensions](docs/Entity-Framework-Core-Extensions.md)
       - [Scenarios](docs/Entity-Framework-Core-Scenarios.md)
-    - [Cosmos DB](docs/Cosmos.md)
 - [Release Notes](docs/Release-Notes.md)
 
 _[Legacy documentation here (OpenCQRS 6.x)](docs-6.x/index.md)_
