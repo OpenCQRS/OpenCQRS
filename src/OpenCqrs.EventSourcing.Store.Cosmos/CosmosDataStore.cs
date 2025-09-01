@@ -61,6 +61,49 @@ public class CosmosDataStore : ICosmosDataStore
         }
     }
 
+    public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType is null)
+        {
+            return new Failure
+            (
+                Title: "Aggregate type not found",
+                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
+            );
+        }
+        
+        const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
+        var queryDefinition = new QueryDefinition(sql)
+            .WithParameter("@streamId", streamId.Id)
+            .WithParameter("@aggregateId", aggregateId.ToIdWithTypeVersion(aggregateType.Version))
+            .WithParameter("@documentType", DocumentType.AggregateEvent);
+        
+        var aggregateEventDocuments = new List<AggregateEventDocument>();
+        
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<AggregateEventDocument>(queryDefinition);
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                aggregateEventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
+            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the aggregate event documents", tags: new ActivityTagsCollection(tags!)));
+            return new Failure
+            (
+                Title: "Error retrieving the aggregate event documents",
+                Description: "There was an error when retrieving the aggregate event documents"
+            );
+        }
+        
+        return aggregateEventDocuments;
+    }
+
     public async Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
