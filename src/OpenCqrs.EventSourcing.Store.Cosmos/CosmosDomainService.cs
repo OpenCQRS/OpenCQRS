@@ -247,7 +247,7 @@ public class CosmosDomainService : IDomainService
         {
             using var iterator = _container.GetItemQueryIterator<int?>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             if (!iterator.HasMoreResults)

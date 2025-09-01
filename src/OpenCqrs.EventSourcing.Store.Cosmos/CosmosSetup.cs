@@ -1,41 +1,17 @@
 ﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
+using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
+using System.Collections.ObjectModel;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
-public class CosmosSetup(CosmosClient client)
+public class CosmosSetup(IOptions<CosmosOptions> cosmosOptions)
 {
-    public async Task<Container> CreateContainerWithIndexingPolicyAsync(string dbName, string containerName)
+    public async Task<Container> CreateDatabaseAndContainer(int throughput = 400)
     {
-        var database = await client.CreateDatabaseIfNotExistsAsync(dbName);
-
-        var containerProperties = new ContainerProperties(containerName, partitionKeyPath: "/aggregateId")
-        {
-            IndexingPolicy = new IndexingPolicy
-            {
-                // Automatic indexing enabled
-                Automatic = true,
-
-                // Consistent = all writes are immediately indexed
-                IndexingMode = IndexingMode.Consistent,
-
-                // Exclude everything by default
-                ExcludedPaths =
-                {
-                    new ExcludedPath { Path = "/*" }
-                },
-
-                // Include only specific paths
-                IncludedPaths =
-                {
-                    new IncludedPath { Path = "/aggregateId/?" },
-                    new IncludedPath { Path = "/type/?" },
-                    new IncludedPath { Path = "/eventType/?" },
-                    new IncludedPath { Path = "/sequence/?" }
-                }
-            }
-        };
-
-        var response = await database.Database.CreateContainerIfNotExistsAsync(containerProperties, throughput: 400);
-        return response.Container;
+        var cosmosClient = new CosmosClient(cosmosOptions.Value.Endpoint, cosmosOptions.Value.AuthKey, cosmosOptions.Value.ClientOptions);
+        var databaseResponse = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosOptions.Value.DatabaseName);
+        var containerResponse = await databaseResponse.Database.CreateContainerIfNotExistsAsync(cosmosOptions.Value.ContainerName, "/streamId", throughput);
+        return containerResponse.Container;
     }
 }

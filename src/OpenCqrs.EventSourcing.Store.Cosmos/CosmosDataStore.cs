@@ -86,7 +86,7 @@ public class CosmosDataStore : ICosmosDataStore
         {
             using var iterator = _container.GetItemQueryIterator<AggregateEventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             while (iterator.HasMoreResults)
@@ -140,7 +140,7 @@ public class CosmosDataStore : ICosmosDataStore
         {
             using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             while (iterator.HasMoreResults)
@@ -177,7 +177,7 @@ public class CosmosDataStore : ICosmosDataStore
         {
             using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             while (iterator.HasMoreResults)
@@ -233,7 +233,7 @@ public class CosmosDataStore : ICosmosDataStore
         {
             using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             while (iterator.HasMoreResults)
@@ -289,7 +289,7 @@ public class CosmosDataStore : ICosmosDataStore
         {
             using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
             {
-                PartitionKey = new  PartitionKey(streamId.Id)
+                PartitionKey = new PartitionKey(streamId.Id)
             });
 
             while (iterator.HasMoreResults)

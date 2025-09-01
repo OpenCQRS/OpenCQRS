@@ -33,24 +33,21 @@ public abstract class TestBase
             {"TestAggregate1:1", typeof(TestAggregate1)},
             {"TestAggregate2:1", typeof(TestAggregate2)}
         };
-        
-        var cosmosOptions = new CosmosOptions
+
+        var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
+        optionsSubstitute.Value.Returns(new CosmosOptions
         {
             Endpoint = "https://localhost:8081",
             AuthKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-        };
-
-        var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
-        optionsSubstitute.Value.Returns(cosmosOptions);
-        
+        });
         TimeProvider = new FakeTimeProvider();
         var httpContextAccessor = CreateHttpContextAccessor();
+
         DataStore = new CosmosDataStore(optionsSubstitute, TimeProvider, httpContextAccessor);
         DomainService = new CosmosDomainService(optionsSubstitute, TimeProvider, httpContextAccessor, DataStore);
 
-        var cosmosClient = new CosmosClient(cosmosOptions.Endpoint, cosmosOptions.AuthKey, cosmosOptions.ClientOptions);
-        var databaseResponse = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosOptions.DatabaseName).GetAwaiter().GetResult();
-        databaseResponse.Database.CreateContainerIfNotExistsAsync(cosmosOptions.ContainerName, "/streamId", throughput: 400);
+        var cosmosSetup = new CosmosSetup(optionsSubstitute);
+        _ = cosmosSetup.CreateDatabaseAndContainer();
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()

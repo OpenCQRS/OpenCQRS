@@ -11,9 +11,6 @@ public static class ServiceCollectionExtensions
         services.AddOptions<CosmosOptions>().Configure(configureOptions);
         services.TryAddScoped<IDomainService, CosmosDomainService>();
         services.TryAddScoped<ICosmosDataStore, CosmosDataStore>();
-        
-        // TODO: Container throughput (shared or dedicated)
-
-        // TODO: ContainerProperties with partition key, indexing policy, etc.
+        services.TryAddSingleton<CosmosSetup>();
     }
 }
