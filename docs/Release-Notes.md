@@ -1,8 +1,8 @@
 # Release Notes
 
 ## OpenCQRS 7.0.0-beta.5
-_**Released ???**_
-- ???
+_**Released 01/09/2025**_
+- Cosmos DB store provider
 
 ## OpenCQRS 7.0.0-beta.4
 _**Released 29/08/2025**_

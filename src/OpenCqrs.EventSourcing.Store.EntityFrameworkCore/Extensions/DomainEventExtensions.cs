@@ -197,11 +197,10 @@ public static class DomainEventExtensions
 
         return new EventEntity
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = $"{streamId.Id}:{sequence}",
             StreamId = streamId.Id,
             Sequence = sequence,
-            TypeName = domainEventTypeAttribute.Name,
-            TypeVersion = domainEventTypeAttribute.Version,
+            EventType = TypeBindings.GetTypeBindingKey(domainEventTypeAttribute.Name, domainEventTypeAttribute.Version),
             Data = JsonConvert.SerializeObject(domainEvent)
         };
     }

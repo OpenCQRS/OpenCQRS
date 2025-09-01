@@ -45,7 +45,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 /// }
 /// </code>
 /// </example>
-public class AggregateEntity : IAuditableEntity, IEditableEntity, IBindableEntity
+public class AggregateEntity : IAuditableEntity, IEditableEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for the aggregate instance.
@@ -66,6 +66,8 @@ public class AggregateEntity : IAuditableEntity, IEditableEntity, IBindableEntit
     /// This should match the <see cref="IAggregate.StreamId"/> property of the domain aggregate.
     /// </value>
     public string StreamId { get; set; } = null!;
+
+    public string AggregateType { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the current version of the aggregate based on the number of applied events.
@@ -136,26 +138,6 @@ public class AggregateEntity : IAuditableEntity, IEditableEntity, IBindableEntit
     /// Can be null if the modifier information is not available or required.
     /// </value>
     public string? UpdatedBy { get; set; }
-
-    /// <summary>
-    /// Gets or sets the logical name of the aggregate type as defined in the <see cref="AggregateType"/> attribute.
-    /// Used for type resolution during deserialization and type binding operations.
-    /// </summary>
-    /// <value>
-    /// A string representing the logical name of the aggregate type. This should match the
-    /// Name property from the <see cref="AggregateType"/> attribute on the aggregate class.
-    /// </value>
-    public string TypeName { get; set; } = null!;
-
-    /// <summary>
-    /// Gets or sets the version of the aggregate type schema as defined in the <see cref="AggregateType"/> attribute.
-    /// Supports aggregate schema evolution and ensures proper deserialization of different versions.
-    /// </summary>
-    /// <value>
-    /// An integer representing the schema version of the aggregate type. This should match the
-    /// Version property from the <see cref="AggregateType"/> attribute on the aggregate class.
-    /// </value>
-    public int TypeVersion { get; set; }
 }
 
 /// <summary>
@@ -251,10 +233,10 @@ public static class AggregateEntityExtensions
     /// </example>
     public static T ToAggregate<T>(this AggregateEntity aggregateEntity) where T : IAggregate
     {
-        var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateEntity.GetTypeBindingKey(), out var aggregateType);
+        var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateEntity.AggregateType, out var aggregateType);
         if (typeFound is false)
         {
-            throw new InvalidOperationException($"Aggregate type {aggregateEntity.TypeName} not found in TypeBindings");
+            throw new InvalidOperationException($"Aggregate type {aggregateEntity.AggregateType} not found in TypeBindings");
         }
 
         var aggregate = (T)JsonConvert.DeserializeObject(aggregateEntity.Data, aggregateType!, JsonSerializerSettings)!;

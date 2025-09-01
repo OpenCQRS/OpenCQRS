@@ -52,7 +52,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 /// }
 /// </code>
 /// </example>
-public class EventEntity : IAuditableEntity, IBindableEntity
+public class EventEntity : IAuditableEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for this domain event instance.
@@ -73,6 +73,8 @@ public class EventEntity : IAuditableEntity, IBindableEntity
     /// can share the same StreamId, forming an ordered sequence of changes for an aggregate.
     /// </value>
     public string StreamId { get; set; } = null!;
+
+    public string EventType { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the sequence number of this event within its stream.
@@ -113,26 +115,6 @@ public class EventEntity : IAuditableEntity, IBindableEntity
     /// Can be null if creator information is not available or not required for the use case.
     /// </value>
     public string? CreatedBy { get; set; }
-
-    /// <summary>
-    /// Gets or sets the logical name of the domain event type as defined in the <see cref="DomainEventType"/> attribute.
-    /// Used for type resolution during event deserialization and type binding operations.
-    /// </summary>
-    /// <value>
-    /// A string representing the logical name of the domain event type. Should match the
-    /// Name property from the <see cref="DomainEventType"/> attribute on the event class.
-    /// </value>
-    public string TypeName { get; set; } = null!;
-
-    /// <summary>
-    /// Gets or sets the version of the domain event type schema as defined in the <see cref="DomainEventType"/> attribute.
-    /// Supports event schema evolution and ensures proper deserialization of different event versions.
-    /// </summary>
-    /// <value>
-    /// An integer representing the schema version of the domain event type. Should match the
-    /// Version property from the <see cref="DomainEventType"/> attribute on the event class.
-    /// </value>
-    public int TypeVersion { get; set; }
 }
 
 /// <summary>
@@ -243,10 +225,10 @@ public static class EventEntityExtensions
     /// </example>
     public static IDomainEvent ToDomainEvent(this EventEntity eventEntity)
     {
-        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventEntity.GetTypeBindingKey(), out var eventType);
+        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventEntity.EventType, out var eventType);
         if (typeFound is false)
         {
-            throw new InvalidOperationException($"Event type {eventEntity.TypeName} not found in TypeBindings");
+            throw new InvalidOperationException($"Event type {eventEntity.EventType} not found in TypeBindings");
         }
 
         return (IDomainEvent)JsonConvert.DeserializeObject(eventEntity.Data, eventType!, JsonSerializerSettings)!;

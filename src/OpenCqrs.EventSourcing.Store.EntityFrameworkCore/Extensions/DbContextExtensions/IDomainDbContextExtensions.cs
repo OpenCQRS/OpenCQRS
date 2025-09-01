@@ -5,53 +5,8 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 
-/// <summary>
-/// Provides extension methods for <see cref="IDomainDbContext"/> that implement core event sourcing operations
-/// including aggregate persistence, event tracking, domain event management, and aggregate reconstruction.
-/// These methods enable seamless integration with Entity Framework Core for event sourcing scenarios.
-/// </summary>
-/// <example>
-/// <code>
-/// // Example usage in a command handler
-/// public class CreateOrderCommandHandler : IRequestHandler&lt;CreateOrderCommand&gt;
-/// {
-///     private readonly IDomainDbContext _context;
-///     
-///     public CreateOrderCommandHandler(IDomainDbContext context)
-///     {
-///         _context = context;
-///     }
-///     
-///     public async Task&lt;Result&gt; Handle(CreateOrderCommand request, CancellationToken cancellationToken)
-///     {
-///         var streamId = new StreamId($"order-{request.OrderId}");
-///         var aggregateId = new OrderAggregateId(request.OrderId);
-///         
-///         // Create new aggregate
-///         var order = new OrderAggregate(request.OrderId, request.CustomerId);
-///         order.AddItem(request.ProductId, request.Quantity);
-///         
-///         // Save with concurrency control
-///         return await _context.Save(streamId, aggregateId, order, expectedEventSequence: 0, cancellationToken);
-///     }
-/// }
-/// </code>
-/// </example>
 public static partial class IDomainDbContextExtensions
 {
-    // TODO: GetDomainEventsBetweenSequences (Issue #124)
-    // TODO: GetDomainEventsUpToDate (Issue #124)
-    // TODO: GetDomainEventsFromDate (Issue #124)
-    // TODO: GetDomainEventsBetweenDates (Issue #124)
-
-    // TODO: GetDomainEvents as stream (Issue #122)
-    // TODO: GetDomainEventsUpToSequence as stream (Issue #122)
-    // TODO: GetDomainEventsFromSequence as stream (Issue #122)
-    // TODO: GetDomainEventsBetweenSequences as stream (Issue #122)
-    // TODO: GetDomainEventsUpToDate as stream (Issue #122)
-    // TODO: GetDomainEventsFromDate as stream (Issue #122)
-    // TODO: GetDomainEventsBetweenDates as stream (Issue #122)
-
     // TODO: GetEventEntitiesBetweenSequences (Issue #124)
     // TODO: GetEventEntitiesUpToDate (Issue #124)
     // TODO: GetEventEntitiesFromDate (Issue #124)

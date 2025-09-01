@@ -19,11 +19,10 @@ public class GetDomainEventsTests : TestBase
         aggregate.Update("Updated Name 2", "Updated Description 2");
         aggregate.Update("Updated Name 3", "Updated Description 3");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = await dbContext.GetDomainEvents(streamId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var domainEvents = await DomainService.GetDomainEvents(streamId);
 
-        domainEvents.Count.Should().Be(4);
+        domainEvents.Value!.Count.Should().Be(4);
     }
 
     [Fact]

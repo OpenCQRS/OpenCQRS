@@ -3,7 +3,6 @@ using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Data;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
@@ -24,10 +23,8 @@ public class SaveAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var saveResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
         using (new AssertionScope())
         {
@@ -49,7 +46,7 @@ public class SaveAggregateTests : TestBase
 
         await using var dbContext = Shared.CreateTestDbContext();
 
-        var saveResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
 
@@ -58,12 +55,12 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(1);
             aggregateEntity.LatestEventSequence.Should().Be(1);
 
             eventEntity.Should().NotBeNull();
-            eventEntity.TypeName.Should().Be("TestAggregateCreated");
+            eventEntity.EventType.Should().Be("TestAggregateCreated:1");
             eventEntity.Sequence.Should().Be(1);
         }
     }
@@ -77,12 +74,12 @@ public class SaveAggregateTests : TestBase
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
         await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregate = updatedAggregateResult.Value!;
         aggregate.Update("Updated Name", "Updated Description");
 
-        var saveResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
         var eventEntities = await dbContext.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
 
@@ -91,14 +88,14 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(2);
             aggregateEntity.LatestEventSequence.Should().Be(2);
 
             eventEntities.Count.Should().Be(2);
-            eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
+            eventEntities[0].EventType.Should().Be("TestAggregateCreated:1");
             eventEntities[0].Sequence.Should().Be(1);
-            eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventEntities[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventEntities[1].Sequence.Should().Be(2);
         }
     }
@@ -113,7 +110,7 @@ public class SaveAggregateTests : TestBase
         aggregate.Update("Updated Name", "Updated Description");
 
         await using var dbContext = Shared.CreateTestDbContext();
-        var saveResult = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
         var eventEntities = await dbContext.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
 
@@ -122,14 +119,14 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
-            aggregateEntity.TypeName.Should().Be("TestAggregate1");
+            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(2);
             aggregateEntity.LatestEventSequence.Should().Be(2);
 
             eventEntities.Count.Should().Be(2);
-            eventEntities[0].TypeName.Should().Be("TestAggregateCreated");
+            eventEntities[0].EventType.Should().Be("TestAggregateCreated:1");
             eventEntities[0].Sequence.Should().Be(1);
-            eventEntities[1].TypeName.Should().Be("TestAggregateUpdated");
+            eventEntities[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventEntities[1].Sequence.Should().Be(2);
         }
     }
@@ -174,21 +171,22 @@ public class SaveAggregateTests : TestBase
         var aggregateId = new TestAggregate2Id(id);
         var aggregate = new TestAggregate2(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var domainEvents = new IDomainEvent[]
+        {
+            new SomethingHappenedEvent("Something1"),
+            new SomethingHappenedEvent("Something2"),
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        };
+        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
 
-        dbContext.Add(new SomethingHappenedEvent("Something1").ToEventEntity(streamId, sequence: 2));
-        dbContext.Add(new SomethingHappenedEvent("Something2").ToEventEntity(streamId, sequence: 3));
-        dbContext.Add(new SomethingHappenedEvent("Something3").ToEventEntity(streamId, sequence: 4));
-        dbContext.Add(new SomethingHappenedEvent("Something4").ToEventEntity(streamId, sequence: 5));
-        await dbContext.SaveChangesAsync();
-
-        var aggregateToUpdateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var aggregateToUpdateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
 
-        var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var aggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -218,9 +216,10 @@ public class SaveAggregateTests : TestBase
 
         var timeProvider = new FakeTimeProvider();
         timeProvider.SetUtcNow(now);
-        await using var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor());
+        var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor());
+        var domainService = Shared.CreateDomainService(dbContext);
 
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
 
@@ -250,18 +249,19 @@ public class SaveAggregateTests : TestBase
 
         var createDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         timeProvider.SetUtcNow(createDate);
-        await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
+        using (var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor()))
         {
-            await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+            await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         }
 
         var updateDate = new DateTime(2024, 6, 15, 18, 0, 0, DateTimeKind.Utc);
         timeProvider.SetUtcNow(updateDate);
-        await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
+        var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor());
+        using (var domainService = Shared.CreateDomainService(dbContext))
         {
-            var aggregateToUpdateResult = await dbContext.GetAggregate(streamId, aggregateId);
+            var aggregateToUpdateResult = await domainService.GetAggregate(streamId, aggregateId);
             aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
-            await dbContext.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
+            await domainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
 
             var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
             var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);

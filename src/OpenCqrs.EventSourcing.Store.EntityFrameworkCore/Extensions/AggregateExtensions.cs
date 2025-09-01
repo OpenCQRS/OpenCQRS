@@ -108,7 +108,7 @@ public static class AggregateExtensions
     /// var entity = orderAggregate.ToAggregateEntity(streamId, aggregateId, 0);
     /// 
     /// // The entity will have:
-    /// // - Id: "{orderId}|v:1" (versioned identifier)
+    /// // - Id: "{orderId}:1" (versioned identifier)
     /// // - StreamId: streamId.Id
     /// // - TypeName: "Order"
     /// // - TypeVersion: 1
@@ -119,24 +119,23 @@ public static class AggregateExtensions
     /// </example>
     public static AggregateEntity ToAggregateEntity(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence)
     {
-        var eventTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (eventTypeAttribute == null)
+        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateTypeAttribute == null)
         {
             throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(eventTypeAttribute.Version);
+        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version);
         aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateEntity
         {
-            Id = aggregateId.ToIdWithTypeVersion(eventTypeAttribute.Version),
+            Id = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
-            TypeName = eventTypeAttribute.Name,
-            TypeVersion = eventTypeAttribute.Version,
+            AggregateType = TypeBindings.GetTypeBindingKey(aggregateTypeAttribute.Name, aggregateTypeAttribute.Version),
             Data = JsonConvert.SerializeObject(aggregate)
         };
     }
