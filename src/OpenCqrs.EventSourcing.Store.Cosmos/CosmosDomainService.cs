@@ -466,7 +466,7 @@ public class CosmosDomainService : IDomainService
             return new TAggregate();
         }
 
-        return await _cosmosDataStore.UpdateAggregate(streamId, aggregateId, aggregateDocument, cancellationToken);
+        return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, aggregateDocument, cancellationToken);
     }
 
     public void Dispose() => _cosmosClient.Dispose();
