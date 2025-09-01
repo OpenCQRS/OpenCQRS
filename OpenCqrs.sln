@@ -47,9 +47,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{5442F24B-4
 		docs\Domain.md = docs\Domain.md
 		docs\Notifications.md = docs\Notifications.md
 		docs\Entity-Framework-Core-Extensions.md = docs\Entity-Framework-Core-Extensions.md
-		docs\Entity-Framework-Core-Scenarios.md = docs\Entity-Framework-Core-Scenarios.md
 		docs\Store-Providers.md = docs\Store-Providers.md
 		docs\Domain-Service.md = docs\Domain-Service.md
+		docs\Event-Sourcing-Scenarios.md = docs\Event-Sourcing-Scenarios.md
+		docs\Entity-Framework-Core-Scenarios.md = docs\Entity-Framework-Core-Scenarios.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.EventSourcing.EntityFrameworkCore", "examples\OpenCqrs.Examples.EventSourcing.EntityFrameworkCore\OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.csproj", "{6379279E-932F-41F3-BEFD-7FC432FB7E1F}"

@@ -4,15 +4,13 @@
 
 .NET framework implementing DDD, Event Sourcing, and CQRS. OpenCQRS 7 is a revamped version of the project with a complete rewrite of the codebase. 
 
-OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Entity Framework Core with any relational database providers (work for a separate Cosmos DB provider is underway).
-
-All features from OpenCQRS 6.x are being added to OpenCQRS 7 beta versions.
+OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core with any relational database providers.
 
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
 ## Packages
 
-| Package                                                                                                                                               | Beta 4                                                                                                                                                          |
+| Package                                                                                                                                               | Beta 5                                                                                                                                                          |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
 | [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
@@ -122,13 +120,14 @@ public class SomethingHappenedHandlerTwo : INotifcationHandler<SomethingHappened
 await _dispatcher.Publish(new SomethingHappened());
 ```
 
-## Event Sourcing with Entity Framework Core
+## Event Sourcing
 
-You can either use the `IDomainService` interface to access the event-sourcing functionalities or directly use them from your DbContext that inherits from `DomainDbContext` or `IdentityDomainDbContext`.
+You can use the `IDomainService` interface to access the event-sourcing functionalities for every store provider.
 
-All features are implemented as extension methods on the `IDomainDbContext` interface, allowing seamless integration with your existing DbContext implementations.
+In the Cosmos DB store provider you can also use the `ICosmosDataStore` interface to access Cosmos DB specific features.
 
-IdentityDbContext from ASP.NET Core Identity is also supported.
+In the Entity Framework Core store provider you can also use the `IDomainDbContext` extensions to access Entity Framework Core specific features.
+In the Entity Framework Core store provider, IdentityDbContext from ASP.NET Core Identity is also supported.
 
 ```C#
 [AggregateType("Order")]
@@ -177,21 +176,27 @@ var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
 // Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-// or
-var result = await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
-
-## Event Sourcing with Cosmos DB
-
-_Work in progress_
 
 ## Roadmap
 
 ### OpenCQRS 7.0.0
 
-- Caching queries with Memory/Redis
-- Message bus integration with Azure Service Bus/RabbitMQ
-- Event Sourcing with Cosmos DB
+- All features from OpenCQRS 6.x
+- Complete rewrite of the framework
+- Upgrade to .NET 9
+- New mediator pattern with commands, queries, and notifications
+- Cosmos DB store provider
+- Entity Framework Core store provider
+- Extensions for db context in the Entity Framework Core store provider
+- Support for IdentityDbContext from ASP.NET Core Identity
+- Command validation
+- Command sequences
+- Send and publish methods that automatically publish notifications on the back of a successfully processed command
+- More flexible and extensible architecture
+- Better performance
+- Better test coverage
+- More documentation and examples
 
 ### OpenCQRS 7.1.0
 
@@ -210,6 +215,8 @@ _Work in progress_
   - [Queries](docs/Queries.md)
 - [Event Sourcing](docs/Event-Sourcing.md)
   - [Domain](docs/Domain.md)
+  - [Domain Service](docs/Domain-Service.md)
+  - [Scenarios](docs/Event-Sourcing-Scenarios.md)
   - [Store Providers](docs/Store-Providers.md)
     - [Entity Framework Core](docs/Entity-Framework-Core.md)
       - [Extensions](docs/Entity-Framework-Core-Extensions.md)
