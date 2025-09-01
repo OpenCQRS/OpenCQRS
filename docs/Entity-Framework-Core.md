@@ -6,7 +6,7 @@ You can either use the `IDomainService` interface to access the event sourcing f
 
 All features are implemented as extension methods on the `IDomainDbContext` interface, allowing seamless integration with your existing DbContext implementations.
 
-It also means that you can use the OpenCQRS mediator pattern, any other mediator library, or classic service classes without any dependency on a specific mediator.
+It also means that you can use the OpenCQRS mediator pattern, any other mediator library, or classic service classes without any dependencies on a specific mediator.
 
 The event sourcing functionalities can used with the following Entity Framework Core database providers:
 - SQL Server

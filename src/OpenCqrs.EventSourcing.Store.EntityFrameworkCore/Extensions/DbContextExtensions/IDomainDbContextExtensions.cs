@@ -52,7 +52,6 @@ public static partial class IDomainDbContextExtensions
     // TODO: GetEventEntitiesFromDate as stream (Issue #122)
     // TODO: GetEventEntitiesBetweenDates as stream (Issue #122)
 
-    // TODO: Create a separate interface/class for entities related methods
     private static async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var currentAggregateVersion = aggregate.Version;
