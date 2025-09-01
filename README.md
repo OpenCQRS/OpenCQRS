@@ -17,6 +17,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 | [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                       |
 | [OpenCqrs.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)          |
 | [OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) |
+| [OpenCqrs.Validation.FluentValidation](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)                      | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation) |
 
 ## Simple mediator
 
