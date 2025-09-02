@@ -1,8 +1,10 @@
-﻿namespace OpenCqrs.Messaging;
+﻿using OpenCqrs.Results;
+
+namespace OpenCqrs.Messaging;
 
 public class MessagePublisher(IMessagingProvider messagingProvider) : IMessagePublisher
 {
-    public async Task Publish<TMessage>(TMessage message) where TMessage : IMessage
+    public async Task<Result> Publish<TMessage>(TMessage message) where TMessage : IMessage
     {
         if (message is IQueueMessage && message is ITopicMessage)
         {
@@ -11,12 +13,12 @@ public class MessagePublisher(IMessagingProvider messagingProvider) : IMessagePu
 
         if (message is IQueueMessage queueMessage)
         {
-            await messagingProvider.SendQueueMessage(queueMessage);
+            return await messagingProvider.SendQueueMessage(queueMessage);
         }
 
         if (message is ITopicMessage topicMessage)
         {
-            await messagingProvider.SendTopicMessage(topicMessage);
+            return await messagingProvider.SendTopicMessage(topicMessage);
         }
 
         throw new NotSupportedException("The message must implement either the IQueueMessage or the ITopicMessage interface");

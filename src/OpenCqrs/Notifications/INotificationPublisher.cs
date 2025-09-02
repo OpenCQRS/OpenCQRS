@@ -2,7 +2,7 @@
 
 namespace OpenCqrs.Notifications;
 
-public interface IPublisher
+public interface INotificationPublisher
 {
     Task<IEnumerable<Result>> Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
 }

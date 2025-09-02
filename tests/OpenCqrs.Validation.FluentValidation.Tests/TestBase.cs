@@ -33,8 +33,8 @@ public abstract class TestBase
 
         var fluentValidationProvider = new FluentValidationProvider(serviceProvider);
         var validationService = new ValidationService(fluentValidationProvider);
-        var commandSender = new CommandSender(serviceProvider, validationService, Substitute.For<IPublisher>());
+        var commandSender = new CommandSender(serviceProvider, validationService, Substitute.For<INotificationPublisher>());
 
-        Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), Substitute.For<IPublisher>());
+        Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), Substitute.For<INotificationPublisher>());
     }
 }

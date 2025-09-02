@@ -1,6 +1,8 @@
-﻿namespace OpenCqrs.Messaging;
+﻿using OpenCqrs.Results;
+
+namespace OpenCqrs.Messaging;
 
 public interface IMessagePublisher
 {
-    Task Publish<TMessage>(TMessage message) where TMessage : IMessage;
+    Task<Result> Publish<TMessage>(TMessage message) where TMessage : IMessage;
 }

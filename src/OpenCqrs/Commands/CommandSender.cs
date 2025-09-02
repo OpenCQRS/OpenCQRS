@@ -22,11 +22,11 @@ namespace OpenCqrs.Commands;
 /// });
 /// </code>
 /// </example>
-public class CommandSender(IServiceProvider serviceProvider, IValidationService validationService, IPublisher publisher) : ICommandSender
+public class CommandSender(IServiceProvider serviceProvider, IValidationService validationService, INotificationPublisher notificationPublisher) : ICommandSender
 {
     private static readonly ConcurrentDictionary<Type, object?> CommandHandlerWrappers = new();
 
-    private static readonly ConcurrentDictionary<Type, Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>> CompiledPublishers = new();
+    private static readonly ConcurrentDictionary<Type, Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>> CompiledPublishers = new();
 
     /// <summary>
     /// Sends a command that does not expect a response value to its corresponding handler for processing.
@@ -143,7 +143,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             {
                 var notificationType = notification.GetType();
                 var publishDelegate = GetOrCreateCompiledPublisher(notificationType);
-                return publishDelegate(publisher, notification, cancellationToken);
+                return publishDelegate(notificationPublisher, notification, cancellationToken);
             })
             .ToList();
 
@@ -208,20 +208,20 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return commandResults;
     }
 
-    private static Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
+    private static Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
     {
         return CompiledPublishers.GetOrAdd(notificationType, type =>
         {
-            var publisherParam = Expression.Parameter(typeof(IPublisher), "publisher");
+            var publisherParam = Expression.Parameter(typeof(INotificationPublisher), "publisher");
             var notificationParam = Expression.Parameter(typeof(INotification), "notification");
             var cancellationTokenParam = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            var publishMethod = typeof(IPublisher).GetMethod(nameof(IPublisher.Publish))!.MakeGenericMethod(type);
+            var publishMethod = typeof(INotificationPublisher).GetMethod(nameof(INotificationPublisher.Publish))!.MakeGenericMethod(type);
             var castNotification = Expression.Convert(notificationParam, type);
 
             var methodCall = Expression.Call(publisherParam, publishMethod, castNotification, cancellationTokenParam);
 
-            var lambda = Expression.Lambda<Func<IPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>>(methodCall, publisherParam, notificationParam, cancellationTokenParam);
+            var lambda = Expression.Lambda<Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>>(methodCall, publisherParam, notificationParam, cancellationTokenParam);
 
             return lambda.Compile();
         });

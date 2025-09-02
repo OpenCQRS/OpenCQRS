@@ -3,7 +3,7 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.Notifications;
 
-public class Publisher(IServiceProvider serviceProvider) : IPublisher
+public class NotificationPublisher(IServiceProvider serviceProvider) : INotificationPublisher
 {
     public async Task<IEnumerable<Result>> Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
     {

@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDispatcher, Dispatcher>();
         services.AddScoped<ICommandSender, CommandSender>();
         services.AddScoped<IQueryProcessor, QueryProcessor>();
-        services.AddScoped<IPublisher, Publisher>();
+        services.AddScoped<INotificationPublisher, NotificationPublisher>();
         services.AddScoped<IValidationService, ValidationService>();
 
         var typeList = types.ToList();
