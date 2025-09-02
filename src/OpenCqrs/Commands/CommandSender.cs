@@ -115,7 +115,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             var validationResult = await validationService.Validate(command);
             if (validationResult.IsNotSuccess)
             {
-                return new SendAndPublishResponse(CommandResult: validationResult, NotificationResults: []);
+                return new SendAndPublishResponse(CommandResult: validationResult, NotificationResults: [], MessageResults: []);
             }
         }
 
@@ -135,7 +135,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             || commandResult.Value?.Notifications == null
             || commandResult.Value?.Notifications.Any() is false)
         {
-            return new SendAndPublishResponse(commandResult, NotificationResults: []);
+            return new SendAndPublishResponse(commandResult, NotificationResults: [], MessageResults: []);
         }
 
         var tasks = commandResult.Value!.Notifications
@@ -149,7 +149,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         var notificationsResults = await Task.WhenAll(tasks);
 
-        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList());
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), MessageResults: []);
     }
 
     /// <summary>
