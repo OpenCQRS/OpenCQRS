@@ -68,14 +68,14 @@ public class CosmosDomainService : IDomainService
             return aggregate;
         }
 
-        var domainEvents = eventDocuments.Select(eventDoc => eventDoc.ToDomainEvent()).ToList();
+        var domainEvents = eventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
         aggregate.Apply(domainEvents);
         if (aggregate.Version == 0)
         {
             return aggregate;
         }
 
-        var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDoc => eventDoc.Sequence).Last().Sequence;
+        var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDocument => eventDocument.Sequence).Last().Sequence;
         var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
 
         var timeStamp = _timeProvider.GetUtcNow();
@@ -110,23 +110,11 @@ public class CosmosDomainService : IDomainService
                 return aggregate;
             }
 
-            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
-            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when creating the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error creating the aggregate",
-                Description: "There was an error when creating the aggregate"
-            );
+            return batchResponse.ToFailure("Create Aggregate");
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when creating the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error creating the aggregate",
-                Description: "There was an error when creating the aggregate"
-            );
+            return ex.ToFailure("Get Aggregate");
         }
     }
 
@@ -261,13 +249,7 @@ public class CosmosDomainService : IDomainService
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the latest event sequence", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the latest event sequence",
-                Description: "There was an error when retrieving the latest event sequence"
-            );
+            return ex.ToFailure("Get Latest Event Sequence");
         }
     }
 
@@ -284,7 +266,6 @@ public class CosmosDomainService : IDomainService
             return latestEventSequenceResult.Failure!;
         }
         var latestEventSequence = latestEventSequenceResult.Value;
-
         if (latestEventSequence != expectedEventSequence)
         {
             return new Failure
@@ -364,23 +345,11 @@ public class CosmosDomainService : IDomainService
                 return Result.Ok();
             }
 
-            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
-            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving the aggregate",
-                Description: "There was an error when saving the aggregate"
-            );
+            return batchResponse.ToFailure("Save Aggregate");
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving the aggregate",
-                Description: "There was an error when saving the aggregate"
-            );
+            return ex.ToFailure("Save Aggregate");
         }
     }
 
@@ -427,23 +396,11 @@ public class CosmosDomainService : IDomainService
                 return Result.Ok();
             }
 
-            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
-            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving the aggregate",
-                Description: "There was an error when saving the aggregate"
-            );
+            return batchResponse.ToFailure("Save Domain Events");
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when saving the domain events", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving the domain events",
-                Description: "There was an error when saving the domain events"
-            );
+            return ex.ToFailure("Save Domain Events");
         }
     }
 

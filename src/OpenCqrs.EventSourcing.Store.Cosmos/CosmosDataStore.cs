@@ -52,13 +52,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the aggregate document", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the aggregate document",
-                Description: "There was an error when retrieving the aggregate document"
-            );
+            return ex.ToFailure("Get Aggregate Document");
         }
     }
 
@@ -97,13 +91,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the aggregate event documents", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the aggregate event documents",
-                Description: "There was an error when retrieving the aggregate event documents"
-            );
+            return ex.ToFailure("Get Aggregate Event Documents");
         }
 
         return aggregateEventDocuments;
@@ -151,13 +139,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the event documents",
-                Description: "There was an error when retrieving the event documents"
-            );
+            return ex.ToFailure("Get Event Documents");
         }
 
         return eventDocuments;
@@ -188,13 +170,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the event documents",
-                Description: "There was an error when retrieving the event documents"
-            );
+            return ex.ToFailure("Get Event Documents by IDs");
         }
 
         return eventDocuments;
@@ -244,13 +220,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the event documents",
-                Description: "There was an error when retrieving the event documents"
-            );
+            return ex.ToFailure("Get Event Documents from Sequence");
         }
 
         return eventDocuments;
@@ -300,13 +270,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when retrieving the event documents", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error retrieving the event documents",
-                Description: "There was an error when retrieving the event documents"
-            );
+            return ex.ToFailure("Get Event Documents up to Sequence");
         }
 
         return eventDocuments;
@@ -376,23 +340,11 @@ public class CosmosDataStore : ICosmosDataStore
                 return aggregate;
             }
 
-            var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
-            Activity.Current?.AddEvent(new ActivityEvent("Batch execution failed when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving the aggregate",
-                Description: "There was an error when saving the aggregate"
-            );
+            return batchResponse.ToFailure("Update Aggregate Document");
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when updating the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving changes",
-                Description: "There was an error when updating the aggregate"
-            );
+            return ex.ToFailure("Update Aggregate Document");
         }
     }
 
