@@ -2,23 +2,18 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Options;
 using OpenCqrs.Messaging;
+using OpenCQRS.Messaging.ServiceBus.Configuration;
 using OpenCqrs.Results;
 
 namespace OpenCQRS.Messaging.ServiceBus;
 
-public class ServiceBusMessagingProvider : IMessagingProvider, IAsyncDisposable
+public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : IMessagingProvider, IAsyncDisposable
 {
-    private readonly ServiceBusClient _serviceBusClient;
-    private readonly ConcurrentDictionary<string, ServiceBusSender> _queueSenders;
-    private readonly ConcurrentDictionary<string, ServiceBusSender> _topicSenders;
-
-    public ServiceBusMessagingProvider(string connectionString)
-    {
-        _serviceBusClient = new ServiceBusClient(connectionString);
-        _queueSenders = new ConcurrentDictionary<string, ServiceBusSender>();
-        _topicSenders = new ConcurrentDictionary<string, ServiceBusSender>();
-    }
+    private readonly ServiceBusClient _serviceBusClient = new(options.Value.ConnectionString);
+    private readonly ConcurrentDictionary<string, ServiceBusSender> _queueSenders = new();
+    private readonly ConcurrentDictionary<string, ServiceBusSender> _topicSenders = new();
 
     public async Task<Result> SendQueueMessage<TMessage>(TMessage message) where TMessage : IQueueMessage
     {
