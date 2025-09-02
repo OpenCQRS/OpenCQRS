@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using Microsoft.Extensions.DependencyInjection;
+using OpenCqrs.Messaging;
 using OpenCqrs.Notifications;
 using OpenCqrs.Results;
 using OpenCqrs.Validation;
@@ -138,7 +139,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             return new SendAndPublishResponse(commandResult, NotificationResults: [], MessageResults: []);
         }
 
-        var tasks = commandResult.Value!.Notifications
+        var notificationTasks = commandResult.Value!.Notifications
             .Select(notification =>
             {
                 var notificationType = notification.GetType();
@@ -147,9 +148,19 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             })
             .ToList();
 
-        var notificationsResults = await Task.WhenAll(tasks);
+        var messageTasks = commandResult.Value!.Notifications.Where(n => n is IMessage)
+            .Select(notification =>
+            {
+                var notificationType = notification.GetType();
+                var publishDelegate = GetOrCreateCompiledPublisher(notificationType);
+                return publishDelegate(notificationPublisher, notification, cancellationToken);
+            })
+            .ToList();
 
-        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), MessageResults: []);
+        var notificationsResults = await Task.WhenAll(notificationTasks);
+        var messagesResults = await Task.WhenAll(messageTasks);
+
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), MessageResults: messagesResults.SelectMany(r => r).ToList());
     }
 
     /// <summary>

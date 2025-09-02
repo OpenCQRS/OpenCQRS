@@ -9,7 +9,7 @@ public static class ErrorHandlingExtensions
     public static Failure ToFailure(this TransactionalBatchResponse batchResponse, string operationDescription)
     {
         // TODO: Add more tags from the response
-        var tags = new Dictionary<string, object> {{ "Message", batchResponse.ErrorMessage }};
+        var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
         Activity.Current?.AddEvent(new ActivityEvent($"{operationDescription}: batch execution failed", tags: new ActivityTagsCollection(tags!)));
         return new Failure
         (
@@ -20,7 +20,7 @@ public static class ErrorHandlingExtensions
 
     public static Failure ToFailure(this Exception exception, string operationDescription)
     {
-        var tagList = new TagList {{ "Operation Description", operationDescription }};
+        var tagList = new TagList { { "Operation Description", operationDescription } };
         Activity.Current?.AddException(exception, tagList, DateTimeOffset.UtcNow);
         return new Failure
         (

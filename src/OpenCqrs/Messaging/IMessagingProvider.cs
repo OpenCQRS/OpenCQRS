@@ -5,6 +5,6 @@ namespace OpenCqrs.Messaging;
 public interface IMessagingProvider
 {
     Task<Result> SendQueueMessage<TMessage>(TMessage message) where TMessage : IQueueMessage;
-    
+
     Task<Result> SendTopicMessage<TMessage>(TMessage message) where TMessage : ITopicMessage;
 }
