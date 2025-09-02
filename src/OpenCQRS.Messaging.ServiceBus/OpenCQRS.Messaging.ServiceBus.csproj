@@ -10,4 +10,8 @@
       <ProjectReference Include="..\OpenCqrs\OpenCqrs.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
+    </ItemGroup>
+
 </Project>
