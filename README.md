@@ -6,6 +6,21 @@
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core with any relational database providers.
 
+## Main Features
+
+- Multiple aggregates per stream
+- Aggregate snapshot stored alongside events for fast reads
+- In memory aggregate reconstruction up to a specific event sequence if provided _(soon up to aggregate version or up to a specific date/time)_
+- Events applied to the aggregate filtered by event type
+- Retrieval of all domain events applied to an aggregate
+- Querying stream events from or up to a specific event sequence _(soon from or up to a specific date/time or date range)_
+- Optimistic concurrency control with an expected event sequence
+- Automatic event/notification publication after a command is successfully processed that returns a list of results from all notification handlers
+- Automatic command validation with FluentValidation if required
+- Command sequences that return a list of results from all commands in the sequence
+- Simple mediator with commands, queries, and notifications
+- Extensible architecture with providers for store, bus, caching, and validation
+
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
 ## Packages
@@ -202,6 +217,7 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.1.0
 
+- More extensions for domain events and event documents in the Cosmos DB store provider
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
 - Custom table names for EntityFrameworkCore store provider
