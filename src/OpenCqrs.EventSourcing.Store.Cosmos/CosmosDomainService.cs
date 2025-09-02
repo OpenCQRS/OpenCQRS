@@ -335,12 +335,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            if (batchResponse.IsSuccessStatusCode)
-            {
-                return Result.Ok();
-            }
-
-            return batchResponse.ToFailure("Save Aggregate");
+            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ToFailure("Save Aggregate");
         }
         catch (Exception ex)
         {
@@ -386,12 +381,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            if (batchResponse.IsSuccessStatusCode)
-            {
-                return Result.Ok();
-            }
-
-            return batchResponse.ToFailure("Save Domain Events");
+            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ToFailure("Save Domain Events");
         }
         catch (Exception ex)
         {

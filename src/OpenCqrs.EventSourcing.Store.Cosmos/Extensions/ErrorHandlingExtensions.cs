@@ -20,9 +20,7 @@ public static class ErrorHandlingExtensions
 
     public static Failure ToFailure(this Exception exception, string operationDescription)
     {
-        // TODO: Add more tags from the exception
-        var tags = new Dictionary<string, object> { { "Message", exception.Message } };
-        Activity.Current?.AddEvent(new ActivityEvent($"{operationDescription}: exception", tags: new ActivityTagsCollection(tags!)));
+        Activity.Current?.AddException(exception);
         return new Failure
         (
             Title: operationDescription,
