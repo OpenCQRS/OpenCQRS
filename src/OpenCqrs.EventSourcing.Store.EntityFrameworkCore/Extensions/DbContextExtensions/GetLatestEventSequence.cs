@@ -114,12 +114,12 @@ public static partial class IDomainDbContextExtensions
                 .MaxAsync(eventEntity => (int?)eventEntity.Sequence, cancellationToken) ?? 0;
         }
 
-        var domainEventTypeKeys = eventTypeFilter!
+        var eventTypes = eventTypeFilter!
             .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
             .Select(b => b.Key).ToList();
 
         return await domainDbContext.Events.AsNoTracking()
-            .Where(eventEntity => eventEntity.StreamId == streamId.Id && domainEventTypeKeys.Contains(eventEntity.EventType))
+            .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventTypes.Contains(eventEntity.EventType))
             .MaxAsync(eventEntity => (int?)eventEntity.Sequence, cancellationToken) ?? 0;
     }
 }

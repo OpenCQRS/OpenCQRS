@@ -271,12 +271,12 @@ public static partial class IDomainDbContextExtensions
                 .ToListAsync(cancellationToken);
         }
 
-        var domainEventTypeKeys = eventTypeFilter!
+        var eventTypes = eventTypeFilter!
             .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
             .Select(b => b.Key).ToList();
 
         return await domainDbContext.Events.AsNoTracking()
-            .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventEntity.Sequence <= upToSequence && domainEventTypeKeys.Contains(eventEntity.EventType))
+            .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventEntity.Sequence <= upToSequence && eventTypes.Contains(eventEntity.EventType))
             .OrderBy(eventEntity => eventEntity.Sequence)
             .ToListAsync(cancellationToken);
     }

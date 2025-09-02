@@ -215,7 +215,7 @@ public class CosmosDomainService : IDomainService
         }
         else
         {
-            var domainEventTypeKeys = eventTypeFilter!
+            var eventTypes = eventTypeFilter!
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
 
@@ -223,7 +223,7 @@ public class CosmosDomainService : IDomainService
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
                 .WithParameter("@documentType", DocumentType.Event)
-                .WithParameter("@eventTypes", domainEventTypeKeys);
+                .WithParameter("@eventTypes", eventTypes);
         }
 
         try

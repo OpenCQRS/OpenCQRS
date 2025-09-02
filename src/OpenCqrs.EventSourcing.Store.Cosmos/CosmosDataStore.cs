@@ -102,7 +102,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         else
         {
-            var domainEventTypeKeys = eventTypeFilter!
+            var eventTypes = eventTypeFilter!
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
 
@@ -110,7 +110,7 @@ public class CosmosDataStore : ICosmosDataStore
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
                 .WithParameter("@documentType", DocumentType.Event)
-                .WithParameter("@eventTypes", domainEventTypeKeys);
+                .WithParameter("@eventTypes", eventTypes);
         }
 
         var eventDocuments = new List<EventDocument>();
@@ -182,7 +182,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         else
         {
-            var domainEventTypeKeys = eventTypeFilter!
+            var eventTypes = eventTypeFilter!
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
 
@@ -191,7 +191,7 @@ public class CosmosDataStore : ICosmosDataStore
                 .WithParameter("@streamId", streamId.Id)
                 .WithParameter("@fromSequence", fromSequence)
                 .WithParameter("@documentType", DocumentType.Event)
-                .WithParameter("@eventTypes", domainEventTypeKeys);
+                .WithParameter("@eventTypes", eventTypes);
         }
 
         var eventDocuments = new List<EventDocument>();
@@ -232,7 +232,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         else
         {
-            var domainEventTypeKeys = eventTypeFilter!
+            var eventTypes = eventTypeFilter!
                 .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
                 .Select(b => b.Key).ToList();
 
@@ -241,7 +241,7 @@ public class CosmosDataStore : ICosmosDataStore
                 .WithParameter("@streamId", streamId.Id)
                 .WithParameter("@upToSequence", upToSequence)
                 .WithParameter("@documentType", DocumentType.Event)
-                .WithParameter("@eventTypes", domainEventTypeKeys);
+                .WithParameter("@eventTypes", eventTypes);
         }
 
         var eventDocuments = new List<EventDocument>();
