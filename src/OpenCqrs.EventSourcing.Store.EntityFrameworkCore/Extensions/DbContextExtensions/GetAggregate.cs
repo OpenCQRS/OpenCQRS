@@ -174,11 +174,7 @@ public static partial class IDomainDbContextExtensions
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)
         {
-            return new Failure
-            (
-                Title: "Aggregate type not found",
-                Description: $"Aggregate {typeof(TAggregate).Name} does not have an AggregateType attribute."
-            );
+            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
 
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToIdWithTypeVersion(aggregateType.Version), cancellationToken);

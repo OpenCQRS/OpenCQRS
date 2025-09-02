@@ -9,10 +9,10 @@ public static class DomainEventExtensions
 {
     public static EventDocument ToEventDocument(this IDomainEvent domainEvent, IStreamId streamId, int sequence)
     {
-        var domainEventTypeAttribute = domainEvent.GetType().GetCustomAttribute<DomainEventType>();
-        if (domainEventTypeAttribute == null)
+        var domainEventType = domainEvent.GetType().GetCustomAttribute<DomainEventType>();
+        if (domainEventType == null)
         {
-            throw new InvalidOperationException($"Domain event {domainEvent.GetType().Name} does not have a DomainEventType attribute.");
+            throw new Exception($"Domain event {domainEvent.GetType().Name} does not have a DomainEventType attribute.");
         }
 
         return new EventDocument
@@ -20,7 +20,7 @@ public static class DomainEventExtensions
             Id = $"{streamId.Id}:{sequence}",
             StreamId = streamId.Id,
             Sequence = sequence,
-            EventType = TypeBindings.GetTypeBindingKey(domainEventTypeAttribute.Name, domainEventTypeAttribute.Version),
+            EventType = TypeBindings.GetTypeBindingKey(domainEventType.Name, domainEventType.Version),
             Data = JsonConvert.SerializeObject(domainEvent)
         };
     }

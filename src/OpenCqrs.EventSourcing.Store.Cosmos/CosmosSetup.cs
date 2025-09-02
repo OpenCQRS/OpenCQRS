@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
-using System.Collections.ObjectModel;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
