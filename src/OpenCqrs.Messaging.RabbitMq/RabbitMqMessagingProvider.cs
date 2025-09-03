@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using OpenCqrs.Messaging.RabbitMq.Configuration;
 using OpenCqrs.Results;
 using RabbitMQ.Client;
@@ -15,13 +15,23 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
     private readonly IConnection _connection;
     private readonly ConcurrentDictionary<string, IModel> _queueChannels = new();
     private readonly ConcurrentDictionary<string, IModel> _exchangeChannels = new();
-    private readonly Lock _lockObject = new();
     private bool _disposed;
 
     public RabbitMqMessagingProvider(IOptions<RabbitMqOptions> options)
     {
         _options = options.Value;
         _connection = CreateConnection();
+
+        if (_options.CreateDelayedExchange)
+        {
+            EnsureDelayedExchangeExists();
+        }
+    }
+
+    public RabbitMqMessagingProvider(IOptions<RabbitMqOptions> options, IConnection connection)
+    {
+        _options = options.Value;
+        _connection = connection;
 
         if (_options.CreateDelayedExchange)
         {
@@ -225,17 +235,9 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             return existingChannel;
         }
 
-        lock (_lockObject)
-        {
-            if (_queueChannels.TryGetValue(queueName, out existingChannel) && existingChannel.IsOpen)
-            {
-                return existingChannel;
-            }
-
-            var newChannel = _connection.CreateModel();
-            _queueChannels[queueName] = newChannel;
-            return newChannel;
-        }
+        var newChannel = _connection.CreateModel();
+        _queueChannels[queueName] = newChannel;
+        return newChannel;
     }
 
     private IModel GetOrCreateExchangeChannel(string exchangeName)
@@ -245,22 +247,14 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             return existingChannel;
         }
 
-        lock (_lockObject)
-        {
-            if (_exchangeChannels.TryGetValue(exchangeName, out existingChannel) && existingChannel.IsOpen)
-            {
-                return existingChannel;
-            }
-
-            var newChannel = _connection.CreateModel();
-            _exchangeChannels[exchangeName] = newChannel;
-            return newChannel;
-        }
+        var newChannel = _connection.CreateModel();
+        _exchangeChannels[exchangeName] = newChannel;
+        return newChannel;
     }
 
     private static byte[] CreateMessageBody<TMessage>(TMessage message) where TMessage : IMessage
     {
-        var json = JsonSerializer.Serialize(message);
+        var json = JsonConvert.SerializeObject(message);
         return Encoding.UTF8.GetBytes(json);
     }
 

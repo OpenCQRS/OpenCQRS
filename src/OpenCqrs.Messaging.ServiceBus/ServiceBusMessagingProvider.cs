@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using Newtonsoft.Json;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Messaging.ServiceBus;
@@ -95,7 +95,7 @@ public class ServiceBusMessagingProvider(ServiceBusClient serviceBusClient) : IM
 
     private ServiceBusMessage CreateServiceBusMessage<TMessage>(TMessage message) where TMessage : IMessage
     {
-        var json = JsonSerializer.Serialize(message);
+        var json = JsonConvert.SerializeObject(message);
         var serviceBusMessage = new ServiceBusMessage(json)
         {
             ContentType = "application/json",
