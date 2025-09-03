@@ -2,8 +2,6 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Options;
-using OpenCqrs.Messaging.ServiceBus.Configuration;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Messaging.ServiceBus;
