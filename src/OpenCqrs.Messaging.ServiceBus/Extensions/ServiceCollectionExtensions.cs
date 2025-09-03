@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenCqrs.Messaging;
 using OpenCqrs.Messaging.ServiceBus.Configuration;
 
 namespace OpenCqrs.Messaging.ServiceBus.Extensions;
