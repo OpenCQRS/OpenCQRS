@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using OpenCqrs.Commands;
+using OpenCqrs.Messaging;
 using OpenCqrs.Notifications;
 using OpenCqrs.Queries;
 using OpenCqrs.Tests.Models.Commands;
@@ -29,7 +30,7 @@ public abstract class TestBase
             .BuildServiceProvider();
 
         var publisher = new NotificationPublisher(serviceProvider);
-        var commandSender = new CommandSender(serviceProvider, Substitute.For<IValidationService>(), publisher);
+        var commandSender = new CommandSender(serviceProvider, Substitute.For<IValidationService>(), publisher, Substitute.For<IMessagePublisher>());
 
         Dispatcher = new Dispatcher(commandSender, Substitute.For<IQueryProcessor>(), publisher);
     }

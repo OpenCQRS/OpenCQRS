@@ -23,11 +23,11 @@ namespace OpenCqrs.Commands;
 /// });
 /// </code>
 /// </example>
-public class CommandSender(IServiceProvider serviceProvider, IValidationService validationService, INotificationPublisher notificationPublisher) : ICommandSender
+public class CommandSender(IServiceProvider serviceProvider, IValidationService validationService, INotificationPublisher notificationPublisher, IMessagePublisher messagePublisher) : ICommandSender
 {
     private static readonly ConcurrentDictionary<Type, object?> CommandHandlerWrappers = new();
-
-    private static readonly ConcurrentDictionary<Type, Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>> CompiledPublishers = new();
+    private static readonly ConcurrentDictionary<Type, Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>> CompiledNotificationPublishers = new();
+    private static readonly ConcurrentDictionary<Type, Func<IMessagePublisher, IMessage, CancellationToken, Task<IEnumerable<Result>>>> CompiledMessagePublishers = new();
 
     /// <summary>
     /// Sends a command that does not expect a response value to its corresponding handler for processing.
@@ -143,17 +143,17 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             .Select(notification =>
             {
                 var notificationType = notification.GetType();
-                var publishDelegate = GetOrCreateCompiledPublisher(notificationType);
+                var publishDelegate = GetOrCreateCompiledNotificationPublisher(notificationType);
                 return publishDelegate(notificationPublisher, notification, cancellationToken);
             })
             .ToList();
 
-        var messageTasks = commandResult.Value!.Notifications.Where(n => n is IMessage)
-            .Select(notification =>
+        var messageTasks = commandResult.Value!.Messages
+            .Select(message =>
             {
-                var notificationType = notification.GetType();
-                var publishDelegate = GetOrCreateCompiledPublisher(notificationType);
-                return publishDelegate(notificationPublisher, notification, cancellationToken);
+                var messageType = message.GetType();
+                var publishDelegate = GetOrCreateCompiledMessagePublisher(messageType);
+                return publishDelegate(messagePublisher, message, cancellationToken);
             })
             .ToList();
 
@@ -219,9 +219,9 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return commandResults;
     }
 
-    private static Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledPublisher(Type notificationType)
+    private static Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledNotificationPublisher(Type notificationType)
     {
-        return CompiledPublishers.GetOrAdd(notificationType, type =>
+        return CompiledNotificationPublishers.GetOrAdd(notificationType, type =>
         {
             var publisherParam = Expression.Parameter(typeof(INotificationPublisher), "publisher");
             var notificationParam = Expression.Parameter(typeof(INotification), "notification");
@@ -233,6 +233,25 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             var methodCall = Expression.Call(publisherParam, publishMethod, castNotification, cancellationTokenParam);
 
             var lambda = Expression.Lambda<Func<INotificationPublisher, INotification, CancellationToken, Task<IEnumerable<Result>>>>(methodCall, publisherParam, notificationParam, cancellationTokenParam);
+
+            return lambda.Compile();
+        });
+    }
+    
+    private static Func<IMessagePublisher, IMessage, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledMessagePublisher(Type messageType)
+    {
+        return CompiledMessagePublishers.GetOrAdd(messageType, type =>
+        {
+            var publisherParam = Expression.Parameter(typeof(IMessagePublisher), "publisher");
+            var messageParam = Expression.Parameter(typeof(IMessage), "message");
+            var cancellationTokenParam = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+            var publishMethod = typeof(IMessagePublisher).GetMethod(nameof(IMessagePublisher.Publish))!.MakeGenericMethod(type);
+            var castMessage = Expression.Convert(messageParam, type);
+
+            var methodCall = Expression.Call(publisherParam, publishMethod, castMessage, cancellationTokenParam);
+
+            var lambda = Expression.Lambda<Func<IMessagePublisher, IMessage, CancellationToken, Task<IEnumerable<Result>>>>(methodCall, publisherParam, messageParam, cancellationTokenParam);
 
             return lambda.Compile();
         });
