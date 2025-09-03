@@ -243,5 +243,3 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
       - [Extensions](docs/Entity-Framework-Core-Extensions.md)
       - [Scenarios](docs/Entity-Framework-Core-Scenarios.md)
 - [Release Notes](docs/Release-Notes.md)
-
-_[Legacy documentation here (OpenCQRS 6.x)](docs-6.x/index.md)_
