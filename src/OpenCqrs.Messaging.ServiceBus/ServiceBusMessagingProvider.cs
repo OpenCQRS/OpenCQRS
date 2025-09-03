@@ -8,9 +8,8 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.Messaging.ServiceBus;
 
-public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : IMessagingProvider, IAsyncDisposable
+public class ServiceBusMessagingProvider(ServiceBusClient serviceBusClient) : IMessagingProvider, IAsyncDisposable
 {
-    private readonly ServiceBusClient _serviceBusClient = new(options.Value.ConnectionString);
     private readonly ConcurrentDictionary<string, ServiceBusSender> _queueSenders = new();
     private readonly ConcurrentDictionary<string, ServiceBusSender> _topicSenders = new();
 
@@ -77,7 +76,7 @@ public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : 
             return queueSender;
         }
 
-        queueSender = _serviceBusClient.CreateSender(queueName);
+        queueSender = serviceBusClient.CreateSender(queueName);
         _queueSenders[queueName] = queueSender;
 
         return queueSender;
@@ -90,7 +89,7 @@ public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : 
             return topicSender;
         }
 
-        topicSender = _serviceBusClient.CreateSender(topicName);
+        topicSender = serviceBusClient.CreateSender(topicName);
         _topicSenders[topicName] = topicSender;
 
         return topicSender;
@@ -130,7 +129,7 @@ public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : 
             await sender.DisposeAsync();
         }
 
-        await _serviceBusClient.DisposeAsync();
+        await serviceBusClient.DisposeAsync();
 
         _queueSenders.Clear();
         _topicSenders.Clear();

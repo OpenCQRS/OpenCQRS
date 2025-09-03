@@ -237,7 +237,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             return lambda.Compile();
         });
     }
-    
+
     private static Func<IMessagePublisher, IMessage, CancellationToken, Task<IEnumerable<Result>>> GetOrCreateCompiledMessagePublisher(Type messageType)
     {
         return CompiledMessagePublishers.GetOrAdd(messageType, type =>

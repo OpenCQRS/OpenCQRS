@@ -17,7 +17,7 @@ public class CommandResponse
     {
         Result = result;
     }
-    
+
     public CommandResponse(INotification notification, object? result = null)
     {
         Notifications = new List<INotification>
@@ -33,7 +33,7 @@ public class CommandResponse
         Notifications = notifications;
         Result = result;
     }
-    
+
     public CommandResponse(IMessage message, object? result = null)
     {
         Messages = new List<IMessage>
@@ -49,14 +49,14 @@ public class CommandResponse
         Messages = messages;
         Result = result;
     }
-    
+
     public CommandResponse(INotification notification, IMessage message, object? result = null)
     {
         Notifications = new List<INotification>
         {
             notification
         };
-        
+
         Messages = new List<IMessage>
         {
             message
@@ -64,18 +64,18 @@ public class CommandResponse
 
         Result = result;
     }
-    
+
     public CommandResponse(IEnumerable<INotification> notifications, IEnumerable<IMessage> messages, object? result = null)
     {
         Notifications = notifications;
         Messages = messages;
         Result = result;
     }
-    
+
     public CommandResponse(IEnumerable<INotification> notifications, IMessage message, object? result = null)
     {
         Notifications = notifications;
-        
+
         Messages = new List<IMessage>
         {
             message
@@ -83,7 +83,7 @@ public class CommandResponse
 
         Result = result;
     }
-    
+
     public CommandResponse(INotification notification, IEnumerable<IMessage> messages, object? result = null)
     {
         Notifications = new List<INotification>
