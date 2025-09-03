@@ -1,4 +1,4 @@
-﻿namespace OpenCQRS.Messaging.ServiceBus.Configuration;
+﻿namespace OpenCqrs.Messaging.ServiceBus.Configuration;
 
 public class ServiceBusOptions
 {

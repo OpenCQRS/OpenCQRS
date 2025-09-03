@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenCqrs.Messaging;
-using OpenCQRS.Messaging.ServiceBus.Configuration;
+using OpenCqrs.Messaging.ServiceBus.Configuration;
 
-namespace OpenCQRS.Messaging.ServiceBus.Extensions;
+namespace OpenCqrs.Messaging.ServiceBus.Extensions;
 
 public static class ServiceCollectionExtensions
 {

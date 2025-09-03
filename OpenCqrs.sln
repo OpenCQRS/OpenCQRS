@@ -61,11 +61,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Validation.FluentV
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Validation.FluentValidation.Tests", "tests\OpenCqrs.Validation.FluentValidation.Tests\OpenCqrs.Validation.FluentValidation.Tests.csproj", "{22A820BB-DE18-4E53-88B8-C4CEF155A92B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCQRS.EventSourcing.Store.Cosmos.Tests", "tests\OpenCQRS.EventSourcing.Store.Cosmos.Tests\OpenCQRS.EventSourcing.Store.Cosmos.Tests.csproj", "{4786B770-8FED-440A-9747-C29D933D62CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.EventSourcing.Store.Cosmos.Tests", "tests\OpenCqrs.EventSourcing.Store.Cosmos.Tests\OpenCqrs.EventSourcing.Store.Cosmos.Tests.csproj", "{4786B770-8FED-440A-9747-C29D933D62CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCQRS.Messaging.ServiceBus", "src\OpenCQRS.Messaging.ServiceBus\OpenCQRS.Messaging.ServiceBus.csproj", "{FF6C93CA-5E57-4F3F-892B-90B826331B9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.ServiceBus", "src\OpenCqrs.Messaging.ServiceBus\OpenCqrs.Messaging.ServiceBus.csproj", "{FF6C93CA-5E57-4F3F-892B-90B826331B9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCQRS.Messaging.RabbitMq", "src\OpenCQRS.Messaging.RabbitMq\OpenCQRS.Messaging.RabbitMq.csproj", "{2DE0ABFC-0635-4CF1-9568-283433A818C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.RabbitMq", "src\OpenCqrs.Messaging.RabbitMq\OpenCqrs.Messaging.RabbitMq.csproj", "{2DE0ABFC-0635-4CF1-9568-283433A818C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.ServiceBus.Tests", "tests\OpenCqrs.Messaging.ServiceBus.Tests\OpenCqrs.Messaging.ServiceBus.Tests.csproj", "{0773E28D-6C00-43AC-B605-D061178CA652}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.RabbitMq.Tests", "tests\OpenCqrs.Messaging.RabbitMq.Tests\OpenCqrs.Messaging.RabbitMq.Tests.csproj", "{71944EA6-0B7F-4BFB-9592-679452EF3E3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +129,14 @@ Global
 		{2DE0ABFC-0635-4CF1-9568-283433A818C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DE0ABFC-0635-4CF1-9568-283433A818C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DE0ABFC-0635-4CF1-9568-283433A818C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0773E28D-6C00-43AC-B605-D061178CA652}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0773E28D-6C00-43AC-B605-D061178CA652}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0773E28D-6C00-43AC-B605-D061178CA652}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0773E28D-6C00-43AC-B605-D061178CA652}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71944EA6-0B7F-4BFB-9592-679452EF3E3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71944EA6-0B7F-4BFB-9592-679452EF3E3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71944EA6-0B7F-4BFB-9592-679452EF3E3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71944EA6-0B7F-4BFB-9592-679452EF3E3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,6 +155,8 @@ Global
 		{4786B770-8FED-440A-9747-C29D933D62CF} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
 		{FF6C93CA-5E57-4F3F-892B-90B826331B9D} = {90721148-631D-47AB-845C-8472AE48BC89}
 		{2DE0ABFC-0635-4CF1-9568-283433A818C8} = {90721148-631D-47AB-845C-8472AE48BC89}
+		{0773E28D-6C00-43AC-B605-D061178CA652} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
+		{71944EA6-0B7F-4BFB-9592-679452EF3E3A} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {154500C3-9A83-4F15-9D78-E1C285AD80AE}

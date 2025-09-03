@@ -1,7 +1,7 @@
 ﻿using OpenCqrs.Messaging;
 using OpenCqrs.Results;
 
-namespace OpenCQRS.Messaging.RabbitMq;
+namespace OpenCqrs.Messaging.RabbitMq;
 
 public class RabbitMqMessagingProvider : IMessagingProvider
 {

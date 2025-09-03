@@ -1,7 +1,7 @@
 ﻿using OpenCqrs.EventSourcing.Domain;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
 
-namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
+namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
 
 [AggregateType("TestAggregate2")]
 public class TestAggregate2 : Aggregate

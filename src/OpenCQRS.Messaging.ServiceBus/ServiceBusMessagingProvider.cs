@@ -4,10 +4,10 @@ using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 using OpenCqrs.Messaging;
-using OpenCQRS.Messaging.ServiceBus.Configuration;
+using OpenCqrs.Messaging.ServiceBus.Configuration;
 using OpenCqrs.Results;
 
-namespace OpenCQRS.Messaging.ServiceBus;
+namespace OpenCqrs.Messaging.ServiceBus;
 
 public class ServiceBusMessagingProvider(IOptions<ServiceBusOptions> options) : IMessagingProvider, IAsyncDisposable
 {

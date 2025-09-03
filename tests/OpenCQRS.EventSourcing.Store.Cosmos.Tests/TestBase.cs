@@ -8,10 +8,10 @@ using OpenCqrs.EventSourcing;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
 
-namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests;
+namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests;
 
 public abstract class TestBase
 {
