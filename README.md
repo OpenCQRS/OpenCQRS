@@ -4,7 +4,7 @@
 
 .NET framework implementing DDD, Event Sourcing, and CQRS. OpenCQRS 7 is a revamped version of the project with a complete rewrite of the codebase. 
 
-OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core with any relational database providers.
+OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
 ## Main Features
 
@@ -25,14 +25,16 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Packages
 
-| Package                                                                                                                                               | Beta 5                                                                                                                                                          |
-|-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
-| [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
-| [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                       |
-| [OpenCqrs.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)          |
+| Package                                                                                                                                               | Beta 5                                                                                                                                  |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                          |
+| [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)            |
+| [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos) |
+| [OpenCqrs.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore) |
 | [OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Identity) |
-| [OpenCqrs.Validation.FluentValidation](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)                      | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation) |
+| [OpenCqrs.Messaging.RabbitMq](https://www.nuget.org/packages/OpenCqrs.Messaging.RabbitMq)                                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Messaging.RabbitMq)|
+| [OpenCqrs.Messaging.ServiceBus](https://www.nuget.org/packages/OpenCqrs.Messaging.ServiceBus)                                                         | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Messaging.ServiceBus)|
+| [OpenCqrs.Validation.FluentValidation](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)|
 
 ## Simple mediator
 
@@ -199,8 +201,7 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.0.0
 
-- All features from OpenCQRS 6.x
-- Complete rewrite of the framework
+- Complete rewrite of the codebase
 - Upgrade to .NET 9
 - New mediator pattern with commands, queries, and notifications
 - Cosmos DB store provider
@@ -217,6 +218,7 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.1.0
 
+- Storing commands
 - More extensions for domain events and event documents in the Cosmos DB store provider
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
@@ -241,5 +243,3 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
       - [Extensions](docs/Entity-Framework-Core-Extensions.md)
       - [Scenarios](docs/Entity-Framework-Core-Scenarios.md)
 - [Release Notes](docs/Release-Notes.md)
-
-_[Legacy documentation here (OpenCQRS 6.x)](docs-6.x/index.md)_

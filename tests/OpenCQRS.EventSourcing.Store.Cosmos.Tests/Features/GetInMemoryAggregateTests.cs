@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Events;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Streams;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Streams;
 using Xunit;
 
-namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests.Features;
+namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Features;
 
 public class GetInMemoryAggregateTests : TestBase
 {

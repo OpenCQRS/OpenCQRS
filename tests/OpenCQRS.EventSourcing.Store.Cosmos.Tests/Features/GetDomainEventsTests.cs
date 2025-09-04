@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
-using OpenCQRS.EventSourcing.Store.Cosmos.Tests.Models.Streams;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
+using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Streams;
 using Xunit;
 
-namespace OpenCQRS.EventSourcing.Store.Cosmos.Tests.Features;
+namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Features;
 
 public class GetDomainEventsTests : TestBase
 {
