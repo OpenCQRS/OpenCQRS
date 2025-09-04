@@ -11,8 +11,7 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendQueueMessage_WithValidMessage_ShouldSucceed()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage
         {
             QueueName = "test-queue",
@@ -20,24 +19,20 @@ public class ServiceBusMessagingProviderTests
             Properties = new Dictionary<string, object> { { "key1", "value1" } }
         };
 
-        // Act
         var result = await provider.SendQueueMessage(message);
 
-        // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
 
-        // Verify message was captured
         var sentMessages = _mockHelper.GetSentMessages();
         sentMessages.Should().HaveCount(1);
 
-        var sentMessage = sentMessages.First();
+        var sentMessage = sentMessages[0];
         sentMessage.EntityName.Should().Be("test-queue");
         sentMessage.ContentType.Should().Be("application/json");
         sentMessage.MessageId.Should().NotBeNullOrEmpty();
 
-        // Verify the actual message content
-        var deserializedMessages = _mockHelper.GetSentMessages<TestQueueMessage>();
+        var deserializedMessages = _mockHelper.GetSentMessages<TestQueueMessage>().ToArray();
         deserializedMessages.Should().HaveCount(1);
 
         var deserializedMessage = deserializedMessages.First();
@@ -48,8 +43,7 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendTopicMessage_WithValidMessage_ShouldSucceed()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestTopicMessage
         {
             TopicName = "test-topic",
@@ -61,18 +55,14 @@ public class ServiceBusMessagingProviderTests
             }
         };
 
-        // Act
         var result = await provider.SendTopicMessage(message);
 
-        // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
 
-        // Verify message was sent to correct topic
         var topicMessages = _mockHelper.GetSentMessagesForEntity("test-topic");
         topicMessages.Should().HaveCount(1);
 
-        // Verify message count helper
         _mockHelper.GetMessageCountForEntity("test-topic").Should().Be(1);
         _mockHelper.TotalSentMessageCount.Should().Be(1);
     }
@@ -80,43 +70,36 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendQueueMessage_WithEmptyQueueName_ShouldReturnFailure()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage
         {
             QueueName = string.Empty,
             TestData = "Test data"
         };
 
-        // Act
         var result = await provider.SendQueueMessage(message);
 
-        // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.Failure.Should().NotBeNull();
         result.Failure!.Title.Should().Be("Queue name");
         result.Failure.Description.Should().Be("Queue name cannot be null or empty");
 
-        // No messages should have been sent
         _mockHelper.TotalSentMessageCount.Should().Be(0);
     }
 
     [Fact]
     public async Task SendTopicMessage_WithEmptyTopicName_ShouldReturnFailure()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestTopicMessage
         {
             TopicName = string.Empty,
             TestData = "Test data"
         };
 
-        // Act
         var result = await provider.SendTopicMessage(message);
 
-        // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.Failure.Should().NotBeNull();
@@ -127,8 +110,7 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendQueueMessage_WithScheduledEnqueueTime_ShouldSetScheduledTime()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var scheduledTime = DateTime.UtcNow.AddHours(1);
         var message = new TestQueueMessage
         {
@@ -137,10 +119,8 @@ public class ServiceBusMessagingProviderTests
             ScheduledEnqueueTimeUtc = scheduledTime
         };
 
-        // Act
         var result = await provider.SendQueueMessage(message);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
 
         var sentMessages = _mockHelper.GetSentMessages();
@@ -154,8 +134,7 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendQueueMessage_WithApplicationProperties_ShouldIncludeProperties()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage
         {
             QueueName = "properties-queue",
@@ -168,10 +147,8 @@ public class ServiceBusMessagingProviderTests
             }
         };
 
-        // Act
         var result = await provider.SendQueueMessage(message);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
 
         var sentMessages = _mockHelper.GetSentMessages();
@@ -186,21 +163,17 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendQueueMessage_WhenSenderThrowsException_ShouldReturnFailure()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage
         {
             QueueName = "error-queue",
             TestData = "This will fail"
         };
 
-        // Setup the mock to throw an exception
-        _mockHelper.SetupSendFailure("error-queue", "Mock service bus error");
+        _mockHelper.SetupSendFailure("error-queue");
 
-        // Act
         var result = await provider.SendQueueMessage(message);
 
-        // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.Failure.Should().NotBeNull();
@@ -211,18 +184,15 @@ public class ServiceBusMessagingProviderTests
     [Fact]
     public async Task SendMultipleMessages_ShouldCaptureAllMessages()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var queueMessage1 = new TestQueueMessage { QueueName = "queue1", TestData = "Queue message 1" };
         var queueMessage2 = new TestQueueMessage { QueueName = "queue2", TestData = "Queue message 2" };
         var topicMessage = new TestTopicMessage { TopicName = "topic1", TestData = "Topic message 1" };
 
-        // Act
         await provider.SendQueueMessage(queueMessage1);
         await provider.SendQueueMessage(queueMessage2);
         await provider.SendTopicMessage(topicMessage);
 
-        // Assert
         _mockHelper.TotalSentMessageCount.Should().Be(3);
         _mockHelper.GetMessageCountForEntity("queue1").Should().Be(1);
         _mockHelper.GetMessageCountForEntity("queue2").Should().Be(1);
@@ -236,64 +206,46 @@ public class ServiceBusMessagingProviderTests
     }
 
     [Fact]
-    public void ClearSentMessages_ShouldRemoveAllCapturedMessages()
+    public async Task ClearSentMessages_ShouldRemoveAllCapturedMessages()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage { QueueName = "test-queue", TestData = "Test" };
 
-        // Act - send a message first
-        provider.SendQueueMessage(message).Wait();
+        await provider.SendQueueMessage(message);
         _mockHelper.TotalSentMessageCount.Should().Be(1);
 
-        // Clear and verify
         _mockHelper.ClearSentMessages();
 
-        // Assert
         _mockHelper.TotalSentMessageCount.Should().Be(0);
         _mockHelper.GetSentMessages().Should().BeEmpty();
     }
 
     [Fact]
-    public void VerifyMessageSent_WithCorrectCount_ShouldNotThrow()
+    public async Task VerifyMessageSent_WithCorrectCount_ShouldNotThrow()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage { QueueName = "verify-queue", TestData = "Verify test" };
 
-        // Act
-        provider.SendQueueMessage(message).Wait();
+        await provider.SendQueueMessage(message);
 
-        // Assert - should not throw
-        _mockHelper.VerifyMessageSent("verify-queue", 1);
+        _mockHelper.VerifyMessageSent("verify-queue");
     }
 
     [Fact]
-    public void VerifyMessageSent_WithIncorrectCount_ShouldThrow()
+    public async Task VerifyMessageSent_WithIncorrectCount_ShouldThrow()
     {
-        // Arrange
-        var provider = CreateTestableServiceBusMessagingProvider();
+        var provider = CreateServiceBusMessagingProvider();
         var message = new TestQueueMessage { QueueName = "verify-queue", TestData = "Verify test" };
 
-        // Act
-        provider.SendQueueMessage(message).Wait();
+        await provider.SendQueueMessage(message);
 
-        // Assert
         var action = () => _mockHelper.VerifyMessageSent("verify-queue", 2);
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("Expected 2 messages to verify-queue, but found 1");
     }
 
-    /// <summary>
-    /// Creates a testable ServiceBusMessagingProvider instance.
-    /// Note: This is a simplified approach. In practice, you might need to modify
-    /// ServiceBusMessagingProvider to accept an injected ServiceBusClient or use a factory pattern.
-    /// </summary>
-    private ServiceBusMessagingProvider CreateTestableServiceBusMessagingProvider()
+    private ServiceBusMessagingProvider CreateServiceBusMessagingProvider()
     {
-        // For this test, we'll use the real ServiceBusMessagingProvider with mock options
-        // In a real implementation, you'd want to modify ServiceBusMessagingProvider to accept
-        // an injected ServiceBusClient for better testability
         return new ServiceBusMessagingProvider(_mockHelper.MockServiceBusClient);
     }
 }
