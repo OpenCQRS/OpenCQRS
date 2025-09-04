@@ -16,7 +16,7 @@ public class MockRabbitMqTestHelper
     public IOptions<RabbitMqOptions> MockOptions { get; }
 
     private readonly ConcurrentDictionary<string, IModel> _mockChannels = new();
-    private readonly ConcurrentBag<SentMessage> _sentMessages = new();
+    private readonly ConcurrentBag<SentMessage> _sentMessages = [];
     private readonly Dictionary<string, Exception> _publishFailures = new();
 
     public MockRabbitMqTestHelper()
@@ -63,7 +63,7 @@ public class MockRabbitMqTestHelper
 
             string? contentType = null;
             string? messageId = null;
-            bool persistent = false;
+            var persistent = false;
             IDictionary<string, object>? headers = null;
 
             props.When(p => p.ContentType = Arg.Any<string>()).Do(callInfo => contentType = callInfo.Arg<string>());
@@ -267,13 +267,7 @@ public class MockRabbitMqTestHelper
         return _sentMessages.Count(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public int TotalSentMessageCount
-    {
-        get
-        {
-            return _sentMessages.Count;
-        }
-    }
+    public int TotalSentMessageCount => _sentMessages.Count;
 
     public void VerifyMessageSent(string entityName, int expectedCount = 1)
     {

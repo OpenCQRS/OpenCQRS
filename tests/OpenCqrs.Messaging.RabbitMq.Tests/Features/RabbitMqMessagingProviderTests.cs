@@ -62,7 +62,7 @@ public class RabbitMqMessagingProviderTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
 
-        var topicMessages = _mockHelper.GetSentMessagesForEntity("test-topic");
+        var topicMessages = _mockHelper.GetSentMessagesForEntity("test-topic").ToArray();
         topicMessages.Should().HaveCount(1);
 
         var sentMessage = topicMessages.First();
