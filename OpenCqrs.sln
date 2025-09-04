@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.RabbitMq
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Messaging.ServiceBus.Tests", "tests\OpenCqrs.Messaging.ServiceBus.Tests\OpenCqrs.Messaging.ServiceBus.Tests.csproj", "{B4D67082-4D10-4B6A-B50C-A01D59CD74CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Messaging.ServiceBus", "examples\OpenCqrs.Examples.Messaging.ServiceBus\OpenCqrs.Examples.Messaging.ServiceBus.csproj", "{A829777C-D893-408C-B8D2-186957147AD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,6 +139,10 @@ Global
 		{B4D67082-4D10-4B6A-B50C-A01D59CD74CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4D67082-4D10-4B6A-B50C-A01D59CD74CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4D67082-4D10-4B6A-B50C-A01D59CD74CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A829777C-D893-408C-B8D2-186957147AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A829777C-D893-408C-B8D2-186957147AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A829777C-D893-408C-B8D2-186957147AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A829777C-D893-408C-B8D2-186957147AD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +163,7 @@ Global
 		{6B0F4223-6905-4CAB-A7E5-2DC2E72D3052} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
 		{9D967871-A77B-4875-95ED-2C57FF6D0098} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
 		{B4D67082-4D10-4B6A-B50C-A01D59CD74CA} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
+		{A829777C-D893-408C-B8D2-186957147AD5} = {DFBB5E4C-0C58-497D-A013-0DC8312B7192}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {154500C3-9A83-4F15-9D78-E1C285AD80AE}
