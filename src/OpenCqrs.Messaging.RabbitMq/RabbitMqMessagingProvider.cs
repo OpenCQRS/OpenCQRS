@@ -50,7 +50,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
 
             var channel = GetOrCreateQueueChannel(message.QueueName);
 
-            // Ensure queue exists
             channel.QueueDeclare(
                 queue: message.QueueName,
                 durable: true,
@@ -63,14 +62,12 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
 
             if (message.ScheduledEnqueueTimeUtc.HasValue)
             {
-                // Use delayed message plugin or calculate delay
-                var delay = message.ScheduledEnqueueTimeUtc.Value - DateTime.UtcNow;
+                var delay = message.ScheduledEnqueueTimeUtc.Value - DateTimeOffset.UtcNow;
                 if (delay.TotalMilliseconds > 0)
                 {
                     properties.Headers ??= new Dictionary<string, object>();
                     properties.Headers["x-delay"] = (int)delay.TotalMilliseconds;
 
-                    // Publish to delayed exchange instead of direct queue
                     channel.BasicPublish(
                         exchange: _options.DelayedExchangeName,
                         routingKey: message.QueueName,
@@ -79,7 +76,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
                 }
                 else
                 {
-                    // Message should be delivered immediately
                     channel.BasicPublish(
                         exchange: string.Empty,
                         routingKey: message.QueueName,
@@ -89,7 +85,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             }
             else
             {
-                // Direct queue publish
                 channel.BasicPublish(
                     exchange: string.Empty,
                     routingKey: message.QueueName,
@@ -122,7 +117,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
 
             var channel = GetOrCreateExchangeChannel(message.TopicName);
 
-            // Ensure an exchange exists (topic exchange for pub/sub)
             channel.ExchangeDeclare(
                 exchange: message.TopicName,
                 type: ExchangeType.Topic,
@@ -133,13 +127,11 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             var body = CreateMessageBody(message);
             var properties = CreateBasicProperties(channel, message);
 
-            // Use a default routing key or allow it to be specified in message properties
             var routingKey = GetRoutingKey(message);
 
             if (message.ScheduledEnqueueTimeUtc.HasValue)
             {
-                // Use delayed message plugin
-                var delay = message.ScheduledEnqueueTimeUtc.Value - DateTime.UtcNow;
+                var delay = message.ScheduledEnqueueTimeUtc.Value - DateTimeOffset.UtcNow;
                 if (delay.TotalMilliseconds > 0)
                 {
                     properties.Headers ??= new Dictionary<string, object>();
@@ -147,7 +139,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
                     properties.Headers["x-original-exchange"] = message.TopicName;
                     properties.Headers["x-original-routing-key"] = routingKey;
 
-                    // Publish to delayed exchange
                     channel.BasicPublish(
                         exchange: _options.DelayedExchangeName,
                         routingKey: $"topic.{message.TopicName}.{routingKey}",
@@ -156,7 +147,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
                 }
                 else
                 {
-                    // Message should be delivered immediately
                     channel.BasicPublish(
                         exchange: message.TopicName,
                         routingKey: routingKey,
@@ -166,7 +156,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             }
             else
             {
-                // Direct topic publish
                 channel.BasicPublish(
                     exchange: message.TopicName,
                     routingKey: routingKey,
@@ -208,7 +197,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
         using var channel = _connection.CreateModel();
         try
         {
-            // Declare delayed exchange with rabbitmq-delayed-message-exchange plugin
             var arguments = new Dictionary<string, object>
             {
                 { "x-delayed-type", "direct" }
@@ -265,7 +253,7 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
         properties.ContentEncoding = "utf-8";
         properties.MessageId = Guid.NewGuid().ToString();
         properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-        properties.Persistent = true; // Make a message persistent
+        properties.Persistent = true;
 
         if (message.Properties.Count > 0)
         {
@@ -276,18 +264,18 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             }
         }
 
+        properties.Headers.Add("AssemblyQualifiedName", message.GetType().AssemblyQualifiedName);
+
         return properties;
     }
 
     private static string GetRoutingKey<TMessage>(TMessage message) where TMessage : ITopicMessage
     {
-        // Check if a routing key is specified in properties
         if (message.Properties.TryGetValue("RoutingKey", out var routingKeyObj) && routingKeyObj is string routingKey)
         {
             return routingKey;
         }
 
-        // Default routing key pattern
         return "message";
     }
 
@@ -300,7 +288,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
 
         try
         {
-            // Close all channels
             foreach (var channel in _queueChannels.Values)
             {
                 if (channel.IsOpen)
@@ -321,7 +308,6 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
                 channel.Dispose();
             }
 
-            // Close connection
             if (_connection.IsOpen)
             {
                 _connection.Close();
