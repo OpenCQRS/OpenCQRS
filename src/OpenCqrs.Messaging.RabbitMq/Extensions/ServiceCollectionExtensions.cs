@@ -1,0 +1,32 @@
+using Microsoft.Extensions.DependencyInjection;
+using OpenCqrs.Messaging.RabbitMq.Configuration;
+
+namespace OpenCqrs.Messaging.RabbitMq.Extensions;
+
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    /// Adds RabbitMQ messaging provider to the service collection with custom options.
+    /// </summary>
+    public static IServiceCollection AddOpenCqrsRabbitMq(this IServiceCollection services, Action<RabbitMqOptions> configureOptions)
+    {
+        services.Configure(configureOptions);
+        services.AddSingleton<IMessagingProvider, RabbitMqMessagingProvider>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds RabbitMQ messaging provider to the service collection with a connection string.
+    /// </summary>
+    public static IServiceCollection AddOpenCqrsRabbitMq(this IServiceCollection services, string connectionString)
+    {
+        services.Configure<RabbitMqOptions>(options =>
+        {
+            options.ConnectionString = connectionString;
+        });
+        services.AddSingleton<IMessagingProvider, RabbitMqMessagingProvider>();
+
+        return services;
+    }
+}

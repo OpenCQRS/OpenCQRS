@@ -15,7 +15,7 @@ namespace OpenCqrs;
 /// var result = await dispatcher.Send(new CreateUserCommand { Email = "user@example.com" });
 /// </code>
 /// </example>
-public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProcessor, IPublisher publisher) : IDispatcher
+public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProcessor, INotificationPublisher notificationPublisher) : IDispatcher
 {
     /// <summary>
     /// Sends a command that does not expect a response value to its corresponding handler for processing.
@@ -92,6 +92,6 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     /// <returns>A collection of <see cref="Result"/> objects indicating the success or failure of each notification handler.</returns>
     public async Task<IEnumerable<Result>> Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
     {
-        return await publisher.Publish(notification, cancellationToken);
+        return await notificationPublisher.Publish(notification, cancellationToken);
     }
 }

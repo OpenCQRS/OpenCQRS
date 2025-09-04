@@ -20,7 +20,8 @@ public static class ErrorHandlingExtensions
 
     public static Failure ToFailure(this Exception exception, string operationDescription)
     {
-        Activity.Current?.AddException(exception);
+        var tagList = new TagList { { "Operation Description", operationDescription } };
+        Activity.Current?.AddException(exception, tagList, DateTimeOffset.UtcNow);
         return new Failure
         (
             Title: operationDescription,

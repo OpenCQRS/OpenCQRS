@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.Extensions;
 
 namespace OpenCqrs.EventSourcing.Extensions;
 

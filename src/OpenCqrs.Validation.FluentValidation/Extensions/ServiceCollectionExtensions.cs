@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace OpenCqrs.Validation.FluentValidation.Extensions;
 
@@ -17,7 +18,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<IValidationProvider, FluentValidationProvider>();
+        services.Replace(ServiceDescriptor.Scoped<IValidationProvider, FluentValidationProvider>());
 
         var typeList = types.ToList();
 
