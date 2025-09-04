@@ -13,9 +13,8 @@ public class MockServiceBusTestHelper
 
     private readonly ConcurrentDictionary<string, ServiceBusSender> _mockQueueSenders = new();
     private readonly ConcurrentDictionary<string, ServiceBusSender> _mockTopicSenders = new();
-    private readonly List<SentMessage> _sentMessages = [];
-    private readonly Lock _messagesLock = new();
-    private readonly Dictionary<string, Exception> _sendFailures = new();
+    private readonly ConcurrentBag<SentMessage> _sentMessages = new();
+    private readonly ConcurrentDictionary<string, Exception> _sendFailures = new();
 
     public MockServiceBusTestHelper()
     {
@@ -52,21 +51,18 @@ public class MockServiceBusTestHelper
 
                 var message = call.Arg<ServiceBusMessage>();
 
-                lock (_messagesLock)
+                _sentMessages.Add(new SentMessage
                 {
-                    _sentMessages.Add(new SentMessage
-                    {
-                        EntityName = entityName,
-                        ServiceBusMessage = message,
-                        SentAt = DateTimeOffset.UtcNow,
-                        MessageBody = message.Body.ToString(),
-                        ContentType = message.ContentType,
-                        MessageId = message.MessageId,
-                        ScheduledEnqueueTime = message.ScheduledEnqueueTime,
-                        ApplicationProperties = new Dictionary<string, object>(message.ApplicationProperties),
-                        OriginalMessageType = GetOriginalMessageType(message.Body.ToString())
-                    });
-                }
+                    EntityName = entityName,
+                    ServiceBusMessage = message,
+                    SentAt = DateTimeOffset.UtcNow,
+                    MessageBody = message.Body.ToString(),
+                    ContentType = message.ContentType,
+                    MessageId = message.MessageId,
+                    ScheduledEnqueueTime = message.ScheduledEnqueueTime,
+                    ApplicationProperties = new Dictionary<string, object>(message.ApplicationProperties),
+                    OriginalMessageType = GetOriginalMessageType(message.Body.ToString())
+                });
 
                 return Task.CompletedTask;
             });
@@ -81,23 +77,20 @@ public class MockServiceBusTestHelper
 
                 var messages = call.Arg<IEnumerable<ServiceBusMessage>>();
 
-                lock (_messagesLock)
+                foreach (var message in messages)
                 {
-                    foreach (var message in messages)
+                    _sentMessages.Add(new SentMessage
                     {
-                        _sentMessages.Add(new SentMessage
-                        {
-                            EntityName = entityName,
-                            ServiceBusMessage = message,
-                            SentAt = DateTimeOffset.UtcNow,
-                            MessageBody = message.Body.ToString(),
-                            ContentType = message.ContentType,
-                            MessageId = message.MessageId,
-                            ScheduledEnqueueTime = message.ScheduledEnqueueTime,
-                            ApplicationProperties = new Dictionary<string, object>(message.ApplicationProperties),
-                            OriginalMessageType = GetOriginalMessageType(message.Body.ToString())
-                        });
-                    }
+                        EntityName = entityName,
+                        ServiceBusMessage = message,
+                        SentAt = DateTimeOffset.UtcNow,
+                        MessageBody = message.Body.ToString(),
+                        ContentType = message.ContentType,
+                        MessageId = message.MessageId,
+                        ScheduledEnqueueTime = message.ScheduledEnqueueTime,
+                        ApplicationProperties = new Dictionary<string, object>(message.ApplicationProperties),
+                        OriginalMessageType = GetOriginalMessageType(message.Body.ToString())
+                    });
                 }
 
                 return Task.CompletedTask;
@@ -146,7 +139,7 @@ public class MockServiceBusTestHelper
 
     public void ClearSendFailure(string entityName)
     {
-        _sendFailures.Remove(entityName);
+        _sendFailures.TryRemove(entityName, out _);
     }
 
     public void ClearAllSendFailures()
@@ -156,99 +149,75 @@ public class MockServiceBusTestHelper
 
     public IReadOnlyList<SentMessage> GetSentMessages()
     {
-        lock (_messagesLock)
-        {
-            return _sentMessages.ToList().AsReadOnly();
-        }
+        return _sentMessages.ToList().AsReadOnly();
     }
 
     public IEnumerable<SentMessage> GetSentMessagesForEntity(string entityName)
     {
-        lock (_messagesLock)
-        {
-            return _sentMessages.Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
+        return _sentMessages.Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
     public IEnumerable<T> GetSentMessages<T>() where T : class
     {
-        lock (_messagesLock)
-        {
-            var targetTypeName = typeof(T).FullName;
+        var targetTypeName = typeof(T).FullName;
 
-            return _sentMessages
-                .Where(m => m.ContentType == "application/json")
-                .Where(m => m.OriginalMessageType == targetTypeName)
-                .Select(m =>
+        return _sentMessages
+            .Where(m => m.ContentType == "application/json")
+            .Where(m => m.OriginalMessageType == targetTypeName)
+            .Select(m =>
+            {
+                try
                 {
-                    try
-                    {
-                        return JsonSerializer.Deserialize<T>(m.MessageBody);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                })
-                .Where(m => m != null)
-                .Cast<T>()
-                .ToList();
-        }
+                    return JsonSerializer.Deserialize<T>(m.MessageBody);
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .Where(m => m != null)
+            .Cast<T>()
+            .ToList();
     }
 
     public IEnumerable<T> GetSentMessagesForEntity<T>(string entityName) where T : class
     {
-        lock (_messagesLock)
-        {
-            var targetTypeName = typeof(T).FullName;
+        var targetTypeName = typeof(T).FullName;
 
-            return _sentMessages
-                .Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase))
-                .Where(m => m.ContentType == "application/json")
-                .Where(m => m.OriginalMessageType == targetTypeName)
-                .Select(m =>
+        return _sentMessages
+            .Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase))
+            .Where(m => m.ContentType == "application/json")
+            .Where(m => m.OriginalMessageType == targetTypeName)
+            .Select(m =>
+            {
+                try
                 {
-                    try
-                    {
-                        return JsonSerializer.Deserialize<T>(m.MessageBody);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                })
-                .Where(m => m != null)
-                .Cast<T>()
-                .ToList();
-        }
+                    return JsonSerializer.Deserialize<T>(m.MessageBody);
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .Where(m => m != null)
+            .Cast<T>()
+            .ToList();
     }
 
     public void ClearSentMessages()
     {
-        lock (_messagesLock)
+        while (!_sentMessages.IsEmpty)
         {
-            _sentMessages.Clear();
+            _sentMessages.TryTake(out _);
         }
     }
 
     public int GetMessageCountForEntity(string entityName)
     {
-        lock (_messagesLock)
-        {
-            return _sentMessages.Count(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase));
-        }
+        return _sentMessages.Count(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public int TotalSentMessageCount
-    {
-        get
-        {
-            lock (_messagesLock)
-            {
-                return _sentMessages.Count;
-            }
-        }
-    }
+    public int TotalSentMessageCount => _sentMessages.Count;
 
     public void VerifyMessageSent(string entityName, int expectedCount = 1)
     {

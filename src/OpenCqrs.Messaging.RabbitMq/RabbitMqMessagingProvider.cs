@@ -264,6 +264,7 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
             }
         }
 
+        properties.Headers ??= new Dictionary<string, object>();
         properties.Headers.Add("AssemblyQualifiedName", message.GetType().AssemblyQualifiedName);
 
         return properties;

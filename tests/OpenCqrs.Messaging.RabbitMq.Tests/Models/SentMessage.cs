@@ -2,7 +2,7 @@ using RabbitMQ.Client;
 
 namespace OpenCqrs.Messaging.RabbitMq.Tests.Models;
 
-public class RabbitMqSentMessage
+public class SentMessage
 {
     public string EntityName { get; set; } = string.Empty;
     public string Exchange { get; set; } = string.Empty;
