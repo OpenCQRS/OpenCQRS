@@ -1,5 +1,11 @@
 # Release Notes
 
+## OpenCQRS 7.0.0-beta.6
+_**Released 05/09/2025**_
+- Service Bus Provider
+- RabbitMQ Provider
+- Automatic publishing of messages on the back of a successfully processed command
+
 ## OpenCQRS 7.0.0-beta.5
 _**Released 01/09/2025**_
 - Cosmos DB store provider
