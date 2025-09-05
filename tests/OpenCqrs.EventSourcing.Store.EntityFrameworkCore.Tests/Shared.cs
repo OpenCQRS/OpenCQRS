@@ -15,7 +15,7 @@ public static class Shared
     public static DbContextOptions<DomainDbContext> CreateContextOptions()
     {
         var builder = new DbContextOptionsBuilder<DomainDbContext>();
-        builder.UseInMemoryDatabase("OpenCQRS");
+        builder.UseInMemoryDatabase("OpenCqrs");
         return builder.Options;
     }
 

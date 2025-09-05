@@ -11,13 +11,13 @@ public class CosmosOptions
     [Required]
     public string AuthKey { get; set; } = string.Empty;
 
-    public string DatabaseName { get; set; } = "OpenCQRS";
+    public string DatabaseName { get; set; } = "OpenCqrs";
 
     public string ContainerName { get; set; } = "Domain";
 
     public CosmosClientOptions ClientOptions { get; set; } = new()
     {
-        ApplicationName = "OpenCQRS",
+        ApplicationName = "OpenCqrs",
         ConnectionMode = ConnectionMode.Direct
     };
 }
