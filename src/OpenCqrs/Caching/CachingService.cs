@@ -1,8 +1,10 @@
-﻿namespace OpenCqrs.Caching;
+﻿using OpenCqrs.Results;
+
+namespace OpenCqrs.Caching;
 
 public class CachingService(ICachingProvider cachingProvider) : ICachingService
 {
-    public async Task<T?> GetOrSet<T>(string key, Func<Task<T>> acquireAsync, int? cacheTimeInSeconds = null)
+    public async Task<T?> GetOrSet<T>(string key, Func<Task<T>> acquire, int? cacheTimeInSeconds = null)
     {
         var data = await cachingProvider.Get<T>(key);
         if (data != null)
@@ -10,7 +12,7 @@ public class CachingService(ICachingProvider cachingProvider) : ICachingService
             return data;
         }
 
-        var result = await acquireAsync();
+        var result = await acquire();
         if (result == null)
         {
             return default;
@@ -21,8 +23,8 @@ public class CachingService(ICachingProvider cachingProvider) : ICachingService
         return result;
     }
 
-    public Task Remove(string key)
+    public async Task Remove(string key)
     {
-        return cachingProvider.Remove(key);
+        await cachingProvider.Remove(key);
     }
 }
