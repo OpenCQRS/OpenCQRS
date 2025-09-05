@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using OpenCqrs.Caching;
 using OpenCqrs.Commands;
 using OpenCqrs.Messaging;
 using OpenCqrs.Notifications;
@@ -16,10 +17,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDispatcher, Dispatcher>();
         services.AddScoped<ICommandSender, CommandSender>();
         services.AddScoped<IQueryProcessor, QueryProcessor>();
+        services.AddScoped<ICachingService, CachingService>();
         services.AddScoped<INotificationPublisher, NotificationPublisher>();
         services.AddScoped<IMessagePublisher, MessagePublisher>();
         services.AddScoped<IValidationService, ValidationService>();
 
+        services.AddScoped<ICachingProvider, DefaultCachingProvider>();
         services.AddScoped<IMessagingProvider, DefaultMessagingProvider>();
         services.AddScoped<IValidationProvider, DefaultValidationProvider>();
 

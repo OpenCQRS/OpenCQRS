@@ -1,0 +1,7 @@
+﻿namespace OpenCqrs.Caching;
+
+public interface ICachingService
+{
+    Task<T?> GetOrSet<T>(string key, Func<Task<T>> acquireAsync, int? cacheTimeInSeconds = null);
+    Task Remove(string key);
+}
