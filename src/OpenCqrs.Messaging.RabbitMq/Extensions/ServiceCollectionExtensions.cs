@@ -8,9 +8,9 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds RabbitMQ messaging provider to the service collection with custom options.
     /// </summary>
-    public static IServiceCollection AddOpenCqrsRabbitMq(this IServiceCollection services, Action<RabbitMqOptions> configureOptions)
+    public static IServiceCollection AddOpenCqrsRabbitMq(this IServiceCollection services, Action<RabbitMqOptions> options)
     {
-        services.Configure(configureOptions);
+        services.Configure(options);
         services.AddSingleton<IMessagingProvider, RabbitMqMessagingProvider>();
 
         return services;
