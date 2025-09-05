@@ -1,24 +1,44 @@
-﻿namespace OpenCqrs.Caching.MemoryCache;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
-public class MemoryCacheProvider : ICachingProvider
+namespace OpenCqrs.Caching.MemoryCache;
+
+public class MemoryCacheProvider(IMemoryCache memoryCache, IOptions<Configuration.MemoryCacheOptions> options) : ICachingProvider
 {
-    public Task<T> Get<T>(string key)
+    public Task<T?> Get<T>(string key)
     {
-        throw new NotImplementedException();
+        var data = memoryCache.Get<T>(key);
+        return Task.FromResult(data);
     }
 
-    public Task Set(string key, object? data, int? cacheTimeInSeconds = null)
+    public async Task Set(string key, object? data, int? cacheTimeInSeconds = null)
     {
-        throw new NotImplementedException();
+        if (data is null)
+        {
+            return;
+        }
+
+        var isSet = await IsSet(key);
+        if (isSet)
+        {
+            return;
+        }
+
+        cacheTimeInSeconds ??= options.Value.DefaultCacheTimeInSeconds;
+        var memoryCacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheTimeInSeconds.Value));
+
+        memoryCache.Set(key, data, memoryCacheEntryOptions);
     }
 
     public Task<bool> IsSet(string key)
     {
-        throw new NotImplementedException();
+        var ieSet = memoryCache.Get(key) is not null;
+        return Task.FromResult(ieSet);
     }
 
     public Task Remove(string key)
     {
-        throw new NotImplementedException();
+        memoryCache.Remove(key);
+        return Task.FromResult(true);
     }
 }

@@ -27,7 +27,7 @@ public static class ServiceCollectionExtensions
         {
             options.ConnectionString = connectionString;
         });
-        
+
         services.Replace(ServiceDescriptor.Scoped<IMessagingProvider>(test => new RabbitMqMessagingProvider(test.GetRequiredService<IOptions<RabbitMqOptions>>())));
 
         return services;
