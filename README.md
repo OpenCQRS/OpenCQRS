@@ -2,7 +2,7 @@
 
 [![.Build](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml/badge.svg)](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml)
 
-.NET framework implementing DDD, Event Sourcing, and CQRS. OpenCQRS 7 is a revamped version of the project with a complete rewrite of the codebase. 
+.NET framework implementing DDD, Event Sourcing, and CQRS.
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
@@ -201,7 +201,6 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.0.0
 
-- Complete rewrite of the codebase
 - Upgrade to .NET 9
 - New mediator pattern with commands, queries, and notifications
 - Cosmos DB store provider
