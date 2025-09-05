@@ -3,10 +3,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs;
-using OpenCqrs.Examples.Messaging.ServiceBus.Commands;
+using OpenCqrs.Examples.Messaging.RabbitMq.Commands;
 using OpenCqrs.Extensions;
-using OpenCqrs.Messaging.ServiceBus.Configuration;
-using OpenCqrs.Messaging.ServiceBus.Extensions;
+using OpenCqrs.Messaging.RabbitMq.Extensions;
 
 var serviceProvider = ConfigureServices();
 
@@ -28,10 +27,10 @@ IServiceProvider ConfigureServices()
     services.AddSingleton(TimeProvider.System);
     services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-    const string connectionString = "your_service_bus_connection_string";
+    const string connectionString = "your_rabbit_mq_connection_string";
 
     services.AddOpenCqrs(typeof(Program));
-    services.AddOpenCqrsServiceBus(new ServiceBusOptions { ConnectionString = connectionString });
+    services.AddOpenCqrsRabbitMq(connectionString);
 
     return services.BuildServiceProvider();
 }
