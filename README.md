@@ -210,7 +210,8 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 - Support for IdentityDbContext from ASP.NET Core Identity
 - Command validation
 - Command sequences
-- Send and publish methods that automatically publish notifications on the back of a successfully processed command
+- Automatic publishing of notifications and messages (ServiceBus or RabbitMQ) on the back of a successfully processed command
+- Automatic caching of query results with MemoryCache or Redis
 - More flexible and extensible architecture
 - Better performance
 - Better test coverage

@@ -2,6 +2,7 @@
 
 - [Main](#main)
 - [Command Validation](Command-Validation)
+- [Messaging](#messaging)
 - [Event Sourcing](#event-sourcing)
 
 <a name="main"></a>
@@ -17,11 +18,30 @@ Both assemblies need to be registered.
 
 <a name="command-validation"></a>
 ## Command Validation
-To use the command validation features, you need to install and register a validation package first (e.g., **OpenCqrs.Validation.FluentValidation** package).
+To use the command validation features, you need to install and register a validation package first.
+
+**OpenCqrs.Validation.FluentValidation**
 ```C#
 services.AddOpenCqrsFluentValidation(typeof(CreateProduct));
 ```
 All validators will be registered automatically by passing one type per assembly.
+
+<a name="messaging"></a>
+## Messaging
+To use the messaging features, you need to install and register a messaging package first.
+
+**OpenCqrs.Messaging.ServiceBus**
+```C#
+services.AddOpenCqrsServiceBus(new ServiceBusOptions { ConnectionString = connectionString });
+```
+**OpenCqrs.Messaging.RabbitMq**
+```C#
+services
+    .AddOpenCqrsRabbitMq(options =>
+    {
+         options.ConnectionString = connectionString;
+     });
+```
 
 <a name="event-sourcing"></a>
 ## Event Sourcing

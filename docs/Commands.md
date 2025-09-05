@@ -2,7 +2,7 @@
 
 - [Simple commands](#simple-commands)
 - [Commands with a result](#commands-with-results)
-- [Commands that publish notifications](#commands-with-notifications)
+- [Commands that publish notifications and messages](#commands-with-publishing)
 - [Commands validation](#commands-validation)
 - [Command sequence](#command-sequence)
 
@@ -77,7 +77,7 @@ var command = new DoSomethingAndGetResult();
 var result = await _dispatcher.Send(command);
 ```
 
-<a name="commands-with-notifications"></a>
+<a name="commands-with-publishing"></a>
 ## Commands that publish notifications
 
 If you want to automatically publish notifications on the back of a successfully processed command, you can use the SendAndPublish method:
@@ -127,7 +127,27 @@ public class SomethingHappenedHandlerTwo : INotificationHandler<SomethingHappene
     }
 }
 ```
+You can also publish messages to a message bus by including them in the CommandResponse:
+```C#
+public class DoSomethingHandler : ICommandHandler<DoSomething, CommandResponse>
+{
+    public async Task<Result<CommandResponse>> Handle(DoSomething command, CancellationToken cancellationToken = default)
+    {
+        await Task.CompletedTask;
 
+        var notification = new SomethingHappened(command.Name);
+        var message = new SomethingToSendToServiceBus(command.Name);
+
+        var response = new CommandResponse(
+            notification,
+            message,
+            new { Message = $"Successfully processed command for: {command.Name}" }
+        );
+
+        return response;
+    }
+}
+```
 Finally, send the command using the dispatcher:
 ```C#
 var command = new DoSomething("MyName");
@@ -144,6 +164,18 @@ The result will contain the command result and all results from the notification
         "Error": null
     },
     "NotificationResults": [
+        {
+            "IsSuccess": true,
+            "Value": null,
+            "Error": null
+        },
+        {
+            "IsSuccess": true,
+            "Value": null,
+            "Error": null
+        }
+    ],
+    "MessageResults": [
         {
             "IsSuccess": true,
             "Value": null,
