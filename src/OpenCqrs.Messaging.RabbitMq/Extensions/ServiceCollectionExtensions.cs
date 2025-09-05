@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using OpenCqrs.Messaging.RabbitMq.Configuration;
 
 namespace OpenCqrs.Messaging.RabbitMq.Extensions;
@@ -25,7 +27,8 @@ public static class ServiceCollectionExtensions
         {
             options.ConnectionString = connectionString;
         });
-        services.AddSingleton<IMessagingProvider, RabbitMqMessagingProvider>();
+        
+        services.Replace(ServiceDescriptor.Scoped<IMessagingProvider>(test => new RabbitMqMessagingProvider(test.GetRequiredService<IOptions<RabbitMqOptions>>())));
 
         return services;
     }
