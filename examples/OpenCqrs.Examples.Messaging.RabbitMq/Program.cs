@@ -27,7 +27,7 @@ IServiceProvider ConfigureServices()
     services.AddSingleton(TimeProvider.System);
     services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-    const string connectionString = "your_rabbit_mq_connection_string";
+    const string connectionString = "amqp://guest:guest@localhost:5672/";
 
     services.AddOpenCqrs(typeof(Program));
     services.AddOpenCqrsRabbitMq(connectionString);
