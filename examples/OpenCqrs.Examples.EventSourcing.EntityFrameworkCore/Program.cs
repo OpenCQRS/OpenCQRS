@@ -36,9 +36,6 @@ IServiceProvider ConfigureServices()
 {
     var services = new ServiceCollection();
 
-    services.AddSingleton(TimeProvider.System);
-    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
     var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MyStore.db");
     var connectionString = $"Data Source={dbPath}";
 
