@@ -15,8 +15,6 @@ public class SaveAggregateTests : TestBase
     [Fact]
     public async Task GivenAnotherEventWithTheExpectedSequenceIsAlreadyStored_ThenReturnsConcurrencyExceptionFailure()
     {
-        using var activity = StartTestActivity();
-
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);

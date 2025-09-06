@@ -1,13 +1,17 @@
-﻿using OpenCqrs.EventSourcing.Domain;
+﻿using System.Diagnostics;
+using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests;
 
-public abstract class TestBase
+public abstract class TestBase : IDisposable
 {
     protected readonly IDomainService DomainService;
 
+    private readonly ActivitySource _activitySource;
+    private readonly ActivityListener _activityListener;
+    
     protected TestBase()
     {
         TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
@@ -25,5 +29,25 @@ public abstract class TestBase
 
         var dbContext = Shared.CreateTestDbContext();
         DomainService = new EntityFrameworkCoreDomainService(dbContext);
+        
+        _activitySource = new ActivitySource("TestSource");
+
+        _activityListener = new ActivityListener();
+        _activityListener.ShouldListenTo = _ => true;
+        _activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData;
+        _activityListener.SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData;
+        _activityListener.ActivityStarted = _ => { };
+        _activityListener.ActivityStopped = _ => { };
+
+        ActivitySource.AddActivityListener(_activityListener);
+        
+        _activitySource.StartActivity();
+    }
+    
+    public void Dispose()
+    {
+        _activityListener.Dispose();
+        _activitySource.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

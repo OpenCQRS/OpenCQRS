@@ -60,11 +60,8 @@ public abstract class TestBase : IDisposable
         _activityListener.ActivityStopped = _ => { };
 
         ActivitySource.AddActivityListener(_activityListener);
-    }
-
-    protected Activity? StartTestActivity(string? name = null)
-    {
-        return _activitySource.StartActivity(name ?? "TestActivity");
+        
+        _activitySource.StartActivity();
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()
@@ -88,8 +85,8 @@ public abstract class TestBase : IDisposable
 
     public void Dispose()
     {
-        _activityListener?.Dispose();
-        _activitySource?.Dispose();
+        _activityListener.Dispose();
+        _activitySource.Dispose();
         GC.SuppressFinalize(this);
     }
 }
