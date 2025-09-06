@@ -44,10 +44,17 @@ public class QueryProcessor(IServiceProvider serviceProvider, ICachingService ca
             throw new Exception("No Cache Key was provided");
         }
 
-        var result = await cachingService.GetOrSet(cacheableQuery.CacheKey,
-            () => handler.Handle(query, serviceProvider, cancellationToken),
+        var result = await cachingService.GetOrSet(
+            cacheableQuery.CacheKey,
+            Handle,
             cacheableQuery.CacheTimeInSeconds);
 
-        return result ?? new Failure();
+        return result is not null ? new Success<TResult>(result) : new Failure();
+
+        async Task<TResult?> Handle()
+        {
+            var handle = await handler.Handle(query, serviceProvider, cancellationToken);
+            return handle.IsSuccess ? handle.Value : default;
+        }
     }
 }

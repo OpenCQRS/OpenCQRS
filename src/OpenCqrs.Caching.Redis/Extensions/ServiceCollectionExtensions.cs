@@ -8,11 +8,6 @@ namespace OpenCqrs.Caching.Redis.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddOpenCqrsRedisCache(this IServiceCollection services)
-    {
-        services.AddOpenCqrsRedisCache(_ => { });
-    }
-
     public static void AddOpenCqrsRedisCache(this IServiceCollection services, Action<RedisCacheOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
