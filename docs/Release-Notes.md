@@ -1,5 +1,10 @@
 # Release Notes
 
+## OpenCQRS 7.0.0-rc.1
+_**Released 06/09/2025**_
+- Memory Caching Provider
+- Redis Caching Provider
+
 ## OpenCQRS 7.0.0-beta.6
 _**Released 05/09/2025**_
 - Service Bus Provider
