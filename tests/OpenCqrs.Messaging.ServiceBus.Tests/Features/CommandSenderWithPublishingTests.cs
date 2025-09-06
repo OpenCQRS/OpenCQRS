@@ -1,6 +1,6 @@
 using FluentAssertions;
-using OpenCqrs.Messaging.ServiceBus.Tests.Messages;
 using OpenCqrs.Messaging.ServiceBus.Tests.Models.Commands;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models.Messages;
 using Xunit;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests.Features;

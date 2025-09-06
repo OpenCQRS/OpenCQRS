@@ -1,4 +1,4 @@
-namespace OpenCqrs.Messaging.ServiceBus.Tests.Messages;
+namespace OpenCqrs.Messaging.RabbitMq.Tests.Models.Messages;
 
 public class TestQueueMessage : IQueueMessage
 {

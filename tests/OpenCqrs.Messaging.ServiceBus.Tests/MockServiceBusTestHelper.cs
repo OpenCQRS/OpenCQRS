@@ -3,7 +3,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using OpenCqrs.Messaging.ServiceBus.Tests.Messages;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models.Messages;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests;
 

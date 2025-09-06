@@ -1,5 +1,5 @@
 using OpenCqrs.Commands;
-using OpenCqrs.Messaging.ServiceBus.Tests.Messages;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models.Messages;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests.Models.Commands.Handlers;

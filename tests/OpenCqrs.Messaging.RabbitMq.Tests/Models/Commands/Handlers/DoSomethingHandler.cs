@@ -1,4 +1,5 @@
 using OpenCqrs.Commands;
+using OpenCqrs.Messaging.RabbitMq.Tests.Models.Messages;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Messaging.RabbitMq.Tests.Models.Commands.Handlers;
