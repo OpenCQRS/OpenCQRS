@@ -1,5 +1,5 @@
 using FluentAssertions;
-using OpenCqrs.Messaging.ServiceBus.Tests.Models;
+using OpenCqrs.Messaging.ServiceBus.Tests.Messages;
 using Xunit;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests.Features;

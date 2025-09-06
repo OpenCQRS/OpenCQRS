@@ -1,5 +1,5 @@
 using FluentAssertions;
-using OpenCqrs.Messaging.ServiceBus.Tests.Models;
+using OpenCqrs.Messaging.ServiceBus.Tests.Messages;
 using OpenCqrs.Messaging.ServiceBus.Tests.Models.Commands;
 using Xunit;
 
@@ -8,7 +8,7 @@ namespace OpenCqrs.Messaging.ServiceBus.Tests.Features;
 public class CommandSenderWithPublishingTests : TestBase
 {
     [Fact]
-    public async Task Given_When_Then()
+    public async Task SendAndPublish_ShouldPublishServiceBusMessages()
     {
         var result = await Dispatcher.SendAndPublish(new DoSomething(Id: Guid.NewGuid(), Name: "Test message data"));
 
