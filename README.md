@@ -25,7 +25,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Packages
 
-| Package                                                                                                                                               | Beta 6                                                                                                                                                          |
+| Package                                                                                                                                               | RC 1                                                                                                                                                            |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
 | [OpenCqrs.Caching.MemoryCache](https://www.nuget.org/packages/OpenCqrs.Caching.MemoryCache)                                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.MemoryCache)                              |
