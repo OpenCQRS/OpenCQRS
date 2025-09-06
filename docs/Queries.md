@@ -40,3 +40,15 @@ And finally, get the result using the dispatcher:
 var query = new GetSomething { Id = 123 };
 var something = await _dispatcher.Get(query);
 ```
+
+If you want your query result to be cached automatically, you can use the **CacheableQuery<string>** abstract class for your queries:
+
+```C#
+public class GetSomethingQuery : CacheableQuery<string>;
+
+var result = await dispatcher.Get(new GetSomethingQuery
+{
+    CacheKey = "my-cache-key",
+    CacheTimeInSeconds = 600
+});
+```

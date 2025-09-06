@@ -1,8 +1,9 @@
 # Configuration
 
 - [Main](#main)
-- [Command Validation](Command-Validation)
+- [Command Validation](#command-validation)
 - [Messaging](#messaging)
+- [Caching](#caching)
 - [Event Sourcing](#event-sourcing)
 
 <a name="main"></a>
@@ -41,6 +42,21 @@ services
     {
          options.ConnectionString = connectionString;
      });
+```
+
+<a name="caching"></a>
+## Caching
+To use the caching features, you need to install and register a caching package.
+**OpenCqrs.Caching.MemoryCache**
+```C#
+services.AddOpenCqrsMemoryCache();
+```
+**OpenCqrs.Caching.Redis**
+```C#
+services.AddOpenCqrsRedisCache(options =>
+{
+    options.ConnectionString = "localhost:6379"
+});
 ```
 
 <a name="event-sourcing"></a>

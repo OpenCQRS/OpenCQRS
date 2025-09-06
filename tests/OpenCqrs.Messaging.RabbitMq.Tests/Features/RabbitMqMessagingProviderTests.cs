@@ -1,5 +1,6 @@
 using FluentAssertions;
 using OpenCqrs.Messaging.RabbitMq.Tests.Models;
+using OpenCqrs.Messaging.RabbitMq.Tests.Models.Messages;
 using Xunit;
 
 namespace OpenCqrs.Messaging.RabbitMq.Tests.Features;

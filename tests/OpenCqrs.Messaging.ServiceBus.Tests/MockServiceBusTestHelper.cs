@@ -3,7 +3,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using OpenCqrs.Messaging.ServiceBus.Tests.Models;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models.Messages;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests;
 
@@ -13,7 +13,7 @@ public class MockServiceBusTestHelper
 
     private readonly ConcurrentDictionary<string, ServiceBusSender> _mockQueueSenders = new();
     private readonly ConcurrentDictionary<string, ServiceBusSender> _mockTopicSenders = new();
-    private readonly ConcurrentBag<SentMessage> _sentMessages = new();
+    private readonly ConcurrentBag<SentMessage> _sentMessages = [];
     private readonly ConcurrentDictionary<string, Exception> _sendFailures = new();
 
     public MockServiceBusTestHelper()
@@ -101,7 +101,7 @@ public class MockServiceBusTestHelper
         return sender;
     }
 
-    private static string? GetOriginalMessageType(string messageBody)
+    private string? GetOriginalMessageType(string messageBody)
     {
         try
         {

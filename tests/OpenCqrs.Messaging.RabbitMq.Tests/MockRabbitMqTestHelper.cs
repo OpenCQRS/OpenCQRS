@@ -6,6 +6,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using OpenCqrs.Messaging.RabbitMq.Configuration;
 using OpenCqrs.Messaging.RabbitMq.Tests.Models;
+using OpenCqrs.Messaging.RabbitMq.Tests.Models.Messages;
 using RabbitMQ.Client;
 
 namespace OpenCqrs.Messaging.RabbitMq.Tests;

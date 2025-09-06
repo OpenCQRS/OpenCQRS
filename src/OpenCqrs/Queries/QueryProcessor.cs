@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using OpenCqrs.Caching;
 using OpenCqrs.Results;
 
 namespace OpenCqrs.Queries;
@@ -13,7 +14,7 @@ namespace OpenCqrs.Queries;
 /// var result = await processor.Get(new GetUserQuery { UserId = userId });
 /// </code>
 /// </example>
-public class QueryProcessor(IServiceProvider serviceProvider) : IQueryProcessor
+public class QueryProcessor(IServiceProvider serviceProvider, ICachingService cachingService) : IQueryProcessor
 {
     private static readonly ConcurrentDictionary<Type, object?> QueryHandlerWrappers = new();
 
@@ -33,8 +34,27 @@ public class QueryProcessor(IServiceProvider serviceProvider) : IQueryProcessor
         var handler = (QueryHandlerWrapperBase<TResult>)QueryHandlerWrappers.GetOrAdd(queryType, _ =>
             Activator.CreateInstance(typeof(QueryHandlerWrapper<,>).MakeGenericType(queryType, typeof(TResult))))!;
 
-        var result = await handler.Handle(query, serviceProvider, cancellationToken);
+        if (query is not CacheableQuery<TResult> cacheableQuery)
+        {
+            return await handler.Handle(query, serviceProvider, cancellationToken);
+        }
 
-        return result;
+        if (string.IsNullOrEmpty(cacheableQuery.CacheKey))
+        {
+            throw new Exception("No Cache Key was provided");
+        }
+
+        var result = await cachingService.GetOrSet(
+            cacheableQuery.CacheKey,
+            Handle,
+            cacheableQuery.CacheTimeInSeconds);
+
+        return result is not null ? new Success<TResult>(result) : new Failure();
+
+        async Task<TResult?> Handle()
+        {
+            var handle = await handler.Handle(query, serviceProvider, cancellationToken);
+            return handle.IsSuccess ? handle.Value : default;
+        }
     }
 }
