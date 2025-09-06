@@ -1,7 +1,7 @@
 ﻿using OpenCqrs.Queries;
 using OpenCqrs.Results;
 
-namespace OpenCqrs.Examples.Caching.MemoryCache.Queries.Handlers;
+namespace OpenCqrs.Examples.Caching.Redis.Queries.Handlers;
 
 public class GetSomethingQueryHandler : IQueryHandler<GetSomethingQuery, string>
 {

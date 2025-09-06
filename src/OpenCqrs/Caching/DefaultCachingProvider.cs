@@ -2,9 +2,9 @@ namespace OpenCqrs.Caching;
 
 public class DefaultCachingProvider : ICachingProvider
 {
-    private static string NotImplementedMessage => "No caching provider has been configured. Please configure a caching provider such as MemoryCache or Redis.";
+    private static string NotImplementedMessage => "No caching provider has been configured. Please configure a caching provider such as Memory or Redis caching providers.";
 
-    public Task<T> Get<T>(string key)
+    public Task<T?> Get<T>(string key)
     {
         throw new NotImplementedException(NotImplementedMessage);
     }

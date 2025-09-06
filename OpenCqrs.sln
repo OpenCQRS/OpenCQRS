@@ -75,11 +75,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.EventSourcing.Stor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Messaging.RabbitMq", "examples\OpenCqrs.Examples.Messaging.RabbitMq\OpenCqrs.Examples.Messaging.RabbitMq.csproj", "{9E9B2583-D31F-448A-8176-0423ADFC003C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.MemoryCache", "src\OpenCqrs.Caching.MemoryCache\OpenCqrs.Caching.MemoryCache.csproj", "{45885E26-6EE4-4DE1-B996-C079CB2DC63B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.Memory", "src\OpenCqrs.Caching.Memory\OpenCqrs.Caching.Memory.csproj", "{45885E26-6EE4-4DE1-B996-C079CB2DC63B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.Redis", "src\OpenCqrs.Caching.Redis\OpenCqrs.Caching.Redis.csproj", "{B4B7BE42-6941-465A-9839-A343109DE806}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.MemoryCache.Tests", "tests\OpenCqrs.Caching.MemoryCache.Tests\OpenCqrs.Caching.MemoryCache.Tests.csproj", "{979AC923-5219-4392-BC8D-A9644D4F65C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.Memory.Tests", "tests\OpenCqrs.Caching.Memory.Tests\OpenCqrs.Caching.Memory.Tests.csproj", "{979AC923-5219-4392-BC8D-A9644D4F65C2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Caching.Redis.Tests", "tests\OpenCqrs.Caching.Redis.Tests\OpenCqrs.Caching.Redis.Tests.csproj", "{C87BA4A0-DE14-46BF-82BB-584451A64A93}"
 EndProject
@@ -87,7 +87,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.EventSour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Caching.Redis", "examples\OpenCqrs.Examples.Caching.Redis\OpenCqrs.Examples.Caching.Redis.csproj", "{B841B955-D8EE-43F9-B3AC-75355EF16405}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Caching.MemoryCache", "examples\OpenCqrs.Examples.Caching.MemoryCache\OpenCqrs.Examples.Caching.MemoryCache.csproj", "{376BBF21-7E58-45FF-BD05-3E70C7B9B052}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Caching.Memory", "examples\OpenCqrs.Examples.Caching.Memory\OpenCqrs.Examples.Caching.Memory.csproj", "{376BBF21-7E58-45FF-BD05-3E70C7B9B052}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

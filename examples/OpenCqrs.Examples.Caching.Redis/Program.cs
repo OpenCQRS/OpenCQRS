@@ -3,7 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs;
 using OpenCqrs.Caching.Redis.Extensions;
-using OpenCqrs.Examples.Caching.MemoryCache.Queries;
+using OpenCqrs.Examples.Caching.Redis.Queries;
 using OpenCqrs.Extensions;
 
 var serviceProvider = ConfigureServices();

@@ -47,7 +47,7 @@ services
 <a name="caching"></a>
 ## Caching
 To use the caching features, you need to install and register a caching package.
-**OpenCqrs.Caching.MemoryCache**
+**OpenCqrs.Caching.Memory**
 ```C#
 services.AddOpenCqrsMemoryCache();
 ```

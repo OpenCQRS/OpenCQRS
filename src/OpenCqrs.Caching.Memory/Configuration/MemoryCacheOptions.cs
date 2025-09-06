@@ -1,4 +1,4 @@
-namespace OpenCqrs.Caching.MemoryCache.Configuration;
+namespace OpenCqrs.Caching.Memory.Configuration;
 
 public class MemoryCacheOptions
 {

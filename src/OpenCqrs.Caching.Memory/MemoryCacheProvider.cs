@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
-namespace OpenCqrs.Caching.MemoryCache;
+namespace OpenCqrs.Caching.Memory;
 
 public class MemoryCacheProvider(IMemoryCache memoryCache, IOptions<Configuration.MemoryCacheOptions> options) : ICachingProvider
 {

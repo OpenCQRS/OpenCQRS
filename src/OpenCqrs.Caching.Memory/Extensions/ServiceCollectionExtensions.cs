@@ -2,9 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using OpenCqrs.Caching.MemoryCache.Configuration;
 
-namespace OpenCqrs.Caching.MemoryCache.Extensions;
+namespace OpenCqrs.Caching.Memory.Extensions;
 
 public static class ServiceCollectionExtensions
 {

@@ -28,7 +28,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 | Package                                                                                                                                               | RC 1                                                                                                                                                            |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
-| [OpenCqrs.Caching.MemoryCache](https://www.nuget.org/packages/OpenCqrs.Caching.MemoryCache)                                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.MemoryCache)                              |
+| [OpenCqrs.Caching.Memory](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                              |
 | [OpenCqrs.Caching.Redis](https://www.nuget.org/packages/OpenCqrs.Caching.Redis)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Redis)                                    |
 | [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
 | [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                       |
@@ -212,7 +212,7 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 - Command validation
 - Command sequences
 - Automatic publishing of notifications and messages (ServiceBus or RabbitMQ) on the back of a successfully processed command
-- Automatic caching of query results with MemoryCache or Redis
+- Automatic caching of query results with Memory or Redis caching providers
 - More flexible and extensible architecture
 - Better performance
 - Better test coverage

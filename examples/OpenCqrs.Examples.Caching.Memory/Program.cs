@@ -2,8 +2,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using OpenCqrs;
-using OpenCqrs.Caching.MemoryCache.Extensions;
-using OpenCqrs.Examples.Caching.MemoryCache.Queries;
+using OpenCqrs.Caching.Memory.Extensions;
+using OpenCqrs.Examples.Caching.Memory.Queries;
 using OpenCqrs.Extensions;
 
 var serviceProvider = ConfigureServices();

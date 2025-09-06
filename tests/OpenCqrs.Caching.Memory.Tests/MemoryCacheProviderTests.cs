@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
-namespace OpenCqrs.Caching.MemoryCache.Tests;
+namespace OpenCqrs.Caching.Memory.Tests;
 
 public class MemoryCacheProviderTests
 {
@@ -13,8 +13,8 @@ public class MemoryCacheProviderTests
     public MemoryCacheProviderTests()
     {
         var memoryCache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new MemoryCacheOptions());
-        var defaultOptions = new Configuration.MemoryCacheOptions { DefaultCacheTimeInSeconds = 300 };
-        var options = Substitute.For<IOptions<Configuration.MemoryCacheOptions>>();
+        var defaultOptions = new Memory.Configuration.MemoryCacheOptions { DefaultCacheTimeInSeconds = 300 };
+        var options = Substitute.For<IOptions<Memory.Configuration.MemoryCacheOptions>>();
         options.Value.Returns(defaultOptions);
         _provider = new MemoryCacheProvider(memoryCache, options);
     }
