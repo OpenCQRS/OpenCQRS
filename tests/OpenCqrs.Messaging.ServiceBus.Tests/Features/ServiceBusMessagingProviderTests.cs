@@ -6,6 +6,8 @@ namespace OpenCqrs.Messaging.ServiceBus.Tests.Features;
 
 public class ServiceBusMessagingProviderTests
 {
+    private readonly MockServiceBusTestHelper _mockHelper = new();
+
     [Fact]
     public async Task SendQueueMessage_WithValidMessage_ShouldSucceed()
     {
@@ -22,7 +24,7 @@ public class ServiceBusMessagingProviderTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
 
-        var sentMessages = MockServiceBusTestHelper.GetSentMessages();
+        var sentMessages = _mockHelper.GetSentMessages();
         sentMessages.Should().HaveCount(1);
 
         var sentMessage = sentMessages[0];
@@ -30,7 +32,7 @@ public class ServiceBusMessagingProviderTests
         sentMessage.ContentType.Should().Be("application/json");
         sentMessage.MessageId.Should().NotBeNullOrEmpty();
 
-        var deserializedMessages = MockServiceBusTestHelper.GetSentMessages<TestQueueMessage>().ToArray();
+        var deserializedMessages = _mockHelper.GetSentMessages<TestQueueMessage>().ToArray();
         deserializedMessages.Should().HaveCount(1);
 
         var deserializedMessage = deserializedMessages.First();
@@ -58,11 +60,11 @@ public class ServiceBusMessagingProviderTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
 
-        var topicMessages = MockServiceBusTestHelper.GetSentMessagesForEntity("test-topic");
+        var topicMessages = _mockHelper.GetSentMessagesForEntity("test-topic");
         topicMessages.Should().HaveCount(1);
 
-        MockServiceBusTestHelper.GetMessageCountForEntity("test-topic").Should().Be(1);
-        MockServiceBusTestHelper.TotalSentMessageCount.Should().Be(1);
+        _mockHelper.GetMessageCountForEntity("test-topic").Should().Be(1);
+        _mockHelper.TotalSentMessageCount.Should().Be(1);
     }
 
     [Fact]
@@ -83,7 +85,7 @@ public class ServiceBusMessagingProviderTests
         result.Failure!.Title.Should().Be("Queue name");
         result.Failure.Description.Should().Be("Queue name cannot be null or empty");
 
-        MockServiceBusTestHelper.TotalSentMessageCount.Should().Be(0);
+        _mockHelper.TotalSentMessageCount.Should().Be(0);
     }
 
     [Fact]
@@ -121,7 +123,7 @@ public class ServiceBusMessagingProviderTests
 
         result.IsSuccess.Should().BeTrue();
 
-        var sentMessages = MockServiceBusTestHelper.GetSentMessages();
+        var sentMessages = _mockHelper.GetSentMessages();
         sentMessages.Should().HaveCount(1);
 
         var sentMessage = sentMessages.First();
@@ -149,7 +151,7 @@ public class ServiceBusMessagingProviderTests
 
         result.IsSuccess.Should().BeTrue();
 
-        var sentMessages = MockServiceBusTestHelper.GetSentMessages();
+        var sentMessages = _mockHelper.GetSentMessages();
         var sentMessage = sentMessages.First();
 
         sentMessage.ApplicationProperties.Should().HaveCount(3);
@@ -168,7 +170,7 @@ public class ServiceBusMessagingProviderTests
             TestData = "This will fail"
         };
 
-        MockServiceBusTestHelper.SetupSendFailure("error-queue");
+        _mockHelper.SetupSendFailure("error-queue");
 
         var result = await provider.SendQueueMessage(message);
 
@@ -191,15 +193,15 @@ public class ServiceBusMessagingProviderTests
         await provider.SendQueueMessage(queueMessage2);
         await provider.SendTopicMessage(topicMessage);
 
-        MockServiceBusTestHelper.TotalSentMessageCount.Should().Be(3);
-        MockServiceBusTestHelper.GetMessageCountForEntity("queue1").Should().Be(1);
-        MockServiceBusTestHelper.GetMessageCountForEntity("queue2").Should().Be(1);
-        MockServiceBusTestHelper.GetMessageCountForEntity("topic1").Should().Be(1);
+        _mockHelper.TotalSentMessageCount.Should().Be(3);
+        _mockHelper.GetMessageCountForEntity("queue1").Should().Be(1);
+        _mockHelper.GetMessageCountForEntity("queue2").Should().Be(1);
+        _mockHelper.GetMessageCountForEntity("topic1").Should().Be(1);
 
-        var allQueueMessages = MockServiceBusTestHelper.GetSentMessages<TestQueueMessage>();
+        var allQueueMessages = _mockHelper.GetSentMessages<TestQueueMessage>();
         allQueueMessages.Should().HaveCount(2);
 
-        var allTopicMessages = MockServiceBusTestHelper.GetSentMessages<TestTopicMessage>();
+        var allTopicMessages = _mockHelper.GetSentMessages<TestTopicMessage>();
         allTopicMessages.Should().HaveCount(1);
     }
 
@@ -210,12 +212,12 @@ public class ServiceBusMessagingProviderTests
         var message = new TestQueueMessage { QueueName = "test-queue", TestData = "Test" };
 
         await provider.SendQueueMessage(message);
-        MockServiceBusTestHelper.TotalSentMessageCount.Should().Be(1);
+        _mockHelper.TotalSentMessageCount.Should().Be(1);
 
-        MockServiceBusTestHelper.ClearSentMessages();
+        _mockHelper.ClearSentMessages();
 
-        MockServiceBusTestHelper.TotalSentMessageCount.Should().Be(0);
-        MockServiceBusTestHelper.GetSentMessages().Should().BeEmpty();
+        _mockHelper.TotalSentMessageCount.Should().Be(0);
+        _mockHelper.GetSentMessages().Should().BeEmpty();
     }
 
     [Fact]
@@ -226,7 +228,7 @@ public class ServiceBusMessagingProviderTests
 
         await provider.SendQueueMessage(message);
 
-        MockServiceBusTestHelper.VerifyMessageSent("verify-queue");
+        _mockHelper.VerifyMessageSent("verify-queue");
     }
 
     [Fact]
@@ -237,15 +239,13 @@ public class ServiceBusMessagingProviderTests
 
         await provider.SendQueueMessage(message);
 
-        var action = () => MockServiceBusTestHelper.VerifyMessageSent("verify-queue", 2);
+        var action = () => _mockHelper.VerifyMessageSent("verify-queue", 2);
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("Expected 2 messages to verify-queue, but found 1");
     }
 
     private ServiceBusMessagingProvider CreateServiceBusMessagingProvider()
     {
-        MockServiceBusTestHelper.ClearAllSendFailures();
-        MockServiceBusTestHelper.ClearSentMessages();
-        return new ServiceBusMessagingProvider(MockServiceBusTestHelper.MockServiceBusClient);
+        return new ServiceBusMessagingProvider(_mockHelper.MockServiceBusClient);
     }
 }

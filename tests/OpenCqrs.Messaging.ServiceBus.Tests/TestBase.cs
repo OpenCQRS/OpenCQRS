@@ -11,6 +11,7 @@ namespace OpenCqrs.Messaging.ServiceBus.Tests;
 
 public abstract class TestBase
 {
+    protected readonly MockServiceBusTestHelper MockServiceBusTestHelper;
     protected readonly IDispatcher Dispatcher;
 
     protected TestBase()
@@ -19,7 +20,7 @@ public abstract class TestBase
             .AddSingleton<ICommandHandler<DoSomething, CommandResponse>, DoSomethingHandler>()
             .BuildServiceProvider();
 
-        // var mockServiceBusTestHelper = new MockServiceBusTestHelper();
+        MockServiceBusTestHelper = new MockServiceBusTestHelper();
         var serviceBusMessagingProvider = new ServiceBusMessagingProvider(MockServiceBusTestHelper.MockServiceBusClient);
         var messagePublisher = new MessagePublisher(serviceBusMessagingProvider);
         var commandSender = new CommandSender(serviceProvider, Substitute.For<IValidationService>(), Substitute.For<INotificationPublisher>(), messagePublisher);
