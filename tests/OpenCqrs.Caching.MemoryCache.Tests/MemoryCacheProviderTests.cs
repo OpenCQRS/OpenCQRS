@@ -30,7 +30,7 @@ public class MemoryCacheProviderTests
 
         result.Should().Be(expectedValue);
     }
-  
+
     [Fact]
     public async Task Get_WithNonExistentKey_ShouldReturnNull()
     {
