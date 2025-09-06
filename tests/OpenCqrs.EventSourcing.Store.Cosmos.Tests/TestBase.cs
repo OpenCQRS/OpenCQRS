@@ -60,7 +60,7 @@ public abstract class TestBase : IDisposable
         _activityListener.ActivityStopped = _ => { };
 
         ActivitySource.AddActivityListener(_activityListener);
-        
+
         _activitySource.StartActivity();
     }
 

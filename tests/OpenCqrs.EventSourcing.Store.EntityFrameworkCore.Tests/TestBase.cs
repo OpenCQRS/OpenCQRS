@@ -11,7 +11,7 @@ public abstract class TestBase : IDisposable
 
     private readonly ActivitySource _activitySource;
     private readonly ActivityListener _activityListener;
-    
+
     protected TestBase()
     {
         TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
@@ -29,7 +29,7 @@ public abstract class TestBase : IDisposable
 
         var dbContext = Shared.CreateTestDbContext();
         DomainService = new EntityFrameworkCoreDomainService(dbContext);
-        
+
         _activitySource = new ActivitySource("TestSource");
 
         _activityListener = new ActivityListener();
@@ -40,10 +40,10 @@ public abstract class TestBase : IDisposable
         _activityListener.ActivityStopped = _ => { };
 
         ActivitySource.AddActivityListener(_activityListener);
-        
+
         _activitySource.StartActivity();
     }
-    
+
     public void Dispose()
     {
         _activityListener.Dispose();

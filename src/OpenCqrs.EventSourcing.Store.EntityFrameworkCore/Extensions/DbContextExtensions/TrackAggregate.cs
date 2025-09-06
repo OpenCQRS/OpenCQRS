@@ -192,11 +192,7 @@ public static partial class IDomainDbContextExtensions
         var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
         if (latestEventSequence != expectedEventSequence)
         {
-            return new Failure
-            (
-                Title: "Concurrency exception",
-                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-            );
+            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence);
         }
 
         var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();

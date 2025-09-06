@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Diagnostics;
+using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
@@ -31,8 +32,15 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeFalse();
             saveResult.Failure.Should().NotBeNull();
             saveResult.Failure.ErrorCode.Should().Be(ErrorCode.Error);
-            saveResult.Failure.Title.Should().Be("Concurrency exception");
-            saveResult.Failure.Description.Should().Be("Expected event sequence 0 but found 1");
+            saveResult.Failure.Title.Should().Be("Error");
+            saveResult.Failure.Description.Should().Be("There was an error when processing the request");
+
+            var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
+            activityEvent.Should().NotBeNull();
+            activityEvent.Value.Tags.First().Key.Should().Be("ExpectedEventSequence");
+            activityEvent.Value.Tags.First().Value.Should().Be(0);
+            activityEvent.Value.Tags.Last().Key.Should().Be("LatestEventSequence");
+            activityEvent.Value.Tags.Last().Value.Should().Be(1);
         }
     }
 
