@@ -5,6 +5,6 @@
 /// </summary>
 public class ValidationError
 {
-    public string PropertyName { get; set; }
-    public string ErrorMessage { get; set; }
+    public required string PropertyName { get; set; }
+    public required string ErrorMessage { get; set; }
 }

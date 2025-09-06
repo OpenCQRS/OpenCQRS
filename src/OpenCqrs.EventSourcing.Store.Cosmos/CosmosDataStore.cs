@@ -11,6 +11,10 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
+/// <summary>
+/// Provides data access operations for the Cosmos DB Event Sourcing store.
+/// This class handles the storage and retrieval of aggregates, events, and aggregate event documents in Cosmos DB.
+/// </summary>
 public class CosmosDataStore : ICosmosDataStore
 {
     private readonly TimeProvider _timeProvider;
@@ -18,6 +22,12 @@ public class CosmosDataStore : ICosmosDataStore
     private readonly CosmosClient _cosmosClient;
     private readonly Container _container;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CosmosDataStore"/> class.
+    /// </summary>
+    /// <param name="options">The Cosmos DB configuration options.</param>
+    /// <param name="timeProvider">The time provider for timestamp operations.</param>
+    /// <param name="httpContextAccessor">The HTTP context accessor for retrieving user information.</param>
     public CosmosDataStore(IOptions<CosmosOptions> options, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor)
     {
         _timeProvider = timeProvider;
@@ -26,6 +36,15 @@ public class CosmosDataStore : ICosmosDataStore
         _container = _cosmosClient.GetContainer(options.Value.DatabaseName, options.Value.ContainerName);
     }
 
+    /// <summary>
+    /// Retrieves an aggregate document from Cosmos DB for the specified stream and aggregate.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier containing the aggregate.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing the aggregate document if found, null if not found, or a failure if an error occurred.</returns>
+    /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
@@ -51,6 +70,16 @@ public class CosmosDataStore : ICosmosDataStore
         }
     }
 
+    /// <summary>
+    /// Retrieves all aggregate event documents for a specific aggregate from Cosmos DB.
+    /// The results are ordered by applied date.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate whose events to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier containing the aggregate.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of aggregate event documents, or a failure if an error occurred.</returns>
+    /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
@@ -88,6 +117,14 @@ public class CosmosDataStore : ICosmosDataStore
         return aggregateEventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves all event documents from a stream, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
@@ -136,6 +173,14 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves specific event documents from a stream by their identifiers.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="eventIds">An array of event identifiers to retrieve.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents matching the specified IDs, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds, CancellationToken cancellationToken = default)
     {
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventIds, c.id) ORDER BY c.sequence";
@@ -167,6 +212,15 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream starting from a specific sequence number, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="fromSequence">The minimum sequence number to start retrieving events from (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents from the specified sequence, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
@@ -217,6 +271,15 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream up to a specific sequence number, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="upToSequence">The maximum sequence number to retrieve events up to (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents up to the specified sequence, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
@@ -267,6 +330,18 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Updates an aggregate document by applying new events and storing the updated state in Cosmos DB.
+    /// This method retrieves new events since the aggregate's last update, applies them to the aggregate, 
+    /// and creates aggregate event documents to track the relationship between the aggregate and events.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to update.</typeparam>
+    /// <param name="streamId">The stream identifier containing the aggregate.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate.</param>
+    /// <param name="aggregateDocument">The current aggregate document to update.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing the updated aggregate, or a failure if an error occurred.</returns>
+    /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public async Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = aggregateDocument.ToAggregate<TAggregate>();
@@ -339,6 +414,10 @@ public class CosmosDataStore : ICosmosDataStore
         }
     }
 
+    /// <summary>
+    /// Releases the unmanaged resources used by the CosmosDataStore and optionally releases the managed resources.
+    /// This method disposes of the Cosmos client connection.
+    /// </summary>
     public void Dispose()
     {
         _cosmosClient.Dispose();

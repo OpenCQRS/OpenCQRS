@@ -5,13 +5,24 @@ using Microsoft.Extensions.Options;
 
 namespace OpenCqrs.Caching.Memory.Extensions;
 
+/// <summary>
+/// Provides extension methods for adding and configuring OpenCqrs memory caching services.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Adds memory caching support for OpenCqrs to the service collection.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the memory cache to.</param>
     public static void AddOpenCqrsMemoryCache(this IServiceCollection services)
     {
         services.AddOpenCqrsMemoryCache(opt => { });
     }
 
+    /// <summary>
+    /// Adds memory caching support for OpenCqrs to the service collection.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the memory cache to.</param>
     public static void AddOpenCqrsMemoryCache(this IServiceCollection services, Action<Configuration.MemoryCacheOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);

@@ -6,8 +6,28 @@ using StackExchange.Redis;
 
 namespace OpenCqrs.Caching.Redis.Extensions;
 
+/// <summary>
+/// Provides extension methods for integrating Redis caching with the OpenCqrs framework.
+/// </summary>
+/// <remarks>
+/// This static class offers functionality to configure and register Redis caching services within
+/// the dependency injection container. It utilizes the Microsoft.Extensions.DependencyInjection namespace
+/// to allow seamless integration of Redis caching into applications using the OpenCqrs framework.
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Configures and registers Redis caching services for use with the OpenCqrs framework.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the Redis caching services to.</param>
+    /// <param name="options">
+    /// An <see cref="Action{RedisCacheOptions}"/> to configure the Redis cache settings,
+    /// including the connection string, default cache time, and other optional parameters.
+    /// </param>
+    /// <remarks>
+    /// This method integrates Redis as the caching provider for OpenCqrs, including configuration of
+    /// connection multiplexer and Redis cache options. It replaces the default caching provider with Redis.
+    /// </remarks>
     public static void AddOpenCqrsRedisCache(this IServiceCollection services, Action<RedisCacheOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
