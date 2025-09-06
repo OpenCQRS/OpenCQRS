@@ -181,12 +181,10 @@ public static partial class IDomainDbContextExtensions
         if (aggregateEntity is not null)
         {
             var currentAggregate = aggregateEntity.ToAggregate<TAggregate>();
-
             if (!applyNewDomainEvents)
             {
                 return currentAggregate;
             }
-
             return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
         }
 

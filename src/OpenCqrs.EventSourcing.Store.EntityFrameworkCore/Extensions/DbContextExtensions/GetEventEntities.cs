@@ -180,7 +180,10 @@ public static partial class IDomainDbContextExtensions
                 .ToListAsync(cancellationToken);
         }
 
-        var eventTypes = eventTypeFilter!.Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType)).Select(b => b.Key).ToList();
+        var eventTypes = eventTypeFilter!
+            .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+            .Select(b => b.Key).ToList();
+
         return await domainDbContext.Events.AsNoTracking()
             .Where(eventEntity => eventEntity.StreamId == streamId.Id && eventTypes.Contains(eventEntity.EventType))
             .OrderBy(eventEntity => eventEntity.Sequence)

@@ -23,7 +23,7 @@ public interface ICommand;
 /// meaningful business information resulting from the command processing.
 /// </summary>
 /// <typeparam name="TResponse">
-/// The type of response expected from successful command execution. This should contain
+/// The type of response expected from a successful command execution. This should contain
 /// relevant information needed by the caller, such as generated identifiers or computed values.
 /// </typeparam>
 /// <example>

@@ -40,12 +40,10 @@ public class CosmosDomainService : IDomainService
         if (aggregateDocumentResult.Value != null)
         {
             var currentAggregate = aggregateDocumentResult.Value.ToAggregate<TAggregate>();
-
             if (!applyNewDomainEvents)
             {
                 return currentAggregate;
             }
-
             return await UpdateAggregate(streamId, aggregateId, cancellationToken);
         }
 
@@ -189,7 +187,6 @@ public class CosmosDomainService : IDomainService
             return eventDocumentsResult.Failure!;
         }
         var eventDocuments = eventDocumentsResult.Value!.ToList();
-
         if (eventDocuments.Count == 0)
         {
             return aggregate;
