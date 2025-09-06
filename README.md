@@ -229,7 +229,7 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.2.0
 
-- Store provider using files
+- File store provider for event sourcing
 
 ## Full Documentation
 
