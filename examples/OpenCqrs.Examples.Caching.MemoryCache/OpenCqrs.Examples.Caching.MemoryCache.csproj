@@ -7,4 +7,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\OpenCqrs.Caching.MemoryCache\OpenCqrs.Caching.MemoryCache.csproj" />
+      <ProjectReference Include="..\..\src\OpenCqrs\OpenCqrs.csproj" />
+    </ItemGroup>
+
 </Project>
