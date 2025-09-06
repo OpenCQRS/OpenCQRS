@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Diagnostics;
+using FluentAssertions;
 using FluentAssertions.Execution;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
@@ -14,6 +15,8 @@ public class SaveAggregateTests : TestBase
     [Fact]
     public async Task GivenAnotherEventWithTheExpectedSequenceIsAlreadyStored_ThenReturnsConcurrencyExceptionFailure()
     {
+        using var activity = StartTestActivity();
+
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
@@ -29,6 +32,13 @@ public class SaveAggregateTests : TestBase
             saveResult.Failure.ErrorCode.Should().Be(ErrorCode.Error);
             saveResult.Failure.Title.Should().Be("Error");
             saveResult.Failure.Description.Should().Be("There was an error when processing the request");
+
+            var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
+            activityEvent.Should().NotBeNull();
+            activityEvent.Value.Tags.First().Key.Should().Be("ExpectedEventSequence");
+            activityEvent.Value.Tags.First().Value.Should().Be(0);
+            activityEvent.Value.Tags.Last().Key.Should().Be("LatestEventSequence");
+            activityEvent.Value.Tags.Last().Value.Should().Be(1);
         }
     }
 

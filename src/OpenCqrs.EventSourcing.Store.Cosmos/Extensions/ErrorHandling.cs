@@ -28,7 +28,7 @@ public static class ErrorHandling
             Description: "There was an error when processing the request"
         );
     }
-    
+
     public static Failure ProcessErrorAndGetFailure(int expectedEventSequence, int latestEventSequence, DateTimeOffset timestamp)
     {
         var tags = new Dictionary<string, object?>
@@ -36,12 +36,12 @@ public static class ErrorHandling
             { "ExpectedEventSequence", expectedEventSequence },
             { "LatestEventSequence", latestEventSequence }
         };
-        
+
         Activity.Current?.AddEvent(new ActivityEvent(
-            name: "Concurrency exception", 
-            timestamp, 
+            name: "Concurrency exception",
+            timestamp,
             tags: new ActivityTagsCollection(tags)));
-        
+
         return new Failure
         (
             Title: "Error",

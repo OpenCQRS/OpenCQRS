@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -10,11 +11,14 @@ using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests;
 
-public abstract class TestBase
+public abstract class TestBase : IDisposable
 {
     protected readonly IDomainService DomainService;
     protected readonly ICosmosDataStore DataStore;
     protected readonly FakeTimeProvider TimeProvider;
+
+    private readonly ActivitySource _activitySource;
+    private readonly ActivityListener _activityListener;
 
     protected TestBase()
     {
@@ -45,6 +49,22 @@ public abstract class TestBase
 
         var cosmosSetup = new CosmosSetup(optionsSubstitute);
         _ = cosmosSetup.CreateDatabaseAndContainerIfNotExist();
+
+        _activitySource = new ActivitySource("TestSource");
+
+        _activityListener = new ActivityListener();
+        _activityListener.ShouldListenTo = _ => true;
+        _activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData;
+        _activityListener.SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData;
+        _activityListener.ActivityStarted = _ => { };
+        _activityListener.ActivityStopped = _ => { };
+
+        ActivitySource.AddActivityListener(_activityListener);
+    }
+
+    protected Activity? StartTestActivity(string? name = null)
+    {
+        return _activitySource.StartActivity(name ?? "TestActivity");
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()
@@ -64,5 +84,12 @@ public abstract class TestBase
 
         httpContextAccessor.HttpContext.Returns(context);
         return httpContextAccessor;
+    }
+
+    public void Dispose()
+    {
+        _activityListener?.Dispose();
+        _activitySource?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
