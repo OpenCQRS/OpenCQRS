@@ -227,6 +227,10 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 - Custom table names for EntityFrameworkCore store provider
 - Custom handlers/services per command/query/notification
 
+### OpenCQRS 7.2.0
+
+- Store provider using files
+
 ## Full Documentation
 
 - [Installation](docs/Installation.md)
