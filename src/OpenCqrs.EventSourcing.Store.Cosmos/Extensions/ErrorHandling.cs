@@ -4,9 +4,9 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
-public static class ErrorHandlingExtensions
+public static class ErrorHandling
 {
-    public static Failure ToFailure(this TransactionalBatchResponse batchResponse, string operationDescription)
+    public static Failure ProcessErrorAndGetFailure(this TransactionalBatchResponse batchResponse, string operationDescription)
     {
         // TODO: Add more tags from the response
         var tags = new Dictionary<string, object> { { "Message", batchResponse.ErrorMessage } };
@@ -18,13 +18,33 @@ public static class ErrorHandlingExtensions
         );
     }
 
-    public static Failure ToFailure(this Exception exception, string operationDescription)
+    public static Failure ProcessErrorAndGetFailure(this Exception exception, string operationDescription)
     {
         var tagList = new TagList { { "Operation Description", operationDescription } };
         Activity.Current?.AddException(exception, tagList, DateTimeOffset.UtcNow);
         return new Failure
         (
             Title: operationDescription,
+            Description: "There was an error when processing the request"
+        );
+    }
+    
+    public static Failure ProcessErrorAndGetFailure(int expectedEventSequence, int latestEventSequence, DateTimeOffset timestamp)
+    {
+        var tags = new Dictionary<string, object?>
+        {
+            { "ExpectedEventSequence", expectedEventSequence },
+            { "LatestEventSequence", latestEventSequence }
+        };
+        
+        Activity.Current?.AddEvent(new ActivityEvent(
+            name: "Concurrency exception", 
+            timestamp, 
+            tags: new ActivityTagsCollection(tags)));
+        
+        return new Failure
+        (
+            Title: "Error",
             Description: "There was an error when processing the request"
         );
     }

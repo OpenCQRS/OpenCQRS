@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -109,11 +110,11 @@ public class CosmosDomainService : IDomainService
                 return aggregate;
             }
 
-            return batchResponse.ToFailure("Create Aggregate");
+            return batchResponse.ProcessErrorAndGetFailure("Create Aggregate");
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Aggregate");
+            return ex.ProcessErrorAndGetFailure("Get Aggregate");
         }
     }
 
@@ -244,7 +245,7 @@ public class CosmosDomainService : IDomainService
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Latest Event Sequence");
+            return ex.ProcessErrorAndGetFailure("Get Latest Event Sequence");
         }
     }
 
@@ -263,11 +264,7 @@ public class CosmosDomainService : IDomainService
         var latestEventSequence = latestEventSequenceResult.Value;
         if (latestEventSequence != expectedEventSequence)
         {
-            return new Failure
-            (
-                Title: "Concurrency exception",
-                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-            );
+            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence, _timeProvider.GetUtcNow());
         }
 
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
@@ -335,11 +332,11 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ToFailure("Save Aggregate");
+            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ProcessErrorAndGetFailure("Save Aggregate");
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Save Aggregate");
+            return ex.ProcessErrorAndGetFailure("Save Aggregate");
         }
     }
 
@@ -358,11 +355,7 @@ public class CosmosDomainService : IDomainService
         var latestEventSequence = latestEventSequenceResult.Value;
         if (latestEventSequence != expectedEventSequence)
         {
-            return new Failure
-            (
-                Title: "Concurrency exception",
-                Description: $"Expected event sequence {expectedEventSequence} but found {latestEventSequence}"
-            );
+            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence, _timeProvider.GetUtcNow());
         }
 
         var timeStamp = _timeProvider.GetUtcNow();
@@ -381,11 +374,11 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ToFailure("Save Domain Events");
+            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ProcessErrorAndGetFailure("Save Domain Events");
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Save Domain Events");
+            return ex.ProcessErrorAndGetFailure("Save Domain Events");
         }
     }
 

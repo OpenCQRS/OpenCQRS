@@ -47,7 +47,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Aggregate Document");
+            return ex.ProcessErrorAndGetFailure("Get Aggregate Document");
         }
     }
 
@@ -82,7 +82,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Aggregate Event Documents");
+            return ex.ProcessErrorAndGetFailure("Get Aggregate Event Documents");
         }
 
         return aggregateEventDocuments;
@@ -130,7 +130,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Event Documents");
+            return ex.ProcessErrorAndGetFailure("Get Event Documents");
         }
 
         return eventDocuments;
@@ -161,7 +161,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Event Documents by IDs");
+            return ex.ProcessErrorAndGetFailure("Get Event Documents by IDs");
         }
 
         return eventDocuments;
@@ -211,7 +211,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Event Documents from Sequence");
+            return ex.ProcessErrorAndGetFailure("Get Event Documents from Sequence");
         }
 
         return eventDocuments;
@@ -261,7 +261,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Get Event Documents up to Sequence");
+            return ex.ProcessErrorAndGetFailure("Get Event Documents up to Sequence");
         }
 
         return eventDocuments;
@@ -331,11 +331,11 @@ public class CosmosDataStore : ICosmosDataStore
                 return aggregate;
             }
 
-            return batchResponse.ToFailure("Update Aggregate Document");
+            return batchResponse.ProcessErrorAndGetFailure("Update Aggregate Document");
         }
         catch (Exception ex)
         {
-            return ex.ToFailure("Update Aggregate Document");
+            return ex.ProcessErrorAndGetFailure("Update Aggregate Document");
         }
     }
 

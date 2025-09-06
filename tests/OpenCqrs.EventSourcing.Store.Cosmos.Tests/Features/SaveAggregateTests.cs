@@ -27,8 +27,8 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeFalse();
             saveResult.Failure.Should().NotBeNull();
             saveResult.Failure.ErrorCode.Should().Be(ErrorCode.Error);
-            saveResult.Failure.Title.Should().Be("Concurrency exception");
-            saveResult.Failure.Description.Should().Be("Expected event sequence 0 but found 1");
+            saveResult.Failure.Title.Should().Be("Error");
+            saveResult.Failure.Description.Should().Be("There was an error when processing the request");
         }
     }
 
