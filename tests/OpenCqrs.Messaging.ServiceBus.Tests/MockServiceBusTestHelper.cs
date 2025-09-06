@@ -7,22 +7,22 @@ using OpenCqrs.Messaging.ServiceBus.Tests.Models;
 
 namespace OpenCqrs.Messaging.ServiceBus.Tests;
 
-public class MockServiceBusTestHelper
+public static class MockServiceBusTestHelper
 {
-    public ServiceBusClient MockServiceBusClient { get; }
+    public static ServiceBusClient MockServiceBusClient { get; }
 
-    private readonly ConcurrentDictionary<string, ServiceBusSender> _mockQueueSenders = new();
-    private readonly ConcurrentDictionary<string, ServiceBusSender> _mockTopicSenders = new();
-    private readonly ConcurrentBag<SentMessage> _sentMessages = new();
-    private readonly ConcurrentDictionary<string, Exception> _sendFailures = new();
+    private static readonly ConcurrentDictionary<string, ServiceBusSender> MockQueueSenders = new();
+    private static readonly ConcurrentDictionary<string, ServiceBusSender> MockTopicSenders = new();
+    private static readonly ConcurrentBag<SentMessage> SentMessages = [];
+    private static readonly ConcurrentDictionary<string, Exception> SendFailures = new();
 
-    public MockServiceBusTestHelper()
+    static MockServiceBusTestHelper()
     {
         MockServiceBusClient = Substitute.For<ServiceBusClient>();
         SetupDefaultBehavior();
     }
 
-    private void SetupDefaultBehavior()
+    private static void SetupDefaultBehavior()
     {
         MockServiceBusClient.CreateSender(Arg.Any<string>())
             .Returns(call =>
@@ -30,28 +30,28 @@ public class MockServiceBusTestHelper
                 var entityName = call.Arg<string>();
                 var sender = CreateMockSender(entityName);
 
-                _mockQueueSenders.TryAdd(entityName, sender);
-                _mockTopicSenders.TryAdd(entityName, sender);
+                MockQueueSenders.TryAdd(entityName, sender);
+                MockTopicSenders.TryAdd(entityName, sender);
 
                 return sender;
             });
     }
 
-    private ServiceBusSender CreateMockSender(string entityName)
+    private static ServiceBusSender CreateMockSender(string entityName)
     {
         var sender = Substitute.For<ServiceBusSender>();
 
         sender.SendMessageAsync(Arg.Any<ServiceBusMessage>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                if (_sendFailures.TryGetValue(entityName, out var exception))
+                if (SendFailures.TryGetValue(entityName, out var exception))
                 {
                     throw exception;
                 }
 
                 var message = call.Arg<ServiceBusMessage>();
 
-                _sentMessages.Add(new SentMessage
+                SentMessages.Add(new SentMessage
                 {
                     EntityName = entityName,
                     ServiceBusMessage = message,
@@ -70,7 +70,7 @@ public class MockServiceBusTestHelper
         sender.SendMessagesAsync(Arg.Any<IEnumerable<ServiceBusMessage>>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                if (_sendFailures.TryGetValue(entityName, out var exception))
+                if (SendFailures.TryGetValue(entityName, out var exception))
                 {
                     throw exception;
                 }
@@ -79,7 +79,7 @@ public class MockServiceBusTestHelper
 
                 foreach (var message in messages)
                 {
-                    _sentMessages.Add(new SentMessage
+                    SentMessages.Add(new SentMessage
                     {
                         EntityName = entityName,
                         ServiceBusMessage = message,
@@ -125,43 +125,43 @@ public class MockServiceBusTestHelper
         }
     }
 
-    public void SetupSendFailure(string entityName, string errorMessage = "Mock service bus error")
+    public static void SetupSendFailure(string entityName, string errorMessage = "Mock service bus error")
     {
         var exception = new ServiceBusException(errorMessage, ServiceBusFailureReason.ServiceTimeout);
-        _sendFailures[entityName] = exception;
+        SendFailures[entityName] = exception;
     }
 
-    public void SetupCreateSenderFailure(string entityName, string errorMessage = "Mock create sender error")
+    public static void SetupCreateSenderFailure(string entityName, string errorMessage = "Mock create sender error")
     {
         MockServiceBusClient.CreateSender(entityName)
             .Throws(new ServiceBusException(errorMessage, ServiceBusFailureReason.GeneralError));
     }
 
-    public void ClearSendFailure(string entityName)
+    public static void ClearSendFailure(string entityName)
     {
-        _sendFailures.TryRemove(entityName, out _);
+        SendFailures.TryRemove(entityName, out _);
     }
 
-    public void ClearAllSendFailures()
+    public static void ClearAllSendFailures()
     {
-        _sendFailures.Clear();
+        SendFailures.Clear();
     }
 
-    public IReadOnlyList<SentMessage> GetSentMessages()
+    public static IReadOnlyList<SentMessage> GetSentMessages()
     {
-        return _sentMessages.ToList().AsReadOnly();
+        return SentMessages.ToList().AsReadOnly();
     }
 
-    public IEnumerable<SentMessage> GetSentMessagesForEntity(string entityName)
+    public static IEnumerable<SentMessage> GetSentMessagesForEntity(string entityName)
     {
-        return _sentMessages.Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase)).ToList();
+        return SentMessages.Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
-    public IEnumerable<T> GetSentMessages<T>() where T : class
+    public static IEnumerable<T> GetSentMessages<T>() where T : class
     {
         var targetTypeName = typeof(T).FullName;
 
-        return _sentMessages
+        return SentMessages
             .Where(m => m.ContentType == "application/json")
             .Where(m => m.OriginalMessageType == targetTypeName)
             .Select(m =>
@@ -180,11 +180,11 @@ public class MockServiceBusTestHelper
             .ToList();
     }
 
-    public IEnumerable<T> GetSentMessagesForEntity<T>(string entityName) where T : class
+    public static IEnumerable<T> GetSentMessagesForEntity<T>(string entityName) where T : class
     {
         var targetTypeName = typeof(T).FullName;
 
-        return _sentMessages
+        return SentMessages
             .Where(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase))
             .Where(m => m.ContentType == "application/json")
             .Where(m => m.OriginalMessageType == targetTypeName)
@@ -204,22 +204,22 @@ public class MockServiceBusTestHelper
             .ToList();
     }
 
-    public void ClearSentMessages()
+    public static void ClearSentMessages()
     {
-        while (!_sentMessages.IsEmpty)
+        while (!SentMessages.IsEmpty)
         {
-            _sentMessages.TryTake(out _);
+            SentMessages.TryTake(out _);
         }
     }
 
-    public int GetMessageCountForEntity(string entityName)
+    public static int GetMessageCountForEntity(string entityName)
     {
-        return _sentMessages.Count(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase));
+        return SentMessages.Count(m => string.Equals(m.EntityName, entityName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public int TotalSentMessageCount => _sentMessages.Count;
+    public static int TotalSentMessageCount => SentMessages.Count;
 
-    public void VerifyMessageSent(string entityName, int expectedCount = 1)
+    public static void VerifyMessageSent(string entityName, int expectedCount = 1)
     {
         var actualCount = GetMessageCountForEntity(entityName);
         if (actualCount != expectedCount)
@@ -228,15 +228,15 @@ public class MockServiceBusTestHelper
         }
     }
 
-    public void VerifySendMessageAsyncCalled(string entityName, int expectedTimes = 1)
+    public static void VerifySendMessageAsyncCalled(string entityName, int expectedTimes = 1)
     {
-        if (!_mockQueueSenders.ContainsKey(entityName) && !_mockTopicSenders.ContainsKey(entityName))
+        if (!MockQueueSenders.ContainsKey(entityName) && !MockTopicSenders.ContainsKey(entityName))
         {
             throw new InvalidOperationException($"No sender was created for entity '{entityName}'");
         }
     }
 
-    public void VerifyCreateSenderCalled(string entityName, int expectedTimes = 1)
+    public static void VerifyCreateSenderCalled(string entityName, int expectedTimes = 1)
     {
         MockServiceBusClient.Received(expectedTimes).CreateSender(entityName);
     }

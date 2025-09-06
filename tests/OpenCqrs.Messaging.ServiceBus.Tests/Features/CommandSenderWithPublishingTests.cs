@@ -1,0 +1,33 @@
+using FluentAssertions;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models;
+using OpenCqrs.Messaging.ServiceBus.Tests.Models.Commands;
+using Xunit;
+
+namespace OpenCqrs.Messaging.ServiceBus.Tests.Features;
+
+public class CommandSenderWithPublishingTests : TestBase
+{
+    [Fact]
+    public async Task Given_When_Then()
+    {
+        var result = await Dispatcher.SendAndPublish(new DoSomething(Id: Guid.NewGuid(), Name: "Test message data"));
+
+        result.Should().NotBeNull();
+        result.CommandResult.IsSuccess.Should().BeTrue();
+
+        var sentMessages = MockServiceBusTestHelper.GetSentMessages();
+        sentMessages.Should().HaveCount(1);
+
+        var sentMessage = sentMessages[0];
+        sentMessage.EntityName.Should().Be("test-queue");
+        sentMessage.ContentType.Should().Be("application/json");
+        sentMessage.MessageId.Should().NotBeNullOrEmpty();
+
+        var deserializedMessages = MockServiceBusTestHelper.GetSentMessages<TestQueueMessage>().ToArray();
+        deserializedMessages.Should().HaveCount(1);
+
+        var deserializedMessage = deserializedMessages.First();
+        deserializedMessage.QueueName.Should().Be("test-queue");
+        deserializedMessage.TestData.Should().Be("Test message data");
+    }
+}
