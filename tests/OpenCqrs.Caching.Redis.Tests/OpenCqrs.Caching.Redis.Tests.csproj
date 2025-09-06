@@ -15,10 +15,10 @@
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.8" />
     </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\OpenCqrs.Caching.MemoryCache\OpenCqrs.Caching.MemoryCache.csproj" />
-        <ProjectReference Include="..\..\src\OpenCqrs\OpenCqrs.csproj" />
-    </ItemGroup>
     
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\OpenCqrs.Caching.Redis\OpenCqrs.Caching.Redis.csproj" />
+      <ProjectReference Include="..\..\src\OpenCqrs\OpenCqrs.csproj" />
+    </ItemGroup>
+
 </Project>
