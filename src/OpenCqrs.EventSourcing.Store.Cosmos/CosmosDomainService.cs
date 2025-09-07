@@ -103,16 +103,19 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            if (batchResponse.IsSuccessStatusCode)
-            {
-                return aggregate;
-            }
-
-            return batchResponse.ProcessErrorAndGetFailure("Create Aggregate");
+            batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
+            return batchResponse.IsSuccessStatusCode
+                ? aggregate
+                : new Failure
+                (
+                    Title: "Error",
+                    Description: "There was an error when processing the request"
+                );
         }
         catch (Exception ex)
         {
-            return ex.ProcessErrorAndGetFailure("Get Aggregate");
+            ex.AddException(streamId, operationDescription: "Get Aggregate");
+            return ErrorHandling.DefaultFailure;
         }
     }
 
@@ -242,7 +245,8 @@ public class CosmosDomainService : IDomainService
         }
         catch (Exception ex)
         {
-            return ex.ProcessErrorAndGetFailure("Get Latest Event Sequence");
+            ex.AddException(streamId, operationDescription: "Get Latest Event Sequence");
+            return ErrorHandling.DefaultFailure;
         }
     }
 
@@ -261,7 +265,8 @@ public class CosmosDomainService : IDomainService
         var latestEventSequence = latestEventSequenceResult.Value;
         if (latestEventSequence != expectedEventSequence)
         {
-            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence, _timeProvider.GetUtcNow());
+            DiagnosticsExtensions.AddActivityEvent(streamId, expectedEventSequence, latestEventSequence);
+            return ErrorHandling.DefaultFailure;
         }
 
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
@@ -329,11 +334,19 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ProcessErrorAndGetFailure("Save Aggregate");
+            batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
+            return batchResponse.IsSuccessStatusCode
+                ? Result.Ok()
+                : new Failure
+                (
+                    Title: "Error",
+                    Description: "There was an error when processing the request"
+                );
         }
         catch (Exception ex)
         {
-            return ex.ProcessErrorAndGetFailure("Save Aggregate");
+            ex.AddException(streamId, operationDescription: "Save Aggregate");
+            return ErrorHandling.DefaultFailure;
         }
     }
 
@@ -352,7 +365,8 @@ public class CosmosDomainService : IDomainService
         var latestEventSequence = latestEventSequenceResult.Value;
         if (latestEventSequence != expectedEventSequence)
         {
-            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence, _timeProvider.GetUtcNow());
+            DiagnosticsExtensions.AddActivityEvent(streamId, expectedEventSequence, latestEventSequence);
+            return ErrorHandling.DefaultFailure;
         }
 
         var timeStamp = _timeProvider.GetUtcNow();
@@ -361,21 +375,30 @@ public class CosmosDomainService : IDomainService
         try
         {
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
-
+            var eventDocuments = new List<EventDocument>();
             foreach (var @event in domainEvents)
             {
                 var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
                 eventDocument.CreatedDate = timeStamp;
                 eventDocument.CreatedBy = currentUserNameIdentifier;
+                eventDocuments.Add(eventDocument);
                 batch.CreateItem(eventDocument);
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            return batchResponse.IsSuccessStatusCode ? Result.Ok() : batchResponse.ProcessErrorAndGetFailure("Save Domain Events");
+            batchResponse.AddActivityEvent(streamId, eventDocuments);
+            return batchResponse.IsSuccessStatusCode
+                ? Result.Ok()
+                : new Failure
+                (
+                    Title: "Error",
+                    Description: "There was an error when processing the request"
+                );
         }
         catch (Exception ex)
         {
-            return ex.ProcessErrorAndGetFailure("Save Domain Events");
+            ex.AddException(streamId, operationDescription: "Save Domain Events");
+            return ErrorHandling.DefaultFailure;
         }
     }
 
