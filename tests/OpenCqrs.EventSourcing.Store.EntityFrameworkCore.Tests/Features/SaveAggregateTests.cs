@@ -65,11 +65,13 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
+            aggregateEntity.Id.Should().Be($"{aggregateId.Id}:1");
             aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(1);
             aggregateEntity.LatestEventSequence.Should().Be(1);
 
             eventEntity.Should().NotBeNull();
+            eventEntity.Id.Should().Be($"{streamId.Id}:1");
             eventEntity.EventType.Should().Be("TestAggregateCreated:1");
             eventEntity.Sequence.Should().Be(1);
         }

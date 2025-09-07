@@ -105,7 +105,7 @@ public class CosmosDomainService : IDomainService
             {
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToStoreId()}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToStoreId()}|{eventDocument.Id}",
                     StreamId = streamId.Id,
                     AggregateId = aggregateId.ToStoreId(),
                     EventId = eventDocument.Id,
@@ -375,7 +375,7 @@ public class CosmosDomainService : IDomainService
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToStoreId()}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToStoreId()}|{eventDocument.Id}",
                     StreamId = streamId.Id,
                     AggregateId = aggregateId.ToStoreId(),
                     EventId = eventDocument.Id,

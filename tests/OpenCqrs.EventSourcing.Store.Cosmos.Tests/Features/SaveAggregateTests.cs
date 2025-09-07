@@ -59,11 +59,13 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.Id.Should().Be($"{aggregateId.Id}:1");
             aggregateDocument.Value.AggregateType.Should().Be("TestAggregate1:1");
             aggregateDocument.Value.Version.Should().Be(1);
             aggregateDocument.Value.LatestEventSequence.Should().Be(1);
 
             eventDocuments.Value.Should().NotBeNull();
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
         }
@@ -96,8 +98,10 @@ public class SaveAggregateTests : TestBase
             aggregateDocument.Value.LatestEventSequence.Should().Be(2);
 
             eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].Id.Should().Be($"{streamId.Id}:2");
             eventDocuments.Value[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventDocuments.Value[1].Sequence.Should().Be(2);
         }
@@ -126,8 +130,10 @@ public class SaveAggregateTests : TestBase
             aggregateDocument.Value.LatestEventSequence.Should().Be(2);
 
             eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].Id.Should().Be($"{streamId.Id}:2");
             eventDocuments.Value[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventDocuments.Value[1].Sequence.Should().Be(2);
         }
