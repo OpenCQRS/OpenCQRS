@@ -21,25 +21,25 @@ public static class AggregateExtensions
     /// <param name="newLatestEventSequence">The latest event sequence number for the aggregate.</param>
     /// <returns>An <see cref="AggregateDocument"/> containing the serialized aggregate data and metadata.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence)
+    public static AggregateDocument ToAggregateDocument<TAggregate>(this IAggregate aggregate, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int newLatestEventSequence) where TAggregate : IAggregate
     {
-        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateTypeAttribute == null)
+        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version);
+        aggregate.AggregateId = aggregateId.ToStoreId();
         aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateDocument
         {
-            Id = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
+            Id = aggregateId.ToStoreId(),
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
-            AggregateType = TypeBindings.GetTypeBindingKey(aggregateTypeAttribute.Name, aggregateTypeAttribute.Version),
+            AggregateType = TypeBindings.GetTypeBindingKey(aggregateType.Name, aggregateType.Version),
             Data = JsonConvert.SerializeObject(aggregate)
         };
     }

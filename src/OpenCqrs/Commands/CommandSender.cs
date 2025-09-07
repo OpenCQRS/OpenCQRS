@@ -55,7 +55,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         var handler = serviceProvider.GetService<ICommandHandler<TCommand>>();
         if (handler is null)
         {
-            throw new Exception($"Command handler for {typeof(TCommand).Name} not found.");
+            throw new InvalidOperationException($"Command handler for {typeof(TCommand).Name} not found.");
         }
 
         return await handler.Handle(command, cancellationToken);
@@ -90,7 +90,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         if (handler is null)
         {
-            throw new Exception($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
+            throw new InvalidOperationException($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
@@ -127,7 +127,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         if (handler is null)
         {
-            throw new Exception($"Command handler for {typeof(ICommand<CommandResponse>).Name} not found.");
+            throw new InvalidOperationException($"Command handler for {typeof(ICommand<CommandResponse>).Name} not found.");
         }
 
         var commandResult = await handler.Handle(command, serviceProvider, cancellationToken);
@@ -160,7 +160,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         var notificationsResults = await Task.WhenAll(notificationTasks);
         var messagesResults = await Task.WhenAll(messageTasks);
 
-        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), MessageResults: messagesResults.Select(r => r).ToList());
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
     }
 
     /// <summary>
@@ -204,13 +204,13 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
             if (handler is null)
             {
-                throw new Exception($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
+                throw new InvalidOperationException($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
             }
 
             var commandResult = await handler.Handle(command, commandResults, serviceProvider, cancellationToken);
             commandResults.Add(commandResult);
 
-            if (stopProcessingOnFirstFailure && commandResult.IsNotSuccess)
+            if (commandResult.IsNotSuccess && stopProcessingOnFirstFailure)
             {
                 break;
             }

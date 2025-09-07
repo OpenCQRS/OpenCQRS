@@ -37,10 +37,12 @@ public class SaveAggregateTests : TestBase
 
             var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
             activityEvent.Should().NotBeNull();
-            activityEvent.Value.Tags.First().Key.Should().Be("ExpectedEventSequence");
-            activityEvent.Value.Tags.First().Value.Should().Be(0);
-            activityEvent.Value.Tags.Last().Key.Should().Be("LatestEventSequence");
-            activityEvent.Value.Tags.Last().Value.Should().Be(1);
+            activityEvent.Value.Tags.First().Key.Should().Be("streamId");
+            activityEvent.Value.Tags.First().Value.Should().Be(streamId.Id);
+            activityEvent.Value.Tags.Skip(1).First().Key.Should().Be("expectedEventSequence");
+            activityEvent.Value.Tags.Skip(1).First().Value.Should().Be(0);
+            activityEvent.Value.Tags.Skip(2).First().Key.Should().Be("latestEventSequence");
+            activityEvent.Value.Tags.Skip(2).First().Value.Should().Be(1);
         }
     }
 
@@ -55,7 +57,7 @@ public class SaveAggregateTests : TestBase
         await using var dbContext = Shared.CreateTestDbContext();
 
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
 
         using (new AssertionScope())
@@ -63,11 +65,13 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateEntity.Should().NotBeNull();
+            aggregateEntity.Id.Should().Be($"{aggregateId.Id}:1");
             aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
             aggregateEntity.Version.Should().Be(1);
             aggregateEntity.LatestEventSequence.Should().Be(1);
 
             eventEntity.Should().NotBeNull();
+            eventEntity.Id.Should().Be($"{streamId.Id}:1");
             eventEntity.EventType.Should().Be("TestAggregateCreated:1");
             eventEntity.Sequence.Should().Be(1);
         }
@@ -88,7 +92,7 @@ public class SaveAggregateTests : TestBase
         aggregate.Update("Updated Name", "Updated Description");
 
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
         var eventEntities = await dbContext.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
 
         using (new AssertionScope())
@@ -119,7 +123,7 @@ public class SaveAggregateTests : TestBase
 
         await using var dbContext = Shared.CreateTestDbContext();
         var saveResult = await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
         var eventEntities = await dbContext.Events.AsNoTracking().Where(a => a.StreamId == streamId.Id).ToListAsync();
 
         using (new AssertionScope())
@@ -156,8 +160,8 @@ public class SaveAggregateTests : TestBase
         await dbContext.Save();
 
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
-        var aggregate1Entity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == testAggregate1Key.ToIdWithTypeVersion(1));
-        var aggregate2Entity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == testAggregate2Key.ToIdWithTypeVersion(1));
+        var aggregate1Entity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == testAggregate1Key.ToStoreId());
+        var aggregate2Entity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == testAggregate2Key.ToStoreId());
 
         using (new AssertionScope())
         {
@@ -203,7 +207,7 @@ public class SaveAggregateTests : TestBase
             aggregateResult.Value.Should().NotBeNull();
 
             aggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             aggregateResult.Value.Version.Should().Be(2);
             aggregateResult.Value.LatestEventSequence.Should().Be(6);
 
@@ -228,7 +232,7 @@ public class SaveAggregateTests : TestBase
         var domainService = Shared.CreateDomainService(dbContext);
 
         await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
         var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
 
         using (new AssertionScope())
@@ -271,7 +275,7 @@ public class SaveAggregateTests : TestBase
             aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
             await domainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 1);
 
-            var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+            var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
             var eventEntity = await dbContext.Events.AsNoTracking().FirstOrDefaultAsync(a => a.StreamId == streamId.Id);
 
             using (new AssertionScope())

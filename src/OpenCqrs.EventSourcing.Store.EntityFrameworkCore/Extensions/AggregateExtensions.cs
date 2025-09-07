@@ -117,21 +117,21 @@ public static class AggregateExtensions
     /// // - LatestEventSequence: 0
     /// </code>
     /// </example>
-    public static AggregateEntity ToAggregateEntity(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence)
+    public static AggregateEntity ToAggregateEntity<TAggregate>(this IAggregate aggregate, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int newLatestEventSequence) where TAggregate : IAggregate
     {
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+        aggregate.AggregateId = aggregateId.ToStoreId();
         aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateEntity
         {
-            Id = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+            Id = aggregateId.ToStoreId(),
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,

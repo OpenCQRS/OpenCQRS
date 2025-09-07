@@ -27,7 +27,7 @@ public class MessagePublisher(IMessagingProvider messagingProvider) : IMessagePu
     {
         if (message is IQueueMessage && message is ITopicMessage)
         {
-            throw new Exception("The message cannot implement both the IQueueMessage and the ITopicMessage interfaces");
+            throw new InvalidOperationException("The message cannot implement both the IQueueMessage and the ITopicMessage interfaces");
         }
 
         if (message is IQueueMessage queueMessage)

@@ -1,4 +1,6 @@
-﻿namespace OpenCqrs.EventSourcing.Domain;
+﻿using System.Reflection;
+
+namespace OpenCqrs.EventSourcing.Domain;
 
 /// <summary>
 /// Defines a contract for aggregate identifiers in the event sourcing domain model.
@@ -42,11 +44,11 @@
 /// // Usage in aggregates
 /// public class Order : Aggregate
 /// {
-///     public OrderId Id { get; private set; }
+///     public string Id { get; private set; }
 ///     
 ///     public Order(OrderId id, CustomerId customerId)
 ///     {
-///         Id = id;
+///         Id = id.Id;
 ///         // Apply domain events...
 ///     }
 /// }
@@ -108,14 +110,13 @@ public interface IAggregateId<TAggregate> : IAggregateId where TAggregate : IAgg
 /// Provides extension methods for <see cref="IAggregateId"/> to support advanced aggregate identification scenarios
 /// including versioning and type-aware operations.
 /// </summary>
-public static class AggregateIdExtensions
+public static class IAggregateIdExtensions
 {
     /// <summary>
     /// Combines the aggregate ID with an aggregate type version to create a versioned identifier.
     /// This is useful for scenarios where different versions of the same aggregate type need distinct identification.
     /// </summary>
     /// <param name="aggregateId">The base aggregate identifier.</param>
-    /// <param name="aggregateTypeVersion">The version number of the aggregate type.</param>
     /// <returns>
     /// A string that combines the aggregate ID with the type version in the format "id:version".
     /// </returns>
@@ -144,6 +145,14 @@ public static class AggregateIdExtensions
     /// }
     /// </code>
     /// </example>
-    public static string ToIdWithTypeVersion(this IAggregateId aggregateId, byte aggregateTypeVersion) =>
-        $"{aggregateId.Id}:{aggregateTypeVersion}";
+    public static string ToStoreId<TAggregate>(this IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
+    {
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
+        {
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+        }
+        
+        return $"{aggregateId.Id}:{aggregateType.Version}";
+    }
 }

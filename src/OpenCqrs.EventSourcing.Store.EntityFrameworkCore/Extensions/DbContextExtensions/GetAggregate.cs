@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
@@ -171,13 +170,7 @@ public static partial class IDomainDbContextExtensions
     /// </example>
     public static async Task<Result<TAggregate>> GetAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
-        var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToIdWithTypeVersion(aggregateType.Version), cancellationToken);
+        var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
         {
             var currentAggregate = aggregateEntity.ToAggregate<TAggregate>();
@@ -214,13 +207,8 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when getting or creating the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving changes",
-                Description: "There was an error when getting or creating the aggregate"
-            );
+            ex.AddException(streamId, operationDescription: "Get Aggregate");
+            return ErrorHandling.DefaultFailure;
         }
 
         domainDbContext.DetachAggregate(aggregateId, aggregate);

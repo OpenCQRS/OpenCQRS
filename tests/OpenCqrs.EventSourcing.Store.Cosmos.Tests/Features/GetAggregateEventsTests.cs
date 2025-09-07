@@ -43,7 +43,9 @@ public class GetAggregateEventsTests : TestBase
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().NotBeNull();
             result.Value.Count.Should().Be(2);
+            result.Value.First().Id.Should().Be($"{aggregateId.Id}:1|{streamId.Id}:1");
             result.Value.First().AppliedDate.Should().Be(appliedDate1);
+            result.Value.Last().Id.Should().Be($"{aggregateId.Id}:1|{streamId.Id}:6");
             result.Value.Last().AppliedDate.Should().Be(appliedDate2);
         }
     }
@@ -69,6 +71,7 @@ public class GetAggregateEventsTests : TestBase
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().NotBeNull();
             result.Value.Count.Should().Be(1);
+            result.Value.First().Id.Should().Be($"{testAggregate2Key.Id}:1|{streamId.Id}:1");
             result.Value.First().AppliedDate.Should().Be(appliedDate);
         }
     }

@@ -1,5 +1,19 @@
 # Release Notes
 
+## OpenCQRS 7.0.0
+_**Released 07/09/2025**_
+- Upgrade to .NET 9
+- New mediator pattern with commands, queries, and notifications
+- Cosmos DB store provider
+- Entity Framework Core store provider
+- Extensions for db context in the Entity Framework Core store provider
+- Support for IdentityDbContext from ASP.NET Core Identity
+- Command validation
+- Command sequences
+- Automatic publishing of notifications and messages (ServiceBus or RabbitMQ) on the back of a successfully processed command
+- Automatic caching of query results (MemoryCache or RedisCache)
+- More flexible and extensible architecture
+
 ## OpenCQRS 7.0.0-rc.1
 _**Released 06/09/2025**_
 - Memory Caching Provider

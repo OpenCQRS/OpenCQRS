@@ -5,6 +5,9 @@ using OpenCqrs.Messaging.RabbitMq.Configuration;
 
 namespace OpenCqrs.Messaging.RabbitMq.Extensions;
 
+/// <summary>
+/// Provides extension methods for configuring RabbitMQ messaging services in the dependency injection container.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>

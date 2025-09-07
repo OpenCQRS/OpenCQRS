@@ -302,14 +302,8 @@ public static partial class IDomainDbContextExtensions
     /// </example>
     public static async Task<Result<List<AggregateEventEntity>>> GetAggregateEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
         var aggregateEventEntities = await domainDbContext.AggregateEvents.Include(entity => entity.Event).AsNoTracking()
-            .Where(entity => entity.AggregateId == aggregateId.ToIdWithTypeVersion(aggregateType.Version))
+            .Where(entity => entity.AggregateId == aggregateId.ToStoreId())
             .ToListAsync(cancellationToken);
 
         return aggregateEventEntities.ToList();

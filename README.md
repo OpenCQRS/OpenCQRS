@@ -25,10 +25,10 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Packages
 
-| Package                                                                                                                                               | RC 1                                                                                                                                                            |
+| Package                                                                                                                                               | Latest Stable                                                                                                                                                   |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [OpenCqrs](https://www.nuget.org/packages/OpenCqrs)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs)                                                  |
-| [OpenCqrs.Caching.Memory](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                              |
+| [OpenCqrs.Caching.Memory](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                                                                     | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Memory)                                   |
 | [OpenCqrs.Caching.Redis](https://www.nuget.org/packages/OpenCqrs.Caching.Redis)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Caching.Redis)                                    |
 | [OpenCqrs.EventSourcing](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing)                                    |
 | [OpenCqrs.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-7.0.0-blue.svg)](https://www.nuget.org/packages/OpenCqrs.EventSourcing.Store.Cosmos)                       |
@@ -201,23 +201,6 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ## Roadmap
 
-### OpenCQRS 7.0.0
-
-- Upgrade to .NET 9
-- New mediator pattern with commands, queries, and notifications
-- Cosmos DB store provider
-- Entity Framework Core store provider
-- Extensions for db context in the Entity Framework Core store provider
-- Support for IdentityDbContext from ASP.NET Core Identity
-- Command validation
-- Command sequences
-- Automatic publishing of notifications and messages (ServiceBus or RabbitMQ) on the back of a successfully processed command
-- Automatic caching of query results with Memory or Redis caching providers
-- More flexible and extensible architecture
-- Better performance
-- Better test coverage
-- More documentation and examples
-
 ### OpenCQRS 7.1.0
 
 - Storing commands
@@ -237,8 +220,8 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 - [Configuration](docs/Configuration.md)
 - [Basics](docs/Basics.md)
   - [Commands](docs/Commands.md)
-  - [Events](docs/Events.md)
   - [Queries](docs/Queries.md)
+  - [Notifications](docs/Notifications.md)
 - [Event Sourcing](docs/Event-Sourcing.md)
   - [Domain](docs/Domain.md)
   - [Domain Service](docs/Domain-Service.md)

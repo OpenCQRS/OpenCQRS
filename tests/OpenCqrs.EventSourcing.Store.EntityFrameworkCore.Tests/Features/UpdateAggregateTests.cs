@@ -29,7 +29,7 @@ public class UpdateAggregateTests : TestBase
             updatedAggregateResult.Value.Should().NotBeNull();
 
             updatedAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             updatedAggregateResult.Value.Version.Should().Be(2);
 
             updatedAggregateResult.Value.Id.Should().Be(id);

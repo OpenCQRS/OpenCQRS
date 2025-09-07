@@ -7,12 +7,19 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests;
 
 public abstract class TestBase : IDisposable
 {
-    protected readonly IDomainService DomainService;
+    protected IDomainService DomainService = null!;
 
-    private readonly ActivitySource _activitySource;
-    private readonly ActivityListener _activityListener;
+    private ActivitySource _activitySource = null!;
+    private ActivityListener _activityListener = null!;
 
     protected TestBase()
+    {
+        SetupTypeBindings();
+        SetupDomainService();
+        SetupActivity();
+    }
+
+    private static void SetupTypeBindings()
     {
         TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
         {
@@ -26,10 +33,16 @@ public abstract class TestBase : IDisposable
             {"TestAggregate1:1", typeof(TestAggregate1)},
             {"TestAggregate2:1", typeof(TestAggregate2)}
         };
+    }
 
+    private void SetupDomainService()
+    {
         var dbContext = Shared.CreateTestDbContext();
         DomainService = new EntityFrameworkCoreDomainService(dbContext);
+    }
 
+    private void SetupActivity()
+    {
         _activitySource = new ActivitySource("TestSource");
 
         _activityListener = new ActivityListener();

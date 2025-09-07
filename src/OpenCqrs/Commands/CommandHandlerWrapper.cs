@@ -10,7 +10,7 @@ internal class CommandHandlerWrapper<TCommand, TResponse> : CommandHandlerWrappe
         var handler = GetHandler<ICommandHandler<TCommand, TResponse>>(serviceProvider);
         if (handler == null)
         {
-            throw new Exception($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
+            throw new InvalidOperationException($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
         return await handler.Handle((TCommand)command, cancellationToken);

@@ -33,10 +33,12 @@ public class SaveAggregateTests : TestBase
 
             var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
             activityEvent.Should().NotBeNull();
-            activityEvent.Value.Tags.First().Key.Should().Be("ExpectedEventSequence");
-            activityEvent.Value.Tags.First().Value.Should().Be(0);
-            activityEvent.Value.Tags.Last().Key.Should().Be("LatestEventSequence");
-            activityEvent.Value.Tags.Last().Value.Should().Be(1);
+            activityEvent.Value.Tags.First().Key.Should().Be("streamId");
+            activityEvent.Value.Tags.First().Value.Should().Be(streamId.Id);
+            activityEvent.Value.Tags.Skip(1).First().Key.Should().Be("expectedEventSequence");
+            activityEvent.Value.Tags.Skip(1).First().Value.Should().Be(0);
+            activityEvent.Value.Tags.Skip(2).First().Key.Should().Be("latestEventSequence");
+            activityEvent.Value.Tags.Skip(2).First().Value.Should().Be(1);
         }
     }
 
@@ -57,11 +59,13 @@ public class SaveAggregateTests : TestBase
             saveResult.IsSuccess.Should().BeTrue();
 
             aggregateDocument.Value.Should().NotBeNull();
+            aggregateDocument.Value.Id.Should().Be($"{aggregateId.Id}:1");
             aggregateDocument.Value.AggregateType.Should().Be("TestAggregate1:1");
             aggregateDocument.Value.Version.Should().Be(1);
             aggregateDocument.Value.LatestEventSequence.Should().Be(1);
 
             eventDocuments.Value.Should().NotBeNull();
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
         }
@@ -94,8 +98,10 @@ public class SaveAggregateTests : TestBase
             aggregateDocument.Value.LatestEventSequence.Should().Be(2);
 
             eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].Id.Should().Be($"{streamId.Id}:2");
             eventDocuments.Value[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventDocuments.Value[1].Sequence.Should().Be(2);
         }
@@ -124,8 +130,10 @@ public class SaveAggregateTests : TestBase
             aggregateDocument.Value.LatestEventSequence.Should().Be(2);
 
             eventDocuments.Value!.Count.Should().Be(2);
+            eventDocuments.Value[0].Id.Should().Be($"{streamId.Id}:1");
             eventDocuments.Value[0].EventType.Should().Be("TestAggregateCreated:1");
             eventDocuments.Value[0].Sequence.Should().Be(1);
+            eventDocuments.Value[1].Id.Should().Be($"{streamId.Id}:2");
             eventDocuments.Value[1].EventType.Should().Be("TestAggregateUpdated:1");
             eventDocuments.Value[1].Sequence.Should().Be(2);
         }
@@ -163,7 +171,7 @@ public class SaveAggregateTests : TestBase
             aggregateResult.Value.Should().NotBeNull();
 
             aggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             aggregateResult.Value.Version.Should().Be(2);
             aggregateResult.Value.LatestEventSequence.Should().Be(6);
 
