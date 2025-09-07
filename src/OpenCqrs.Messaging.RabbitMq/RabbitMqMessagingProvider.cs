@@ -9,6 +9,9 @@ using RabbitMQ.Client;
 
 namespace OpenCqrs.Messaging.RabbitMq;
 
+/// <summary>
+/// Provides messaging functionality using RabbitMQ for sending queue and topic messages.
+/// </summary>
 public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, IDisposable
 {
     private readonly RabbitMqOptions _options;
@@ -17,6 +20,10 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
     private readonly ConcurrentDictionary<string, IModel> _exchangeChannels = new();
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RabbitMqMessagingProvider"/> class.
+    /// </summary>
+    /// <param name="options">The RabbitMQ options.</param>
     public RabbitMqMessagingProvider(IOptions<RabbitMqOptions> options)
     {
         _options = options.Value;
@@ -28,6 +35,11 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RabbitMqMessagingProvider"/> class with a custom connection.
+    /// </summary>
+    /// <param name="options">The RabbitMQ options.</param>
+    /// <param name="connection">The RabbitMQ connection.</param>
     public RabbitMqMessagingProvider(IOptions<RabbitMqOptions> options, IConnection connection)
     {
         _options = options.Value;
@@ -39,6 +51,13 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
         }
     }
 
+    /// <summary>
+    /// Sends a message to the specified queue.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of the message, which must implement IQueueMessage.</typeparam>
+    /// <param name="message">The message to send.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task representing the result of the send operation.</returns>
     public Task<Result> SendQueueMessage<TMessage>(TMessage message, CancellationToken cancellationToken = default) where TMessage : IQueueMessage
     {
         try
@@ -106,6 +125,13 @@ public class RabbitMqMessagingProvider : IMessagingProvider, IAsyncDisposable, I
         }
     }
 
+    /// <summary>
+    /// Sends a message to the specified topic.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of the message, which must implement ITopicMessage.</typeparam>
+    /// <param name="message">The message to send.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task representing the result of the send operation.</returns>
     public Task<Result> SendTopicMessage<TMessage>(TMessage message, CancellationToken cancellationToken = default) where TMessage : ITopicMessage
     {
         try
