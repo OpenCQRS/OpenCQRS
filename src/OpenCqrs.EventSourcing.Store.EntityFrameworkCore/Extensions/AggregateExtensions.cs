@@ -122,7 +122,7 @@ public static class AggregateExtensions
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;

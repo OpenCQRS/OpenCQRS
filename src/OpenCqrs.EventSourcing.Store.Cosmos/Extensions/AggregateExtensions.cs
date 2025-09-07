@@ -23,23 +23,23 @@ public static class AggregateExtensions
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public static AggregateDocument ToAggregateDocument(this IAggregate aggregate, IStreamId streamId, IAggregateId aggregateId, int newLatestEventSequence)
     {
-        var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateTypeAttribute == null)
+        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version);
+        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
         aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateDocument
         {
-            Id = aggregateId.ToIdWithTypeVersion(aggregateTypeAttribute.Version),
+            Id = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
             StreamId = streamId.Id,
             Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
-            AggregateType = TypeBindings.GetTypeBindingKey(aggregateTypeAttribute.Name, aggregateTypeAttribute.Version),
+            AggregateType = TypeBindings.GetTypeBindingKey(aggregateType.Name, aggregateType.Version),
             Data = JsonConvert.SerializeObject(aggregate)
         };
     }

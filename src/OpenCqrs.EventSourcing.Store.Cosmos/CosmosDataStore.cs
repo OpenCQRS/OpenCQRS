@@ -50,7 +50,7 @@ public class CosmosDataStore : ICosmosDataStore
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)
         {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
 
         var aggregateDocumentId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
@@ -85,7 +85,7 @@ public class CosmosDataStore : ICosmosDataStore
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)
         {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
 
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
@@ -349,7 +349,7 @@ public class CosmosDataStore : ICosmosDataStore
         var aggregateTypeAttribute = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateTypeAttribute == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         var currentAggregateVersion = aggregate.Version;

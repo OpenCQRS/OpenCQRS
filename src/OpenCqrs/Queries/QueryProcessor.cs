@@ -41,7 +41,7 @@ public class QueryProcessor(IServiceProvider serviceProvider, ICachingService ca
 
         if (string.IsNullOrEmpty(cacheableQuery.CacheKey))
         {
-            throw new Exception("No Cache Key was provided");
+            throw new InvalidOperationException("No Cache Key was provided");
         }
 
         var result = await cachingService.GetOrSet(

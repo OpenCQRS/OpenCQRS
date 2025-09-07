@@ -12,7 +12,7 @@ internal class CommandValidatorWrapper<TCommand, TResponse> : CommandValidatorWr
         var validator = GetValidator<IValidator<TCommand>>(serviceProvider);
         if (validator == null)
         {
-            throw new Exception("Command validator not found.");
+            throw new InvalidOperationException("Command validator not found.");
         }
 
         return await validator.ValidateAsync((TCommand)command, cancellationToken);

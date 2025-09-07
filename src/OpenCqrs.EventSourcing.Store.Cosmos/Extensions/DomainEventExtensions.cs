@@ -25,7 +25,7 @@ public static class DomainEventExtensions
         var domainEventType = domainEvent.GetType().GetCustomAttribute<DomainEventType>();
         if (domainEventType == null)
         {
-            throw new Exception($"Domain event {domainEvent.GetType().Name} does not have a DomainEventType attribute.");
+            throw new InvalidOperationException($"Domain event {domainEvent.GetType().Name} does not have a DomainEventType attribute.");
         }
 
         return new EventDocument

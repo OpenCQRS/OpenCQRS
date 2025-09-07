@@ -10,7 +10,7 @@ internal class CommandSequenceHandlerWrapper<TCommand, TResponse> : CommandSeque
         var handler = GetHandler<ICommandSequenceHandler<TCommand, TResponse>>(serviceProvider);
         if (handler == null)
         {
-            throw new Exception($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
+            throw new InvalidOperationException($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
         return await handler.Handle((TCommand)command, previousResults, cancellationToken);

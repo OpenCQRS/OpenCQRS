@@ -42,11 +42,11 @@
 /// // Usage in aggregates
 /// public class Order : Aggregate
 /// {
-///     public OrderId Id { get; private set; }
+///     public string Id { get; private set; }
 ///     
 ///     public Order(OrderId id, CustomerId customerId)
 ///     {
-///         Id = id;
+///         Id = id.Id;
 ///         // Apply domain events...
 ///     }
 /// }

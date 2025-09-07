@@ -33,7 +33,7 @@ public class FluentValidationProvider(IServiceProvider serviceProvider) : IValid
         var validator = serviceProvider.GetService<IValidator<TCommand>>();
         if (validator is null)
         {
-            throw new Exception($"Validator for {typeof(TCommand).Name} not found.");
+            throw new InvalidOperationException($"Validator for {typeof(TCommand).Name} not found.");
         }
 
         var validationResult = await validator.ValidateAsync(command, cancellationToken);
@@ -61,7 +61,7 @@ public class FluentValidationProvider(IServiceProvider serviceProvider) : IValid
 
         if (validator is null)
         {
-            throw new Exception($"Validator for {typeof(ICommand<TResponse>).Name} not found.");
+            throw new InvalidOperationException($"Validator for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
         var validationResult = await validator.Validate(command, serviceProvider, cancellationToken);

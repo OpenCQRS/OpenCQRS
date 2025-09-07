@@ -52,7 +52,7 @@ public class CosmosDomainService : IDomainService
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
@@ -173,7 +173,7 @@ public class CosmosDomainService : IDomainService
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)
         {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
 
         var aggregate = new TAggregate();
@@ -267,7 +267,7 @@ public class CosmosDomainService : IDomainService
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new Exception($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
         var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
@@ -384,7 +384,7 @@ public class CosmosDomainService : IDomainService
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType is null)
         {
-            throw new Exception($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
 
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
