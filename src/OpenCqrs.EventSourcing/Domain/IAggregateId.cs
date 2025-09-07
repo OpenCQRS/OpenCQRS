@@ -108,7 +108,7 @@ public interface IAggregateId<TAggregate> : IAggregateId where TAggregate : IAgg
 /// Provides extension methods for <see cref="IAggregateId"/> to support advanced aggregate identification scenarios
 /// including versioning and type-aware operations.
 /// </summary>
-public static class AggregateIdExtensions
+public static class IAggregateIdExtensions
 {
     /// <summary>
     /// Combines the aggregate ID with an aggregate type version to create a versioned identifier.
