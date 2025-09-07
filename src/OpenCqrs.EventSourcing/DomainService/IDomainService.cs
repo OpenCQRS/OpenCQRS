@@ -8,7 +8,7 @@ public partial interface IDomainService : IDisposable
     // TODO: GetDomainEventsBetweenDates (Issue #124)
     // TODO: GetInMemoryAggregateUpToSequence (Issue #124)
     // TODO: GetInMemoryAggregateUpToDate (Issue #124)
-    
+
     // TODO: GetDomainEvents as stream (Issue #122)
     // TODO: GetDomainEventsUpToSequence as stream (Issue #122)
     // TODO: GetDomainEventsFromSequence as stream (Issue #122)

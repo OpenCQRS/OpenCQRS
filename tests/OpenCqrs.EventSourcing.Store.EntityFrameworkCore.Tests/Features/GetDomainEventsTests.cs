@@ -60,4 +60,22 @@ public class GetDomainEventsTests : TestBase
 
         domainEvents.Count.Should().Be(2);
     }
+
+    [Fact]
+    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificSequencesAreRequested_ThenOnlyDomainEventsBetweenSpecificSequencesAreReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
+        aggregate.Update("Updated Name 1", "Updated Description 1");
+        aggregate.Update("Updated Name 2", "Updated Description 2");
+        aggregate.Update("Updated Name 3", "Updated Description 3");
+        aggregate.Update("Updated Name 4", "Updated Description 4");
+
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var domainEvents = await DomainService.GetDomainEventsBetweenSequences(streamId, fromSequence: 2, toSequence: 4);
+
+        domainEvents.Value!.Count.Should().Be(3);
+    }
 }

@@ -152,7 +152,7 @@ public static class IAggregateIdExtensions
         {
             throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
         }
-        
+
         return $"{aggregateId.Id}:{aggregateType.Version}";
     }
 }

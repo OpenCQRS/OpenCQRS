@@ -14,7 +14,7 @@ public interface ICachingService
     /// <param name="cacheTimeInSeconds">The cache expiration time in seconds. If null, uses default expiration.</param>
     /// <returns>The cached or newly acquired value.</returns>
     Task<T?> GetOrSet<T>(string key, Func<Task<T>> acquire, int? cacheTimeInSeconds = null);
-    
+
     /// <summary>
     /// Removes the cached value for the specified key.
     /// </summary>

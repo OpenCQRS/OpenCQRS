@@ -50,6 +50,9 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds,
         CancellationToken cancellationToken = default);
 
+    Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence,
+        int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Retrieves a list of event documents from the specified sequence in the Cosmos data store.
     /// </summary>
