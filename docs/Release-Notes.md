@@ -1,7 +1,7 @@
 # Release Notes
 
 ## OpenCQRS 7.0.0
-_**Released ??/09/2025**_
+_**Released 07/09/2025**_
 - Upgrade to .NET 9
 - New mediator pattern with commands, queries, and notifications
 - Cosmos DB store provider
