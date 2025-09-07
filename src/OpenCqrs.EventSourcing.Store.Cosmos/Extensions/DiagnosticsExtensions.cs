@@ -5,8 +5,18 @@ using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
 
+/// <summary>
+/// Provides extension methods for adding diagnostic information to activities.
+/// </summary>
 public static class DiagnosticsExtensions
 {
+    /// <summary>
+    /// Adds an activity event for a CosmosDB batch response with aggregate information.
+    /// </summary>
+    /// <param name="batchResponse">The transactional batch response from CosmosDB.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="aggregateType">The aggregate type information.</param>
     public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId aggregateId, AggregateType aggregateType)
     {
         Activity.Current?.AddEvent(new ActivityEvent("CosmosDB Batch Execute", default, new ActivityTagsCollection
@@ -21,6 +31,12 @@ public static class DiagnosticsExtensions
         }));
     }
 
+    /// <summary>
+    /// Adds an activity event for a CosmosDB batch response with event document information.
+    /// </summary>
+    /// <param name="batchResponse">The transactional batch response from CosmosDB.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="eventDocuments">The collection of event documents processed in the batch.</param>
     public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IEnumerable<EventDocument> eventDocuments)
     {
         Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Batch Execute", timestamp: default, new ActivityTagsCollection
@@ -35,6 +51,12 @@ public static class DiagnosticsExtensions
         }));
     }
 
+    /// <summary>
+    /// Adds an activity event for concurrency exceptions with sequence information.
+    /// </summary>
+    /// <param name="streamId">The stream identifier where the concurrency exception occurred.</param>
+    /// <param name="expectedEventSequence">The expected event sequence number.</param>
+    /// <param name="latestEventSequence">The actual latest event sequence number.</param>
     public static void AddActivityEvent(IStreamId streamId, int expectedEventSequence, int latestEventSequence)
     {
         Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency exception", timestamp: default, tags: new ActivityTagsCollection
@@ -45,6 +67,12 @@ public static class DiagnosticsExtensions
         }));
     }
 
+    /// <summary>
+    /// Adds exception information to the current activity with stream and operation context.
+    /// </summary>
+    /// <param name="exception">The exception to add to the activity.</param>
+    /// <param name="streamId">The stream identifier associated with the operation.</param>
+    /// <param name="operationDescription">A description of the operation that caused the exception.</param>
     public static void AddException(this Exception exception, IStreamId streamId, string operationDescription)
     {
         Activity.Current?.AddException(exception, tags: new TagList
