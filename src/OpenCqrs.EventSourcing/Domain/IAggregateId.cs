@@ -1,4 +1,6 @@
-﻿namespace OpenCqrs.EventSourcing.Domain;
+﻿using System.Reflection;
+
+namespace OpenCqrs.EventSourcing.Domain;
 
 /// <summary>
 /// Defines a contract for aggregate identifiers in the event sourcing domain model.
@@ -115,7 +117,6 @@ public static class IAggregateIdExtensions
     /// This is useful for scenarios where different versions of the same aggregate type need distinct identification.
     /// </summary>
     /// <param name="aggregateId">The base aggregate identifier.</param>
-    /// <param name="aggregateTypeVersion">The version number of the aggregate type.</param>
     /// <returns>
     /// A string that combines the aggregate ID with the type version in the format "id:version".
     /// </returns>
@@ -144,6 +145,14 @@ public static class IAggregateIdExtensions
     /// }
     /// </code>
     /// </example>
-    public static string ToIdWithTypeVersion(this IAggregateId aggregateId, byte aggregateTypeVersion) =>
-        $"{aggregateId.Id}:{aggregateTypeVersion}";
+    public static string ToStoreId<TAggregate>(this IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
+    {
+        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
+        if (aggregateType == null)
+        {
+            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
+        }
+        
+        return $"{aggregateId.Id}:{aggregateType.Version}";
+    }
 }

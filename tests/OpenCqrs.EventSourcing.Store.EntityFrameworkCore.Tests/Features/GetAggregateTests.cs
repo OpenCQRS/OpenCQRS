@@ -33,7 +33,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(1);
 
             getAggregateResult.Value.Id.Should().Be(aggregate.Id);
@@ -65,7 +65,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(2);
 
             getAggregateResult.Value.Id.Should().Be(aggregate.Id);
@@ -94,7 +94,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(2);
 
             getAggregateResult.Value.Id.Should().Be(aggregate.Id);
@@ -160,7 +160,7 @@ public class GetAggregateTests : TestBase
         await dbContext.SaveChangesAsync();
 
         await dbContext.GetAggregate(streamId, aggregateId);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
 
         using (new AssertionScope())
         {
@@ -193,7 +193,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(2);
 
             getAggregateResult.Value.Id.Should().Be(id);
@@ -225,7 +225,7 @@ public class GetAggregateTests : TestBase
             updatedAggregateResult.Value.Should().NotBeNull();
 
             updatedAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             updatedAggregateResult.Value.Version.Should().Be(2);
 
             updatedAggregateResult.Value.Id.Should().Be(aggregate.Id);

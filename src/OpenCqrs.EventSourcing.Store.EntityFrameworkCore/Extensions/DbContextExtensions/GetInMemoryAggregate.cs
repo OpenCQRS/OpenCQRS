@@ -211,12 +211,6 @@ public static partial class IDomainDbContextExtensions
     /// </example>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
         var aggregate = new TAggregate();
 
         var eventEntities = upToSequence > 0
@@ -229,7 +223,7 @@ public static partial class IDomainDbContextExtensions
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+        aggregate.AggregateId = aggregateId.ToStoreId();
         aggregate.LatestEventSequence = eventEntities.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
         aggregate.Apply(eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()));
 

@@ -37,7 +37,7 @@ public abstract class IdentityDomainDbContext(
     public DbSet<EventEntity> Events { get; set; } = null!;
     public DbSet<AggregateEventEntity> AggregateEvents { get; set; } = null!;
 
-    public void DetachAggregate<TAggregate>(IAggregateId aggregateId, TAggregate aggregate) where TAggregate : IAggregate
+    public void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregate
     {
         foreach (var entityEntry in ChangeTracker.Entries())
         {
@@ -46,7 +46,7 @@ public abstract class IdentityDomainDbContext(
                 continue;
             }
 
-            if (aggregateEntity.Id == aggregateId.ToIdWithTypeVersion(aggregate.AggregateType().Version))
+            if (aggregateEntity.Id == aggregateId.ToStoreId())
             {
                 entityEntry.State = EntityState.Detached;
             }

@@ -63,7 +63,7 @@ public static partial class IDomainDbContextExtensions
         return eventEntities;
     }
 
-    private static AggregateEntity TrackAggregateEntity(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId aggregateId, IAggregate aggregate, int newLatestEventSequence, bool aggregateIsNew)
+    private static AggregateEntity TrackAggregateEntity<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, IAggregate aggregate, int newLatestEventSequence, bool aggregateIsNew) where TAggregate : IAggregate
     {
         var aggregateEntity = aggregate.ToAggregateEntity(streamId, aggregateId, newLatestEventSequence);
         if (!aggregateIsNew)

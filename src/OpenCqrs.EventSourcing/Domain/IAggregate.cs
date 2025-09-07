@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace OpenCqrs.EventSourcing.Domain;
 
 /// <summary>
@@ -81,46 +79,4 @@ public interface IAggregate
     /// <c>true</c> if the aggregate can handle the specified event type; otherwise, <c>false</c>.
     /// </returns>
     bool IsDomainEventHandled(Type domainEventType);
-}
-
-/// <summary>
-/// Provides extension methods for <see cref="IAggregate"/> to extract type metadata and support
-/// aggregate serialization, versioning, and type binding operations.
-/// </summary>
-public static class IAggregateExtensions
-{
-    /// <summary>
-    /// Extracts the <see cref="AggregateType"/> attribute information from an aggregate instance.
-    /// </summary>
-    /// <param name="aggregate">The aggregate instance to extract type information from.</param>
-    /// <returns>
-    /// The <see cref="AggregateType"/> attribute containing the aggregate's logical name and version.
-    /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the aggregate class does not have an <see cref="AggregateType"/> attribute.
-    /// </exception>
-    public static AggregateType AggregateType(this IAggregate aggregate)
-    {
-        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateType == null)
-        {
-            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have an AggregateType attribute.");
-        }
-        return aggregateType;
-    }
-
-    /// <summary>
-    /// Generates a type binding key for the aggregate that combines the aggregate name and version
-    /// into a format suitable for type resolution and serialization mapping.
-    /// </summary>
-    /// <param name="aggregate">The aggregate instance to generate a binding key for.</param>
-    /// <returns>
-    /// A string that uniquely identifies the aggregate type and version combination,
-    /// suitable for use in type binding registrations and serialization scenarios.
-    /// </returns>
-    public static string GetTypeBindingKey(this IAggregate aggregate)
-    {
-        var aggregateType = aggregate.AggregateType();
-        return TypeBindings.GetTypeBindingKey(aggregateType.Name, aggregateType.Version);
-    }
 }

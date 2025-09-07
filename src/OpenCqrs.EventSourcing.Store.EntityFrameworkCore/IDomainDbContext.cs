@@ -703,5 +703,5 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// </code>
     /// </example>
-    void DetachAggregate<TAggregate>(IAggregateId aggregateId, TAggregate aggregate) where TAggregate : IAggregate;
+    void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregate;
 }

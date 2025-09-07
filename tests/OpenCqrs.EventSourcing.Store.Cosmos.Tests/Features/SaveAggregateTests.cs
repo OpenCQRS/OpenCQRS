@@ -165,7 +165,7 @@ public class SaveAggregateTests : TestBase
             aggregateResult.Value.Should().NotBeNull();
 
             aggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             aggregateResult.Value.Version.Should().Be(2);
             aggregateResult.Value.LatestEventSequence.Should().Be(6);
 

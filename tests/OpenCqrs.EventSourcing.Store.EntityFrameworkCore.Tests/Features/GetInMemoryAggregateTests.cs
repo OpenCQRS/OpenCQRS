@@ -32,7 +32,7 @@ public class GetInMemoryAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(1);
 
             getAggregateResult.Value.Id.Should().Be(id);
@@ -64,7 +64,7 @@ public class GetInMemoryAggregateTests : TestBase
             getAggregateResult.Value.Should().NotBeNull();
 
             getAggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            getAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             getAggregateResult.Value.Version.Should().Be(1);
 
             getAggregateResult.Value.Id.Should().Be(id);
@@ -87,7 +87,7 @@ public class GetInMemoryAggregateTests : TestBase
         await dbContext.SaveChangesAsync();
 
         var aggregateResult = await dbContext.GetInMemoryAggregate(streamId, aggregateId);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
 
         using (new AssertionScope())
         {
@@ -95,7 +95,7 @@ public class GetInMemoryAggregateTests : TestBase
 
             aggregateResult.Value.Should().NotBeNull();
             aggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             aggregateResult.Value.Version.Should().Be(2);
             aggregateResult.Value.Id.Should().Be(id);
             aggregateResult.Value.Name.Should().Be("Updated Name");
@@ -119,7 +119,7 @@ public class GetInMemoryAggregateTests : TestBase
         await dbContext.SaveChangesAsync();
 
         var aggregateResult = await dbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToIdWithTypeVersion(1));
+        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
 
         using (new AssertionScope())
         {
@@ -127,7 +127,7 @@ public class GetInMemoryAggregateTests : TestBase
 
             aggregateResult.Value.Should().NotBeNull();
             aggregateResult.Value.StreamId.Should().Be(streamId.Id);
-            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToIdWithTypeVersion(1));
+            aggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
             aggregateResult.Value.Version.Should().Be(1);
             aggregateResult.Value.Id.Should().Be(id);
             aggregateResult.Value.Name.Should().Be("Test Name");

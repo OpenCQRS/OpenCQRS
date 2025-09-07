@@ -67,12 +67,6 @@ public class CosmosDomainService : IDomainService
 
         var aggregate = new TAggregate();
 
-        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateType == null)
-        {
-            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
-        }
-
         var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
         if (eventDocumentsResult.IsNotSuccess)
         {
@@ -111,9 +105,9 @@ public class CosmosDomainService : IDomainService
             {
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToStoreId()}:{eventDocument.Id}",
                     StreamId = streamId.Id,
-                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+                    AggregateId = aggregateId.ToStoreId(),
                     EventId = eventDocument.Id,
                     AppliedDate = timeStamp
                 };
@@ -121,7 +115,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
+            batchResponse.AddActivityEvent(streamId, aggregateId);
             return batchResponse.IsSuccessStatusCode ? aggregate : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
@@ -225,12 +219,6 @@ public class CosmosDomainService : IDomainService
     /// <returns>A result containing the in-memory aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
         var aggregate = new TAggregate();
 
         var eventDocumentsResult = upToSequence > 0
@@ -248,7 +236,7 @@ public class CosmosDomainService : IDomainService
         }
 
         aggregate.StreamId = streamId.Id;
-        aggregate.AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+        aggregate.AggregateId = aggregateId.ToStoreId();
         aggregate.LatestEventSequence = eventDocuments.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
         aggregate.Apply(eventDocuments.Select(eventEntity => eventEntity.ToDomainEvent()));
 
@@ -338,12 +326,6 @@ public class CosmosDomainService : IDomainService
             return ErrorHandling.DefaultFailure;
         }
 
-        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateType == null)
-        {
-            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
-        }
-
         var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
         var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
         var aggregateIsNew = currentAggregateVersion == 0;
@@ -393,9 +375,9 @@ public class CosmosDomainService : IDomainService
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToStoreId()}:{eventDocument.Id}",
                     StreamId = streamId.Id,
-                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+                    AggregateId = aggregateId.ToStoreId(),
                     EventId = eventDocument.Id,
                     AppliedDate = timeStamp
                 };
@@ -403,7 +385,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
+            batchResponse.AddActivityEvent(streamId, aggregateId);
             return batchResponse.IsSuccessStatusCode ? Result.Ok() : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
@@ -477,12 +459,6 @@ public class CosmosDomainService : IDomainService
     /// <returns>A result containing the updated aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)
         {

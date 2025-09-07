@@ -47,13 +47,7 @@ public class CosmosDataStore : ICosmosDataStore
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
-        var aggregateDocumentId = aggregateId.ToIdWithTypeVersion(aggregateType.Version);
+        var aggregateDocumentId = aggregateId.ToStoreId();
 
         try
         {
@@ -83,16 +77,10 @@ public class CosmosDataStore : ICosmosDataStore
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
     public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
-        var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
-        if (aggregateType is null)
-        {
-            throw new InvalidOperationException($"Aggregate {typeof(TAggregate).Name} does not have a AggregateType attribute.");
-        }
-
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
         var queryDefinition = new QueryDefinition(sql)
             .WithParameter("@streamId", streamId.Id)
-            .WithParameter("@aggregateId", aggregateId.ToIdWithTypeVersion(aggregateType.Version))
+            .WithParameter("@aggregateId", aggregateId.ToStoreId())
             .WithParameter("@documentType", DocumentType.AggregateEvent);
 
         var aggregateEventDocuments = new List<AggregateEventDocument>();
@@ -352,12 +340,6 @@ public class CosmosDataStore : ICosmosDataStore
     {
         var aggregate = aggregateDocument.ToAggregate<TAggregate>();
 
-        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
-        if (aggregateType == null)
-        {
-            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
-        }
-
         var currentAggregateVersion = aggregate.Version;
 
         var newEventDocumentsResult = await GetEventDocumentsFromSequence(streamId, fromSequence: aggregate.LatestEventSequence + 1, aggregate.EventTypeFilter, cancellationToken);
@@ -397,9 +379,9 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var aggregateEventDocument = new AggregateEventDocument
                 {
-                    Id = $"{aggregateId.ToIdWithTypeVersion(aggregateType.Version)}:{eventDocument.Id}",
+                    Id = $"{aggregateId.ToStoreId()}:{eventDocument.Id}",
                     StreamId = streamId.Id,
-                    AggregateId = aggregateId.ToIdWithTypeVersion(aggregateType.Version),
+                    AggregateId = aggregateId.ToStoreId(),
                     EventId = eventDocument.Id,
                     AppliedDate = timeStamp
                 };
@@ -407,7 +389,7 @@ public class CosmosDataStore : ICosmosDataStore
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
+            batchResponse.AddActivityEvent(streamId, aggregateId);
             return batchResponse.IsSuccessStatusCode ? aggregate : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)

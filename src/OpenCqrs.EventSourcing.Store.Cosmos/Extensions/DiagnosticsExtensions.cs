@@ -16,13 +16,12 @@ public static class DiagnosticsExtensions
     /// <param name="batchResponse">The transactional batch response from CosmosDB.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
-    /// <param name="aggregateType">The aggregate type information.</param>
-    public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId aggregateId, AggregateType aggregateType)
+    public static void AddActivityEvent<TAggregate>(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
     {
         Activity.Current?.AddEvent(new ActivityEvent("CosmosDB Batch Execute", default, new ActivityTagsCollection
         {
             { "streamId", streamId.Id },
-            { "aggregateId", aggregateId.ToIdWithTypeVersion(aggregateType.Version) },
+            { "aggregateId", aggregateId.ToStoreId() },
             { "cosmosdb.activityId", batchResponse.ActivityId },
             { "cosmosdb.statusCode", batchResponse.StatusCode },
             { "cosmosdb.errorMessage", batchResponse.ErrorMessage },
