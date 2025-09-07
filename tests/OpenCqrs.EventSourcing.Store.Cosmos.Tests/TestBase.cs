@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
 using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;

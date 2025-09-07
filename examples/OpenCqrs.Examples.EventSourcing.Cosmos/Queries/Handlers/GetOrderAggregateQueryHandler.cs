@@ -1,4 +1,5 @@
 ﻿using OpenCqrs.EventSourcing;
+using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.Examples.EventSourcing.Cosmos.Aggregates;
 using OpenCqrs.Examples.EventSourcing.Cosmos.Streams;
 using OpenCqrs.Queries;

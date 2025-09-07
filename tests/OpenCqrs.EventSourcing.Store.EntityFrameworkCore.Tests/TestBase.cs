@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
 

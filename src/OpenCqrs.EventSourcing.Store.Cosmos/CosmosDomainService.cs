@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 using OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
