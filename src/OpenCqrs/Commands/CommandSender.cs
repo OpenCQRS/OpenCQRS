@@ -160,7 +160,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         var notificationsResults = await Task.WhenAll(notificationTasks);
         var messagesResults = await Task.WhenAll(messageTasks);
 
-        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), MessageResults: messagesResults.Select(r => r).ToList());
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             var commandResult = await handler.Handle(command, commandResults, serviceProvider, cancellationToken);
             commandResults.Add(commandResult);
 
-            if (stopProcessingOnFirstFailure && commandResult.IsNotSuccess)
+            if (commandResult.IsNotSuccess && stopProcessingOnFirstFailure)
             {
                 break;
             }
