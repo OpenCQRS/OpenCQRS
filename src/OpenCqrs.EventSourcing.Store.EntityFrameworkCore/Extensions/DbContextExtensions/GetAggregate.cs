@@ -214,13 +214,8 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when getting or creating the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving changes",
-                Description: "There was an error when getting or creating the aggregate"
-            );
+            ex.AddException(streamId, operationDescription: "Get Aggregate");
+            return ErrorHandling.DefaultFailure;
         }
 
         domainDbContext.DetachAggregate(aggregateId, aggregate);

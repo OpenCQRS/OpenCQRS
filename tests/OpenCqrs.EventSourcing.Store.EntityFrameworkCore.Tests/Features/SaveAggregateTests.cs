@@ -37,10 +37,12 @@ public class SaveAggregateTests : TestBase
 
             var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
             activityEvent.Should().NotBeNull();
-            activityEvent.Value.Tags.First().Key.Should().Be("ExpectedEventSequence");
-            activityEvent.Value.Tags.First().Value.Should().Be(0);
-            activityEvent.Value.Tags.Last().Key.Should().Be("LatestEventSequence");
-            activityEvent.Value.Tags.Last().Value.Should().Be(1);
+            activityEvent.Value.Tags.First().Key.Should().Be("streamId");
+            activityEvent.Value.Tags.First().Value.Should().Be(streamId.Id);
+            activityEvent.Value.Tags.Skip(1).First().Key.Should().Be("expectedEventSequence");
+            activityEvent.Value.Tags.Skip(1).First().Value.Should().Be(0);
+            activityEvent.Value.Tags.Skip(2).First().Key.Should().Be("latestEventSequence");
+            activityEvent.Value.Tags.Skip(2).First().Value.Should().Be(1);
         }
     }
 

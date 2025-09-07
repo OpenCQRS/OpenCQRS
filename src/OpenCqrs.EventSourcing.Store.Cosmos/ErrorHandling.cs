@@ -1,6 +1,6 @@
 ﻿using OpenCqrs.Results;
 
-namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
+namespace OpenCqrs.EventSourcing.Store.Cosmos;
 
 public static class ErrorHandling
 {

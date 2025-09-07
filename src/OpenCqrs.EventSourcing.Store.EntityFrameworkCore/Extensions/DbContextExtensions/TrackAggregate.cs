@@ -192,7 +192,8 @@ public static partial class IDomainDbContextExtensions
         var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
         if (latestEventSequence != expectedEventSequence)
         {
-            return ErrorHandling.ProcessErrorAndGetFailure(expectedEventSequence, latestEventSequence);
+            DiagnosticsExtensions.AddActivityEvent(streamId, expectedEventSequence, latestEventSequence);
+            return ErrorHandling.DefaultFailure;
         }
 
         var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();

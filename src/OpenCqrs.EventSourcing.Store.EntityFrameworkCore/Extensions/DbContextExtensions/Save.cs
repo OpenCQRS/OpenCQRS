@@ -128,13 +128,8 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            var tags = new Dictionary<string, object> { { "Message", ex.Message } };
-            Activity.Current?.AddEvent(new ActivityEvent("There was an error when saving the aggregate", tags: new ActivityTagsCollection(tags!)));
-            return new Failure
-            (
-                Title: "Error saving changes",
-                Description: "There was an error when saving changes"
-            );
+            ex.AddException(operationDescription: "Save");
+            return ErrorHandling.DefaultFailure;
         }
     }
 }
