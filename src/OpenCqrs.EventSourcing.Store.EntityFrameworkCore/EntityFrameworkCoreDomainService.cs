@@ -1,5 +1,4 @@
 ﻿using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 using OpenCqrs.Results;
 

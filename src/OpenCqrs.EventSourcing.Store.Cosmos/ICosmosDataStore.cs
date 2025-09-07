@@ -88,7 +88,6 @@ public interface ICosmosDataStore : IDisposable
         IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
-    // TODO: GetEventDocumentsBetweenSequences (Issue #124)
     // TODO: GetEventDocumentsUpToDate (Issue #124)
     // TODO: GetEventDocumentsFromDate (Issue #124)
     // TODO: GetEventDocumentsBetweenDates (Issue #124)

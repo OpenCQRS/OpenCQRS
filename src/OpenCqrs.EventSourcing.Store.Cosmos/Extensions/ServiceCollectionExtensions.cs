@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
-using OpenCqrs.EventSourcing.Store.Cosmos.DataStore;
 using OpenCqrs.EventSourcing.Store.Cosmos.DomainService;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;

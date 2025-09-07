@@ -1,6 +1,5 @@
 ﻿using OpenCqrs.Commands;
 using OpenCqrs.EventSourcing;
-using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Aggregates;
 using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Streams;
 using OpenCqrs.Results;

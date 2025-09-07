@@ -1,9 +1,9 @@
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.Results;
 
-namespace OpenCqrs.EventSourcing.DomainService;
+namespace OpenCqrs.EventSourcing;
 
-public partial interface IDomainService : IDisposable
+public interface IDomainService : IDisposable
 {
     /// <summary>
     /// Retrieves an aggregate of the specified type.

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
-using OpenCqrs.EventSourcing.DomainService;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Data;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests;
