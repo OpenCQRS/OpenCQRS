@@ -1,6 +1,4 @@
-﻿using OpenCqrs.Results;
-
-namespace OpenCqrs.Caching;
+﻿namespace OpenCqrs.Caching;
 
 public interface ICachingService
 {
