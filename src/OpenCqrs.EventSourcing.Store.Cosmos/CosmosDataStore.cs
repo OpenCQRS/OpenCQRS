@@ -408,13 +408,7 @@ public class CosmosDataStore : ICosmosDataStore
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
             batchResponse.AddActivityEvent(streamId, aggregateId, aggregateType);
-            return batchResponse.IsSuccessStatusCode
-                ? aggregate
-                : new Failure
-                (
-                    Title: "Error",
-                    Description: "There was an error when processing the request"
-                );
+            return batchResponse.IsSuccessStatusCode ? aggregate : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
         {
