@@ -13,14 +13,21 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests;
 
 public abstract class TestBase : IDisposable
 {
-    protected readonly IDomainService DomainService;
-    protected readonly ICosmosDataStore DataStore;
-    protected readonly FakeTimeProvider TimeProvider;
+    protected IDomainService DomainService;
+    protected ICosmosDataStore DataStore;
+    protected FakeTimeProvider TimeProvider;
 
-    private readonly ActivitySource _activitySource;
-    private readonly ActivityListener _activityListener;
+    private ActivitySource _activitySource;
+    private ActivityListener _activityListener;
 
     protected TestBase()
+    {
+        SetupTypeBindings();
+        SetupDomainService();
+        SetupActivity();
+    }
+
+    private static void SetupTypeBindings()
     {
         TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
         {
@@ -34,7 +41,10 @@ public abstract class TestBase : IDisposable
             {"TestAggregate1:1", typeof(TestAggregate1)},
             {"TestAggregate2:1", typeof(TestAggregate2)}
         };
+    }
 
+    private void SetupDomainService()
+    {
         var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
         optionsSubstitute.Value.Returns(new CosmosOptions
         {
@@ -49,19 +59,6 @@ public abstract class TestBase : IDisposable
 
         var cosmosSetup = new CosmosSetup(optionsSubstitute);
         _ = cosmosSetup.CreateDatabaseAndContainerIfNotExist();
-
-        _activitySource = new ActivitySource("TestSource");
-
-        _activityListener = new ActivityListener();
-        _activityListener.ShouldListenTo = _ => true;
-        _activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData;
-        _activityListener.SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData;
-        _activityListener.ActivityStarted = _ => { };
-        _activityListener.ActivityStopped = _ => { };
-
-        ActivitySource.AddActivityListener(_activityListener);
-
-        _activitySource.StartActivity();
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor()
@@ -81,6 +78,22 @@ public abstract class TestBase : IDisposable
 
         httpContextAccessor.HttpContext.Returns(context);
         return httpContextAccessor;
+    }
+
+    private void SetupActivity()
+    {
+        _activitySource = new ActivitySource("TestSource");
+
+        _activityListener = new ActivityListener();
+        _activityListener.ShouldListenTo = _ => true;
+        _activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData;
+        _activityListener.SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData;
+        _activityListener.ActivityStarted = _ => { };
+        _activityListener.ActivityStopped = _ => { };
+
+        ActivitySource.AddActivityListener(_activityListener);
+
+        _activitySource.StartActivity();
     }
 
     public void Dispose()
