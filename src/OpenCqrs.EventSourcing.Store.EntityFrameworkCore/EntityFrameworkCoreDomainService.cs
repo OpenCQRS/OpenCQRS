@@ -120,6 +120,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
     }
 
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
+        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToDate, cancellationToken);
+    }
+
     /// <summary>
     /// Gets the latest event sequence number from the specified stream with optional event type filtering.
     /// </summary>

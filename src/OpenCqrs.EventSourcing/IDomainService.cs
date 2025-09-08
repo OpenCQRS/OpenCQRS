@@ -110,6 +110,9 @@ public interface IDomainService : IDisposable
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
+    Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
+        DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+
     /// <summary>
     /// Retrieves the latest event sequence number for a specific stream.
     /// </summary>
@@ -155,8 +158,6 @@ public interface IDomainService : IDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains the updated aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
-
-    // TODO: GetInMemoryAggregateUpToDate (Issue #124)
 
     // TODO: GetDomainEvents as stream (Issue #122)
     // TODO: GetDomainEventsUpToSequence as stream (Issue #122)

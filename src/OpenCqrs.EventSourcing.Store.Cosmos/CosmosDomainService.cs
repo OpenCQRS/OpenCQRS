@@ -299,6 +299,30 @@ public class CosmosDomainService : IDomainService
         return aggregate;
     }
 
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
+        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        var aggregate = new TAggregate();
+
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsUpToDate(streamId, upToDate, aggregate.EventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        var eventDocuments = eventDocumentsResult.Value!.ToList();
+        if (eventDocuments.Count == 0)
+        {
+            return aggregate;
+        }
+
+        aggregate.StreamId = streamId.Id;
+        aggregate.AggregateId = aggregateId.ToStoreId();
+        aggregate.LatestEventSequence = eventDocuments.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
+        aggregate.Apply(eventDocuments.Select(eventEntity => eventEntity.ToDomainEvent()));
+
+        return aggregate;
+    }
+
     /// <summary>
     /// Gets the latest event sequence number for a stream with optional event type filtering.
     /// </summary>

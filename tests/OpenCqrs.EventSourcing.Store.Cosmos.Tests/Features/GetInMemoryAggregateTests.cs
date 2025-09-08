@@ -179,4 +179,39 @@ public class GetInMemoryAggregateTests : TestBase
             result.Value.Version.Should().Be(0);
         }
     }
+
+    [Fact]
+    public async Task GivenAggregateExists_ThenInMemoryAggregateUpToASpecificDateIsReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await DomainService.SaveDomainEvents(streamId, [
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new SomethingHappenedEvent("Something2")
+        ], expectedEventSequence: 0);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 2);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something5"),
+            new SomethingHappenedEvent("Something6")
+        ], expectedEventSequence: 4);
+
+        var result = await DomainService.GetInMemoryAggregate(streamId, aggregateId,
+            upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        using (new AssertionScope())
+        {
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value.Version.Should().Be(1);
+        }
+    }
 }
