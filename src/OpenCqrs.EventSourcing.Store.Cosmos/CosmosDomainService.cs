@@ -253,6 +253,17 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
+    }
+
     /// <summary>
     /// Gets an aggregate built-in-memory from events, optionally up to a specific sequence number.
     /// </summary>

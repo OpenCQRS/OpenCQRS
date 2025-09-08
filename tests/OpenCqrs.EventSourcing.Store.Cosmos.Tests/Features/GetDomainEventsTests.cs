@@ -211,4 +211,75 @@ public class GetDomainEventsTests : TestBase
             result.Value[2].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something4");
         }
     }
+
+    [Fact]
+    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificDatesAreRequested_ThenDomainEventsBetweenSpecificDatesAreReturned()
+    {
+        var streamId = new TestStreamId(Guid.NewGuid().ToString());
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something1"),
+            new SomethingHappenedEvent("Something2")
+        ], expectedEventSequence: 0);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 2);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something5"),
+            new SomethingHappenedEvent("Something6")
+        ], expectedEventSequence: 4);
+
+        var result = await DomainService.GetDomainEventsBetweenDates(streamId,
+            fromDate: new DateTimeOffset(new DateTime(2024, 6, 10, 12, 10, 25)),
+            toDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        using (new AssertionScope())
+        {
+            result.Value!.Count.Should().Be(4);
+            result.Value[0].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something1");
+            result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something2");
+            result.Value[2].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something3");
+            result.Value[3].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something4");
+        }
+    }
+
+    [Fact]
+    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificDatesFilteredByEventTypeAreRequested_ThenDomainEventsBetweenSpecificDatesFilteredByEventTypeAreReturned()
+    {
+        var streamId = new TestStreamId(Guid.NewGuid().ToString());
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something1"),
+            new TestAggregateCreatedEvent(Guid.NewGuid().ToString(), "Test Name", "Test Description"),
+        ], expectedEventSequence: 0);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something2"),
+            new TestAggregateUpdatedEvent(Guid.NewGuid().ToString(), "Updated Name", "Updated Description")
+        ], expectedEventSequence: 2);
+
+        TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await DomainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 4);
+
+        var result = await DomainService.GetDomainEventsBetweenDates(streamId,
+            fromDate: new DateTimeOffset(new DateTime(2024, 6, 10, 12, 10, 25)),
+            toDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)),
+            eventTypeFilter: [typeof(SomethingHappenedEvent)]);
+        using (new AssertionScope())
+        {
+            result.Value!.Count.Should().Be(2);
+            result.Value[0].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something1");
+            result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something2");
+        }
+    }
 }

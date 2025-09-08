@@ -100,6 +100,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
     }
 
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
+    }
+
     /// <summary>
     /// Gets an in-memory aggregate optionally up to a specific sequence number.
     /// </summary>
