@@ -1,6 +1,10 @@
 ﻿using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.Extensions.Time.Testing;
+using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Aggregates;
+using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Streams;
 using Xunit;
 
@@ -77,5 +81,77 @@ public class GetDomainEventsTests : TestBase
         var domainEvents = await DomainService.GetDomainEventsBetweenSequences(streamId, fromSequence: 2, toSequence: 4);
 
         domainEvents.Value!.Count.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsUpToASpecificDateAreRequested_ThenDomainEventsUpToASpecificDateAreReturned()
+    {
+        var streamId = new TestStreamId(Guid.NewGuid().ToString());
+        var timeProvider = new FakeTimeProvider();
+
+        using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something1"),
+            new SomethingHappenedEvent("Something2")
+        ], expectedEventSequence: 0);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 2);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something5"),
+            new SomethingHappenedEvent("Something6")
+        ], expectedEventSequence: 4);
+
+        var result = await domainService.GetDomainEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        using (new AssertionScope())
+        {
+            result.Value!.Count.Should().Be(4);
+            result.Value[0].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something1");
+            result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something2");
+            result.Value[2].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something3");
+            result.Value[3].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something4");
+        }
+    }
+
+    [Fact]
+    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsUpToASpecificDateFilteredByEventTypeAreRequested_ThenDomainEventsUpToASpecificDateFilteredByEventTypeAreReturned()
+    {
+        var streamId = new TestStreamId(Guid.NewGuid().ToString());
+        var timeProvider = new FakeTimeProvider();
+
+        using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something1"),
+            new TestAggregateCreatedEvent(Guid.NewGuid().ToString(), "Test Name", "Test Description"),
+        ], expectedEventSequence: 0);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something2"),
+            new TestAggregateUpdatedEvent(Guid.NewGuid().ToString(), "Updated Name", "Updated Description")
+        ], expectedEventSequence: 2);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 4);
+
+        var result = await domainService.GetDomainEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)), eventTypeFilter: [typeof(SomethingHappenedEvent)]);
+        using (new AssertionScope())
+        {
+            result.Value!.Count.Should().Be(2);
+            result.Value[0].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something1");
+            result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something2");
+        }
     }
 }

@@ -88,6 +88,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
     }
 
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
+    }
+
     /// <summary>
     /// Gets an in-memory aggregate optionally up to a specific sequence number.
     /// </summary>

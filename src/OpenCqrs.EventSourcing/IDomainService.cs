@@ -49,8 +49,6 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
         IStreamId streamId,
         int fromSequence,
@@ -80,6 +78,12 @@ public interface IDomainService : IDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
+
+    Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(
+        IStreamId streamId,
+        DateTimeOffset upToDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified sequence, if provided.
@@ -139,7 +143,6 @@ public interface IDomainService : IDisposable
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
-    // TODO: GetDomainEventsUpToDate (Issue #124)
     // TODO: GetDomainEventsFromDate (Issue #124)
     // TODO: GetDomainEventsBetweenDates (Issue #124)
     // TODO: GetInMemoryAggregateUpToDate (Issue #124)

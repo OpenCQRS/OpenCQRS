@@ -62,8 +62,8 @@ public class CosmosDataStore : ICosmosDataStore
             ex.AddException(streamId, operationDescription: "Get Aggregate Document");
             return ErrorHandling.DefaultFailure;
         }
-    }    
-    
+    }
+
     /// <summary>
     /// Retrieves all aggregate event documents for a specific aggregate from Cosmos DB.
     /// The results are ordered by applied date.
@@ -104,8 +104,8 @@ public class CosmosDataStore : ICosmosDataStore
         }
 
         return aggregateEventDocuments;
-    }    
-    
+    }
+
     /// <summary>
     /// Retrieves all event documents from a stream, optionally filtered by event types.
     /// The results are ordered by sequence number.
@@ -201,8 +201,8 @@ public class CosmosDataStore : ICosmosDataStore
         }
 
         return eventDocuments;
-    }    
-    
+    }
+
     public async Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
@@ -254,8 +254,8 @@ public class CosmosDataStore : ICosmosDataStore
         }
 
         return eventDocuments;
-    }    
-    
+    }
+
     /// <summary>
     /// Retrieves event documents from a stream starting from a specific sequence number, optionally filtered by event types.
     /// The results are ordered by sequence number.
@@ -314,8 +314,8 @@ public class CosmosDataStore : ICosmosDataStore
         }
 
         return eventDocuments;
-    }    
-    
+    }
+
     /// <summary>
     /// Retrieves event documents from a stream up to a specific sequence number, optionally filtered by event types.
     /// The results are ordered by sequence number.
@@ -374,8 +374,8 @@ public class CosmosDataStore : ICosmosDataStore
         }
 
         return eventDocuments;
-    }    
-    
+    }
+
     /// <summary>
     /// Updates an aggregate document by applying new events and storing the updated state in Cosmos DB.
     /// This method retrieves new events since the aggregate's last update, applies them to the aggregate, 
@@ -449,8 +449,8 @@ public class CosmosDataStore : ICosmosDataStore
             ex.AddException(streamId, operationDescription: "Update Aggregate Document");
             return ErrorHandling.DefaultFailure;
         }
-    }    
-    
+    }
+
     /// <summary>
     /// Releases the unmanaged resources used by the CosmosDataStore and optionally releases the managed resources.
     /// This method disposes of the Cosmos client connection.

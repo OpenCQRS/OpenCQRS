@@ -1,5 +1,10 @@
 # Release Notes
 
+## OpenCQRS 7.1.0
+_**Released ??/09/2025**_
+- New methods in the domain service and DbContext(EntityFrameworkCore)/DataStore(CosmosDB):
+  - Get domain events between two sequences
+
 ## OpenCQRS 7.0.0
 _**Released 07/09/2025**_
 - Upgrade to .NET 9
