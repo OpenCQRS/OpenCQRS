@@ -2,8 +2,11 @@
 
 ## OpenCQRS 7.1.0
 _**Released ??/09/2025**_
-- New methods in the domain service and DbContext(EntityFrameworkCore)/DataStore(CosmosDB):
+- New methods in the domain service (EntityFrameworkCore and CosmosDB):
   - Get domain events between two sequences
+  - Get domain events up to a specific date
+  - Get domain events from a specific date
+  - Get domain events between two dates
 
 ## OpenCQRS 7.0.0
 _**Released 07/09/2025**_
