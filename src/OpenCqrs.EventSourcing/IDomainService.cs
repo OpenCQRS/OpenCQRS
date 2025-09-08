@@ -40,6 +40,17 @@ public interface IDomainService : IDisposable
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
 
+    /// <summary>
+    /// Retrieves the list of domain events that occurred between the specified sequence numbers.
+    /// </summary>
+    /// <param name="streamId">The unique identifier of the stream from which to retrieve domain events.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
         IStreamId streamId,
         int fromSequence,

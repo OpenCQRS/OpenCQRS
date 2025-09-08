@@ -48,6 +48,15 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsAppliedToAggregate(aggregateId, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets domain events between two specific sequence numbers with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);

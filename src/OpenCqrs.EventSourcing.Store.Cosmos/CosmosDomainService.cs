@@ -171,6 +171,15 @@ public class CosmosDomainService : IDomainService
         return eventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    /// <summary>
+    /// Gets domain events between two specific sequence numbers with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events or failure information.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
         IStreamId streamId,
         int fromSequence,
