@@ -428,6 +428,12 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    public Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Updates an aggregate document by applying new events and storing the updated state in Cosmos DB.
     /// This method retrieves new events since the aggregate's last update, applies them to the aggregate, 

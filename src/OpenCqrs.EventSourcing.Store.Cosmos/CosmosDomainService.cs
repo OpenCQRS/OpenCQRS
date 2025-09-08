@@ -242,6 +242,12 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    public Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Gets an aggregate built-in-memory from events, optionally up to a specific sequence number.
     /// </summary>

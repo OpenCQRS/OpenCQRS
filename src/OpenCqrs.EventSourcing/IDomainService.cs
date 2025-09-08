@@ -84,6 +84,12 @@ public interface IDomainService : IDisposable
         DateTimeOffset upToDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
+    
+    Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(
+        IStreamId streamId,
+        DateTimeOffset fromDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified sequence, if provided.
@@ -142,8 +148,7 @@ public interface IDomainService : IDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains the updated aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
-
-    // TODO: GetDomainEventsFromDate (Issue #124)
+    
     // TODO: GetDomainEventsBetweenDates (Issue #124)
     // TODO: GetInMemoryAggregateUpToDate (Issue #124)
 
