@@ -75,6 +75,12 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
+    Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(
+        IStreamId streamId,
+        DateTimeOffset upToDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Updates an existing aggregate document in the Cosmos data store.
     /// </summary>
