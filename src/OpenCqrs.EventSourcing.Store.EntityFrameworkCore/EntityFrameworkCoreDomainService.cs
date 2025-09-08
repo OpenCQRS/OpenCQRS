@@ -94,10 +94,10 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
     }
 
-    public Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await domainDbContext.GetDomainEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>

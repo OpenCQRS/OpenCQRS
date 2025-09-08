@@ -78,7 +78,7 @@ public class GetDomainEventsTests : TestBase
 
         domainEvents.Value!.Count.Should().Be(3);
     }
-    
+
     [Fact]
     public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsUpToASpecificDateAreRequested_ThenDomainEventsUpToASpecificDateAreReturned()
     {
@@ -144,7 +144,7 @@ public class GetDomainEventsTests : TestBase
             result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something2");
         }
     }
- 
+
     [Fact]
     public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsFromASpecificDateAreRequested_ThenDomainEventsFromASpecificDateAreReturned()
     {

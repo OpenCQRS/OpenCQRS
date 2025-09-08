@@ -80,13 +80,13 @@ public interface ICosmosDataStore : IDisposable
         DateTimeOffset upToDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
-    
+
     Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(
         IStreamId streamId,
         DateTimeOffset fromDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Updates an existing aggregate document in the Cosmos data store.
     /// </summary>

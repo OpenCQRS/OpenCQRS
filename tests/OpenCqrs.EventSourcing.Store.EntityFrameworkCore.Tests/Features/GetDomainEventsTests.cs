@@ -226,5 +226,5 @@ public class GetDomainEventsTests : TestBase
             result.Value[1].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something3");
             result.Value[2].Should().BeOfType<SomethingHappenedEvent>().Which.Something.Should().Be("Something4");
         }
-    }    
+    }
 }
