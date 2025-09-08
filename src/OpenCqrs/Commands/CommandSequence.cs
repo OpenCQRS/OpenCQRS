@@ -9,7 +9,7 @@ namespace OpenCqrs.Commands;
 public abstract class CommandSequence<TResponse> : ICommandSequence<TResponse>
 {
     private readonly List<ICommand<TResponse>> _commands = [];
-    
+
     /// <summary>
     /// Gets the read-only collection of commands in the sequence.
     /// </summary>

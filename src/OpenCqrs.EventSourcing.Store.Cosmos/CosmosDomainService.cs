@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Domain;
@@ -173,6 +172,30 @@ public class CosmosDomainService : IDomainService
     }
 
     /// <summary>
+    /// Gets domain events between two specific sequence numbers with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events or failure information.</returns>
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
+        IStreamId streamId,
+        int fromSequence,
+        int toSequence,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
+    }
+
+    /// <summary>
     /// Gets domain events from a specific sequence number onwards with optional event type filtering.
     /// </summary>
     /// <param name="streamId">The stream identifier.</param>
@@ -208,8 +231,41 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
+    }
+
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
+    }
+
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
+    }
+
     /// <summary>
-    /// Gets an aggregate built in-memory from events, optionally up to a specific sequence number.
+    /// Gets an aggregate built-in-memory from events, optionally up to a specific sequence number.
     /// </summary>
     /// <typeparam name="TAggregate">The type of aggregate to build.</typeparam>
     /// <param name="streamId">The stream identifier.</param>
@@ -225,6 +281,30 @@ public class CosmosDomainService : IDomainService
             ? await _cosmosDataStore.GetEventDocumentsUpToSequence(streamId, upToSequence.Value, aggregate.EventTypeFilter, cancellationToken)
             : await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
 
+        if (eventDocumentsResult.IsNotSuccess)
+        {
+            return eventDocumentsResult.Failure!;
+        }
+        var eventDocuments = eventDocumentsResult.Value!.ToList();
+        if (eventDocuments.Count == 0)
+        {
+            return aggregate;
+        }
+
+        aggregate.StreamId = streamId.Id;
+        aggregate.AggregateId = aggregateId.ToStoreId();
+        aggregate.LatestEventSequence = eventDocuments.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
+        aggregate.Apply(eventDocuments.Select(eventEntity => eventEntity.ToDomainEvent()));
+
+        return aggregate;
+    }
+
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
+        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        var aggregate = new TAggregate();
+
+        var eventDocumentsResult = await _cosmosDataStore.GetEventDocumentsUpToDate(streamId, upToDate, aggregate.EventTypeFilter, cancellationToken);
         if (eventDocumentsResult.IsNotSuccess)
         {
             return eventDocumentsResult.Failure!;

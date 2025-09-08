@@ -50,6 +50,9 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds,
         CancellationToken cancellationToken = default);
 
+    Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence,
+        int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Retrieves a list of event documents from the specified sequence in the Cosmos data store.
     /// </summary>
@@ -72,6 +75,25 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
+    Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(
+        IStreamId streamId,
+        DateTimeOffset upToDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(
+        IStreamId streamId,
+        DateTimeOffset fromDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<List<EventDocument>>> GetEventDocumentsBetweenDates(
+        IStreamId streamId,
+        DateTimeOffset fromDate,
+        DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Updates an existing aggregate document in the Cosmos data store.
     /// </summary>
@@ -85,7 +107,6 @@ public interface ICosmosDataStore : IDisposable
         IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
-    // TODO: GetEventDocumentsBetweenSequences (Issue #124)
     // TODO: GetEventDocumentsUpToDate (Issue #124)
     // TODO: GetEventDocumentsFromDate (Issue #124)
     // TODO: GetEventDocumentsBetweenDates (Issue #124)

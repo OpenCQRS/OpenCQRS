@@ -41,6 +41,22 @@ public interface IDomainService : IDisposable
         where TAggregate : IAggregate, new();
 
     /// <summary>
+    /// Retrieves the list of domain events that occurred between the specified sequence numbers.
+    /// </summary>
+    /// <param name="streamId">The unique identifier of the stream from which to retrieve domain events.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
+        IStreamId streamId,
+        int fromSequence,
+        int toSequence,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves domain events starting from a specified sequence number, optionally filtered by event types.
     /// </summary>
     /// <param name="streamId">The unique identifier of the stream to which the domain events belong.</param>
@@ -63,6 +79,25 @@ public interface IDomainService : IDisposable
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
+    Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(
+        IStreamId streamId,
+        DateTimeOffset upToDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(
+        IStreamId streamId,
+        DateTimeOffset fromDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(
+        IStreamId streamId,
+        DateTimeOffset fromDate,
+        DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified sequence, if provided.
     /// </summary>
@@ -74,6 +109,9 @@ public interface IDomainService : IDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+
+    Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
+        DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
     /// <summary>
     /// Retrieves the latest event sequence number for a specific stream.
@@ -121,11 +159,6 @@ public interface IDomainService : IDisposable
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
-    // TODO: GetDomainEventsBetweenSequences (Issue #124)
-    // TODO: GetDomainEventsUpToDate (Issue #124)
-    // TODO: GetDomainEventsFromDate (Issue #124)
-    // TODO: GetDomainEventsBetweenDates (Issue #124)
-
     // TODO: GetDomainEvents as stream (Issue #122)
     // TODO: GetDomainEventsUpToSequence as stream (Issue #122)
     // TODO: GetDomainEventsFromSequence as stream (Issue #122)
@@ -133,7 +166,4 @@ public interface IDomainService : IDisposable
     // TODO: GetDomainEventsUpToDate as stream (Issue #122)
     // TODO: GetDomainEventsFromDate as stream (Issue #122)
     // TODO: GetDomainEventsBetweenDates as stream (Issue #122)
-
-    // TODO: GetInMemoryAggregateUpToSequence (Issue #122)
-    // TODO: GetInMemoryAggregateUpToDate (Issue #122)
 }

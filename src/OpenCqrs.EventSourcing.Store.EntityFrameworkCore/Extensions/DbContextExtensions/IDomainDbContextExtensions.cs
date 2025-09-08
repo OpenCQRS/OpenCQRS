@@ -6,7 +6,6 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextE
 
 public static partial class IDomainDbContextExtensions
 {
-    // TODO: GetEventEntitiesBetweenSequences (Issue #124)
     // TODO: GetEventEntitiesUpToDate (Issue #124)
     // TODO: GetEventEntitiesFromDate (Issue #124)
     // TODO: GetEventEntitiesBetweenDates (Issue #124)

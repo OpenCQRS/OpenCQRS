@@ -12,12 +12,12 @@ public class CommandResponse
     /// Gets or sets the collection of notifications generated during command execution.
     /// </summary>
     public IEnumerable<INotification> Notifications { get; set; } = [];
-    
+
     /// <summary>
     /// Gets or sets the collection of messages generated during command execution.
     /// </summary>
     public IEnumerable<IMessage> Messages { get; set; } = [];
-    
+
     /// <summary>
     /// Gets or sets the result of the command execution.
     /// </summary>

@@ -49,6 +49,20 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     }
 
     /// <summary>
+    /// Gets domain events between two specific sequence numbers with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromSequence">The starting sequence number (inclusive).</param>
+    /// <param name="toSequence">The ending sequence number (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);
+    }
+
+    /// <summary>
     /// Gets domain events from a specific sequence number onwards with optional event type filtering.
     /// </summary>
     /// <param name="streamId">The stream identifier.</param>
@@ -74,6 +88,24 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
     }
 
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
+    }
+
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
+    }
+
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
+    }
+
     /// <summary>
     /// Gets an in-memory aggregate optionally up to a specific sequence number.
     /// </summary>
@@ -86,6 +118,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
+    }
+
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
+        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToDate, cancellationToken);
     }
 
     /// <summary>

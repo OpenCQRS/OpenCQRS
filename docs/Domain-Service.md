@@ -12,6 +12,7 @@ Every store provider has its own implementation of the `IDomainService` interfac
 - [Get Aggregate](#get-aggregate)
 - [Get In-Memory Aggregate](#get-in-memory-aggregate)
 - [Get Domain Events](#get-domain-events)
+- [Get Domain Events Between Sequences](#get-domain-events-between-sequences)
 - [Get Domain Events From Sequence](#get-domain-events-from-sequence)
 - [Get Domain Events Up To Sequence](#get-domain-events-up-to-sequence)
 - [Get Domain Events Applied To Aggregate](#get-domain-events-applied-to-aggregate)
@@ -120,6 +121,24 @@ Optionally, you can filter the events by specific event types.
 var streamId = new CustomerStreamId(customerId);
 var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
 var domainEventsResult = await domainService.GetDomainEvents(streamId, eventTypes);
+```
+
+<a name="get-domain-events-between-sequences"></a>
+### Get Domain Events Between Sequences
+Retrieves domain events from a specified stream from and to specific sequence numbers, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var toSequence = 10;
+var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var toSequence = 10;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypes);
 ```
 
 <a name="get-domain-events-from-sequence"></a>

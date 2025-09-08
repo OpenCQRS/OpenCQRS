@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
@@ -176,6 +177,44 @@ public class GetInMemoryAggregateTests : TestBase
             result.Failure.Should().BeNull();
             result.Value.Should().NotBeNull();
             result.Value.Version.Should().Be(0);
+        }
+    }
+
+    [Fact]
+    public async Task GivenAggregateExists_ThenInMemoryAggregateUpToASpecificDateIsReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+        var timeProvider = new FakeTimeProvider();
+
+        using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
+        await domainService.SaveDomainEvents(streamId, [
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new SomethingHappenedEvent("Something2")
+        ], expectedEventSequence: 0);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something3"),
+            new SomethingHappenedEvent("Something4")
+        ], expectedEventSequence: 2);
+
+        timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
+        await domainService.SaveDomainEvents(streamId, [
+            new SomethingHappenedEvent("Something5"),
+            new SomethingHappenedEvent("Something6")
+        ], expectedEventSequence: 4);
+
+        var result = await domainService.GetInMemoryAggregate(streamId, aggregateId,
+            upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        using (new AssertionScope())
+        {
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value.Version.Should().Be(1);
         }
     }
 }

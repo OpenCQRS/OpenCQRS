@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Domain;
@@ -204,6 +203,59 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    public async Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
+    {
+        QueryDefinition queryDefinition;
+
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence >= @fromSequence AND c.sequence <= @toSequence AND c.documentType = @documentType ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromSequence", fromSequence)
+                .WithParameter("@toSequence", toSequence)
+                .WithParameter("@documentType", DocumentType.Event);
+        }
+        else
+        {
+            var eventTypes = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.sequence >= @fromSequence AND c.sequence <= @toSequence AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromSequence", fromSequence)
+                .WithParameter("@toSequence", toSequence)
+                .WithParameter("@documentType", DocumentType.Event)
+                .WithParameter("@eventTypes", eventTypes);
+        }
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new PartitionKey(streamId.Id)
+            });
+
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operationDescription: "Get Event Documents from Sequence");
+            return ErrorHandling.DefaultFailure;
+        }
+
+        return eventDocuments;
+    }
+
     /// <summary>
     /// Retrieves event documents from a stream starting from a specific sequence number, optionally filtered by event types.
     /// The results are ordered by sequence number.
@@ -296,6 +348,164 @@ public class CosmosDataStore : ICosmosDataStore
             queryDefinition = new QueryDefinition(sql)
                 .WithParameter("@streamId", streamId.Id)
                 .WithParameter("@upToSequence", upToSequence)
+                .WithParameter("@documentType", DocumentType.Event)
+                .WithParameter("@eventTypes", eventTypes);
+        }
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new PartitionKey(streamId.Id)
+            });
+
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            return ErrorHandling.DefaultFailure;
+        }
+
+        return eventDocuments;
+    }
+
+    public async Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        QueryDefinition queryDefinition;
+
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate <= @upToDate AND c.documentType = @documentType ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@upToDate", upToDate)
+                .WithParameter("@documentType", DocumentType.Event);
+        }
+        else
+        {
+            var eventTypes = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate <= @upToDate AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@upToDate", upToDate)
+                .WithParameter("@documentType", DocumentType.Event)
+                .WithParameter("@eventTypes", eventTypes);
+        }
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new PartitionKey(streamId.Id)
+            });
+
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            return ErrorHandling.DefaultFailure;
+        }
+
+        return eventDocuments;
+    }
+
+    public async Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        QueryDefinition queryDefinition;
+
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate >= @fromDate AND c.documentType = @documentType ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromDate", fromDate)
+                .WithParameter("@documentType", DocumentType.Event);
+        }
+        else
+        {
+            var eventTypes = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate >= @fromDate AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromDate", fromDate)
+                .WithParameter("@documentType", DocumentType.Event)
+                .WithParameter("@eventTypes", eventTypes);
+        }
+
+        var eventDocuments = new List<EventDocument>();
+
+        try
+        {
+            using var iterator = _container.GetItemQueryIterator<EventDocument>(queryDefinition, requestOptions: new QueryRequestOptions
+            {
+                PartitionKey = new PartitionKey(streamId.Id)
+            });
+
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                eventDocuments.AddRange(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            return ErrorHandling.DefaultFailure;
+        }
+
+        return eventDocuments;
+    }
+
+    public async Task<Result<List<EventDocument>>> GetEventDocumentsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        QueryDefinition queryDefinition;
+
+        var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
+        if (!filterEventTypes)
+        {
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate >= @fromDate AND c.createdDate <= @toDate AND c.documentType = @documentType ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromDate", fromDate)
+                .WithParameter("@toDate", toDate)
+                .WithParameter("@documentType", DocumentType.Event);
+        }
+        else
+        {
+            var eventTypes = eventTypeFilter!
+                .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+                .Select(b => b.Key).ToList();
+
+            const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.createdDate >= @fromDate AND c.createdDate <= @toDate AND c.documentType = @documentType AND ARRAY_CONTAINS(@eventTypes, c.eventType) ORDER BY c.sequence";
+            queryDefinition = new QueryDefinition(sql)
+                .WithParameter("@streamId", streamId.Id)
+                .WithParameter("@fromDate", fromDate)
+                .WithParameter("@toDate", toDate)
                 .WithParameter("@documentType", DocumentType.Event)
                 .WithParameter("@eventTypes", eventTypes);
         }

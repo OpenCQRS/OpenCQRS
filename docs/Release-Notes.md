@@ -1,5 +1,14 @@
 # Release Notes
 
+## OpenCQRS 7.1.0
+_**Released ??/09/2025**_
+- New methods in the domain service (EntityFrameworkCore and CosmosDB):
+  - Get domain events between two sequences
+  - Get domain events up to a specific date
+  - Get domain events from a specific date
+  - Get domain events between two dates
+  - Get in memory aggregate up to a specific date
+
 ## OpenCQRS 7.0.0
 _**Released 07/09/2025**_
 - Upgrade to .NET 9
