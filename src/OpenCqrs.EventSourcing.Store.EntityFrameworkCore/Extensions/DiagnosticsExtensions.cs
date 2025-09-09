@@ -9,11 +9,11 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 public static class DiagnosticsExtensions
 {
     /// <summary>
-    /// Adds an activity event for a concurrency exception.
+    /// Adds an activity event for concurrency exceptions with sequence information.
     /// </summary>
-    /// <param name="streamId">The stream identifier.</param>
-    /// <param name="expectedEventSequence">The expected event sequence.</param>
-    /// <param name="latestEventSequence">The latest event sequence.</param>
+    /// <param name="streamId">The stream identifier where the concurrency exception occurred.</param>
+    /// <param name="expectedEventSequence">The expected event sequence number.</param>
+    /// <param name="latestEventSequence">The actual latest event sequence number.</param>
     public static void AddActivityEvent(IStreamId streamId, int expectedEventSequence, int latestEventSequence)
     {
         Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency Exception", timestamp: default, tags: new ActivityTagsCollection
