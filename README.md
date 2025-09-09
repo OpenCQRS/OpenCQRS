@@ -205,7 +205,6 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.1.0
 
-- Storing commands
 - More extensions for domain events and event documents in the Cosmos DB store provider
 - More extensions for domain events and event entities in the Entity Framework Core store provider
 - Get domain events and event entities as IAsyncEnumerable in the Entity Framework Core store provider
