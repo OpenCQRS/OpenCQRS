@@ -119,7 +119,7 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Save Domain Events");
+            ex.AddException(streamId, operation: "Save Domain Events");
             return ErrorHandling.DefaultFailure;
         }
     }

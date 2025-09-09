@@ -16,50 +16,65 @@ public static class DiagnosticsExtensions
     /// <param name="batchResponse">The transactional batch response from CosmosDB.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
-    public static void AddActivityEvent<TAggregate>(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
+    public static void AddActivityEvent<TAggregate>(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId<TAggregate> aggregateId, string operation) where TAggregate : IAggregate
     {
-        Activity.Current?.AddEvent(new ActivityEvent("CosmosDB Batch", default, new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent("Cosmos Transactional Batch", default, new ActivityTagsCollection
         {
+            { "operation", operation },
             { "streamId", streamId.Id },
             { "aggregateId", aggregateId.ToStoreId() },
-            { "cosmosdb.activityId", batchResponse.ActivityId },
-            { "cosmosdb.statusCode", batchResponse.StatusCode },
-            { "cosmosdb.errorMessage", batchResponse.ErrorMessage },
-            { "cosmosdb.requestCharge", batchResponse.RequestCharge },
-            { "cosmosdb.Count", batchResponse.Count }
+            { "cosmos.activityId", batchResponse.ActivityId },
+            { "cosmos.statusCode", batchResponse.StatusCode },
+            { "cosmos.errorMessage", batchResponse.ErrorMessage },
+            { "cosmos.requestCharge", batchResponse.RequestCharge },
+            { "cosmos.count", batchResponse.Count }
         }));
     }
-
+    
     /// <summary>
     /// Adds an activity event for a CosmosDB batch response with event document information.
     /// </summary>
     /// <param name="batchResponse">The transactional batch response from CosmosDB.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="eventDocuments">The collection of event documents processed in the batch.</param>
-    public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IEnumerable<EventDocument> eventDocuments)
+    public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IEnumerable<EventDocument> eventDocuments, string operation)
     {
-        Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Batch", timestamp: default, new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent(name: "Cosmos Transactional Batch", timestamp: default, new ActivityTagsCollection
         {
+            { "operation", operation },
             { "streamId", streamId.Id },
             { "eventDocumentIds", string.Join(", ", eventDocuments.Select(document => document.Id))},
-            { "cosmosdb.activityId", batchResponse.ActivityId },
-            { "cosmosdb.statusCode", batchResponse.StatusCode },
-            { "cosmosdb.errorMessage", batchResponse.ErrorMessage },
-            { "cosmosdb.requestCharge", batchResponse.RequestCharge },
-            { "cosmosdb.Count", batchResponse.Count }
+            { "cosmos.activityId", batchResponse.ActivityId },
+            { "cosmos.statusCode", batchResponse.StatusCode },
+            { "cosmos.errorMessage", batchResponse.ErrorMessage },
+            { "cosmos.requestCharge", batchResponse.RequestCharge },
+            { "cosmos.count", batchResponse.Count }
         }));
     }
 
-    public static void AddActivityEvent<T>(this FeedResponse<T> feedResponse, IStreamId streamId, string operationDescription)
+    public static void AddActivityEvent<TAggregate>(this ItemResponse<AggregateDocument> itemResponse, IStreamId streamId, IAggregateId<TAggregate> aggregateId, string operation) where TAggregate : IAggregate
     {
-        Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Iterator", timestamp: default, new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent("Cosmos Read Item", default, new ActivityTagsCollection
         {
+            { "operation", operation },
             { "streamId", streamId.Id },
-            { "operation", operationDescription },
-            { "cosmosdb.activityId", feedResponse.ActivityId },
-            { "cosmosdb.statusCode", feedResponse.StatusCode },
-            { "cosmosdb.requestCharge", feedResponse.RequestCharge },
-            { "cosmosdb.Count", feedResponse.Count }
+            { "aggregateId", aggregateId.ToStoreId() },
+            { "cosmos.activityId", itemResponse.ActivityId },
+            { "cosmos.statusCode", itemResponse.StatusCode },
+            { "cosmos.requestCharge", itemResponse.RequestCharge }
+        }));
+    }
+    
+    public static void AddActivityEvent<T>(this FeedResponse<T> feedResponse, IStreamId streamId, string operation)
+    {
+        Activity.Current?.AddEvent(new ActivityEvent(name: "Cosmos Feed Iterator", timestamp: default, new ActivityTagsCollection
+        {
+            { "operation", operation },
+            { "streamId", streamId.Id },
+            { "cosmos.activityId", feedResponse.ActivityId },
+            { "cosmos.statusCode", feedResponse.StatusCode },
+            { "cosmos.requestCharge", feedResponse.RequestCharge },
+            { "cosmos.count", feedResponse.Count }
         }));
     }
     
@@ -84,13 +99,13 @@ public static class DiagnosticsExtensions
     /// </summary>
     /// <param name="exception">The exception to add to the activity.</param>
     /// <param name="streamId">The stream identifier associated with the operation.</param>
-    /// <param name="operationDescription">A description of the operation that caused the exception.</param>
-    public static void AddException(this Exception exception, IStreamId streamId, string operationDescription)
+    /// <param name="operation">A description of the operation that caused the exception.</param>
+    public static void AddException(this Exception exception, IStreamId streamId, string operation)
     {
         Activity.Current?.AddException(exception, tags: new TagList
         {
-            { "streamId", streamId.Id },
-            { "operation", operationDescription }
+            { "operation", operation },
+            { "streamId", streamId.Id }
         });
     }
 }

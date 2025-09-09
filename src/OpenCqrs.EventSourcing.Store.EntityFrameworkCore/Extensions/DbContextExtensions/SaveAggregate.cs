@@ -132,7 +132,7 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Save Aggregate");
+            ex.AddException(streamId, operation: "Save Aggregate");
             return ErrorHandling.DefaultFailure;
         }
     }

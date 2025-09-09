@@ -16,7 +16,7 @@ public static class DiagnosticsExtensions
     /// <param name="latestEventSequence">The latest event sequence.</param>
     public static void AddActivityEvent(IStreamId streamId, int expectedEventSequence, int latestEventSequence)
     {
-        Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency exception", timestamp: default, tags: new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency Exception", timestamp: default, tags: new ActivityTagsCollection
         {
             { "streamId", streamId.Id },
             { "expectedEventSequence", expectedEventSequence },
@@ -29,26 +29,26 @@ public static class DiagnosticsExtensions
     /// </summary>
     /// <param name="exception">The exception to add.</param>
     /// <param name="streamId">The stream identifier.</param>
-    /// <param name="operationDescription">The description of the operation.</param>
-    public static void AddException(this Exception exception, IStreamId streamId, string operationDescription)
+    /// <param name="operation">The description of the operation.</param>
+    public static void AddException(this Exception exception, IStreamId streamId, string operation)
     {
         Activity.Current?.AddException(exception, tags: new TagList
         {
-            { "streamId", streamId.Id },
-            { "operation", operationDescription }
+            { "operation", operation },
+            { "streamId", streamId.Id }
         });
     }
 
     /// <summary>
-    /// Adds an exception to the current activity with operation description.
+    /// Adds an exception to the current activity with the operation description.
     /// </summary>
     /// <param name="exception">The exception to add.</param>
-    /// <param name="operationDescription">The description of the operation.</param>
-    public static void AddException(this Exception exception, string operationDescription)
+    /// <param name="operation">The description of the operation.</param>
+    public static void AddException(this Exception exception, string operation)
     {
         Activity.Current?.AddException(exception, tags: new TagList
         {
-            { "operation", operationDescription }
+            { "operation", operation }
         });
     }
 }

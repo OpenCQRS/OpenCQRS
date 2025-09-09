@@ -51,6 +51,7 @@ public class CosmosDataStore : ICosmosDataStore
         try
         {
             var response = await _container.ReadItemAsync<AggregateDocument>(aggregateDocumentId, new PartitionKey(streamId.Id), cancellationToken: cancellationToken);
+            response.AddActivityEvent(streamId, aggregateId, operation: "Get Aggregate Document");
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -59,7 +60,7 @@ public class CosmosDataStore : ICosmosDataStore
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Aggregate Document");
+            ex.AddException(streamId, operation: "Get Aggregate Document");
             return ErrorHandling.DefaultFailure;
         }
     }
@@ -95,12 +96,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 aggregateEventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Aggregate Event Documents");
+                response.AddActivityEvent(streamId, operation: "Get Aggregate Event Documents");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Aggregate Event Documents");
+            ex.AddException(streamId, operation: "Get Aggregate Event Documents");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -153,12 +154,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents");
+            ex.AddException(streamId, operation: "Get Event Documents");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -194,12 +195,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents by IDs");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents by IDs");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents by IDs");
+            ex.AddException(streamId, operation: "Get Event Documents by IDs");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -258,12 +259,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents Between Sequences");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents Between Sequences");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents from Sequence");
+            ex.AddException(streamId, operation: "Get Event Documents from Sequence");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -319,12 +320,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents from Sequence");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents from Sequence");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents from Sequence");
+            ex.AddException(streamId, operation: "Get Event Documents from Sequence");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -380,12 +381,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents up to Sequence");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents up to Sequence");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            ex.AddException(streamId, operation: "Get Event Documents up to Sequence");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -442,12 +443,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents up to Date");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents up to Date");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            ex.AddException(streamId, operation: "Get Event Documents up to Sequence");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -504,12 +505,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents from Date");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents from Date");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            ex.AddException(streamId, operation: "Get Event Documents up to Sequence");
             return ErrorHandling.DefaultFailure;
         }
 
@@ -569,12 +570,12 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
-                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents between Dates");
+                response.AddActivityEvent(streamId, operation: "Get Event Documents between Dates");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents between Dates");
+            ex.AddException(streamId, operation: "Get Event Documents between Dates");
             return ErrorHandling.DefaultFailure;
         }
         
@@ -646,12 +647,12 @@ public class CosmosDataStore : ICosmosDataStore
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId);
+            batchResponse.AddActivityEvent(streamId, aggregateId, operation: "Update Aggregate Document");
             return batchResponse.IsSuccessStatusCode ? aggregate : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Update Aggregate Document");
+            ex.AddException(streamId, operation: "Update Aggregate Document");
             return ErrorHandling.DefaultFailure;
         }
     }

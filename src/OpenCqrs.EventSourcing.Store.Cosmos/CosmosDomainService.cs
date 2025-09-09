@@ -114,12 +114,12 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId);
+            batchResponse.AddActivityEvent(streamId, aggregateId, operation: "Get Aggregate");
             return batchResponse.IsSuccessStatusCode ? aggregate : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Aggregate");
+            ex.AddException(streamId, operation: "Get Aggregate");
             return ErrorHandling.DefaultFailure;
         }
     }
@@ -429,13 +429,13 @@ public class CosmosDomainService : IDomainService
             }
 
             var response = await iterator.ReadNextAsync(cancellationToken);
-            response.AddActivityEvent(streamId, operationDescription: "Get Latest Event Sequence");
+            response.AddActivityEvent(streamId, operation: "Get Latest Event Sequence");
             var result = response.FirstOrDefault();
             return result ?? 0;
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Latest Event Sequence");
+            ex.AddException(streamId, operation: "Get Latest Event Sequence");
             return ErrorHandling.DefaultFailure;
         }
     }
@@ -528,12 +528,12 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, aggregateId);
+            batchResponse.AddActivityEvent(streamId, aggregateId, "Save Aggregate");
             return batchResponse.IsSuccessStatusCode ? Result.Ok() : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Save Aggregate");
+            ex.AddException(streamId, operation: "Save Aggregate");
             return ErrorHandling.DefaultFailure;
         }
     }
@@ -582,12 +582,12 @@ public class CosmosDomainService : IDomainService
             }
 
             var batchResponse = await batch.ExecuteAsync(cancellationToken);
-            batchResponse.AddActivityEvent(streamId, eventDocuments);
+            batchResponse.AddActivityEvent(streamId, eventDocuments, "Save Domain Events");
             return batchResponse.IsSuccessStatusCode ? Result.Ok() : ErrorHandling.DefaultFailure;
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Save Domain Events");
+            ex.AddException(streamId, operation: "Save Domain Events");
             return ErrorHandling.DefaultFailure;
         }
     }

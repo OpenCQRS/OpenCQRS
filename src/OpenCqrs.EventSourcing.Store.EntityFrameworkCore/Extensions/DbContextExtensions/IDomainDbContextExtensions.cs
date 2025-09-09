@@ -34,7 +34,7 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Update Aggregate");
+            ex.AddException(streamId, operation: "Update Aggregate");
             return ErrorHandling.DefaultFailure;
         }
 

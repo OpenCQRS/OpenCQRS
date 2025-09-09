@@ -8,7 +8,7 @@ All features are implemented as extension methods on the `IDomainDbContext` inte
 
 It also means that you can use the OpenCQRS mediator pattern, any other mediator library, or classic service classes without any dependencies on a specific mediator.
 
-The event sourcing functionalities can used with the following Entity Framework Core database providers:
+The event sourcing functionalities can be used with the following Entity Framework Core database providers:
 - SQL Server
 - SQLite
 - PostgreSQL
@@ -17,5 +17,17 @@ The event sourcing functionalities can used with the following Entity Framework 
 
 OpenCQRS also provides support for IdentityDbContext from ASP.NET Core Identity, allowing you to integrate event sourcing with user management and authentication features.
 
+## Diagnostics
+
+OpenCQRS emits diagnostic events using `System.Diagnostics` to help you monitor and troubleshoot your application.
+
+| Event                          | Tags                                                                                                                                                                  |
+|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Concurrency Exception**      | - streamId<br/>- expectedEventSequence<br/>- latestEventSequence                                                                                                      |
+| **Exception**                  | - operation<br/>- streamId                                                                                                                                            |
+
+## Related
+
+- [Domain Service](Domain-Service.md)
 - [Scenarios](Entity-Framework-Core-Scenarios)
 - [Extensions](Entity-Framework-Core-Extensions)

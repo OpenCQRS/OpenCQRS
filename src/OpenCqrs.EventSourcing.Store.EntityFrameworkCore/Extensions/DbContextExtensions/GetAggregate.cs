@@ -206,7 +206,7 @@ public static partial class IDomainDbContextExtensions
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Aggregate");
+            ex.AddException(streamId, operation: "Get Aggregate");
             return ErrorHandling.DefaultFailure;
         }
 
