@@ -61,6 +61,12 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return await handler.Handle(command, cancellationToken);
     }
 
+    public Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false,
+        CancellationToken cancellationToken = default) where TCommand : ICommand
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>
@@ -96,6 +102,12 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         var result = await handler.Handle(command, serviceProvider, cancellationToken);
 
         return result;
+    }
+
+    public Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -161,6 +173,12 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         var messagesResults = await Task.WhenAll(messageTasks);
 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
+    }
+
+    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<SendAndPublishResponse>> commandHandler, bool validateCommand = false,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
