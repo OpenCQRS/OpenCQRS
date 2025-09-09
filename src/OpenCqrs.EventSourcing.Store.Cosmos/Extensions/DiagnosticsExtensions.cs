@@ -38,7 +38,7 @@ public static class DiagnosticsExtensions
     /// <param name="eventDocuments">The collection of event documents processed in the batch.</param>
     public static void AddActivityEvent(this TransactionalBatchResponse batchResponse, IStreamId streamId, IEnumerable<EventDocument> eventDocuments)
     {
-        Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Batch Execute", timestamp: default, new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Batch", timestamp: default, new ActivityTagsCollection
         {
             { "streamId", streamId.Id },
             { "eventDocumentIds", string.Join(", ", eventDocuments.Select(document => document.Id))},
@@ -50,6 +50,19 @@ public static class DiagnosticsExtensions
         }));
     }
 
+    public static void AddActivityEvent<T>(this FeedResponse<T> feedResponse, IStreamId streamId, string operationDescription)
+    {
+        Activity.Current?.AddEvent(new ActivityEvent(name: "CosmosDB Iterator", timestamp: default, new ActivityTagsCollection
+        {
+            { "streamId", streamId.Id },
+            { "operation", operationDescription },
+            { "cosmosdb.activityId", feedResponse.ActivityId },
+            { "cosmosdb.statusCode", feedResponse.StatusCode },
+            { "cosmosdb.requestCharge", feedResponse.RequestCharge },
+            { "cosmosdb.Count", feedResponse.Count }
+        }));
+    }
+    
     /// <summary>
     /// Adds an activity event for concurrency exceptions with sequence information.
     /// </summary>

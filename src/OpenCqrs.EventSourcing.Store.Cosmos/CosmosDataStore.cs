@@ -95,6 +95,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 aggregateEventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Aggregate Event Documents");
             }
         }
         catch (Exception ex)
@@ -152,6 +153,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents");
             }
         }
         catch (Exception ex)
@@ -192,6 +194,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents by IDs");
             }
         }
         catch (Exception ex)
@@ -255,6 +258,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents Between Sequences");
             }
         }
         catch (Exception ex)
@@ -315,6 +319,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents from Sequence");
             }
         }
         catch (Exception ex)
@@ -375,6 +380,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents up to Sequence");
             }
         }
         catch (Exception ex)
@@ -436,6 +442,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents up to Date");
             }
         }
         catch (Exception ex)
@@ -497,6 +504,7 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents from Date");
             }
         }
         catch (Exception ex)
@@ -561,14 +569,15 @@ public class CosmosDataStore : ICosmosDataStore
             {
                 var response = await iterator.ReadNextAsync(cancellationToken);
                 eventDocuments.AddRange(response);
+                response.AddActivityEvent(streamId, operationDescription: "Get Event Documents between Dates");
             }
         }
         catch (Exception ex)
         {
-            ex.AddException(streamId, operationDescription: "Get Event Documents up to Sequence");
+            ex.AddException(streamId, operationDescription: "Get Event Documents between Dates");
             return ErrorHandling.DefaultFailure;
         }
-
+        
         return eventDocuments;
     }
 

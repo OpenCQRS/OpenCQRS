@@ -429,6 +429,7 @@ public class CosmosDomainService : IDomainService
             }
 
             var response = await iterator.ReadNextAsync(cancellationToken);
+            response.AddActivityEvent(streamId, operationDescription: "Get Latest Event Sequence");
             var result = response.FirstOrDefault();
             return result ?? 0;
         }
