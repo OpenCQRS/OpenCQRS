@@ -27,6 +27,15 @@ public interface ICommandSender
     /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
     Task<Result> Send<TCommand>(TCommand command, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
 
+    /// <summary>
+    /// Sends a command that does not expect a response value to its corresponding handler for processing, using a custom command handler.
+    /// </summary>
+    /// <typeparam name="TCommand">The type of command to send.</typeparam>
+    /// <param name="command">The command instance to be processed.</param>
+    /// <param name="commandHandler">A custom handler function to process the command.</param>
+    /// <param name="validateCommand"></param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
     Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
 
     /// <summary>
@@ -39,6 +48,15 @@ public interface ICommandSender
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
     Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a command that expects a response value to its corresponding handler for processing, using a custom command handler.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of response expected from the command.</typeparam>
+    /// <param name="command">The command instance to be processed.</param>
+    /// <param name="commandHandler">A custom handler function to process the command.</param>
+    /// <param name="validateCommand"></param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="Result{TResponse}"/> containing the response value on success or failure information.</returns>
     Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -52,6 +70,14 @@ public interface ICommandSender
     /// and a collection of results from the published notifications.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a command for processing and publishes any corresponding notifications, using a custom command handler.
+    /// </summary>
+    /// <param name="command">The command instance to be sent for processing.</param>
+    /// <param name="commandHandler">A custom handler function to process the command.</param>
+    /// <param name="validateCommand"></param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the notification publishing results.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
