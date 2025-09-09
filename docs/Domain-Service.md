@@ -12,9 +12,12 @@ Every store provider has its own implementation of the `IDomainService` interfac
 - [Get Aggregate](#get-aggregate)
 - [Get In-Memory Aggregate](#get-in-memory-aggregate)
 - [Get Domain Events](#get-domain-events)
-- [Get Domain Events Between Sequences](#get-domain-events-between-sequences)
 - [Get Domain Events From Sequence](#get-domain-events-from-sequence)
 - [Get Domain Events Up To Sequence](#get-domain-events-up-to-sequence)
+- [Get Domain Events Between Sequences](#get-domain-events-between-sequences)
+- [Get Domain Events From Date](#get-domain-events-from-date)
+- [Get Domain Events Up To Date](#get-domain-events-up-to-date)
+- [Get Domain Events Between Dates](#get-domain-events-between-dates)
 - [Get Domain Events Applied To Aggregate](#get-domain-events-applied-to-aggregate)
 - [Get Latest Event Sequence](#get-latest-event-sequence)
 
@@ -108,6 +111,14 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregateResult = await domainService.GetInMemoryAggregate(streamId, aggregateId);
 ```
+Optionally, you can specify a sequence number or a date to reconstruct the aggregate up to a specific point in time.
+```C#
+var aggregateResult = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence);
+```
+or
+```C#
+var aggregateResult = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToDate);
+```
 
 <a name="get-domain-events"></a>
 ### Get Domain Events
@@ -121,24 +132,6 @@ Optionally, you can filter the events by specific event types.
 var streamId = new CustomerStreamId(customerId);
 var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
 var domainEventsResult = await domainService.GetDomainEvents(streamId, eventTypes);
-```
-
-<a name="get-domain-events-between-sequences"></a>
-### Get Domain Events Between Sequences
-Retrieves domain events from a specified stream from and to specific sequence numbers, with optional filtering by event types.
-```C#
-var streamId = new CustomerStreamId(customerId);
-var fromSequence = 5;
-var toSequence = 10;
-var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence);
-```
-Optionally, you can filter the events by specific event types.
-```C#
-var streamId = new CustomerStreamId(customerId);
-var fromSequence = 5;
-var toSequence = 10;
-var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
-var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypes);
 ```
 
 <a name="get-domain-events-from-sequence"></a>
@@ -171,6 +164,74 @@ var streamId = new CustomerStreamId(customerId);
 var upToSequence = 10;
 var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
 var domainEventsResult = await domainService.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypes);
+```
+
+<a name="get-domain-events-between-sequences"></a>
+### Get Domain Events Between Sequences
+Retrieves domain events from a specified stream from and to specific sequence numbers, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var toSequence = 10;
+var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromSequence = 5;
+var toSequence = 10;
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypes);
+```
+
+<a name="get-domain-events-from-date"></a>
+### Get Domain Events From Date
+Retrieves domain events from a specified stream starting from a specific date onwards, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var domainEventsResult = await domainService.GetDomainEventsFromDate(streamId, fromDate);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await domainService.GetDomainEventsFromDate(streamId, fromDate, eventTypes);
+```
+
+<a name="get-domain-events-up-to-date"></a>
+### Get Domain Events Up To Date
+Retrieves domain events from a specified stream up to and including a specific date, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var domainEventsResult = await domainService.GetDomainEventsUpToDate(streamId, upToDate);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var upToDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await domainService.GetDomainEventsUpToDate(streamId, upToDate, eventTypes);
+```
+
+<a name="get-domain-events-between-dates"></a>
+### Get Domain Events Between Dates
+Retrieves domain events from a specified stream from and to specific dates, with optional filtering by event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var toDate = new DateTime(2024, 6, 25, 12, 46, 22);
+var domainEventsResult = await domainService.GetDomainEventsBetweenDates(streamId, fromDate, toDate);
+```
+Optionally, you can filter the events by specific event types.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var fromDate = new DateTime(2024, 6, 15, 17, 45, 48);
+var toDate = new DateTime(2024, 6, 25, 12, 46, 22);
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var domainEventsResult = await domainService.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypes);
 ```
 
 <a name="get-domain-events-applied-to-aggregate"></a>
