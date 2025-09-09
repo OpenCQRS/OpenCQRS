@@ -26,8 +26,6 @@ public abstract class IdentityDomainDbContext(
     {
         base.OnModelCreating(modelBuilder);
 
-        // TODO: Add option to customise table names (Issue #121)
-
         modelBuilder.ApplyConfiguration(new AggregateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new EventEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AggregateEventEntityConfiguration());

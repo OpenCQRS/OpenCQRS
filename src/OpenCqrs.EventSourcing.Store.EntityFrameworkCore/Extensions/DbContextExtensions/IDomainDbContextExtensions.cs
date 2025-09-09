@@ -6,18 +6,6 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextE
 
 public static partial class IDomainDbContextExtensions
 {
-    // TODO: GetEventEntitiesUpToDate (Issue #124)
-    // TODO: GetEventEntitiesFromDate (Issue #124)
-    // TODO: GetEventEntitiesBetweenDates (Issue #124)
-
-    // TODO: GetEventEntities as stream (Issue #122)
-    // TODO: GetEventEntitiesUpToSequence as stream (Issue #122)
-    // TODO: GetEventEntitiesFromSequence as stream (Issue #122)
-    // TODO: GetEventEntitiesBetweenSequences as stream (Issue #122)
-    // TODO: GetEventEntitiesUpToDate as stream (Issue #122)
-    // TODO: GetEventEntitiesFromDate as stream (Issue #122)
-    // TODO: GetEventEntitiesBetweenDates as stream (Issue #122)
-
     private static async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var currentAggregateVersion = aggregate.Version;

@@ -288,7 +288,7 @@ public class CosmosDomainService : IDomainService
         }
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
-    
+
     /// <summary>
     /// Gets an in-memory aggregate by applying all relevant domain events from the stream.
     /// </summary>
@@ -351,7 +351,7 @@ public class CosmosDomainService : IDomainService
 
         return aggregate;
     }
-    
+
     /// <summary>
     /// Gets an in-memory aggregate by applying domain events up to a specific date.
     /// </summary>

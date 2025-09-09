@@ -134,9 +134,9 @@ public interface IDomainService : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
-    Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, 
+    Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
-    
+
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified sequence.
     /// </summary>
@@ -206,12 +206,4 @@ public interface IDomainService : IDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains the updated aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
-
-    // TODO: GetDomainEvents as stream (Issue #122)
-    // TODO: GetDomainEventsUpToSequence as stream (Issue #122)
-    // TODO: GetDomainEventsFromSequence as stream (Issue #122)
-    // TODO: GetDomainEventsBetweenSequences as stream (Issue #122)
-    // TODO: GetDomainEventsUpToDate as stream (Issue #122)
-    // TODO: GetDomainEventsFromDate as stream (Issue #122)
-    // TODO: GetDomainEventsBetweenDates as stream (Issue #122)
 }

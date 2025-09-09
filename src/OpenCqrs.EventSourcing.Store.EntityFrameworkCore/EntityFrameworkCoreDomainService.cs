@@ -130,7 +130,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     {
         return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
     }
-    
+
     /// <summary>
     /// Gets an in-memory aggregate from the specified stream.
     /// </summary>
@@ -157,7 +157,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
     }
-    
+
     /// <summary>
     /// Gets an in-memory aggregate from the specified stream up to a specific date.
     /// </summary>
