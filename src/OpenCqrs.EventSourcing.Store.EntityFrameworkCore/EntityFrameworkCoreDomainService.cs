@@ -105,21 +105,17 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     {
         return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
     }
+    
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    {
+        return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, cancellationToken);
+    }
 
-    /// <summary>
-    /// Gets an in-memory aggregate optionally up to a specific sequence number.
-    /// </summary>
-    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
-    /// <param name="streamId">The stream identifier.</param>
-    /// <param name="aggregateId">The aggregate identifier.</param>
-    /// <param name="upToSequence">Optional sequence number to read up to.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A result containing the in-memory aggregate.</returns>
-    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int? upToSequence = null, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
     }
-
+    
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
