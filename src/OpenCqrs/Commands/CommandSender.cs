@@ -165,35 +165,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         var commandResult = await commandHandler.Handle(command, serviceProvider, cancellationToken);
 
-        var numberOfNotificationsToPublish = commandResult.Value?.Notifications.Count() ?? 0;
-        var numberOfMessagesToPublish = commandResult.Value?.Messages.Count() ?? 0;
-        if (commandResult.IsNotSuccess || (numberOfNotificationsToPublish == 0 && numberOfMessagesToPublish == 0))
-        {
-            return new SendAndPublishResponse(commandResult, NotificationResults: [], MessageResults: []);
-        }
-
-        var notificationTasks = commandResult.Value!.Notifications
-            .Select(notification =>
-            {
-                var notificationType = notification.GetType();
-                var publishDelegate = GetOrCreateCompiledNotificationPublisher(notificationType);
-                return publishDelegate(notificationPublisher, notification, cancellationToken);
-            })
-            .ToList();
-
-        var messageTasks = commandResult.Value!.Messages
-            .Select(message =>
-            {
-                var messageType = message.GetType();
-                var publishDelegate = GetOrCreateCompiledMessagePublisher(messageType);
-                return publishDelegate(messagePublisher, message, cancellationToken);
-            })
-            .ToList();
-
-        var notificationsResults = await Task.WhenAll(notificationTasks);
-        var messagesResults = await Task.WhenAll(messageTasks);
-
-        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
+        return await ProcessCommandResult(commandResult, cancellationToken);
     }
 
     public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
@@ -211,6 +183,11 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         var commandResult = await commandHandler();
 
+        return await ProcessCommandResult(commandResult, cancellationToken);
+    }
+
+    private async Task<SendAndPublishResponse> ProcessCommandResult(Result<CommandResponse> commandResult, CancellationToken cancellationToken)
+    {
         var numberOfNotificationsToPublish = commandResult.Value?.Notifications.Count() ?? 0;
         var numberOfMessagesToPublish = commandResult.Value?.Messages.Count() ?? 0;
         if (commandResult.IsNotSuccess || (numberOfNotificationsToPublish == 0 && numberOfMessagesToPublish == 0))
