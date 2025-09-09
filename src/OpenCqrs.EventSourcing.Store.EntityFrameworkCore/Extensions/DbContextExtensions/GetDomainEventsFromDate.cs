@@ -3,8 +3,20 @@ using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 
+/// <summary>
+/// Provides extension methods for IDomainDbContext.
+/// </summary>
 public static partial class IDomainDbContextExtensions
 {
+    /// <summary>
+    /// Retrieves domain events from a specified date for a given stream.
+    /// </summary>
+    /// <param name="domainDbContext">The domain database context.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromDate">The start date.</param>
+    /// <param name="eventTypeFilter">Optional filter for event types.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of domain events.</returns>
     public static async Task<List<IDomainEvent>> GetDomainEventsFromDate(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntitiesFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);

@@ -4,8 +4,20 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 
+/// <summary>
+/// Provides extension methods for IDomainDbContext.
+/// </summary>
 public static partial class IDomainDbContextExtensions
 {
+    /// <summary>
+    /// Retrieves an in-memory aggregate for a given stream and aggregate ID.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="domainDbContext">The domain database context.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the aggregate.</returns>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -24,6 +36,16 @@ public static partial class IDomainDbContextExtensions
         return aggregate;
     }
 
+    /// <summary>
+    /// Retrieves an in-memory aggregate for a given stream and aggregate ID up to a specified sequence.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="domainDbContext">The domain database context.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToSequence">The maximum sequence number.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the aggregate.</returns>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -42,6 +64,16 @@ public static partial class IDomainDbContextExtensions
         return aggregate;
     }
 
+    /// <summary>
+    /// Retrieves an in-memory aggregate for a given stream and aggregate ID up to a specified date.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="domainDbContext">The domain database context.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToDate">The maximum date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the aggregate.</returns>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();

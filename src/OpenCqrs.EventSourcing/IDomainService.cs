@@ -79,18 +79,46 @@ public interface IDomainService : IDisposable
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves a list of domain events up to a specified date from a given stream,
+    /// optionally filtered by event types.
+    /// </summary>
+    /// <param name="streamId">The unique identifier of the stream containing the domain events.</param>
+    /// <param name="upToDate">The date up to which events should be retrieved.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(
         IStreamId streamId,
         DateTimeOffset upToDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves a list of domain events from a specified date from a given stream,
+    /// optionally filtered by event types.
+    /// </summary>
+    /// <param name="streamId">The unique identifier of the stream containing the domain events.</param>
+    /// <param name="fromDate">The date from which events should be retrieved.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(
         IStreamId streamId,
         DateTimeOffset fromDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves a list of domain events between two specified dates from a given stream,
+    /// optionally filtered by event types.
+    /// </summary>
+    /// <param name="streamId">The unique identifier of the stream containing the domain events.</param>
+    /// <param name="fromDate">The starting date from which events should be retrieved.</param>
+    /// <param name="toDate">The ending date up to which events should be retrieved.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -98,12 +126,38 @@ public interface IDomainService : IDisposable
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves an in-memory aggregate of the specified type.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The unique identifier of the stream to which the aggregate belongs.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, 
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
     
+    /// <summary>
+    /// Retrieves an in-memory aggregate of the specified type up to a specified sequence.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The unique identifier of the stream to which the aggregate belongs.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
+    /// <param name="upToSequence">The sequence number up to which the aggregate should be built.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
+    /// <summary>
+    /// Retrieves an in-memory aggregate of the specified type up to a specified date.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of the aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The unique identifier of the stream to which the aggregate belongs.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
+    /// <param name="upToDate">The date up to which the aggregate should be built.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 

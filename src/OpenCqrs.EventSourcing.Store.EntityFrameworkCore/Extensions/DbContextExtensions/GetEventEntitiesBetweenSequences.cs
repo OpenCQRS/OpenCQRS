@@ -4,8 +4,21 @@ using OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextExtensions;
 
+/// <summary>
+/// Provides extension methods for IDomainDbContext.
+/// </summary>
 public static partial class IDomainDbContextExtensions
 {
+    /// <summary>
+    /// Retrieves event entities between specified sequences for a given stream.
+    /// </summary>
+    /// <param name="domainDbContext">The domain database context.</param>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromSequence">The start sequence.</param>
+    /// <param name="toSequence">The end sequence.</param>
+    /// <param name="eventTypeFilter">Optional filter for event types.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of event entities.</returns>
     public static async Task<List<EventEntity>> GetEventEntitiesBetweenSequences(this IDomainDbContext domainDbContext, IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;

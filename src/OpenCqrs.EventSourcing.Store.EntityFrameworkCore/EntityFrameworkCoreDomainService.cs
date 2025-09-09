@@ -55,8 +55,8 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="fromSequence">The starting sequence number (inclusive).</param>
     /// <param name="toSequence">The ending sequence number (inclusive).</param>
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events between the specified sequences.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);
@@ -88,34 +88,85 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets domain events up to a specific date with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="upToDate">The date to read up to.</param>
+    /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events up to the specified date.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets domain events from a specific date onwards with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromDate">The date to start from.</param>
+    /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events from the specified date.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets domain events between two specific dates with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromDate">The starting date (inclusive).</param>
+    /// <param name="toDate">The ending date (inclusive).</param>
+    /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the list of domain events between the specified dates.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
     }
     
+    /// <summary>
+    /// Gets an in-memory aggregate from the specified stream.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets an in-memory aggregate from the specified stream up to a specific sequence number.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToSequence">The sequence number to read up to.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate up to the specified sequence.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
     }
     
+    /// <summary>
+    /// Gets an in-memory aggregate from the specified stream up to a specific date.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToDate">The date to read up to.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate up to the specified date.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {

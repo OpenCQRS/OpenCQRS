@@ -203,6 +203,16 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream between specific sequence numbers, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="fromSequence">The minimum sequence number to start retrieving events from (inclusive).</param>
+    /// <param name="toSequence">The maximum sequence number to retrieve events up to (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents between the specified sequences, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default)
     {
         QueryDefinition queryDefinition;
@@ -376,6 +386,15 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream up to a specific date, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="upToDate">The maximum date to retrieve events up to (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents up to the specified date, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
@@ -428,6 +447,15 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream starting from a specific date, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="fromDate">The minimum date to start retrieving events from (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents from the specified date, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
@@ -480,6 +508,16 @@ public class CosmosDataStore : ICosmosDataStore
         return eventDocuments;
     }
 
+    /// <summary>
+    /// Retrieves event documents from a stream between specific dates, optionally filtered by event types.
+    /// The results are ordered by sequence number.
+    /// </summary>
+    /// <param name="streamId">The stream identifier to retrieve events from.</param>
+    /// <param name="fromDate">The minimum date to start retrieving events from (inclusive).</param>
+    /// <param name="toDate">The maximum date to retrieve events up to (inclusive).</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter by. If null or empty, all events are returned.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents between the specified dates, or a failure if an error occurred.</returns>
     public async Task<Result<List<EventDocument>>> GetEventDocumentsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {

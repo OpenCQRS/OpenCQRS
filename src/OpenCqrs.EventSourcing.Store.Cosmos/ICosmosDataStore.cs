@@ -50,6 +50,15 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves event documents from the Cosmos data store between specified sequence numbers.
+    /// </summary>
+    /// <param name="streamId">The identifier of the stream from which the event documents are retrieved.</param>
+    /// <param name="fromSequence">The starting sequence number.</param>
+    /// <param name="toSequence">The ending sequence number.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents or a failure.</returns>
     Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence,
         int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default);
 
@@ -75,18 +84,43 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves event documents from the Cosmos data store up to a specified date.
+    /// </summary>
+    /// <param name="streamId">The identifier of the stream from which the event documents are retrieved.</param>
+    /// <param name="upToDate">The date up to which the event documents should be retrieved.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents or a failure.</returns>
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(
         IStreamId streamId,
         DateTimeOffset upToDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves event documents from the Cosmos data store from a specified date.
+    /// </summary>
+    /// <param name="streamId">The identifier of the stream from which the event documents are retrieved.</param>
+    /// <param name="fromDate">The date from which the event documents should be retrieved.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents or a failure.</returns>
     Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(
         IStreamId streamId,
         DateTimeOffset fromDate,
         Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves event documents from the Cosmos data store between specified dates.
+    /// </summary>
+    /// <param name="streamId">The identifier of the stream from which the event documents are retrieved.</param>
+    /// <param name="fromDate">The starting date.</param>
+    /// <param name="toDate">The ending date.</param>
+    /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
+    /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+    /// <returns>A result containing a list of event documents or a failure.</returns>
     Task<Result<List<EventDocument>>> GetEventDocumentsBetweenDates(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -106,16 +140,4 @@ public interface ICosmosDataStore : IDisposable
     Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
-
-    // TODO: GetEventDocumentsUpToDate (Issue #124)
-    // TODO: GetEventDocumentsFromDate (Issue #124)
-    // TODO: GetEventDocumentsBetweenDates (Issue #124)
-
-    // TODO: GetEventDocuments as stream (Issue #122)
-    // TODO: GetEventDocumentsUpToSequence as stream (Issue #122)
-    // TODO: GetEventDocumentsFromSequence as stream (Issue #122)
-    // TODO: GetEventDocumentsBetweenSequences as stream (Issue #122)
-    // TODO: GetEventDocumentsUpToDate as stream (Issue #122)
-    // TODO: GetEventDocumentsFromDate as stream (Issue #122)
-    // TODO: GetEventDocumentsBetweenDates as stream (Issue #122)
 }

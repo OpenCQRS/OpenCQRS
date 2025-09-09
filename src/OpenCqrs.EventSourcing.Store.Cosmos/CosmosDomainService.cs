@@ -231,6 +231,14 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    /// <summary>
+    /// Gets domain events up to a specific date with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="upToDate">The date to stop at.</param>
+    /// <param name="eventTypeFilter">Optional filter for specific event types.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the list of domain events or failure information.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
@@ -242,6 +250,14 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    /// <summary>
+    /// Gets domain events from a specific date onwards with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromDate">The date to start from.</param>
+    /// <param name="eventTypeFilter">Optional filter for specific event types.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the list of domain events or failure information.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
@@ -253,6 +269,15 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
 
+    /// <summary>
+    /// Gets domain events between two specific dates with optional event type filtering.
+    /// </summary>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="fromDate">The starting date (inclusive).</param>
+    /// <param name="toDate">The ending date (inclusive).</param>
+    /// <param name="eventTypeFilter">Optional filter for specific event types.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the list of domain events or failure information.</returns>
     public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
@@ -264,6 +289,14 @@ public class CosmosDomainService : IDomainService
         return eventDocumentsResult.Value!.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
     }
     
+    /// <summary>
+    /// Gets an in-memory aggregate by applying all relevant domain events from the stream.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -287,6 +320,15 @@ public class CosmosDomainService : IDomainService
         return aggregate;
     }
 
+    /// <summary>
+    /// Gets an in-memory aggregate by applying domain events up to a specific sequence number.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToSequence">The sequence number to stop at.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -310,6 +352,15 @@ public class CosmosDomainService : IDomainService
         return aggregate;
     }
     
+    /// <summary>
+    /// Gets an in-memory aggregate by applying domain events up to a specific date.
+    /// </summary>
+    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The stream identifier.</param>
+    /// <param name="aggregateId">The aggregate identifier.</param>
+    /// <param name="upToDate">The date to stop at.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result containing the in-memory aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
