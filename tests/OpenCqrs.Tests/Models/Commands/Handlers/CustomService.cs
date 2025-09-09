@@ -12,14 +12,14 @@ public class CustomService
 
         return Result.Ok();
     }
-    
+
     public async Task<Result<string>> WithResult(CommandWithResult command)
     {
         await Task.CompletedTask;
 
         return $"Hello {command.Name}";
     }
-    
+
     public async Task<Result<CommandResponse>> DoSomething(DoSomething command)
     {
         await Task.CompletedTask;

@@ -52,19 +52,29 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
             }
         }
 
-        var handler = serviceProvider.GetService<ICommandHandler<TCommand>>();
-        if (handler is null)
+        var commandHandler = serviceProvider.GetService<ICommandHandler<TCommand>>();
+        if (commandHandler is null)
         {
             throw new InvalidOperationException($"Command handler for {typeof(TCommand).Name} not found.");
         }
 
-        return await handler.Handle(command, cancellationToken);
+        return await commandHandler.Handle(command, cancellationToken);
     }
 
-    public Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false,
-        CancellationToken cancellationToken = default) where TCommand : ICommand
+    public async Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (validateCommand)
+        {
+            var validationResult = await validationService.Validate(command);
+            if (validationResult.IsNotSuccess)
+            {
+                return validationResult;
+            }
+        }
+
+        return await commandHandler();
     }
 
     /// <summary>
@@ -91,23 +101,34 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         var commandType = command.GetType();
 
-        var handler = (CommandHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+        var commandHandler = (CommandHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
             Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
 
-        if (handler is null)
+        if (commandHandler is null)
         {
             throw new InvalidOperationException($"Command handler for {typeof(ICommand<TResponse>).Name} not found.");
         }
 
-        var result = await handler.Handle(command, serviceProvider, cancellationToken);
+        var result = await commandHandler.Handle(command, serviceProvider, cancellationToken);
 
         return result;
     }
 
-    public Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
+    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (validateCommand)
+        {
+            var validationResult = await validationService.Validate(command);
+            if (validationResult.IsNotSuccess)
+            {
+                return validationResult;
+            }
+        }
+
+        return await commandHandler();
     }
 
     /// <summary>
@@ -134,15 +155,15 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
         var commandType = command.GetType();
 
-        var handler = (CommandHandlerWrapperBase<CommandResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+        var commandHandler = (CommandHandlerWrapperBase<CommandResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
             Activator.CreateInstance(typeof(CommandHandlerWrapper<,>).MakeGenericType(commandType, typeof(CommandResponse))))!;
 
-        if (handler is null)
+        if (commandHandler is null)
         {
             throw new InvalidOperationException($"Command handler for {typeof(ICommand<CommandResponse>).Name} not found.");
         }
 
-        var commandResult = await handler.Handle(command, serviceProvider, cancellationToken);
+        var commandResult = await commandHandler.Handle(command, serviceProvider, cancellationToken);
 
         var numberOfNotificationsToPublish = commandResult.Value?.Notifications.Count() ?? 0;
         var numberOfMessagesToPublish = commandResult.Value?.Messages.Count() ?? 0;
@@ -175,9 +196,50 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
     }
 
-    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (validateCommand)
+        {
+            var validationResult = await validationService.Validate(command);
+            if (validationResult.IsNotSuccess)
+            {
+                return new SendAndPublishResponse(CommandResult: validationResult, NotificationResults: [], MessageResults: []);
+            }
+        }
+
+        var commandResult = await commandHandler();
+
+        var numberOfNotificationsToPublish = commandResult.Value?.Notifications.Count() ?? 0;
+        var numberOfMessagesToPublish = commandResult.Value?.Messages.Count() ?? 0;
+        if (commandResult.IsNotSuccess || (numberOfNotificationsToPublish == 0 && numberOfMessagesToPublish == 0))
+        {
+            return new SendAndPublishResponse(commandResult, NotificationResults: [], MessageResults: []);
+        }
+
+        var notificationTasks = commandResult.Value!.Notifications
+            .Select(notification =>
+            {
+                var notificationType = notification.GetType();
+                var publishDelegate = GetOrCreateCompiledNotificationPublisher(notificationType);
+                return publishDelegate(notificationPublisher, notification, cancellationToken);
+            })
+            .ToList();
+
+        var messageTasks = commandResult.Value!.Messages
+            .Select(message =>
+            {
+                var messageType = message.GetType();
+                var publishDelegate = GetOrCreateCompiledMessagePublisher(messageType);
+                return publishDelegate(messagePublisher, message, cancellationToken);
+            })
+            .ToList();
+
+        var notificationsResults = await Task.WhenAll(notificationTasks);
+        var messagesResults = await Task.WhenAll(messageTasks);
+
+        return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
     }
 
     /// <summary>
@@ -216,15 +278,15 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
 
             var commandType = command.GetType();
 
-            var handler = (CommandSequenceHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
+            var commandHandler = (CommandSequenceHandlerWrapperBase<TResponse>)CommandHandlerWrappers.GetOrAdd(commandType, _ =>
                 Activator.CreateInstance(typeof(CommandSequenceHandlerWrapper<,>).MakeGenericType(commandType, typeof(TResponse))))!;
 
-            if (handler is null)
+            if (commandHandler is null)
             {
                 throw new InvalidOperationException($"Command sequence handler for {typeof(ICommand<TResponse>).Name} not found.");
             }
 
-            var commandResult = await handler.Handle(command, commandResults, serviceProvider, cancellationToken);
+            var commandResult = await commandHandler.Handle(command, commandResults, serviceProvider, cancellationToken);
             commandResults.Add(commandResult);
 
             if (commandResult.IsNotSuccess && stopProcessingOnFirstFailure)

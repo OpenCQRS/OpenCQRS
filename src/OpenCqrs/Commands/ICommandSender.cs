@@ -28,7 +28,7 @@ public interface ICommandSender
     Task<Result> Send<TCommand>(TCommand command, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
 
     Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
-    
+
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>

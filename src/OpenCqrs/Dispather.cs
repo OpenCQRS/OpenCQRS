@@ -30,10 +30,10 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
         return await commandSender.Send(command, validateCommand, cancellationToken);
     }
 
-    public Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false,
+    public async Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false,
         CancellationToken cancellationToken = default) where TCommand : ICommand
     {
-        throw new NotImplementedException();
+        return await commandSender.Send(command, commandHandler, validateCommand, cancellationToken);
     }
 
     /// <summary>
@@ -49,10 +49,10 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
         return await commandSender.Send(command, validateCommand, cancellationToken);
     }
 
-    public Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
+    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await commandSender.Send(command, commandHandler, validateCommand, cancellationToken);
     }
 
     /// <summary>
@@ -69,9 +69,9 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
         return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
     }
 
-    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await commandSender.SendAndPublish(command, commandHandler, validateCommand, cancellationToken);
     }
 
     /// <summary>
