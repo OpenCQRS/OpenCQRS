@@ -69,8 +69,7 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
         return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
     }
 
-    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<SendAndPublishResponse>> commandHandler, bool validateCommand = false,
-        CancellationToken cancellationToken = default)
+    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

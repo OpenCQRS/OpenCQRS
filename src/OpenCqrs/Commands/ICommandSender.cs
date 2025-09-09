@@ -52,7 +52,7 @@ public interface ICommandSender
     /// and a collection of results from the published notifications.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
-    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<SendAndPublishResponse>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
+    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a sequence of commands to their corresponding handlers for processing and retrieves their results.

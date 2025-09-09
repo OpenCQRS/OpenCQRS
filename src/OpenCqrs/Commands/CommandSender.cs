@@ -175,8 +175,7 @@ public class CommandSender(IServiceProvider serviceProvider, IValidationService 
         return new SendAndPublishResponse(commandResult, notificationsResults.SelectMany(r => r).ToList(), messagesResults.Select(r => r).ToList());
     }
 
-    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<SendAndPublishResponse>> commandHandler, bool validateCommand = false,
-        CancellationToken cancellationToken = default)
+    public Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
