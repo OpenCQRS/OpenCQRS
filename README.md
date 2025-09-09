@@ -18,6 +18,7 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 - Automatic event/notification publication after a command is successfully processed that returns a list of results from all notification handlers
 - Automatic command validation with FluentValidation if required
 - Command sequences that return a list of results from all commands in the sequence
+- Result pattern
 - Simple mediator with commands, queries, and notifications
 - Extensible architecture with providers for store, bus, caching, and validation
 
