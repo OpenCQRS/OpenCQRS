@@ -18,7 +18,7 @@ public static class DiagnosticsExtensions
     /// <param name="aggregateId">The aggregate identifier.</param>
     public static void AddActivityEvent<TAggregate>(this TransactionalBatchResponse batchResponse, IStreamId streamId, IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
     {
-        Activity.Current?.AddEvent(new ActivityEvent("CosmosDB Batch Execute", default, new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent("CosmosDB Batch", default, new ActivityTagsCollection
         {
             { "streamId", streamId.Id },
             { "aggregateId", aggregateId.ToStoreId() },
@@ -71,7 +71,7 @@ public static class DiagnosticsExtensions
     /// <param name="latestEventSequence">The actual latest event sequence number.</param>
     public static void AddActivityEvent(IStreamId streamId, int expectedEventSequence, int latestEventSequence)
     {
-        Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency exception", timestamp: default, tags: new ActivityTagsCollection
+        Activity.Current?.AddEvent(new ActivityEvent(name: "Concurrency Exception", timestamp: default, tags: new ActivityTagsCollection
         {
             { "streamId", streamId.Id },
             { "expectedEventSequence", expectedEventSequence },
