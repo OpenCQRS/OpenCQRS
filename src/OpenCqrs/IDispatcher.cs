@@ -26,6 +26,8 @@ public interface IDispatcher
     /// <returns>A <see cref="Result"/> indicating success or failure of the command processing.</returns>
     Task<Result> Send<TCommand>(TCommand command, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
 
+    Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default) where TCommand : ICommand;
+
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>
@@ -36,6 +38,8 @@ public interface IDispatcher
     /// <returns>A <see cref="Result{T}"/> containing the response value on success or failure information.</returns>
     Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
 
+    Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Sends a command for processing and publishes any corresponding notifications.
     /// </summary>
@@ -44,6 +48,8 @@ public interface IDispatcher
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A <see cref="SendAndPublishResponse"/> containing the result of the command processing and the notification publishing results.</returns>
     Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default);
+
+    Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a sequence of commands to their respective handlers for processing, allowing sequential execution with optional validation and error handling.

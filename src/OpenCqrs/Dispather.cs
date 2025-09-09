@@ -30,6 +30,12 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
         return await commandSender.Send(command, validateCommand, cancellationToken);
     }
 
+    public async Task<Result> Send<TCommand>(TCommand command, Func<Task<Result>> commandHandler, bool validateCommand = false,
+        CancellationToken cancellationToken = default) where TCommand : ICommand
+    {
+        return await commandSender.Send(command, commandHandler, validateCommand, cancellationToken);
+    }
+
     /// <summary>
     /// Sends a command that expects a response value to its corresponding handler for processing.
     /// </summary>
@@ -41,6 +47,12 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
         return await commandSender.Send(command, validateCommand, cancellationToken);
+    }
+
+    public async Task<Result<TResponse>> Send<TResponse>(ICommand<TResponse> command, Func<Task<Result<TResponse>>> commandHandler, bool validateCommand = false,
+        CancellationToken cancellationToken = default)
+    {
+        return await commandSender.Send(command, commandHandler, validateCommand, cancellationToken);
     }
 
     /// <summary>
@@ -55,6 +67,11 @@ public class Dispatcher(ICommandSender commandSender, IQueryProcessor queryProce
     public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, bool validateCommand = false, CancellationToken cancellationToken = default)
     {
         return await commandSender.SendAndPublish(command, validateCommand, cancellationToken);
+    }
+
+    public async Task<SendAndPublishResponse> SendAndPublish(ICommand<CommandResponse> command, Func<Task<Result<CommandResponse>>> commandHandler, bool validateCommand = false, CancellationToken cancellationToken = default)
+    {
+        return await commandSender.SendAndPublish(command, commandHandler, validateCommand, cancellationToken);
     }
 
     /// <summary>

@@ -4,6 +4,7 @@
 - [Commands with a result](#commands-with-results)
 - [Commands that publish notifications and messages](#commands-with-publishing)
 - [Commands validation](#commands-validation)
+- [Custom command handlers](#custom-command-handlers)
 - [Command sequence](#command-sequence)
 
 <a name="simple-commands"></a>
@@ -215,6 +216,16 @@ If the command is not valid, the command handler will not be called and the resu
         ]
     }
 }
+```
+
+<a name="custom-command-handlers"></a>
+## Custom command handlers
+You can also use your custom command handler or service instead of the one resolved by the dispatcher.
+Just use the optional `commandHandler` parameter in any of the dispatcher methods:
+
+```C#
+var result = await _dispatcher.Send(command, () => _somethingService.DoSomethingAsync(command));
+var result = await _dispatcher.SendAndPublish(command, () => _somethingService.DoSomethingAndPublishAsync(command));
 ```
 
 <a name="command-sequence"></a>

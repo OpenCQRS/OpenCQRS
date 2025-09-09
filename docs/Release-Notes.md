@@ -8,6 +8,7 @@ _**Released ??/09/2025**_
   - Get domain events from a specific date
   - Get domain events between two dates
   - Get in memory aggregate up to a specific date
+  - Custom command handlers or services
   - ...
 
 ## OpenCQRS 7.0.0

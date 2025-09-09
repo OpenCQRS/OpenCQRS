@@ -5,7 +5,7 @@ using Xunit;
 
 namespace OpenCqrs.Tests.Features;
 
-public class CommandResponseTests : TestBase
+public class SendAndPublishTests : TestBase
 {
     [Fact]
     public async Task SendAndPublish_Should_Call_NotificationHandlers_For_CommandResponse_With_SingleNotification()
