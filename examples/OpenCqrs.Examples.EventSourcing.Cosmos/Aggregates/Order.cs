@@ -1,10 +1,10 @@
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.DomainEvents;
+using OpenCqrs.Examples.EventSourcing.Cosmos.DomainEvents;
 
-namespace OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Aggregates;
+namespace OpenCqrs.Examples.EventSourcing.Cosmos.Aggregates;
 
 [AggregateType("Order")]
-public class OrderAggregateRoot : AggregateRoot
+public class Order : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [
@@ -14,9 +14,9 @@ public class OrderAggregateRoot : AggregateRoot
     public Guid OrderId { get; private set; }
     public decimal Amount { get; private set; }
 
-    public OrderAggregateRoot() { }
+    public Order() { }
 
-    public OrderAggregateRoot(Guid orderId, decimal amount)
+    public Order(Guid orderId, decimal amount)
     {
         Add(new OrderPlacedEvent(OrderId = orderId, Amount = amount));
     }

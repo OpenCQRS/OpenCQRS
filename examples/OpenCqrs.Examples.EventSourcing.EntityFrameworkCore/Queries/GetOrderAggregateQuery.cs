@@ -3,4 +3,4 @@ using OpenCqrs.Queries;
 
 namespace OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Queries;
 
-public record GetOrderAggregateQuery(Guid CustomerId, Guid OrderId) : IQuery<OrderAggregateRoot>;
+public record GetOrderAggregateQuery(Guid CustomerId, Guid OrderId) : IQuery<Order>;

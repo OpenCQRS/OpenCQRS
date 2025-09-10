@@ -17,7 +17,7 @@ public static class AggregateExtensions
     /// This method handles serialization, metadata extraction, and infrastructure property mapping to create
     /// a complete database entity ready for storage in the event sourcing system.
     /// </summary>
-    /// <param name="aggregateRoot">
+    /// <param name="aggregate">
     /// The domain aggregate instance to convert. Must implement <see cref="IAggregateRoot"/> and have
     /// the <see cref="AggregateType"/> attribute for proper type metadata extraction.
     /// </param>
@@ -117,26 +117,26 @@ public static class AggregateExtensions
     /// // - LatestEventSequence: 0
     /// </code>
     /// </example>
-    public static AggregateEntity ToAggregateEntity<T>(this IAggregateRoot aggregateRoot, IStreamId streamId, IAggregateId<T> aggregateId, int newLatestEventSequence) where T : IAggregateRoot
+    public static AggregateEntity ToAggregateEntity<T>(this IAggregateRoot aggregate, IStreamId streamId, IAggregateId<T> aggregateId, int newLatestEventSequence) where T : IAggregateRoot
     {
-        var aggregateType = aggregateRoot.GetType().GetCustomAttribute<AggregateType>();
+        var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
         {
-            throw new InvalidOperationException($"Aggregate {aggregateRoot.GetType().Name} does not have a AggregateType attribute.");
+            throw new InvalidOperationException($"Aggregate {aggregate.GetType().Name} does not have a AggregateType attribute.");
         }
 
-        aggregateRoot.StreamId = streamId.Id;
-        aggregateRoot.AggregateId = aggregateId.ToStoreId();
-        aggregateRoot.LatestEventSequence = newLatestEventSequence;
+        aggregate.StreamId = streamId.Id;
+        aggregate.AggregateId = aggregateId.ToStoreId();
+        aggregate.LatestEventSequence = newLatestEventSequence;
 
         return new AggregateEntity
         {
             Id = aggregateId.ToStoreId(),
             StreamId = streamId.Id,
-            Version = aggregateRoot.Version,
+            Version = aggregate.Version,
             LatestEventSequence = newLatestEventSequence,
             AggregateType = TypeBindings.GetTypeBindingKey(aggregateType.Name, aggregateType.Version),
-            Data = JsonConvert.SerializeObject(aggregateRoot)
+            Data = JsonConvert.SerializeObject(aggregate)
         };
     }
 }

@@ -6,12 +6,12 @@ using OpenCqrs.Results;
 
 namespace OpenCqrs.Examples.EventSourcing.Cosmos.Queries.Handlers;
 
-public class GetOrderAggregateQueryHandler(IDomainService domainService) : IQueryHandler<GetOrderAggregateQuery, OrderAggregateRoot>
+public class GetOrderAggregateQueryHandler(IDomainService domainService) : IQueryHandler<GetOrderQuery, Order>
 {
-    public async Task<Result<OrderAggregateRoot>> Handle(GetOrderAggregateQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<Order>> Handle(GetOrderQuery query, CancellationToken cancellationToken = default)
     {
         var customerStreamId = new CustomerStreamId(query.CustomerId);
-        var orderAggregateId = new OrderAggregateId(query.OrderId);
+        var orderAggregateId = new OrderId(query.OrderId);
 
         return await domainService.GetAggregate(customerStreamId, orderAggregateId, applyNewDomainEvents: false, cancellationToken);
     }
