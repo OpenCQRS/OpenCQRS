@@ -156,7 +156,7 @@ In the Entity Framework Core store provider, IdentityDbContext from ASP.NET Core
 
 ```C#
 [AggregateType("Order")]
-puclic class OrderAggregate : Aggregate
+puclic class OrderAggregate : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [

@@ -10,7 +10,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Updates an existing aggregate with new events from its stream.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate.</param>
@@ -26,15 +26,15 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<T>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is null)
         {
-            return new TAggregate();
+            return new T();
         }
 
-        var aggregate = aggregateEntity.ToAggregate<TAggregate>();
+        var aggregate = aggregateEntity.ToAggregate<T>();
 
         return await domainDbContext.UpdateAggregate(streamId, aggregateId, aggregate, cancellationToken);
     }

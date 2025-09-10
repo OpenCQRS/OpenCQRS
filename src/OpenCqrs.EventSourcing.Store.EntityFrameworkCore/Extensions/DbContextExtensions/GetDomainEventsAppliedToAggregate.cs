@@ -9,7 +9,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Retrieves all domain events that have been applied to a specific aggregate instance.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
@@ -24,7 +24,7 @@ public static partial class IDomainDbContextExtensions
     /// var events = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<T>(this IDomainDbContext domainDbContext, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var eventEntitiesAppliedToAggregate = await domainDbContext.GetEventEntitiesAppliedToAggregate(aggregateId, cancellationToken);
         if (eventEntitiesAppliedToAggregate.IsNotSuccess)

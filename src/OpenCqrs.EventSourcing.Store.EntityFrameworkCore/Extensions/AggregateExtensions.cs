@@ -18,7 +18,7 @@ public static class AggregateExtensions
     /// a complete database entity ready for storage in the event sourcing system.
     /// </summary>
     /// <param name="aggregate">
-    /// The domain aggregate instance to convert. Must implement <see cref="IAggregate"/> and have
+    /// The domain aggregate instance to convert. Must implement <see cref="IAggregateRoot"/> and have
     /// the <see cref="AggregateType"/> attribute for proper type metadata extraction.
     /// </param>
     /// <param name="streamId">
@@ -93,7 +93,7 @@ public static class AggregateExtensions
     /// 
     /// // Example with specific aggregate types
     /// [AggregateType("Order", 1)]
-    /// public class OrderAggregate : Aggregate
+    /// public class OrderAggregate : AggregateRoot
     /// {
     ///     public Guid OrderId { get; private set; }
     ///     public string CustomerName { get; private set; }
@@ -117,7 +117,7 @@ public static class AggregateExtensions
     /// // - LatestEventSequence: 0
     /// </code>
     /// </example>
-    public static AggregateEntity ToAggregateEntity<TAggregate>(this IAggregate aggregate, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int newLatestEventSequence) where TAggregate : IAggregate
+    public static AggregateEntity ToAggregateEntity<T>(this IAggregateRoot aggregate, IStreamId streamId, IAggregateId<T> aggregateId, int newLatestEventSequence) where T : IAggregateRoot
     {
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)

@@ -21,7 +21,7 @@ public static class AggregateExtensions
     /// <param name="newLatestEventSequence">The latest event sequence number for the aggregate.</param>
     /// <returns>An <see cref="AggregateDocument"/> containing the serialized aggregate data and metadata.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public static AggregateDocument ToAggregateDocument<TAggregate>(this IAggregate aggregate, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int newLatestEventSequence) where TAggregate : IAggregate
+    public static AggregateDocument ToAggregateDocument<T>(this IAggregateRoot aggregate, IStreamId streamId, IAggregateId<T> aggregateId, int newLatestEventSequence) where T : IAggregateRoot
     {
         var aggregateType = aggregate.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)

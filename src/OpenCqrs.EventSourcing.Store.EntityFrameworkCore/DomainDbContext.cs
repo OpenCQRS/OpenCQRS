@@ -224,8 +224,8 @@ public abstract class DomainDbContext(
     /// Detaches the specified aggregate entity from the Entity Framework change tracker to prevent
     /// unintended state tracking and optimize memory usage in event sourcing scenarios.
     /// </summary>
-    /// <typeparam name="TAggregate">
-    /// The type of the aggregate being detached. Must implement <see cref="IAggregate"/> to ensure
+    /// <typeparam name="T">
+    /// The type of the aggregate being detached. Must implement <see cref="IAggregateRoot"/> to ensure
     /// proper aggregate contract compliance and type safety.
     /// </typeparam>
     /// <param name="aggregateId">
@@ -305,7 +305,7 @@ public abstract class DomainDbContext(
     /// }
     /// </code>
     /// </example>
-    public void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregate
+    public void DetachAggregate<T>(IAggregateId<T> aggregateId, T aggregate) where T : IAggregateRoot
     {
         foreach (var entityEntry in ChangeTracker.Entries())
         {

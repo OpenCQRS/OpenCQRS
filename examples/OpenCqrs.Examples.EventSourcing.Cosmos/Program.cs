@@ -22,7 +22,7 @@ var orderId = Guid.NewGuid();
 await dispatcher!.Send(new PlaceOrderCommand(customerId, orderId, Amount: 25m));
 Console.WriteLine("Order placed.");
 
-var aggregate = await dispatcher.Get(new GetOrderAggregateQuery(customerId, orderId));
+var aggregate = await dispatcher.Get(new GetOrderQuery(customerId, orderId));
 Console.WriteLine($"Order retrieved. Amount: {aggregate.Value!.Amount}.");
 
 Console.ReadLine();

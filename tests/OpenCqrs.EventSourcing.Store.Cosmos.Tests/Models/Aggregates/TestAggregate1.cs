@@ -4,7 +4,7 @@ using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
 
 [AggregateType("TestAggregate1")]
-public class TestAggregate1 : Aggregate
+public class TestAggregate1 : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [

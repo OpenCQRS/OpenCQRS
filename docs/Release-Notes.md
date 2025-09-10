@@ -1,5 +1,9 @@
 # Release Notes
 
+## OpenCQRS 7.1.1
+_**Released 10/09/2025**_
+- Rename Aggregate to AggregateRoot
+
 ## OpenCQRS 7.1.0
 _**Released 10/09/2025**_
 - New methods in the domain service (EntityFrameworkCore and CosmosDB):

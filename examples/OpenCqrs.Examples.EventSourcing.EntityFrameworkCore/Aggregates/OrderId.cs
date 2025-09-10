@@ -2,7 +2,7 @@
 
 namespace OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Aggregates;
 
-public class OrderAggregateId(Guid orderId) : IAggregateId<OrderAggregate>
+public class OrderId(Guid orderId) : IAggregateId<Order>
 {
     public string Id => $"order:{orderId}";
 }

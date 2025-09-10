@@ -87,7 +87,7 @@ public static class AggregateEntityExtensions
     /// var aggregate = entity.ToAggregate&lt;OrderAggregate&gt;();
     /// </code>
     /// </example>
-    public static T ToAggregate<T>(this AggregateEntity aggregateEntity) where T : IAggregate
+    public static T ToAggregate<T>(this AggregateEntity aggregateEntity) where T : IAggregateRoot
     {
         var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateEntity.AggregateType, out var aggregateType);
         if (typeFound is false)

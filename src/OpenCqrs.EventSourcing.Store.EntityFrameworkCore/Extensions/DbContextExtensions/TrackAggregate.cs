@@ -9,7 +9,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Tracks an aggregate's uncommitted events and state changes in the Entity Framework change tracker.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate.</param>
@@ -27,7 +27,7 @@ public static partial class IDomainDbContextExtensions
     /// var (eventEntities, aggregateEntity, aggregateEventEntities) = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<(List<EventEntity>? EventEntities, AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
+    public static async Task<Result<(List<EventEntity>? EventEntities, AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot
     {
         if (!aggregate.UncommittedEvents.Any())
         {

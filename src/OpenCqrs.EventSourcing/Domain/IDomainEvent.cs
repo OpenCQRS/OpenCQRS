@@ -31,7 +31,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// }
 /// 
 /// // Usage in aggregates
-/// public class Order : Aggregate
+/// public class Order : AggregateRoot
 /// {
 ///     public void PlaceOrder(CustomerId customerId, List&lt;OrderItem&gt; items)
 ///     {

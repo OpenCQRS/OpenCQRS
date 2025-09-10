@@ -5,7 +5,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// Aggregates are consistency boundaries that encapsulate business logic and maintain invariants
 /// through the application of domain events stored in event streams.
 /// </summary>
-public interface IAggregate
+public interface IAggregateRoot
 {
     /// <summary>
     /// Gets or sets the unique identifier for the event stream associated with this aggregate.

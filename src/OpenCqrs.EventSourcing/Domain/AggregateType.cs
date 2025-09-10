@@ -15,7 +15,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// <example>
 /// <code>
 /// [AggregateType("Order")]
-/// public class OrderAggregate : Aggregate
+/// public class OrderAggregate : AggregateRoot
 /// {
 ///     // Aggregate implementation
 /// }
@@ -24,7 +24,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// <example>
 /// <code>
 /// [AggregateType("User", 2)]
-/// public class UserAggregate : Aggregate
+/// public class UserAggregate : AggregateRoot
 /// {
 ///     // Aggregate implementation with version 2
 /// }
