@@ -6,6 +6,8 @@
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
+[Full Documentation](https://opencqrs.github.io/OpenCQRS/)
+
 ## Main Features
 
 - Multiple aggregates per stream
@@ -200,25 +202,6 @@ var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 // Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
-
-## Full Documentation
-
-- [Installation](docs/Installation.md)
-- [Configuration](docs/Configuration.md)
-- [Basics](docs/Basics.md)
-  - [Commands](docs/Commands.md)
-  - [Queries](docs/Queries.md)
-  - [Notifications](docs/Notifications.md)
-- [Event Sourcing](docs/Event-Sourcing.md)
-  - [Domain](docs/Domain.md)
-  - [Domain Service](docs/Domain-Service.md)
-  - [Scenarios](docs/Event-Sourcing-Scenarios.md)
-  - [Store Providers](docs/Store-Providers.md)
-    - [Cosmos DB](docs/Cosmos.md)
-    - [Entity Framework Core](docs/Entity-Framework-Core.md)
-      - [Extensions](docs/Entity-Framework-Core-Extensions.md)
-      - [Scenarios](docs/Entity-Framework-Core-Scenarios.md)
-- [Release Notes](docs/Release-Notes.md)
 
 ## Roadmap
 
