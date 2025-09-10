@@ -578,7 +578,7 @@ public class CosmosDataStore : ICosmosDataStore
             ex.AddException(streamId, operation: "Get Event Documents between Dates");
             return ErrorHandling.DefaultFailure;
         }
-        
+
         return eventDocuments;
     }
 

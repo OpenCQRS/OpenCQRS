@@ -31,7 +31,7 @@ public static class DiagnosticsExtensions
             { "cosmos.count", batchResponse.Count }
         }));
     }
-    
+
     /// <summary>
     /// Adds an activity event for a CosmosDB batch response with event document information.
     /// </summary>
@@ -73,7 +73,7 @@ public static class DiagnosticsExtensions
             { "cosmos.requestCharge", itemResponse.RequestCharge }
         }));
     }
-    
+
     /// <summary>
     /// Adds an activity event for a CosmosDB feed response with stream information.
     /// </summary>
@@ -92,7 +92,7 @@ public static class DiagnosticsExtensions
             { "cosmos.count", feedResponse.Count }
         }));
     }
-    
+
     /// <summary>
     /// Adds an activity event for concurrency exceptions with sequence information.
     /// </summary>
