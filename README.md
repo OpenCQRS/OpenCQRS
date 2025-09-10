@@ -12,10 +12,10 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 
 - Multiple aggregates per stream
 - Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent 
-- In memory aggregate reconstruction up to a specific event sequence if provided _(soon up to aggregate version or up to a specific date/time)_
+- In memory aggregate reconstruction up to a specific event sequence or date if provided _(soon up to aggregate version)_
 - Events applied to the aggregate filtered by event type
 - Retrieval of all domain events applied to an aggregate
-- Querying stream events from or up to a specific event sequence _(soon from or up to a specific date/time or date range)_
+- Querying stream events from or up to a specific event sequence or date/date range
 - Optimistic concurrency control with an expected event sequence
 - Automatic event/notification publication after a command is successfully processed that returns a list of results from all notification handlers
 - Automatic command validation with FluentValidation if required
