@@ -35,7 +35,7 @@ public abstract class IdentityDomainDbContext(
     public DbSet<EventEntity> Events { get; set; } = null!;
     public DbSet<AggregateEventEntity> AggregateEvents { get; set; } = null!;
 
-    public void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregateRoot
+    public void DetachAggregate<T>(IAggregateId<T> aggregateId, T aggregate) where T : IAggregateRoot
     {
         foreach (var entityEntry in ChangeTracker.Entries())
         {

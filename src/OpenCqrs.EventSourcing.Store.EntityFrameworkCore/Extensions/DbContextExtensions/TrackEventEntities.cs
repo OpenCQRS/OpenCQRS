@@ -9,7 +9,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Tracks an aggregate's state changes based on a list of event entities.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate.</param>
@@ -27,7 +27,7 @@ public static partial class IDomainDbContextExtensions
     /// var (aggregateEntity, aggregateEventEntities) = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackEventEntities<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public static async Task<Result<(AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackEventEntities<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, List<EventEntity> eventEntities, int expectedEventSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         if (eventEntities.Count == 0)
         {

@@ -117,7 +117,7 @@ public static class AggregateExtensions
     /// // - LatestEventSequence: 0
     /// </code>
     /// </example>
-    public static AggregateEntity ToAggregateEntity<TAggregate>(this IAggregateRoot aggregateRoot, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int newLatestEventSequence) where TAggregate : IAggregateRoot
+    public static AggregateEntity ToAggregateEntity<T>(this IAggregateRoot aggregateRoot, IStreamId streamId, IAggregateId<T> aggregateId, int newLatestEventSequence) where T : IAggregateRoot
     {
         var aggregateType = aggregateRoot.GetType().GetCustomAttribute<AggregateType>();
         if (aggregateType == null)

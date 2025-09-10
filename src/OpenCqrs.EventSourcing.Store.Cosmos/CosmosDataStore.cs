@@ -38,13 +38,13 @@ public class CosmosDataStore : ICosmosDataStore
     /// <summary>
     /// Retrieves an aggregate document from Cosmos DB for the specified stream and aggregate.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of aggregate to retrieve.</typeparam>
+    /// <typeparam name="T">The type of aggregate to retrieve.</typeparam>
     /// <param name="streamId">The stream identifier containing the aggregate.</param>
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the aggregate document if found, null if not found, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public async Task<Result<AggregateDocument?>> GetAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateDocumentId = aggregateId.ToStoreId();
 
@@ -69,13 +69,13 @@ public class CosmosDataStore : ICosmosDataStore
     /// Retrieves all aggregate event documents for a specific aggregate from Cosmos DB.
     /// The results are ordered by applied date.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of aggregate whose events to retrieve.</typeparam>
+    /// <typeparam name="T">The type of aggregate whose events to retrieve.</typeparam>
     /// <param name="streamId">The stream identifier containing the aggregate.</param>
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of aggregate event documents, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
         var queryDefinition = new QueryDefinition(sql)
@@ -587,16 +587,16 @@ public class CosmosDataStore : ICosmosDataStore
     /// This method retrieves new events since the aggregate's last update, applies them to the aggregate, 
     /// and creates aggregate event documents to track the relationship between the aggregate and events.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of aggregate to update.</typeparam>
+    /// <typeparam name="T">The type of aggregate to update.</typeparam>
     /// <param name="streamId">The stream identifier containing the aggregate.</param>
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="aggregateDocument">The current aggregate document to update.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the updated aggregate, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public async Task<Result<T>> UpdateAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var aggregate = aggregateDocument.ToAggregate<TAggregate>();
+        var aggregate = aggregateDocument.ToAggregate<T>();
 
         var currentAggregateVersion = aggregate.Version;
 

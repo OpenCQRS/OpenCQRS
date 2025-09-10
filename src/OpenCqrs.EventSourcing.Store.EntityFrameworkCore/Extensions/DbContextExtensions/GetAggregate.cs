@@ -10,7 +10,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Retrieves an aggregate from the event store, reconstructing it from events if no snapshot exists.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate to retrieve.</typeparam>
+    /// <typeparam name="T">The type of the aggregate to retrieve.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate instance.</param>
@@ -27,12 +27,12 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public static async Task<Result<T>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
         {
-            var currentAggregate = aggregateEntity.ToAggregate<TAggregate>();
+            var currentAggregate = aggregateEntity.ToAggregate<T>();
             if (!applyNewDomainEvents)
             {
                 return currentAggregate;
@@ -40,7 +40,7 @@ public static partial class IDomainDbContextExtensions
             return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
         }
 
-        var aggregate = new TAggregate();
+        var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntities(streamId, aggregate.EventTypeFilter, cancellationToken);
         if (eventEntities.Count == 0)

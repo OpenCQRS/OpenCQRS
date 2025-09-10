@@ -12,7 +12,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Retrieves an in-memory aggregate for a given stream and aggregate ID.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
@@ -28,9 +28,9 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public static async Task<Result<T>> GetInMemoryAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var aggregate = new TAggregate();
+        var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntities(streamId, aggregate.EventTypeFilter, cancellationToken);
         if (eventEntities.Count == 0)
@@ -49,7 +49,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Retrieves an in-memory aggregate for a given stream and aggregate ID up to a specified sequence.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
@@ -66,9 +66,9 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public static async Task<Result<T>> GetInMemoryAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var aggregate = new TAggregate();
+        var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntitiesUpToSequence(streamId, upToSequence, aggregate.EventTypeFilter, cancellationToken);
         if (eventEntities.Count == 0)
@@ -87,7 +87,7 @@ public static partial class IDomainDbContextExtensions
     /// <summary>
     /// Retrieves an in-memory aggregate for a given stream and aggregate ID up to a specified date.
     /// </summary>
-    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <typeparam name="T">The type of the aggregate.</typeparam>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
@@ -104,9 +104,9 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
+    public static async Task<Result<T>> GetInMemoryAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var aggregate = new TAggregate();
+        var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntitiesUpToDate(streamId, upToDate, aggregate.EventTypeFilter, cancellationToken);
         if (eventEntities.Count == 0)

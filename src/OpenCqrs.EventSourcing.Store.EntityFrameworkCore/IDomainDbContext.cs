@@ -22,8 +22,8 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore;
 ///     public DbSet&lt;EventEntity&gt; Events { get; set; } = null!;
 ///     public DbSet&lt;AggregateEventEntity&gt; AggregateEvents { get; set; } = null!;
 ///     
-///     public void DetachAggregate&lt;TAggregate&gt;(IAggregateId aggregateId, TAggregate aggregate) 
-///         where TAggregate : IAggregate
+///     public void DetachAggregate&lt;T&gt;(IAggregateId aggregateId, T aggregate) 
+///         where T : IAggregate
 ///     {
 ///         // Find and detach any tracked entities for this aggregate
 ///         var trackedEntries = ChangeTracker.Entries()
@@ -565,7 +565,7 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// for aggregate lifecycle management in event sourcing scenarios where aggregates should not
     /// remain in the context after their business operations are complete.
     /// </summary>
-    /// <typeparam name="TAggregate">
+    /// <typeparam name="T">
     /// The type of aggregate to detach. Must implement <see cref="IAggregateRoot"/> to ensure
     /// proper aggregate behavior and lifecycle management.
     /// </typeparam>
@@ -580,8 +580,8 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// <example>
     /// <code>
     /// // Basic implementation of DetachAggregate
-    /// public void DetachAggregate&lt;TAggregate&gt;(IAggregateId aggregateId, TAggregate aggregate) 
-    ///     where TAggregate : IAggregate
+    /// public void DetachAggregate&lt;T&gt;(IAggregateId aggregateId, T aggregate) 
+    ///     where T : IAggregate
     /// {
     ///     // Find all tracked entries related to this aggregate
     ///     var trackedEntries = ChangeTracker.Entries()
@@ -640,8 +640,8 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// 
     /// // Batch detachment for multiple aggregates
-    /// public void DetachAllAggregates&lt;TAggregate&gt;(List&lt;(IAggregateId Id, TAggregate Aggregate)&gt; aggregates)
-    ///     where TAggregate : IAggregate
+    /// public void DetachAllAggregates&lt;T&gt;(List&lt;(IAggregateId Id, T Aggregate)&gt; aggregates)
+    ///     where T : IAggregate
     /// {
     ///     foreach (var (aggregateId, aggregate) in aggregates)
     ///     {
@@ -650,9 +650,9 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// 
     /// // Advanced detachment with logging
-    /// public void DetachAggregateWithLogging&lt;TAggregate&gt;(
+    /// public void DetachAggregateWithLogging&lt;T&gt;(
     ///     IAggregateId aggregateId, 
-    ///     TAggregate aggregate) where TAggregate : IAggregate
+    ///     T aggregate) where T : IAggregate
     /// {
     ///     var trackedCount = ChangeTracker.Entries().Count();
     ///     _logger.LogDebug("Detaching aggregate {AggregateId}, tracking {Count} entities", 
@@ -683,9 +683,9 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// 
     /// // Error-safe detachment operation
-    /// public void SafeDetachAggregate&lt;TAggregate&gt;(
+    /// public void SafeDetachAggregate&lt;T&gt;(
     ///     IAggregateId aggregateId, 
-    ///     TAggregate aggregate) where TAggregate : IAggregate
+    ///     T aggregate) where T : IAggregate
     /// {
     ///     try
     ///     {
@@ -703,5 +703,5 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// </code>
     /// </example>
-    void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregateRoot;
+    void DetachAggregate<T>(IAggregateId<T> aggregateId, T aggregate) where T : IAggregateRoot;
 }
