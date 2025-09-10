@@ -19,11 +19,11 @@ public static partial class IDomainDbContextExtensions
     /// <returns>A list of domain events.</returns>
     /// <example>
     /// <code>
-    /// var events = await context.GetDomainEventsUpToDate(streamId, upToDate);
-    /// var filteredEvents = await context.GetDomainEventsUpToDate(streamId, upToDate, new[] { typeof(SomeEvent) });
+    /// var events = await context.GetEventsUpToDate(streamId, upToDate);
+    /// var filteredEvents = await context.GetEventsUpToDate(streamId, upToDate, new[] { typeof(SomeEvent) });
     /// </code>
     /// </example>
-    public static async Task<List<IDomainEvent>> GetDomainEventsUpToDate(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public static async Task<List<IEvent>> GetEventsUpToDate(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntitiesUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
         return eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();

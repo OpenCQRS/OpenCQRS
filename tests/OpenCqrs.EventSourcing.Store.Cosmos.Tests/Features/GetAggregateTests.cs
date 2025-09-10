@@ -121,11 +121,11 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new SomethingHappenedEvent(Something: "Something")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
@@ -145,12 +145,12 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         await DomainService.GetAggregate(streamId, aggregateId);
         var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
@@ -171,12 +171,12 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
@@ -197,7 +197,7 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequested_ThenTheUpdatedAggregateIsReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequested_ThenTheUpdatedAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -206,13 +206,13 @@ public class GetAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
-        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         using (new AssertionScope())
         {

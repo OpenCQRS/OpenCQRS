@@ -9,7 +9,7 @@ using Xunit;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
 
-public class GetDomainEventsAppliedToAggregateTests : TestBase
+public class GetEventsAppliedToAggregateTests : TestBase
 {
     [Fact]
     public async Task GivenAggregateSaved_ThenOnlyAggregateEventsAppliedAreReturned()
@@ -33,7 +33,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
         await dbContext.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
 
-        var result = await dbContext.GetDomainEventsAppliedToAggregate(aggregateId);
+        var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())
         {
@@ -59,7 +59,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         await dbContext.TrackEventEntities(streamId, testAggregate2Key, trackResult.Value.EventEntities!, expectedEventSequence: 0);
         await dbContext.Save();
 
-        var result = await dbContext.GetDomainEventsAppliedToAggregate(testAggregate2Key);
+        var result = await dbContext.GetEventsAppliedToAggregate(testAggregate2Key);
 
         using (new AssertionScope())
         {
@@ -83,7 +83,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         await dbContext.SaveChangesAsync();
 
         await dbContext.GetAggregate(streamId, aggregateId);
-        var result = await dbContext.GetDomainEventsAppliedToAggregate(aggregateId);
+        var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())
         {
@@ -94,7 +94,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -107,8 +107,8 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.Save();
 
-        await dbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
-        var result = await dbContext.GetDomainEventsAppliedToAggregate(aggregateId);
+        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())
         {
@@ -119,7 +119,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -133,7 +133,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         await dbContext.Save();
 
         await dbContext.UpdateAggregate(streamId, aggregateId);
-        var result = await dbContext.GetDomainEventsAppliedToAggregate(aggregateId);
+        var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())
         {

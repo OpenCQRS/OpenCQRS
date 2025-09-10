@@ -2,5 +2,5 @@
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Models.Events;
 
-[DomainEventType("TestAggregateUpdated")]
-public record TestAggregateUpdatedEvent(string Id, string Name, string Description) : IDomainEvent;
+[EventType("TestAggregateUpdated")]
+public record TestAggregateUpdatedEvent(string Id, string Name, string Description) : IEvent;

@@ -1,14 +1,14 @@
 namespace OpenCqrs.EventSourcing.Domain;
 
 /// <summary>
-/// Provides type binding dictionaries for domain events and aggregates.
+/// Provides type-binding dictionaries for domain events and aggregates.
 /// </summary>
 public static class TypeBindings
 {
     /// <summary>
-    /// Gets or sets the domain event type bindings.
+    /// Gets or sets the event type bindings.
     /// </summary>
-    public static Dictionary<string, Type> DomainEventTypeBindings { get; set; } = new();
+    public static Dictionary<string, Type> EventTypeBindings { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the aggregate type bindings.

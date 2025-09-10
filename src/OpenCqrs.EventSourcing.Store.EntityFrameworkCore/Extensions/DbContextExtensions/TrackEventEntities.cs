@@ -46,13 +46,13 @@ public static partial class IDomainDbContextExtensions
         var eventEntitiesHandledByTheAggregate = new Dictionary<int, EventEntity>();
         for (var i = 0; i < eventEntities.Count; i++)
         {
-            var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventEntities[i].EventType, out var eventType);
+            var typeFound = TypeBindings.EventTypeBindings.TryGetValue(eventEntities[i].EventType, out var eventType);
             if (typeFound is false)
             {
                 throw new InvalidOperationException($"Event type {eventEntities[i].EventType} not found in TypeBindings");
             }
 
-            if (aggregate.IsDomainEventHandled(eventType!))
+            if (aggregate.IsEventHandled(eventType!))
             {
                 eventEntitiesHandledByTheAggregate.Add(i + 1, eventEntities[i]);
             }
@@ -63,7 +63,7 @@ public static partial class IDomainDbContextExtensions
             return (null, null);
         }
 
-        aggregate.Apply(eventEntitiesHandledByTheAggregate.Select(domainEvent => domainEvent.Value.ToDomainEvent()));
+        aggregate.Apply(eventEntitiesHandledByTheAggregate.Select(@event => @event.Value.ToDomainEvent()));
 
         var newLatestEventSequenceForAggregate = expectedEventSequence + eventEntitiesHandledByTheAggregate.Last().Key;
         var trackedAggregateEntity = domainDbContext.TrackAggregateEntity(streamId, aggregateId, aggregate, newLatestEventSequenceForAggregate, aggregateIsNew);

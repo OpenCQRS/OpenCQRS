@@ -1,6 +1,6 @@
 using OpenCqrs.EventSourcing.Domain;
 
-namespace OpenCqrs.Examples.EventSourcing.Cosmos.DomainEvents;
+namespace OpenCqrs.Examples.EventSourcing.Cosmos.events;
 
-[DomainEventType("OrderPlaced")]
-public record OrderPlacedEvent(Guid OrderId, decimal Amount) : IDomainEvent;
+[EventType("OrderPlaced")]
+public record OrderPlacedEvent(Guid OrderId, decimal Amount) : IEvent;

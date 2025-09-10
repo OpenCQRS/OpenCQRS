@@ -208,13 +208,13 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// <example>
     /// <code>
     /// // Append new events to a stream
-    /// public async Task AppendEventsAsync(string streamId, IEnumerable&lt;IDomainEvent&gt; domainEvents)
+    /// public async Task AppendEventsAsync(string streamId, IEnumerable&lt;IDomainEvent&gt; events)
     /// {
     ///     var lastSequence = await _context.Events
     ///         .Where(e =&gt; e.StreamId == streamId)
     ///         .MaxAsync(e =&gt; (int?)e.Sequence) ?? 0;
     ///     
-    ///     var eventEntities = domainEvents.Select((evt, index) =&gt; 
+    ///     var eventEntities = events.Select((evt, index) =&gt; 
     ///         evt.ToEventEntity(new StreamId(streamId), lastSequence + index + 1)).ToList();
     ///     
     ///     _context.Events.AddRange(eventEntities);

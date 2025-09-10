@@ -128,7 +128,7 @@ public class GetAggregateEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -156,7 +156,7 @@ public class GetAggregateEventsTests : TestBase
         timeProvider.SetUtcNow(date3);
         await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
         {
-            await dbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
+            await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
             var result = await dbContext.GetAggregateEventEntities(aggregateId);
 
             using (new AssertionScope())
@@ -171,7 +171,7 @@ public class GetAggregateEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);

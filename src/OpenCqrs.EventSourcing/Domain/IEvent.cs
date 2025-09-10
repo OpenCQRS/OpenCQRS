@@ -7,8 +7,8 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// </summary>
 /// <example>
 /// <code>
-/// // Simple domain event
-/// [DomainEventType("OrderPlaced", 1)]
+/// // Simple event
+/// [EventType("OrderPlaced", 1)]
 /// public record OrderPlacedEvent : IDomainEvent
 /// {
 ///     public Guid OrderId { get; init; }
@@ -19,7 +19,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// }
 /// 
 /// // Event with business context
-/// [DomainEventType("PaymentProcessed", 1)]
+/// [EventType("PaymentProcessed", 1)]
 /// public record PaymentProcessedEvent : IDomainEvent
 /// {
 ///     public Guid PaymentId { get; init; }
@@ -49,4 +49,4 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// }
 /// </code>
 /// </example>
-public interface IDomainEvent;
+public interface IEvent;

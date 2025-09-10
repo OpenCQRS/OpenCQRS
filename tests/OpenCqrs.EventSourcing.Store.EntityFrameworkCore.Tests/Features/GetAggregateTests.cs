@@ -203,7 +203,7 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequested_ThenTheUpdatedAggregateIsReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequested_ThenTheUpdatedAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -216,7 +216,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.Save();
 
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
+        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         using (new AssertionScope())
         {

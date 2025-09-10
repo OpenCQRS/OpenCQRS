@@ -2,5 +2,5 @@
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Events;
 
-[DomainEventType("SomethingHappened")]
-public record SomethingHappenedEvent(string Something) : IDomainEvent;
+[EventType("SomethingHappened")]
+public record SomethingHappenedEvent(string Something) : IEvent;

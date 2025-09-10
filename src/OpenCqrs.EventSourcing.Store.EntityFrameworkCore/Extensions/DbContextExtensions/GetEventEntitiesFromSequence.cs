@@ -33,7 +33,7 @@ public static partial class IDomainDbContextExtensions
         }
 
         var eventTypes = eventTypeFilter!
-            .Select(eventType => TypeBindings.DomainEventTypeBindings.FirstOrDefault(b => b.Value == eventType))
+            .Select(eventType => TypeBindings.EventTypeBindings.FirstOrDefault(b => b.Value == eventType))
             .Select(b => b.Key).ToList();
 
         return await domainDbContext.Events.AsNoTracking()

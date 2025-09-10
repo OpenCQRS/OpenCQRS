@@ -10,10 +10,10 @@ using Xunit;
 
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
 
-public class GetDomainEventsTests : TestBase
+public class GetEventsTests : TestBase
 {
     [Fact]
-    public async Task GiveMultipleDomainEventsSaved_WhenAllDomainEventsAreRequested_ThenAllDomainEventsAreReturned()
+    public async Task GiveMultipleEventsSaved_WhenAllEventsAreRequested_ThenAllEventsAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -24,13 +24,13 @@ public class GetDomainEventsTests : TestBase
         aggregate.Update("Updated Name 3", "Updated Description 3");
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = await DomainService.GetDomainEvents(streamId);
+        var events = await DomainService.GetEvents(streamId);
 
-        domainEvents.Value!.Count.Should().Be(4);
+        events.Value!.Count.Should().Be(4);
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsSaved_WhenOnlyDomainEventsUpToASpecificSequenceAreRequested_ThenOnlyDomainEventsUpToTheSpecificSequenceAreReturned()
+    public async Task GiveMultipleEventsSaved_WhenOnlyEventsUpToASpecificSequenceAreRequested_ThenOnlyEventsUpToTheSpecificSequenceAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -42,13 +42,13 @@ public class GetDomainEventsTests : TestBase
 
         await using var dbContext = Shared.CreateTestDbContext();
         await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = await dbContext.GetDomainEventsUpToSequence(streamId, upToSequence: 3);
+        var events = await dbContext.GetEventsUpToSequence(streamId, upToSequence: 3);
 
-        domainEvents.Count.Should().Be(3);
+        events.Count.Should().Be(3);
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsSaved_WhenOnlyDomainEventsFromASpecificSequenceAreRequested_ThenOnlyDomainEventsFromTheSpecificSequenceAreReturned()
+    public async Task GiveMultipleEventsSaved_WhenOnlyEventsFromASpecificSequenceAreRequested_ThenOnlyEventsFromTheSpecificSequenceAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -60,13 +60,13 @@ public class GetDomainEventsTests : TestBase
 
         await using var dbContext = Shared.CreateTestDbContext();
         await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = await dbContext.GetDomainEventsFromSequence(streamId, fromSequence: 3);
+        var events = await dbContext.GetEventsFromSequence(streamId, fromSequence: 3);
 
-        domainEvents.Count.Should().Be(2);
+        events.Count.Should().Be(2);
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificSequencesAreRequested_ThenOnlyDomainEventsBetweenSpecificSequencesAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsBetweenSpecificSequencesAreRequested_ThenOnlyEventsBetweenSpecificSequencesAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -78,13 +78,13 @@ public class GetDomainEventsTests : TestBase
         aggregate.Update("Updated Name 4", "Updated Description 4");
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = await DomainService.GetDomainEventsBetweenSequences(streamId, fromSequence: 2, toSequence: 4);
+        var events = await DomainService.GetEventsBetweenSequences(streamId, fromSequence: 2, toSequence: 4);
 
-        domainEvents.Value!.Count.Should().Be(3);
+        events.Value!.Count.Should().Be(3);
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsUpToASpecificDateAreRequested_ThenDomainEventsUpToASpecificDateAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsUpToASpecificDateAreRequested_ThenEventsUpToASpecificDateAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -92,24 +92,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2")
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something5"),
             new SomethingHappenedEvent("Something6")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        var result = await domainService.GetEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
         using (new AssertionScope())
         {
             result.Value!.Count.Should().Be(4);
@@ -121,7 +121,7 @@ public class GetDomainEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsUpToASpecificDateFilteredByEventTypeAreRequested_ThenDomainEventsUpToASpecificDateFilteredByEventTypeAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsUpToASpecificDateFilteredByEventTypeAreRequested_ThenEventsUpToASpecificDateFilteredByEventTypeAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -129,24 +129,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new TestAggregateCreatedEvent(Guid.NewGuid().ToString(), "Test Name", "Test Description"),
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something2"),
             new TestAggregateUpdatedEvent(Guid.NewGuid().ToString(), "Updated Name", "Updated Description")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)), eventTypeFilter: [typeof(SomethingHappenedEvent)]);
+        var result = await domainService.GetEventsUpToDate(streamId, upToDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)), eventTypeFilter: [typeof(SomethingHappenedEvent)]);
         using (new AssertionScope())
         {
             result.Value!.Count.Should().Be(2);
@@ -156,7 +156,7 @@ public class GetDomainEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsFromASpecificDateAreRequested_ThenDomainEventsFromASpecificDateAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsFromASpecificDateAreRequested_ThenEventsFromASpecificDateAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -164,24 +164,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2")
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something5"),
             new SomethingHappenedEvent("Something6")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsFromDate(streamId, fromDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
+        var result = await domainService.GetEventsFromDate(streamId, fromDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
         using (new AssertionScope())
         {
             result.Value!.Count.Should().Be(4);
@@ -193,7 +193,7 @@ public class GetDomainEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsFromASpecificDateFilteredByEventTypeAreRequested_ThenDomainEventsFromASpecificDateFilteredByEventTypeAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsFromASpecificDateFilteredByEventTypeAreRequested_ThenEventsFromASpecificDateFilteredByEventTypeAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -201,24 +201,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new TestAggregateCreatedEvent(Guid.NewGuid().ToString(), "Test Name", "Test Description"),
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something2"),
             new TestAggregateUpdatedEvent(Guid.NewGuid().ToString(), "Updated Name", "Updated Description")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsFromDate(streamId, fromDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)), eventTypeFilter: [typeof(SomethingHappenedEvent)]);
+        var result = await domainService.GetEventsFromDate(streamId, fromDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)), eventTypeFilter: [typeof(SomethingHappenedEvent)]);
         using (new AssertionScope())
         {
             result.Value!.Count.Should().Be(3);
@@ -229,7 +229,7 @@ public class GetDomainEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificDatesAreRequested_ThenDomainEventsBetweenSpecificDatesAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsBetweenSpecificDatesAreRequested_ThenEventsBetweenSpecificDatesAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -237,24 +237,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2")
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something5"),
             new SomethingHappenedEvent("Something6")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsBetweenDates(streamId,
+        var result = await domainService.GetEventsBetweenDates(streamId,
             fromDate: new DateTimeOffset(new DateTime(2024, 6, 10, 12, 10, 25)),
             toDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)));
         using (new AssertionScope())
@@ -268,7 +268,7 @@ public class GetDomainEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GiveMultipleDomainEventsStored_WhenOnlyDomainEventsBetweenSpecificDatesFilteredByEventTypeAreRequested_ThenDomainEventsBetweenSpecificDatesFilteredByEventTypeAreReturned()
+    public async Task GiveMultipleEventsStored_WhenOnlyEventsBetweenSpecificDatesFilteredByEventTypeAreRequested_ThenEventsBetweenSpecificDatesFilteredByEventTypeAreReturned()
     {
         var streamId = new TestStreamId(Guid.NewGuid().ToString());
         var timeProvider = new FakeTimeProvider();
@@ -276,24 +276,24 @@ public class GetDomainEventsTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something1"),
             new TestAggregateCreatedEvent(Guid.NewGuid().ToString(), "Test Name", "Test Description"),
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something2"),
             new TestAggregateUpdatedEvent(Guid.NewGuid().ToString(), "Updated Name", "Updated Description")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 4);
 
-        var result = await domainService.GetDomainEventsBetweenDates(streamId,
+        var result = await domainService.GetEventsBetweenDates(streamId,
             fromDate: new DateTimeOffset(new DateTime(2024, 6, 10, 12, 10, 25)),
             toDate: new DateTimeOffset(new DateTime(2024, 6, 15, 17, 45, 48)),
             eventTypeFilter: [typeof(SomethingHappenedEvent)]);

@@ -29,7 +29,7 @@ public interface IAggregateRoot
     /// Gets or sets the current version of the aggregate based on the number of events applied.
     /// </summary>
     /// <value>
-    /// An integer representing the aggregate's version, which increments with each applied domain event.
+    /// An integer representing the aggregate's version, which increments with each applied event.
     /// Used for optimistic concurrency control and tracking aggregate evolution.
     /// </value>
     int Version { get; set; }
@@ -47,36 +47,36 @@ public interface IAggregateRoot
     /// Gets the collection of domain events that have been generated but not yet persisted to the event store.
     /// </summary>
     /// <value>
-    /// A read-only collection of <see cref="IDomainEvent"/> instances representing state changes
+    /// A read-only collection of <see cref="IEvent"/> instances representing state changes
     /// that occurred during the current operation but haven't been committed to storage.
     /// </value>
-    IEnumerable<IDomainEvent> UncommittedEvents { get; }
+    IEnumerable<IEvent> UncommittedEvents { get; }
 
     /// <summary>
     /// Applies a collection of domain events to rebuild the aggregate's state.
     /// Used during aggregate reconstruction from the event store.
     /// </summary>
-    /// <param name="domainEvents">
+    /// <param name="events">
     /// The collection of domain events to apply to the aggregate in chronological order.
     /// </param>
-    void Apply(IEnumerable<IDomainEvent> domainEvents);
+    void Apply(IEnumerable<IEvent> events);
 
     /// <summary>
     /// Gets an array of event types that this aggregate can handle.
     /// Returns null or empty array if all event types are handled.
     /// </summary>
     /// <value>
-    /// An array of <see cref="Type"/> objects representing the domain event types that this aggregate
+    /// An array of <see cref="Type"/> objects representing the event types that this aggregate
     /// can process, or null/empty if the aggregate handles all event types.
     /// </value>
     Type[]? EventTypeFilter { get; }
 
     /// <summary>
-    /// Determines whether this aggregate can handle the specified domain event type.
+    /// Determines whether this aggregate can handle the specified event type.
     /// </summary>
-    /// <param name="domainEventType">The type of domain event to check.</param>
+    /// <param name="eventType">The type of event to check.</param>
     /// <returns>
     /// <c>true</c> if the aggregate can handle the specified event type; otherwise, <c>false</c>.
     /// </returns>
-    bool IsDomainEventHandled(Type domainEventType);
+    bool IsEventHandled(Type eventType);
 }

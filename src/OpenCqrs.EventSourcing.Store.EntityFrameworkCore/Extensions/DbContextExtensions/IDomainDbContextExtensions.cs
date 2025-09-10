@@ -16,8 +16,8 @@ public static partial class IDomainDbContextExtensions
             return aggregate;
         }
 
-        var newDomainEvents = newEventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
-        aggregate.Apply(newDomainEvents);
+        var newEvents = newEventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
+        aggregate.Apply(newEvents);
 
         if (aggregate.Version == currentAggregateVersion)
         {
@@ -43,9 +43,9 @@ public static partial class IDomainDbContextExtensions
         return aggregate;
     }
 
-    private static List<EventEntity> TrackEventEntities(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int startingEventSequence)
+    private static List<EventEntity> TrackEventEntities(this IDomainDbContext domainDbContext, IStreamId streamId, IEvent[] events, int startingEventSequence)
     {
-        var eventEntities = domainEvents.Select((domainEvent, i) => domainEvent.ToEventEntity(streamId, sequence: startingEventSequence + i)).ToList();
+        var eventEntities = events.Select((@event, i) => @event.ToEventEntity(streamId, sequence: startingEventSequence + i)).ToList();
         domainDbContext.Events.AddRange(eventEntities);
         return eventEntities;
     }

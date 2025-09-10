@@ -9,7 +9,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
 public class GetLatestEventSequenceTests : TestBase
 {
     [Fact]
-    public async Task GivenNoDomainEventsSaved_TheLatestEventSequenceReturnedIsZero()
+    public async Task GivenNoEventsSaved_TheLatestEventSequenceReturnedIsZero()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -20,7 +20,7 @@ public class GetLatestEventSequenceTests : TestBase
     }
 
     [Fact]
-    public async Task GivenMultipleDomainEventsSaved_TheLatestEventSequenceIsReturned()
+    public async Task GivenMultipleEventsSaved_TheLatestEventSequenceIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);

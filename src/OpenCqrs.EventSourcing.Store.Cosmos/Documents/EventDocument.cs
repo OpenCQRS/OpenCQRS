@@ -4,7 +4,7 @@ using OpenCqrs.EventSourcing.Domain;
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
 /// <summary>
-/// Represents a document that stores domain event information in the Cosmos DB Event Sourcing store.
+/// Represents a document that stores event information in the Cosmos DB Event Sourcing store.
 /// This document contains all the necessary data to persist and reconstruct domain events.
 /// </summary>
 public class EventDocument
@@ -24,7 +24,7 @@ public class EventDocument
     public static string DocumentType => Documents.DocumentType.Event;
 
     /// <summary>
-    /// Gets or sets the type name of the domain event.
+    /// Gets or sets the type name of the event.
     /// This is used to identify the specific type of event for deserialization purposes.
     /// </summary>
     [JsonProperty("eventType")]
@@ -45,7 +45,7 @@ public class EventDocument
     public int Sequence { get; set; }
 
     /// <summary>
-    /// Gets or sets the serialized data of the domain event.
+    /// Gets or sets the serialized data of the event.
     /// This contains the JSON representation of the event's properties and state.
     /// </summary>
     [JsonProperty("data")]
@@ -78,20 +78,20 @@ public static class EventDocumentExtensions
     };
 
     /// <summary>
-    /// Converts an <see cref="EventDocument"/> to its corresponding <see cref="IDomainEvent"/> instance.
+    /// Converts an <see cref="EventDocument"/> to its corresponding <see cref="IEvent"/> instance.
     /// This method deserializes the event data using the event type information stored in the document.
     /// </summary>
     /// <param name="eventDocument">The event document to convert.</param>
-    /// <returns>The deserialized domain event instance.</returns>
+    /// <returns>The deserialized event instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the event type is not found in TypeBindings.</exception>
-    public static IDomainEvent ToDomainEvent(this EventDocument eventDocument)
+    public static IEvent ToDomainEvent(this EventDocument eventDocument)
     {
-        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventDocument.EventType, out var eventType);
+        var typeFound = TypeBindings.EventTypeBindings.TryGetValue(eventDocument.EventType, out var eventType);
         if (typeFound is false)
         {
             throw new InvalidOperationException($"Event type {eventDocument.EventType} not found in TypeBindings");
         }
 
-        return (IDomainEvent)JsonConvert.DeserializeObject(eventDocument.Data, eventType!, JsonSerializerSettings)!;
+        return (IEvent)JsonConvert.DeserializeObject(eventDocument.Data, eventType!, JsonSerializerSettings)!;
     }
 }

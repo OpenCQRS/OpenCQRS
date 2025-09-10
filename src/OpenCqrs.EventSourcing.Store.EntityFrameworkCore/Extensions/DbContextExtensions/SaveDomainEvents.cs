@@ -11,13 +11,13 @@ public static partial class IDomainDbContextExtensions
     /// </summary>
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
-    /// <param name="domainEvents">An array of domain events to save.</param>
+    /// <param name="events">An array of domain events to save.</param>
     /// <param name="expectedEventSequence">The expected sequence number for concurrency control.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A result indicating the success or failure of the save operation.</returns>
     /// <example>
     /// <code>
-    /// var result = await context.SaveDomainEvents(streamId, domainEvents, expectedSequence);
+    /// var result = await context.SaveEvents(streamId, events, expectedSequence);
     /// if (!result.IsSuccess)
     /// {
     ///     return result.Failure;
@@ -25,11 +25,11 @@ public static partial class IDomainDbContextExtensions
     /// // Save successful
     /// </code>
     /// </example>
-    public static async Task<Result> SaveDomainEvents(this IDomainDbContext domainDbContext, IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
+    public static async Task<Result> SaveEvents(this IDomainDbContext domainDbContext, IStreamId streamId, IEvent[] events, int expectedEventSequence, CancellationToken cancellationToken = default)
     {
         try
         {
-            var trackResult = await domainDbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence, cancellationToken);
+            var trackResult = await domainDbContext.TrackEvents(streamId, events, expectedEventSequence, cancellationToken);
             if (trackResult.IsNotSuccess)
             {
                 return trackResult.Failure!;

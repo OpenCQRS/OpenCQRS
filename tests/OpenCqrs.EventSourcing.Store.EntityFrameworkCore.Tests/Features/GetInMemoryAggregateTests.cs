@@ -191,19 +191,19 @@ public class GetInMemoryAggregateTests : TestBase
         using var domainService = Shared.CreateDomainService(timeProvider, Shared.CreateHttpContextAccessor());
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new SomethingHappenedEvent("Something2")
         ], expectedEventSequence: 0);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 2);
 
         timeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await domainService.SaveDomainEvents(streamId, [
+        await domainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something5"),
             new SomethingHappenedEvent("Something6")
         ], expectedEventSequence: 4);

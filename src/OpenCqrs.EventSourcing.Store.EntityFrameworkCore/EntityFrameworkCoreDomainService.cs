@@ -15,12 +15,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <typeparam name="T">The type of aggregate to retrieve.</typeparam>
     /// <param name="streamId">The stream identifier.</param>
     /// <param name="aggregateId">The aggregate identifier.</param>
-    /// <param name="applyNewDomainEvents">Whether to apply new domain events.</param>
+    /// <param name="applyNewEvents">Whether to apply new domain events.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the aggregate.</returns>
-    public async Task<Result<T>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents, cancellationToken);
+        return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewEvents, cancellationToken);
     }
 
     /// <summary>
@@ -30,9 +30,9 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IEvent>>> GetEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEvents(streamId, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEvents(streamId, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -43,9 +43,9 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events applied to the aggregate.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<List<IEvent>>> GetEventsAppliedToAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        return await domainDbContext.GetDomainEventsAppliedToAggregate(aggregateId, cancellationToken);
+        return await domainDbContext.GetEventsAppliedToAggregate(aggregateId, cancellationToken);
     }
 
     /// <summary>
@@ -57,9 +57,9 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events between the specified sequences.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IEvent>>> GetEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -70,9 +70,9 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events from the specified sequence.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IEvent>>> GetEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsFromSequence(streamId, fromSequence, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsFromSequence(streamId, fromSequence, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -83,9 +83,9 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events up to the specified sequence.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<IEvent>>> GetEventsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsUpToSequence(streamId, upToSequence, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -96,10 +96,10 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events up to the specified date.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+    public async Task<Result<List<IEvent>>> GetEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -110,10 +110,10 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events from the specified date.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+    public async Task<Result<List<IEvent>>> GetEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsFromDate(streamId, fromDate, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -125,10 +125,10 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="eventTypeFilter">Optional array of event types to filter by.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events between the specified dates.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+    public async Task<Result<List<IEvent>>> GetEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.GetDomainEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
+        return await domainDbContext.GetEventsBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
     }
 
     /// <summary>
@@ -204,13 +204,13 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// Saves domain events to the specified stream with expected event sequence validation.
     /// </summary>
     /// <param name="streamId">The stream identifier.</param>
-    /// <param name="domainEvents">The domain events to save.</param>
+    /// <param name="events">The domain events to save.</param>
     /// <param name="expectedEventSequence">The expected event sequence for optimistic concurrency control.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
-    public async Task<Result> SaveDomainEvents(IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence, CancellationToken cancellationToken = default)
+    public async Task<Result> SaveEvents(IStreamId streamId, IEvent[] events, int expectedEventSequence, CancellationToken cancellationToken = default)
     {
-        return await domainDbContext.SaveDomainEvents(streamId, domainEvents, expectedEventSequence, cancellationToken);
+        return await domainDbContext.SaveEvents(streamId, events, expectedEventSequence, cancellationToken);
     }
 
     /// <summary>
