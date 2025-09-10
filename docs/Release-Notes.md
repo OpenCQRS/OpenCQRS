@@ -1,7 +1,7 @@
 # Release Notes
 
 ## OpenCQRS 7.1.1
-_**Released 11/09/2025**_
+_**Released 10/09/2025**_
 - Rename Aggregate to AggregateRoot
 
 ## OpenCQRS 7.1.0
