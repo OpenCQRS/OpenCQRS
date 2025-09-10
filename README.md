@@ -201,12 +201,6 @@ var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
 
-## Roadmap
-
-### OpenCQRS 7.2.0
-
-- File store provider for event sourcing
-
 ## Full Documentation
 
 - [Installation](docs/Installation.md)
@@ -225,3 +219,9 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
       - [Extensions](docs/Entity-Framework-Core-Extensions.md)
       - [Scenarios](docs/Entity-Framework-Core-Scenarios.md)
 - [Release Notes](docs/Release-Notes.md)
+
+## Roadmap
+
+### OpenCQRS 7.2.0
+
+- File store provider for event sourcing
