@@ -27,7 +27,7 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
-## Packages
+## Nuget Packages
 
 | Package                                                                                                                                               | Latest Stable                                                                                                                                                   |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
