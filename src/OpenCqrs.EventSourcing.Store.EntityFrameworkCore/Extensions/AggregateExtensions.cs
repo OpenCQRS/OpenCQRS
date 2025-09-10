@@ -93,7 +93,7 @@ public static class AggregateExtensions
     /// 
     /// // Example with specific aggregate types
     /// [AggregateType("Order", 1)]
-    /// public class OrderAggregate : Aggregate
+    /// public class OrderAggregate : AggregateRoot
     /// {
     ///     public Guid OrderId { get; private set; }
     ///     public string CustomerName { get; private set; }

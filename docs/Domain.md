@@ -54,7 +54,7 @@ Aggregates have an event type filter that specifies which types of events they c
 
 ```C#
 [AggregateType("Order")]
-public class Order : Aggregate
+public class Order : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [
