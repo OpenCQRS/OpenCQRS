@@ -14,6 +14,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing the retrieved aggregate document or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetAggregateDocument&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var document = result.Value;
+    /// </example>
     Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
@@ -26,6 +34,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing the retrieved list of aggregate event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetAggregateEventDocuments&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
@@ -37,6 +53,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results. If null, all event types will be retrieved.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing the list of event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocuments(streamId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
@@ -47,6 +71,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventIds">An array of event identifiers to retrieve.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of retrieved event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocuments(streamId, eventIds);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocuments(IStreamId streamId, string[] eventIds,
         CancellationToken cancellationToken = default);
 
@@ -59,6 +91,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsBetweenSequences(streamId, fromSequence, toSequence, eventTypeFilter);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsBetweenSequences(IStreamId streamId, int fromSequence,
         int toSequence, Type[]? eventTypeFilter, CancellationToken cancellationToken = default);
 
@@ -70,6 +110,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results. If null, all event types are included.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation of the operation.</param>
     /// <returns>A result containing a list of retrieved event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsFromSequence(streamId, fromSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsFromSequence(IStreamId streamId, int fromSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
@@ -81,6 +129,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved documents.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of event documents retrieved or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsUpToSequence(streamId, upToSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
@@ -92,6 +148,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsUpToDate(streamId, upToDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsUpToDate(
         IStreamId streamId,
         DateTimeOffset upToDate,
@@ -106,6 +170,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsFromDate(streamId, fromDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsFromDate(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -121,6 +193,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the results.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of event documents or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.GetEventDocumentsBetweenDates(streamId, fromDate, toDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var documents = result.Value;
+    /// </example>
     Task<Result<List<EventDocument>>> GetEventDocumentsBetweenDates(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -137,6 +217,14 @@ public interface ICosmosDataStore : IDisposable
     /// <param name="aggregateDocument">The aggregate document containing updated data.</param>
     /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
     /// <returns>A result containing the updated aggregate or a failure.</returns>
+    /// <example>
+    /// var result = await cosmosDataStore.UpdateAggregateDocument&lt;TAggregate&gt;(streamId, aggregateId, aggregateDocument);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();

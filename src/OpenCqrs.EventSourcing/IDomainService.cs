@@ -14,6 +14,14 @@ public interface IDomainService : IDisposable
     /// <param name="applyNewDomainEvents">Indicates whether new domain events should be applied to the aggregate before returning it.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetAggregate&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         bool applyNewDomainEvents = false, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
@@ -25,6 +33,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the domain events. If null, no filtering is applied.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a result wrapping a list of domain events.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEvents(streamId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEvents(IStreamId streamId, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
@@ -36,6 +52,14 @@ public interface IDomainService : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate whose applied domain events are to be retrieved.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of applied domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsAppliedToAggregate&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
@@ -49,6 +73,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsBetweenSequences(streamId, fromSequence, toSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenSequences(
         IStreamId streamId,
         int fromSequence,
@@ -64,6 +96,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the retrieved domain events. If null, no filtering is applied.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the retrieved domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsFromSequence(streamId, fromSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsFromSequence(IStreamId streamId, int fromSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
@@ -76,6 +116,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsUpToSequence(streamId, upToSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToSequence(IStreamId streamId, int upToSequence,
         Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default);
 
@@ -88,6 +136,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsUpToDate(streamId, upToDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsUpToDate(
         IStreamId streamId,
         DateTimeOffset upToDate,
@@ -103,6 +159,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsFromDate(streamId, fromDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsFromDate(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -119,6 +183,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the domain events.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of domain events wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetDomainEventsBetweenDates(streamId, fromDate, toDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var events = result.Value;
+    /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsBetweenDates(
         IStreamId streamId,
         DateTimeOffset fromDate,
@@ -134,6 +206,14 @@ public interface IDomainService : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetInMemoryAggregate&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
@@ -146,6 +226,14 @@ public interface IDomainService : IDisposable
     /// <param name="upToSequence">The sequence number up to which the aggregate should be built.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetInMemoryAggregate&lt;TAggregate&gt;(streamId, aggregateId, upToSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
@@ -158,6 +246,14 @@ public interface IDomainService : IDisposable
     /// <param name="upToDate">The date up to which the aggregate should be built.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetInMemoryAggregate&lt;TAggregate&gt;(streamId, aggregateId, upToDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 
@@ -168,6 +264,14 @@ public interface IDomainService : IDisposable
     /// <param name="eventTypeFilter">An optional array of event types to filter the events to be considered when determining the latest sequence number.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the latest event sequence number wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.GetLatestEventSequence(streamId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var sequence = result.Value;
+    /// </example>
     Task<Result<int>> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null,
         CancellationToken cancellationToken = default);
 
@@ -181,6 +285,13 @@ public interface IDomainService : IDisposable
     /// <param name="expectedEventSequence">The sequence number of the last known event, used for optimistic concurrency control.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous save operation. The task result contains a <see cref="Result"/> indicating the outcome of the operation.</returns>
+    /// <example>
+    /// var result = await domainService.SaveAggregate&lt;TAggregate&gt;(streamId, aggregateId, aggregate, expectedEventSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// </example>
     Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default)
         where TAggregate : IAggregate, new();
@@ -193,6 +304,13 @@ public interface IDomainService : IDisposable
     /// <param name="expectedEventSequence">The expected sequence of events in the stream, ensuring concurrency control.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation. The task result is a <see cref="Result"/> indicating success or failure of the operation.</returns>
+    /// <example>
+    /// var result = await domainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// </example>
     Task<Result> SaveDomainEvents(IStreamId streamId, IDomainEvent[] domainEvents, int expectedEventSequence,
         CancellationToken cancellationToken = default);
 
@@ -204,6 +322,14 @@ public interface IDomainService : IDisposable
     /// <param name="aggregateId">The unique identifier of the aggregate to update.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the updated aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
+    /// <example>
+    /// var result = await domainService.UpdateAggregate&lt;TAggregate&gt;(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </example>
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
 }
