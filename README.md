@@ -45,7 +45,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 ## Simple mediator
 
 Three kinds of requests can be sent through the dispatcher:
-~~~~
+
 ### Commands
 
 ```C#
