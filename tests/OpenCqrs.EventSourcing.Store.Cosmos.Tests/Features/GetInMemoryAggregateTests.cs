@@ -48,11 +48,11 @@ public class GetInMemoryAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var getAggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
 
@@ -79,12 +79,12 @@ public class GetInMemoryAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         var aggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
         var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
@@ -112,12 +112,12 @@ public class GetInMemoryAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         var aggregateResult = await DomainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence: 1);
         var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
@@ -163,11 +163,11 @@ public class GetInMemoryAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new SomethingHappenedEvent(Something: "Something")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var result = await DomainService.GetInMemoryAggregate(streamId, aggregateId);
 
@@ -188,19 +188,19 @@ public class GetInMemoryAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
 
         TimeProvider.SetUtcNow(new DateTime(2024, 6, 10, 12, 10, 25));
-        await DomainService.SaveDomainEvents(streamId, [
+        await DomainService.SaveEvents(streamId, [
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new SomethingHappenedEvent("Something2")
         ], expectedEventSequence: 0);
 
         TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 48));
-        await DomainService.SaveDomainEvents(streamId, [
+        await DomainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         ], expectedEventSequence: 2);
 
         TimeProvider.SetUtcNow(new DateTime(2024, 6, 15, 17, 45, 49));
-        await DomainService.SaveDomainEvents(streamId, [
+        await DomainService.SaveEvents(streamId, [
             new SomethingHappenedEvent("Something5"),
             new SomethingHappenedEvent("Something6")
         ], expectedEventSequence: 4);

@@ -60,19 +60,19 @@ public static class EventEntityExtensions
     };
 
     /// <summary>
-    /// Converts an EventEntity to a domain event.
+    /// Converts an EventEntity to a event.
     /// </summary>
     /// <param name="eventEntity">The entity.</param>
-    /// <returns>The domain event.</returns>
+    /// <returns>The event.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the event type is not found.</exception>
-    public static IDomainEvent ToDomainEvent(this EventEntity eventEntity)
+    public static IEvent ToDomainEvent(this EventEntity eventEntity)
     {
-        var typeFound = TypeBindings.DomainEventTypeBindings.TryGetValue(eventEntity.EventType, out var eventType);
+        var typeFound = TypeBindings.EventTypeBindings.TryGetValue(eventEntity.EventType, out var eventType);
         if (typeFound is false)
         {
             throw new InvalidOperationException($"Event type {eventEntity.EventType} not found in TypeBindings");
         }
 
-        return (IDomainEvent)JsonConvert.DeserializeObject(eventEntity.Data, eventType!, JsonSerializerSettings)!;
+        return (IEvent)JsonConvert.DeserializeObject(eventEntity.Data, eventType!, JsonSerializerSettings)!;
     }
 }

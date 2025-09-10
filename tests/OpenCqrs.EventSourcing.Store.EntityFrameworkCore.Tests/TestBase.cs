@@ -21,7 +21,7 @@ public abstract class TestBase : IDisposable
 
     private static void SetupTypeBindings()
     {
-        TypeBindings.DomainEventTypeBindings = new Dictionary<string, Type>
+        TypeBindings.EventTypeBindings = new Dictionary<string, Type>
         {
             {"TestAggregateCreated:1", typeof(TestAggregateCreatedEvent)},
             {"TestAggregateUpdated:1", typeof(TestAggregateUpdatedEvent)},

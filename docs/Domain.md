@@ -25,8 +25,8 @@ var streamId = new CustomerStreamId(customerId);
 Domain events represent business decisions that have happened in the domain and are stored as part of an event stream.
 
 ```C#
-[DomainEventType("OrderPlaced")]
-public record OrderPlacedEvent(Guid orderId, decimal amount) : IDomainEvent;
+[EventType("OrderPlaced")]
+public record OrderPlacedEvent(Guid orderId, decimal amount) : IEvent;
 ```
 
 <a name="aggregate-id"></a>
@@ -75,9 +75,9 @@ public class Order : AggregateRoot
         });
     }
 
-    protected override bool Apply<TDomainEvent>(TDomainEvent domainEvent)
+    protected override bool Apply<T>(T @event)
     {
-        return domainEvent switch
+        return @event switch
         {
             OrderPlaced @event => Apply(@event),
             _ => false

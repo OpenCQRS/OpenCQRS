@@ -14,7 +14,7 @@ public static partial class IDomainDbContextExtensions
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate instance.</param>
-    /// <param name="applyNewDomainEvents">Whether to apply new events after the snapshot.</param>
+    /// <param name="applyNewEvents">Whether to apply new events after the snapshot.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A result containing the aggregate or a failure.</returns>
     /// <example>
@@ -27,13 +27,13 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<T>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public static async Task<Result<T>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
         {
             var currentAggregate = aggregateEntity.ToAggregate<T>();
-            if (!applyNewDomainEvents)
+            if (!applyNewEvents)
             {
                 return currentAggregate;
             }
@@ -48,8 +48,8 @@ public static partial class IDomainDbContextExtensions
             return aggregate;
         }
 
-        var domainEvents = eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
-        aggregate.Apply(domainEvents);
+        var events = eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
+        aggregate.Apply(events);
 
         if (aggregate.Version == 0)
         {

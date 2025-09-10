@@ -150,7 +150,7 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var anotherAggregateId = new AnotherAggregateId(orderId);
 
-var domainEvents = new DomainEvent[]
+var events = new @event[]
 {
     new OrderPlaced
     {
@@ -163,7 +163,7 @@ var domainEvents = new DomainEvent[]
         ShippedDate = _timeProvider.GetUtcNow()
     }
 };
-var trackDomainEntitiesResult = await dbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+var trackDomainEntitiesResult = await dbContext.TrackEvents(streamId, events, expectedEventSequence: 0);
 if (!trackDomainEntitiesResult.IsSuccess)
 {
     return trackDomainEntitiesResult.Error;
@@ -185,7 +185,7 @@ var aggregateId = new OrderAggregateId(orderId);
 var anotherAggregateId = new AnotherAggregateId(orderId);
 var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId);
 
-var domainEvents = new DomainEvent[]
+var events = new @event[]
 {
     new OrderPlaced
     {
@@ -198,7 +198,7 @@ var domainEvents = new DomainEvent[]
         ShippedDate = _timeProvider.GetUtcNow()
     }
 };
-var trackDomainEntitiesResult = await dbContext.TrackDomainEvents(streamId, domainEvents, expectedEventSequence: latestEventSequence);
+var trackDomainEntitiesResult = await dbContext.TrackEvents(streamId, events, expectedEventSequence: latestEventSequence);
 if (!trackDomainEntitiesResult.IsSuccess)
 {
     return trackDomainEntitiesResult.Error;

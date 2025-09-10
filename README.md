@@ -177,9 +177,9 @@ puclic class OrderAggregate : AggregateRoot
         };);
     }
 
-    protected override bool Apply<TDomainEvent>(TDomainEvent domainEvent)
+    protected override bool Apply<T>(T @event)
     {
-        return domainEvent switch
+        return @event switch
         {
             OrderPlaced @event => Apply(@event)
             _ => false

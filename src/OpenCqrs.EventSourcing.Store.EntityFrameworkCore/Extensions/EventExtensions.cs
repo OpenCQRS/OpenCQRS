@@ -8,18 +8,18 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 /// <summary>
 /// Provides extension methods for converting domain events to Entity Framework Core entities
 /// for persistence in the event sourcing store. These extensions handle serialization, metadata
-/// extraction, and proper entity construction for domain event storage.
+/// extraction, and proper entity construction for event storage.
 /// </summary>
-public static class DomainEventExtensions
+public static class EventExtensions
 {
     /// <summary>
-    /// Converts a domain event to its corresponding <see cref="EventEntity"/> for database persistence.
+    /// Converts an event to its corresponding <see cref="EventEntity"/> for database persistence.
     /// This method handles serialization, metadata extraction, and infrastructure property mapping to create
     /// a complete database entity ready for storage in the event sourcing system.
     /// </summary>
-    /// <param name="domainEvent">
-    /// The domain event instance to convert. Must implement <see cref="IDomainEvent"/> and have
-    /// the <see cref="DomainEventType"/> attribute for proper type metadata extraction.
+    /// <param name="event">
+    /// The event instance to convert. Must implement <see cref="IEvent"/> and have
+    /// the <see cref="EventType"/> attribute for proper type metadata extraction.
     /// </param>
     /// <param name="streamId">
     /// The stream identifier that associates this event with its owning aggregate's event stream.
@@ -35,15 +35,15 @@ public static class DomainEventExtensions
     /// The entity includes a new unique identifier and is ready for immediate database storage.
     /// </returns>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the domain event type does not have the required <see cref="DomainEventType"/> attribute.
+    /// Thrown when the event type does not have the required <see cref="EventType"/> attribute.
     /// This attribute is essential for type metadata extraction and proper event store operation.
     /// </exception>
     /// <exception cref="JsonSerializationException">
-    /// Thrown when the domain event cannot be serialized to JSON, typically due to circular references,
+    /// Thrown when the event cannot be serialized to JSON, typically due to circular references,
     /// unsupported data types, or serialization configuration issues.
     /// </exception>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when any of the required parameters (domainEvent, streamId) are null.
+    /// Thrown when any of the required parameters (@event, streamId) are null.
     /// </exception>
     /// <example>
     /// <code>
@@ -69,11 +69,11 @@ public static class DomainEventExtensions
     /// }
     /// 
     /// // Usage with error handling
-    /// public EventEntity ConvertDomainEvent(IDomainEvent domainEvent, IStreamId streamId, int sequence)
+    /// public EventEntity ConvertDomainEvent(IDomainEvent @event, IStreamId streamId, int sequence)
     /// {
     ///     try
     ///     {
-    ///         var entity = domainEvent.ToEventEntity(streamId, sequence);
+    ///         var entity = @event.ToEventEntity(streamId, sequence);
     ///         
     ///         // Verify the conversion was successful
     ///         Debug.Assert(!string.IsNullOrEmpty(entity.Id));
@@ -85,20 +85,20 @@ public static class DomainEventExtensions
     ///     }
     ///     catch (InvalidOperationException ex)
     ///     {
-    ///         _logger.LogError("Domain event {EventType} missing required DomainEventType attribute", 
-    ///             domainEvent.GetType().Name);
+    ///         _logger.LogError("Event {EventType} missing required EventType attribute", 
+    ///             @event.GetType().Name);
     ///         throw;
     ///     }
     ///     catch (JsonException ex)
     ///     {
-    ///         _logger.LogError("Failed to serialize domain event {EventType}: {Error}", 
-    ///             domainEvent.GetType().Name, ex.Message);
+    ///         _logger.LogError("Failed to serialize event {EventType}: {Error}", 
+    ///             @event.GetType().Name, ex.Message);
     ///         throw;
     ///     }
     /// }
     /// 
-    /// // Example with specific domain event types
-    /// [DomainEventType("OrderPlaced", 1)]
+    /// // Example with specific event types
+    /// [EventType("OrderPlaced", 1)]
     /// public record OrderPlacedEvent : IDomainEvent
     /// {
     ///     public Guid OrderId { get; init; }
@@ -187,12 +187,12 @@ public static class DomainEventExtensions
     /// }
     /// </code>
     /// </example>
-    public static EventEntity ToEventEntity(this IDomainEvent domainEvent, IStreamId streamId, int sequence)
+    public static EventEntity ToEventEntity(this IEvent @event, IStreamId streamId, int sequence)
     {
-        var domainEventType = domainEvent.GetType().GetCustomAttribute<DomainEventType>();
-        if (domainEventType == null)
+        var eventType = @event.GetType().GetCustomAttribute<EventType>();
+        if (eventType == null)
         {
-            throw new InvalidOperationException($"Domain event {domainEvent.GetType().Name} does not have a DomainEventType attribute.");
+            throw new InvalidOperationException($"Event {@event.GetType().Name} does not have a EventType attribute.");
         }
 
         return new EventEntity
@@ -200,8 +200,8 @@ public static class DomainEventExtensions
             Id = $"{streamId.Id}:{sequence}",
             StreamId = streamId.Id,
             Sequence = sequence,
-            EventType = TypeBindings.GetTypeBindingKey(domainEventType.Name, domainEventType.Version),
-            Data = JsonConvert.SerializeObject(domainEvent)
+            EventType = TypeBindings.GetTypeBindingKey(eventType.Name, eventType.Version),
+            Data = JsonConvert.SerializeObject(@event)
         };
     }
 }

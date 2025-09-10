@@ -1,5 +1,5 @@
 using OpenCqrs.EventSourcing.Domain;
-using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.DomainEvents;
+using OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.events;
 
 namespace OpenCqrs.Examples.EventSourcing.EntityFrameworkCore.Aggregates;
 
@@ -21,11 +21,11 @@ public class Order : AggregateRoot
         Add(new OrderPlacedEvent(OrderId = orderId, Amount = amount));
     }
 
-    protected override bool Apply<TDomainEvent>(TDomainEvent domainEvent)
+    protected override bool Apply<T>(T @event)
     {
-        return domainEvent switch
+        return @event switch
         {
-            OrderPlacedEvent @event => Apply(@event),
+            OrderPlacedEvent orderPlaced => Apply(orderPlaced),
             _ => false
         };
     }

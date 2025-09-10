@@ -35,23 +35,23 @@ public abstract class AggregateRoot : IAggregateRoot
     /// Private collection of uncommitted events.
     /// </summary>
     [JsonIgnore]
-    private readonly List<IDomainEvent> _uncommittedEvents = [];
+    private readonly List<IEvent> _uncommittedEvents = [];
 
     /// <summary>
     /// Gets the uncommitted events.
     /// </summary>
     [JsonIgnore]
-    public IEnumerable<IDomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+    public IEnumerable<IEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
 
     /// <summary>
-    /// Adds and applies a domain event.
+    /// Adds and applies a event.
     /// </summary>
-    /// <param name="domainEvent">The domain event.</param>
-    protected void Add(IDomainEvent domainEvent)
+    /// <param name="event">The event.</param>
+    protected void Add(IEvent @event)
     {
-        _uncommittedEvents.Add(domainEvent);
+        _uncommittedEvents.Add(@event);
 
-        if (Apply(domainEvent))
+        if (Apply(@event))
         {
             Version++;
         }
@@ -60,12 +60,12 @@ public abstract class AggregateRoot : IAggregateRoot
     /// <summary>
     /// Applies a collection of domain events.
     /// </summary>
-    /// <param name="domainEvents">The domain events.</param>
-    public void Apply(IEnumerable<IDomainEvent> domainEvents)
+    /// <param name="events">The domain events.</param>
+    public void Apply(IEnumerable<IEvent> events)
     {
-        foreach (var domainEvent in domainEvents)
+        foreach (var @event in events)
         {
-            if (Apply(domainEvent))
+            if (Apply(@event))
             {
                 Version++;
             }
@@ -79,25 +79,25 @@ public abstract class AggregateRoot : IAggregateRoot
     public abstract Type[]? EventTypeFilter { get; }
 
     /// <summary>
-    /// Applies a domain event.
+    /// Applies an event.
     /// </summary>
-    /// <typeparam name="TDomainEvent">The domain event type.</typeparam>
-    /// <param name="domainEvent">The domain event.</param>
+    /// <typeparam name="T">The event type.</typeparam>
+    /// <param name="event"></param>
     /// <returns>True if applied.</returns>
-    protected abstract bool Apply<TDomainEvent>(TDomainEvent domainEvent) where TDomainEvent : IDomainEvent;
+    protected abstract bool Apply<T>(T @event) where T : IEvent;
 
     /// <summary>
-    /// Checks if the domain event type is handled.
+    /// Checks if the event type is handled.
     /// </summary>
-    /// <param name="domainEventType">The domain event type.</param>
+    /// <param name="eventType">The event type.</param>
     /// <returns>True if handled.</returns>
-    public bool IsDomainEventHandled(Type domainEventType)
+    public bool IsEventHandled(Type eventType)
     {
         if (EventTypeFilter == null || EventTypeFilter.Length == 0)
         {
             return true;
         }
 
-        return EventTypeFilter.Contains(domainEventType);
+        return EventTypeFilter.Contains(eventType);
     }
 }

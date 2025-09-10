@@ -5,17 +5,17 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// This metadata is essential for event serialization, deserialization, and schema evolution in event stores.
 /// </summary>
 /// <param name="name">
-/// The logical name of the domain event type. This should be a stable identifier that remains consistent
+/// The logical name of the event type. This should be a stable identifier that remains consistent
 /// even if the C# class name changes. Used for event type identification during serialization/deserialization.
 /// </param>
 /// <param name="version">
-/// The version number of the domain event schema. Defaults to 1. Used for managing schema evolution
+/// The version number of the event schema. Defaults to 1. Used for managing schema evolution
 /// and ensuring proper deserialization of events stored with different versions.
 /// </param>
 /// <example>
 /// <code>
 /// // Basic event with default version
-/// [DomainEventType("UserRegistered")]
+/// [EventType("UserRegistered")]
 /// public record UserRegisteredEvent : IDomainEvent
 /// {
 ///     public string UserId { get; init; }
@@ -24,7 +24,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// }
 /// 
 /// // Versioned event for schema evolution
-/// [DomainEventType("OrderPlaced", 2)]
+/// [EventType("OrderPlaced", 2)]
 /// public record OrderPlacedEventV2 : IDomainEvent
 /// {
 ///     public Guid OrderId { get; init; }
@@ -36,7 +36,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// }
 /// 
 /// // Event name different from class name
-/// [DomainEventType("customer-address-changed", 1)]
+/// [EventType("customer-address-changed", 1)]
 /// public record CustomerAddressUpdatedEvent : IDomainEvent
 /// {
 ///     public Guid CustomerId { get; init; }
@@ -47,10 +47,10 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Class)]
-public class DomainEventType(string name, byte version = 1) : Attribute
+public class EventType(string name, byte version = 1) : Attribute
 {
     /// <summary>
-    /// Gets the logical name of the domain event type.
+    /// Gets the logical name of the event type.
     /// </summary>
     /// <value>
     /// A string that serves as the stable, logical identifier for this event type.
@@ -59,7 +59,7 @@ public class DomainEventType(string name, byte version = 1) : Attribute
     public string Name { get; } = name;
 
     /// <summary>
-    /// Gets the version number of the domain event schema.
+    /// Gets the version number of the event schema.
     /// </summary>
     /// <value>
     /// A byte value representing the schema version of this event type.

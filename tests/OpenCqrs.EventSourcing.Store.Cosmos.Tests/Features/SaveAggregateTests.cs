@@ -149,14 +149,14 @@ public class SaveAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2"),
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var aggregateToUpdateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");

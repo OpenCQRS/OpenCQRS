@@ -18,29 +18,29 @@ public static class ServiceCollectionExtensions
     /// <exception cref="InvalidOperationException">Thrown when duplicate type binding keys are encountered.</exception>
     public static void AddOpenCqrsEventSourcing(this IServiceCollection services, params Type[] types)
     {
-        var domainEventTypeBindings = new Dictionary<string, Type>();
+        var eventTypeBindings = new Dictionary<string, Type>();
         var aggregateTypeBindings = new Dictionary<string, Type>();
 
         foreach (var type in types)
         {
             var assembly = type.Assembly;
 
-            var domainEvents = assembly.GetTypes()
-                .Where(t => t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && typeof(IDomainEvent).IsAssignableFrom(t))
+            var events = assembly.GetTypes()
+                .Where(t => t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && typeof(IEvent).IsAssignableFrom(t))
                 .ToList();
 
             var aggregates = assembly.GetTypes()
                 .Where(t => t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && typeof(IAggregateRoot).IsAssignableFrom(t))
                 .ToList();
 
-            foreach (var domainEvent in domainEvents)
+            foreach (var @event in events)
             {
-                var domainEventType = domainEvent.GetCustomAttribute<DomainEventType>();
-                if (domainEventType is null)
+                var eventType = @event.GetCustomAttribute<EventType>();
+                if (eventType is null)
                 {
                     continue;
                 }
-                domainEventTypeBindings.Add(TypeBindings.GetTypeBindingKey(domainEventType.Name, domainEventType.Version), domainEvent);
+                eventTypeBindings.Add(TypeBindings.GetTypeBindingKey(eventType.Name, eventType.Version), @event);
             }
 
             foreach (var aggregate in aggregates)
@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        TypeBindings.DomainEventTypeBindings = domainEventTypeBindings;
+        TypeBindings.EventTypeBindings = eventTypeBindings;
         TypeBindings.AggregateTypeBindings = aggregateTypeBindings;
     }
 }

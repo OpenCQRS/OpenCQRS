@@ -15,11 +15,11 @@ public static partial class IDomainDbContextExtensions
     /// <returns>A list of domain events from the stream.</returns>
     /// <example>
     /// <code>
-    /// var events = await context.GetDomainEvents(streamId);
-    /// var filteredEvents = await context.GetDomainEvents(streamId, new[] { typeof(SomeEvent) });
+    /// var events = await context.GetEvents(streamId);
+    /// var filteredEvents = await context.GetEvents(streamId, new[] { typeof(SomeEvent) });
     /// </code>
     /// </example>
-    public static async Task<List<IDomainEvent>> GetDomainEvents(this IDomainDbContext domainDbContext, IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public static async Task<List<IEvent>> GetEvents(this IDomainDbContext domainDbContext, IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntities(streamId, eventTypeFilter, cancellationToken);
         return eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();

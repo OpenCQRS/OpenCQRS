@@ -20,11 +20,11 @@ public static partial class IDomainDbContextExtensions
     /// <returns>A list of domain events.</returns>
     /// <example>
     /// <code>
-    /// var events = await context.GetDomainEventsBetweenDates(streamId, fromDate, toDate);
-    /// var filteredEvents = await context.GetDomainEventsBetweenDates(streamId, fromDate, toDate, new[] { typeof(SomeEvent) });
+    /// var events = await context.GetEventsBetweenDates(streamId, fromDate, toDate);
+    /// var filteredEvents = await context.GetEventsBetweenDates(streamId, fromDate, toDate, new[] { typeof(SomeEvent) });
     /// </code>
     /// </example>
-    public static async Task<List<IDomainEvent>> GetDomainEventsBetweenDates(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public static async Task<List<IEvent>> GetEventsBetweenDates(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntitiesBetweenDates(streamId, fromDate, toDate, eventTypeFilter, cancellationToken);
         return eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();

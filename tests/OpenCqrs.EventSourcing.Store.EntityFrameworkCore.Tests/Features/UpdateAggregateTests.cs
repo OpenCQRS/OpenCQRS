@@ -11,7 +11,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
 public class UpdateAggregateTests : TestBase
 {
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateVersionIsIncreasedAndTheUpdatedAggregateIsReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateVersionIsIncreasedAndTheUpdatedAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -19,7 +19,7 @@ public class UpdateAggregateTests : TestBase
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        await DomainService.SaveDomainEvents(streamId, [new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")], expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, [new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")], expectedEventSequence: 1);
         var updatedAggregateResult = await DomainService.UpdateAggregate(streamId, aggregateId);
 
         using (new AssertionScope())

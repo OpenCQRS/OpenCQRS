@@ -16,7 +16,7 @@ public static partial class IDomainDbContextExtensions
     /// <returns>A result containing the list of applied domain events or a failure.</returns>
     /// <example>
     /// <code>
-    /// var result = await context.GetDomainEventsAppliedToAggregate(aggregateId);
+    /// var result = await context.GetEventsAppliedToAggregate(aggregateId);
     /// if (!result.IsSuccess)
     /// {
     ///     return result.Failure;
@@ -24,7 +24,7 @@ public static partial class IDomainDbContextExtensions
     /// var events = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<T>(this IDomainDbContext domainDbContext, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public static async Task<Result<List<IEvent>>> GetEventsAppliedToAggregate<T>(this IDomainDbContext domainDbContext, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var eventEntitiesAppliedToAggregate = await domainDbContext.GetEventEntitiesAppliedToAggregate(aggregateId, cancellationToken);
         if (eventEntitiesAppliedToAggregate.IsNotSuccess)

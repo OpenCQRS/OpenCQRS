@@ -21,14 +21,14 @@ public class GetAggregateEventsTests : TestBase
         var appliedDate1 = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(appliedDate1);
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2"),
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var appliedDate2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(appliedDate2);
@@ -85,12 +85,12 @@ public class GetAggregateEventsTests : TestBase
 
         var date1 = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date1);
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
@@ -109,7 +109,7 @@ public class GetAggregateEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -122,15 +122,15 @@ public class GetAggregateEventsTests : TestBase
 
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var date3 = new DateTime(2024, 6, 10, 14, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date3);
-        await DomainService.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
+        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
         var result = await DataStore.GetAggregateEventDocuments(streamId, aggregateId);
 
         using (new AssertionScope())
@@ -144,7 +144,7 @@ public class GetAggregateEventsTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -157,11 +157,11 @@ public class GetAggregateEventsTests : TestBase
 
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var date3 = new DateTime(2024, 6, 10, 14, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date3);

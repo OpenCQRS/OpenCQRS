@@ -10,7 +10,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore;
 /// <summary>
 /// Provides the foundational database context for event sourcing operations using Entity Framework Core.
 /// This abstract context integrates audit functionality, configures event sourcing entities, and provides
-/// the infrastructure for aggregate and domain event persistence in event-driven architectures.
+/// the infrastructure for aggregate and event persistence in event-driven architectures.
 /// </summary>
 /// <param name="options">
 /// The database context options that configure the Entity Framework Core behavior, including

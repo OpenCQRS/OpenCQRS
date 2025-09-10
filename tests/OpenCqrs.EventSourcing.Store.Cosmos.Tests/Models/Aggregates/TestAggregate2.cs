@@ -30,12 +30,12 @@ public class TestAggregate2 : AggregateRoot
         Add(new TestAggregateUpdatedEvent(Id, name, description));
     }
 
-    protected override bool Apply<TDomainEvent>(TDomainEvent domainEvent)
+    protected override bool Apply<T>(T @event)
     {
-        return domainEvent switch
+        return @event switch
         {
-            TestAggregateCreatedEvent @event => Apply(@event),
-            TestAggregateUpdatedEvent @event => Apply(@event),
+            TestAggregateCreatedEvent testAggregateCreated => Apply(testAggregateCreated),
+            TestAggregateUpdatedEvent testAggregateUpdated => Apply(testAggregateUpdated),
             _ => false
         };
     }

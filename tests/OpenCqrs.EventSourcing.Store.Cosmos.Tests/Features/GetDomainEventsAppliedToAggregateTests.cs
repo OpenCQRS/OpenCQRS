@@ -8,7 +8,7 @@ using Xunit;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Features;
 
-public class GetDomainEventsAppliedToAggregateTests : TestBase
+public class GetEventsAppliedToAggregateTests : TestBase
 {
     [Fact]
     public async Task GivenAggregateSaved_ThenOnlyAggregateEventsAppliedAreReturned()
@@ -19,20 +19,20 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         var aggregate = new TestAggregate2(id, "Test Name", "Test Description");
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new SomethingHappenedEvent("Something1"),
             new SomethingHappenedEvent("Something2"),
             new SomethingHappenedEvent("Something3"),
             new SomethingHappenedEvent("Something4")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         var aggregateToUpdateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregateToUpdateResult.Value!.Update("Updated Name", "Updated Description");
         await DomainService.SaveAggregate(streamId, aggregateId, aggregateToUpdateResult.Value, expectedEventSequence: 5);
 
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
+        var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -54,7 +54,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
         await DomainService.GetAggregate(streamId, testAggregate2Key);
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, testAggregate2Key);
+        var result = await DomainService.GetEventsAppliedToAggregate(streamId, testAggregate2Key);
 
         using (new AssertionScope())
         {
@@ -71,15 +71,15 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 0);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
         await DomainService.GetAggregate(streamId, aggregateId);
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
+        var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -90,7 +90,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenApplyNewEventsIsRequestedWhenGettingTheAggregate_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -99,14 +99,14 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
-        await DomainService.GetAggregate(streamId, aggregateId, applyNewDomainEvents: true);
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
+        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -117,7 +117,7 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenDomainEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateIsUpdated_ThenAggregateEventsAppliedAreReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -126,14 +126,14 @@ public class GetDomainEventsAppliedToAggregateTests : TestBase
 
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        var domainEvents = new IDomainEvent[]
+        var events = new IEvent[]
         {
             new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
         };
-        await DomainService.SaveDomainEvents(streamId, domainEvents, expectedEventSequence: 1);
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
         await DomainService.UpdateAggregate(streamId, aggregateId);
-        var result = await DomainService.GetDomainEventsAppliedToAggregate(streamId, aggregateId);
+        var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {

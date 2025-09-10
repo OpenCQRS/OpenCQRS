@@ -16,11 +16,11 @@ public static partial class IDomainDbContextExtensions
     /// <returns>A list of domain events from the starting sequence onwards.</returns>
     /// <example>
     /// <code>
-    /// var events = await context.GetDomainEventsFromSequence(streamId, fromSequence);
-    /// var filteredEvents = await context.GetDomainEventsFromSequence(streamId, fromSequence, new[] { typeof(SomeEvent) });
+    /// var events = await context.GetEventsFromSequence(streamId, fromSequence);
+    /// var filteredEvents = await context.GetEventsFromSequence(streamId, fromSequence, new[] { typeof(SomeEvent) });
     /// </code>
     /// </example>
-    public static async Task<List<IDomainEvent>> GetDomainEventsFromSequence(this IDomainDbContext domainDbContext, IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    public static async Task<List<IEvent>> GetEventsFromSequence(this IDomainDbContext domainDbContext, IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntitiesFromSequence(streamId, fromSequence, eventTypeFilter, cancellationToken);
         return eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
