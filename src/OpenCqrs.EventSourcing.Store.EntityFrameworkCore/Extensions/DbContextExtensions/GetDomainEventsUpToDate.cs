@@ -17,6 +17,12 @@ public static partial class IDomainDbContextExtensions
     /// <param name="eventTypeFilter">Optional filter for event types.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of domain events.</returns>
+    /// <example>
+    /// <code>
+    /// var events = await context.GetDomainEventsUpToDate(streamId, upToDate);
+    /// var filteredEvents = await context.GetDomainEventsUpToDate(streamId, upToDate, new[] { typeof(SomeEvent) });
+    /// </code>
+    /// </example>
     public static async Task<List<IDomainEvent>> GetDomainEventsUpToDate(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var eventEntities = await domainDbContext.GetEventEntitiesUpToDate(streamId, upToDate, eventTypeFilter, cancellationToken);

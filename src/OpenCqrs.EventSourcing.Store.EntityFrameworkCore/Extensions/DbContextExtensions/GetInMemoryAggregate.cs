@@ -18,6 +18,16 @@ public static partial class IDomainDbContextExtensions
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the aggregate.</returns>
+    /// <example>
+    /// <code>
+    /// var result = await context.GetInMemoryAggregate(streamId, aggregateId);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </code>
+    /// </example>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -46,6 +56,16 @@ public static partial class IDomainDbContextExtensions
     /// <param name="upToSequence">The maximum sequence number.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the aggregate.</returns>
+    /// <example>
+    /// <code>
+    /// var result = await context.GetInMemoryAggregate(streamId, aggregateId, upToSequence);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </code>
+    /// </example>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();
@@ -74,6 +94,16 @@ public static partial class IDomainDbContextExtensions
     /// <param name="upToDate">The maximum date.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the aggregate.</returns>
+    /// <example>
+    /// <code>
+    /// var result = await context.GetInMemoryAggregate(streamId, aggregateId, upToDate);
+    /// if (!result.IsSuccess)
+    /// {
+    ///     return result.Failure;
+    /// }
+    /// var aggregate = result.Value;
+    /// </code>
+    /// </example>
     public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
     {
         var aggregate = new TAggregate();

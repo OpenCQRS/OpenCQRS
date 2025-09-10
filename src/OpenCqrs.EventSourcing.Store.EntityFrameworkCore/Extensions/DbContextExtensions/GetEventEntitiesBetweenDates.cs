@@ -19,6 +19,12 @@ public static partial class IDomainDbContextExtensions
     /// <param name="eventTypeFilter">Optional filter for event types.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of event entities.</returns>
+    /// <example>
+    /// <code>
+    /// var entities = await context.GetEventEntitiesBetweenDates(streamId, fromDate, toDate);
+    /// var filteredEntities = await context.GetEventEntitiesBetweenDates(streamId, fromDate, toDate, new[] { typeof(SomeEvent) });
+    /// </code>
+    /// </example>
     public static async Task<List<EventEntity>> GetEventEntitiesBetweenDates(this IDomainDbContext domainDbContext, IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         var filterEventTypes = eventTypeFilter is not null && eventTypeFilter.Length > 0;
