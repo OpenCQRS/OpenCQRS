@@ -35,7 +35,7 @@ public class SaveAggregateTests : TestBase
             saveResult.Failure.Title.Should().Be("Error");
             saveResult.Failure.Description.Should().Be("There was an error when processing the request");
 
-            var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency exception");
+            var activityEvent = Activity.Current?.Events.SingleOrDefault(e => e.Name == "Concurrency Exception");
             activityEvent.Should().NotBeNull();
             activityEvent.Value.Tags.First().Key.Should().Be("streamId");
             activityEvent.Value.Tags.First().Value.Should().Be(streamId.Id);
