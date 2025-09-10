@@ -12,6 +12,24 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// The version number of the aggregate schema. Defaults to 1. Used for managing schema evolution
 /// and ensuring proper deserialization of aggregates stored with different versions.
 /// </param>
+/// <example>
+/// <code>
+/// [AggregateType("Order")]
+/// public class OrderAggregate : Aggregate
+/// {
+///     // Aggregate implementation
+/// }
+/// </code>
+/// </example>
+/// <example>
+/// <code>
+/// [AggregateType("User", 2)]
+/// public class UserAggregate : Aggregate
+/// {
+///     // Aggregate implementation with version 2
+/// }
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Class)]
 public class AggregateType(string name, byte version = 1) : Attribute
 {

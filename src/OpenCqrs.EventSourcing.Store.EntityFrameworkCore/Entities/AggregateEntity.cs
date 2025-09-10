@@ -6,149 +6,68 @@ using OpenCqrs.EventSourcing.Domain;
 namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Entities;
 
 /// <summary>
-/// Represents the database entity for storing serialized aggregate snapshots in an Entity Framework Core event store.
-/// This entity combines aggregate data with auditing information and type metadata to support event sourcing persistence.
+/// Represents the database entity for storing aggregate snapshots.
 /// </summary>
-/// <example>
-/// <code>
-/// // Entity Framework configuration
-/// public void Configure(EntityTypeBuilder&lt;AggregateEntity&gt; builder)
-/// {
-///     builder.HasKey(e =&gt; e.Id);
-///     builder.HasIndex(e =&gt; e.StreamId).IsUnique();
-///     builder.Property(e =&gt; e.Data).HasMaxLength(int.MaxValue);
-///     
-///     // Audit properties
-///     builder.Property(e =&gt; e.CreatedDate).IsRequired();
-///     builder.Property(e =&gt; e.UpdatedDate).IsRequired();
-/// }
-/// 
-/// // Usage in repository
-/// public async Task SaveAggregateAsync&lt;T&gt;(T aggregate) where T : IAggregate
-/// {
-///     var entity = new AggregateEntity
-///     {
-///         Id = aggregate.AggregateId,
-///         StreamId = aggregate.StreamId,
-///         Version = aggregate.Version,
-///         LatestEventSequence = aggregate.LatestEventSequence,
-///         Data = JsonConvert.SerializeObject(aggregate),
-///         TypeName = aggregate.GetTypeBindingKey().Split('_')[0],
-///         TypeVersion = int.Parse(aggregate.GetTypeBindingKey().Split('_')[1].Substring(1)),
-///         CreatedDate = DateTimeOffset.UtcNow,
-///         UpdatedDate = DateTimeOffset.UtcNow,
-///         CreatedBy = _currentUser.Id
-///     };
-///     
-///     _context.Aggregates.Add(entity);
-///     await _context.SaveChangesAsync();
-/// }
-/// </code>
-/// </example>
 public class AggregateEntity : IAuditableEntity, IEditableEntity
 {
     /// <summary>
-    /// Gets or sets the unique identifier for the aggregate instance.
-    /// This serves as the primary key in the database and corresponds to the aggregate's business identifier.
+    /// Gets or sets the unique identifier.
     /// </summary>
-    /// <value>
-    /// A string that uniquely identifies the aggregate instance. Typically matches the 
-    /// <see cref="IAggregate.AggregateId"/> property of the corresponding domain aggregate.
-    /// </value>
     public string Id { get; set; } = null!;
 
     /// <summary>
-    /// Gets or sets the unique identifier for the event stream associated with this aggregate.
-    /// Links the aggregate snapshot to its corresponding event stream for consistency verification.
+    /// Gets or sets the stream ID.
     /// </summary>
-    /// <value>
-    /// A string that uniquely identifies the event stream containing the aggregate's domain events.
-    /// This should match the <see cref="IAggregate.StreamId"/> property of the domain aggregate.
-    /// </value>
     public string StreamId { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the aggregate type.
+    /// </summary>
     public string AggregateType { get; set; } = null!;
 
     /// <summary>
-    /// Gets or sets the current version of the aggregate based on the number of applied events.
-    /// Used for optimistic concurrency control and consistency verification.
+    /// Gets or sets the version.
     /// </summary>
-    /// <value>
-    /// An integer representing the aggregate's current version. Increments with each applied domain event
-    /// and should match the <see cref="IAggregate.Version"/> property of the domain aggregate.
-    /// </value>
     public int Version { get; set; }
 
     /// <summary>
-    /// Gets or sets the sequence number of the latest event that was applied to create this snapshot.
-    /// Provides additional consistency checking beyond the version number.
+    /// Gets or sets the latest event sequence.
     /// </summary>
-    /// <value>
-    /// An integer representing the sequence position of the most recent event applied to this aggregate.
-    /// Should match the <see cref="IAggregate.LatestEventSequence"/> property of the domain aggregate.
-    /// </value>
     public int LatestEventSequence { get; set; }
 
     /// <summary>
-    /// Gets or sets the JSON-serialized representation of the aggregate's business state.
-    /// Contains all the domain data necessary to reconstruct the aggregate instance.
+    /// Gets or sets the JSON data.
     /// </summary>
-    /// <value>
-    /// A JSON string containing the serialized aggregate data. This excludes infrastructure
-    /// properties and includes only the business state of the aggregate.
-    /// </value>
     public string Data { get; set; } = null!;
 
     /// <summary>
-    /// Gets or sets the timestamp when this aggregate entity was first created in the database.
-    /// Part of the audit trail for tracking aggregate lifecycle.
+    /// Gets or sets the created date.
     /// </summary>
-    /// <value>
-    /// A <see cref="DateTimeOffset"/> representing when the aggregate was initially persisted.
-    /// Should use UTC time for consistency across time zones.
-    /// </value>
     public DateTimeOffset CreatedDate { get; set; }
 
     /// <summary>
-    /// Gets or sets the identifier of the user or system that created this aggregate entity.
-    /// Provides audit trail information for compliance and debugging purposes.
+    /// Gets or sets the created by.
     /// </summary>
-    /// <value>
-    /// A string identifying the user, service, or system that initially created the aggregate.
-    /// Can be null if the creator information is not available or required.
-    /// </value>
     public string? CreatedBy { get; set; }
 
     /// <summary>
-    /// Gets or sets the timestamp when this aggregate entity was last modified in the database.
-    /// Updated automatically whenever the aggregate snapshot is refreshed.
+    /// Gets or sets the updated date.
     /// </summary>
-    /// <value>
-    /// A <see cref="DateTimeOffset"/> representing the most recent update to the aggregate entity.
-    /// Should use UTC time for consistency across time zones.
-    /// </value>
     public DateTimeOffset UpdatedDate { get; set; }
 
     /// <summary>
-    /// Gets or sets the identifier of the user or system that last modified this aggregate entity.
-    /// Maintains audit trail for the most recent changes to the aggregate.
+    /// Gets or sets the updated by.
     /// </summary>
-    /// <value>
-    /// A string identifying the user, service, or system that most recently updated the aggregate.
-    /// Can be null if the modifier information is not available or required.
-    /// </value>
     public string? UpdatedBy { get; set; }
 }
 
 /// <summary>
-/// Provides extension methods for <see cref="AggregateEntity"/> to support conversion between
-/// database entities and domain aggregates in the event sourcing infrastructure.
+/// Extension methods for AggregateEntity.
 /// </summary>
 public static class AggregateEntityExtensions
 {
     /// <summary>
-    /// JSON serializer settings configured specifically for aggregate deserialization.
-    /// Uses a custom contract resolver to handle private setters and maintain aggregate encapsulation.
+    /// JSON serializer settings.
     /// </summary>
     private static readonly JsonSerializerSettings JsonSerializerSettings = new()
     {
@@ -156,79 +75,16 @@ public static class AggregateEntityExtensions
     };
 
     /// <summary>
-    /// Converts an <see cref="AggregateEntity"/> database entity back into a strongly-typed domain aggregate.
-    /// Performs JSON deserialization, type resolution, and infrastructure property mapping.
+    /// Converts an AggregateEntity to a domain aggregate.
     /// </summary>
-    /// <typeparam name="T">
-    /// The specific aggregate type to deserialize to. Must implement <see cref="IAggregate"/>
-    /// and must be registered in the <see cref="TypeBindings.AggregateTypeBindings"/> dictionary.
-    /// </typeparam>
-    /// <param name="aggregateEntity">
-    /// The database entity containing the serialized aggregate data and metadata.
-    /// </param>
-    /// <returns>
-    /// A fully reconstructed domain aggregate instance with both business state (from JSON)
-    /// and infrastructure properties (StreamId, Version, etc.) properly populated.
-    /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the aggregate type specified by <see cref="AggregateEntity.TypeName"/> and 
-    /// <see cref="AggregateEntity.TypeVersion"/> is not found in the <see cref="TypeBindings.AggregateTypeBindings"/> registry.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown when the JSON data in <see cref="AggregateEntity.Data"/> cannot be deserialized
-    /// to the target aggregate type, typically due to schema mismatches or corrupt data.
-    /// </exception>
-    /// <exception cref="InvalidCastException">
-    /// Thrown when the deserialized aggregate cannot be cast to the specified generic type parameter.
-    /// </exception>
+    /// <typeparam name="T">The aggregate type.</typeparam>
+    /// <param name="aggregateEntity">The entity.</param>
+    /// <returns>The aggregate.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the aggregate type is not found.</exception>
     /// <example>
     /// <code>
-    /// // Usage in aggregate repository
-    /// public async Task&lt;TAggregate?&gt; GetByIdAsync&lt;TAggregate&gt;(string aggregateId) 
-    ///     where TAggregate : class, IAggregate
-    /// {
-    ///     var entity = await _context.Aggregates
-    ///         .FirstOrDefaultAsync(a =&gt; a.Id == aggregateId);
-    ///     
-    ///     if (entity == null)
-    ///         return null;
-    ///     
-    ///     // Convert entity back to domain aggregate
-    ///     return entity.ToAggregate&lt;TAggregate&gt;();
-    /// }
-    /// 
-    /// // Example with error handling
-    /// public TAggregate GetAggregate&lt;TAggregate&gt;(AggregateEntity entity) 
-    ///     where TAggregate : class, IAggregate
-    /// {
-    ///     try
-    ///     {
-    ///         var aggregate = entity.ToAggregate&lt;TAggregate&gt;();
-    ///         
-    ///         // Verify consistency
-    ///         Debug.Assert(aggregate.StreamId == entity.StreamId);
-    ///         Debug.Assert(aggregate.Version == entity.Version);
-    ///         
-    ///         return aggregate;
-    ///     }
-    ///     catch (InvalidOperationException ex)
-    ///     {
-    ///         _logger.LogError("Aggregate type not registered: {TypeName}", entity.TypeName);
-    ///         throw;
-    ///     }
-    ///     catch (JsonException ex)
-    ///     {
-    ///         _logger.LogError("Failed to deserialize aggregate data: {Error}", ex.Message);
-    ///         throw;
-    ///     }
-    /// }
-    /// 
-    /// // Usage with specific aggregate type
-    /// var orderEntity = await _context.Aggregates.FindAsync(orderId);
-    /// var orderAggregate = orderEntity.ToAggregate&lt;OrderAggregate&gt;();
-    /// 
-    /// // Aggregate is now ready for business operations
-    /// orderAggregate.ProcessPayment(paymentInfo);
+    /// var entity = await _context.Aggregates.FindAsync(id);
+    /// var aggregate = entity.ToAggregate&lt;OrderAggregate&gt;();
     /// </code>
     /// </example>
     public static T ToAggregate<T>(this AggregateEntity aggregateEntity) where T : IAggregate

@@ -14,21 +14,10 @@
 ///     
 ///     public OrderStreamId(Guid orderId)
 ///     {
-///         Id = orderId.ToString();
+///         Id = $"order-{orderId.ToString()}";
 ///     }
 /// }
-/// 
-/// // Composite stream ID with type information
-/// public class AggregateStreamId : IStreamId
-/// {
-///     public string Id { get; }
-///     
-///     public AggregateStreamId(string aggregateType, string aggregateId)
-///     {
-///         Id = $"{aggregateType}-{aggregateId}";
-///     }
-/// }
-/// 
+///
 /// // Usage in event sourcing
 /// var streamId = new OrderStreamId(order.Id);
 /// var events = await eventStore.GetEventsAsync(streamId.Id);

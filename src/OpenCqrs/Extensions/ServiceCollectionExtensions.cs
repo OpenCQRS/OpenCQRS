@@ -8,8 +8,16 @@ using OpenCqrs.Validation;
 
 namespace OpenCqrs.Extensions;
 
+/// <summary>
+/// Provides extension methods for IServiceCollection to add OpenCQRS services.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Adds OpenCQRS services to the dependency injection container.
+    /// </summary>
+    /// <param name="services">The IServiceCollection to add services to.</param>
+    /// <param name="types">The types to scan for handlers.</param>
     public static void AddOpenCqrs(this IServiceCollection services, params Type[] types)
     {
         ArgumentNullException.ThrowIfNull(services);
