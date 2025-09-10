@@ -13,7 +13,7 @@ public class PlaceOrderCommandHandler(IDomainService domainService) : ICommandHa
         var customerStreamId = new CustomerStreamId(command.CustomerId);
         var orderAggregateId = new OrderAggregateId(command.OrderId);
 
-        var orderAggregate = new OrderAggregate(command.OrderId, command.Amount);
+        var orderAggregate = new OrderAggregateRoot(command.OrderId, command.Amount);
 
         return await domainService.SaveAggregate(customerStreamId, orderAggregateId, orderAggregate, expectedEventSequence: 0, cancellationToken);
     }

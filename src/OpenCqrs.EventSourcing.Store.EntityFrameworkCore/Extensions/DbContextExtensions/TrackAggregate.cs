@@ -27,7 +27,7 @@ public static partial class IDomainDbContextExtensions
     /// var (eventEntities, aggregateEntity, aggregateEventEntities) = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<(List<EventEntity>? EventEntities, AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate
+    public static async Task<Result<(List<EventEntity>? EventEntities, AggregateEntity? AggregateEntity, List<AggregateEventEntity>? AggregateEventEntities)>> TrackAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot
     {
         if (!aggregate.UncommittedEvents.Any())
         {

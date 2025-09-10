@@ -6,7 +6,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextE
 
 public static partial class IDomainDbContextExtensions
 {
-    private static async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    private static async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var currentAggregateVersion = aggregate.Version;
 
@@ -50,9 +50,9 @@ public static partial class IDomainDbContextExtensions
         return eventEntities;
     }
 
-    private static AggregateEntity TrackAggregateEntity<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, IAggregate aggregate, int newLatestEventSequence, bool aggregateIsNew) where TAggregate : IAggregate
+    private static AggregateEntity TrackAggregateEntity<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, IAggregateRoot aggregateRoot, int newLatestEventSequence, bool aggregateIsNew) where TAggregate : IAggregateRoot
     {
-        var aggregateEntity = aggregate.ToAggregateEntity(streamId, aggregateId, newLatestEventSequence);
+        var aggregateEntity = aggregateRoot.ToAggregateEntity(streamId, aggregateId, newLatestEventSequence);
         if (!aggregateIsNew)
         {
             domainDbContext.Aggregates.Update(aggregateEntity);

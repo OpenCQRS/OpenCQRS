@@ -46,7 +46,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="applyNewDomainEvents">Whether to apply new domain events to update the aggregate.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the aggregate or failure information.</returns>
-    public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)
@@ -149,7 +149,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the list of domain events applied to the aggregate or failure information.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregateEventDocumentsResult = await _cosmosDataStore.GetAggregateEventDocuments(streamId, aggregateId, cancellationToken);
         if (aggregateEventDocumentsResult.IsNotSuccess)
@@ -297,7 +297,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate or failure information.</returns>
-    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 
@@ -329,7 +329,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="upToSequence">The sequence number to stop at.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate or failure information.</returns>
-    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 
@@ -362,7 +362,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate or failure information.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
-        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+        CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 
@@ -450,7 +450,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="expectedEventSequence">The expected current event sequence for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
-    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         if (!aggregate.UncommittedEvents.Any())
         {
@@ -600,7 +600,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the updated aggregate or failure information.</returns>
-    public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)

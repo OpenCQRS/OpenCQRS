@@ -5,7 +5,7 @@ namespace OpenCqrs.EventSourcing.Domain;
 /// <summary>
 /// Abstract base class for aggregates in event sourcing.
 /// </summary>
-public abstract class Aggregate : IAggregate
+public abstract class AggregateRoot : IAggregateRoot
 {
     /// <summary>
     /// Gets or sets the stream ID.

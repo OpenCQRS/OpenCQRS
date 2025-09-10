@@ -225,7 +225,7 @@ public abstract class DomainDbContext(
     /// unintended state tracking and optimize memory usage in event sourcing scenarios.
     /// </summary>
     /// <typeparam name="TAggregate">
-    /// The type of the aggregate being detached. Must implement <see cref="IAggregate"/> to ensure
+    /// The type of the aggregate being detached. Must implement <see cref="IAggregateRoot"/> to ensure
     /// proper aggregate contract compliance and type safety.
     /// </typeparam>
     /// <param name="aggregateId">
@@ -305,7 +305,7 @@ public abstract class DomainDbContext(
     /// }
     /// </code>
     /// </example>
-    public void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregate
+    public void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregateRoot
     {
         foreach (var entityEntry in ChangeTracker.Entries())
         {

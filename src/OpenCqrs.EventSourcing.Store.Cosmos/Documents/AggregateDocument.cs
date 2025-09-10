@@ -106,13 +106,13 @@ public static class AggregateDocumentExtensions
     /// <summary>
     /// Converts an <see cref="AggregateDocument"/> to an aggregate of a specified type.
     /// </summary>
-    /// <typeparam name="T">The type of aggregate to which the document is converted. Must implement <see cref="IAggregate"/>.</typeparam>
+    /// <typeparam name="T">The type of aggregate to which the document is converted. Must implement <see cref="IAggregateRoot"/>.</typeparam>
     /// <param name="aggregateDocument">The <see cref="AggregateDocument"/> to be converted.</param>
     /// <returns>The aggregate of type <typeparamref name="T"/> populated with data from the <see cref="AggregateDocument"/>.</returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the aggregate type specified in the <see cref="AggregateDocument"/> is not found in the type bindings.
     /// </exception>
-    public static T ToAggregate<T>(this AggregateDocument aggregateDocument) where T : IAggregate
+    public static T ToAggregate<T>(this AggregateDocument aggregateDocument) where T : IAggregateRoot
     {
         var typeFound = TypeBindings.AggregateTypeBindings.TryGetValue(aggregateDocument.AggregateType, out var aggregateType);
         if (typeFound is false)

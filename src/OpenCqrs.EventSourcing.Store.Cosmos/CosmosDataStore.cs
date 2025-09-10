@@ -44,7 +44,7 @@ public class CosmosDataStore : ICosmosDataStore
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the aggregate document if found, null if not found, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregateDocumentId = aggregateId.ToStoreId();
 
@@ -75,7 +75,7 @@ public class CosmosDataStore : ICosmosDataStore
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing a list of aggregate event documents, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         const string sql = "SELECT * FROM c WHERE c.streamId = @streamId AND c.aggregateId = @aggregateId AND c.documentType = @documentType ORDER BY c.appliedDate";
         var queryDefinition = new QueryDefinition(sql)
@@ -594,7 +594,7 @@ public class CosmosDataStore : ICosmosDataStore
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the updated aggregate, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = aggregateDocument.ToAggregate<TAggregate>();
 

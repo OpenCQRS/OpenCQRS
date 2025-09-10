@@ -24,7 +24,7 @@ public interface ICosmosDataStore : IDisposable
     /// </example>
     Task<Result<AggregateDocument?>> GetAggregateDocument<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
-        where TAggregate : IAggregate, new();
+        where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves the event documents associated with an aggregate from the Cosmos data store.
@@ -44,7 +44,7 @@ public interface ICosmosDataStore : IDisposable
     /// </example>
     Task<Result<List<AggregateEventDocument>>> GetAggregateEventDocuments<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
-        where TAggregate : IAggregate, new();
+        where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves a list of event documents from the Cosmos data store for a specific stream.
@@ -227,5 +227,5 @@ public interface ICosmosDataStore : IDisposable
     /// </example>
     Task<Result<TAggregate>> UpdateAggregateDocument<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, AggregateDocument aggregateDocument,
-        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+        CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new();
 }

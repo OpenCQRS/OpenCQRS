@@ -24,7 +24,7 @@ public static partial class IDomainDbContextExtensions
     /// var entities = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<List<EventEntity>>> GetEventEntitiesAppliedToAggregate<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<List<EventEntity>>> GetEventEntitiesAppliedToAggregate<TAggregate>(this IDomainDbContext domainDbContext, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregateEventEntitiesResult = await domainDbContext.GetAggregateEventEntities(aggregateId, cancellationToken);
         if (aggregateEventEntitiesResult.IsNotSuccess)

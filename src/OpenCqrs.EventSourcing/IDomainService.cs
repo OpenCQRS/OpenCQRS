@@ -24,7 +24,7 @@ public interface IDomainService : IDisposable
     /// </example>
     Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         bool applyNewDomainEvents = false, CancellationToken cancellationToken = default)
-        where TAggregate : IAggregate, new();
+        where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves the domain events associated with the specified stream.
@@ -62,7 +62,7 @@ public interface IDomainService : IDisposable
     /// </example>
     Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId,
         IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default)
-        where TAggregate : IAggregate, new();
+        where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves the list of domain events that occurred between the specified sequence numbers.
@@ -215,7 +215,7 @@ public interface IDomainService : IDisposable
     /// var aggregate = result.Value;
     /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
-        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+        CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified sequence.
@@ -235,7 +235,7 @@ public interface IDomainService : IDisposable
     /// var aggregate = result.Value;
     /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
-        int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+        int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves an in-memory aggregate of the specified type up to a specified date.
@@ -255,7 +255,7 @@ public interface IDomainService : IDisposable
     /// var aggregate = result.Value;
     /// </example>
     Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
-        DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+        DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Retrieves the latest event sequence number for a specific stream.
@@ -294,7 +294,7 @@ public interface IDomainService : IDisposable
     /// </example>
     Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
         TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default)
-        where TAggregate : IAggregate, new();
+        where TAggregate : IAggregateRoot, new();
 
     /// <summary>
     /// Saves the specified domain events to the underlying event store.
@@ -331,5 +331,5 @@ public interface IDomainService : IDisposable
     /// var aggregate = result.Value;
     /// </example>
     Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId,
-        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new();
+        CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new();
 }

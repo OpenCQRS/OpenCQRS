@@ -18,7 +18,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="applyNewDomainEvents">Whether to apply new domain events.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the aggregate.</returns>
-    public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, bool applyNewDomainEvents = false, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewDomainEvents, cancellationToken);
     }
@@ -43,7 +43,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the list of domain events applied to the aggregate.</returns>
-    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<List<IDomainEvent>>> GetDomainEventsAppliedToAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.GetDomainEventsAppliedToAggregate(aggregateId, cancellationToken);
     }
@@ -139,7 +139,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate.</returns>
-    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, cancellationToken);
     }
@@ -153,7 +153,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="upToSequence">The sequence number to read up to.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate up to the specified sequence.</returns>
-    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToSequence, cancellationToken);
     }
@@ -168,7 +168,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the in-memory aggregate up to the specified date.</returns>
     public async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate,
-        CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+        CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.GetInMemoryAggregate(streamId, aggregateId, upToDate, cancellationToken);
     }
@@ -195,7 +195,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="expectedEventSequence">The expected event sequence for optimistic concurrency control.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
-    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result> SaveAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, TAggregate aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence, cancellationToken);
     }
@@ -221,7 +221,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A result containing the updated aggregate.</returns>
-    public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public async Task<Result<TAggregate>> UpdateAggregate<TAggregate>(IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         return await domainDbContext.UpdateAggregate(streamId, aggregateId, cancellationToken);
     }

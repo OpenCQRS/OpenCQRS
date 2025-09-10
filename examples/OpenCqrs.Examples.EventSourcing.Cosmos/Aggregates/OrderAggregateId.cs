@@ -2,7 +2,7 @@
 
 namespace OpenCqrs.Examples.EventSourcing.Cosmos.Aggregates;
 
-public class OrderAggregateId(Guid orderId) : IAggregateId<OrderAggregate>
+public class OrderAggregateId(Guid orderId) : IAggregateId<OrderAggregateRoot>
 {
     public string Id => $"order:{orderId}";
 }

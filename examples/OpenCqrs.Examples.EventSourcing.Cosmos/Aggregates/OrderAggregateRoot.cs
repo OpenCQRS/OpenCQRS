@@ -4,7 +4,7 @@ using OpenCqrs.Examples.EventSourcing.Cosmos.DomainEvents;
 namespace OpenCqrs.Examples.EventSourcing.Cosmos.Aggregates;
 
 [AggregateType("Order")]
-public class OrderAggregate : Aggregate
+public class OrderAggregateRoot : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [
@@ -14,9 +14,9 @@ public class OrderAggregate : Aggregate
     public Guid OrderId { get; private set; }
     public decimal Amount { get; private set; }
 
-    public OrderAggregate() { }
+    public OrderAggregateRoot() { }
 
-    public OrderAggregate(Guid orderId, decimal amount)
+    public OrderAggregateRoot(Guid orderId, decimal amount)
     {
         Add(new OrderPlacedEvent(OrderId = orderId, Amount = amount));
     }

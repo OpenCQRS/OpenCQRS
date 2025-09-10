@@ -28,7 +28,7 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 
@@ -66,7 +66,7 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, int upToSequence, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 
@@ -104,7 +104,7 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregate, new()
+    public static async Task<Result<TAggregate>> GetInMemoryAggregate<TAggregate>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<TAggregate> aggregateId, DateTimeOffset upToDate, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot, new()
     {
         var aggregate = new TAggregate();
 

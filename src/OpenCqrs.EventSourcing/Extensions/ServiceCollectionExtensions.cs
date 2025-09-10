@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
                 .ToList();
 
             var aggregates = assembly.GetTypes()
-                .Where(t => t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && typeof(IAggregate).IsAssignableFrom(t))
+                .Where(t => t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && typeof(IAggregateRoot).IsAssignableFrom(t))
                 .ToList();
 
             foreach (var domainEvent in domainEvents)

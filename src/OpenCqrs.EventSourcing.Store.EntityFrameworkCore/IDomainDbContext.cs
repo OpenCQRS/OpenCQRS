@@ -566,7 +566,7 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// remain in the context after their business operations are complete.
     /// </summary>
     /// <typeparam name="TAggregate">
-    /// The type of aggregate to detach. Must implement <see cref="IAggregate"/> to ensure
+    /// The type of aggregate to detach. Must implement <see cref="IAggregateRoot"/> to ensure
     /// proper aggregate behavior and lifecycle management.
     /// </typeparam>
     /// <param name="aggregateId">
@@ -703,5 +703,5 @@ public interface IDomainDbContext : IDisposable, IAsyncDisposable
     /// }
     /// </code>
     /// </example>
-    void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregate;
+    void DetachAggregate<TAggregate>(IAggregateId<TAggregate> aggregateId, TAggregate aggregate) where TAggregate : IAggregateRoot;
 }

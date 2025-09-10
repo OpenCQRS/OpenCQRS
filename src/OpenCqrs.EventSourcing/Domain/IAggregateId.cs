@@ -35,7 +35,7 @@ public interface IAggregateId
 /// Defines a strongly-typed contract for aggregate identifiers.
 /// </summary>
 /// <typeparam name="TAggregate">The aggregate type.</typeparam>
-public interface IAggregateId<TAggregate> : IAggregateId where TAggregate : IAggregate;
+public interface IAggregateId<TAggregate> : IAggregateId where TAggregate : IAggregateRoot;
 
 /// <summary>
 /// Extension methods for IAggregateId.
@@ -47,7 +47,7 @@ public static class IAggregateIdExtensions
     /// </summary>
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <returns>The store ID.</returns>
-    public static string ToStoreId<TAggregate>(this IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregate
+    public static string ToStoreId<TAggregate>(this IAggregateId<TAggregate> aggregateId) where TAggregate : IAggregateRoot
     {
         var aggregateType = typeof(TAggregate).GetCustomAttribute<AggregateType>();
         if (aggregateType == null)
