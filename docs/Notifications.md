@@ -45,6 +45,6 @@ public class SomethingHappenedHandlerTwo : INotificationHandler<SomethingHappene
 And finally, publish the notification using the dispatcher:
 
 ```C#
-var notification = new SomethingHappened();~~~~
+var notification = new SomethingHappened();
 await _dispatcher.Publish(notification)
 ```
