@@ -8,6 +8,8 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 
 [Full Documentation](https://opencqrs.github.io/OpenCQRS/)
 
+_Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
+
 ## Main Features
 
 - Multiple aggregates per stream
@@ -25,7 +27,12 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 - Simple mediator with commands, queries, and notifications
 - Extensible architecture with providers for store, bus, caching, and validation
 
-_Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
+## Roadmap
+
+### OpenCQRS 7.2.0
+
+- Option to disable immediate snapshot storage
+- File store provider for event sourcing
 
 ## Nuget Packages
 
@@ -202,10 +209,3 @@ var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 // Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
-
-## Roadmap
-
-### OpenCQRS 7.2.0
-
-- Option to disable immediate snapshot storage
-- File store provider for event sourcing
