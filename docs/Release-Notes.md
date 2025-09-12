@@ -1,5 +1,9 @@
 # Release Notes
 
+## OpenCQRS 7.1.3
+_**Released 13/09/2025**_
+- Option to disable automatic snapshot creation in the Entity Framework Core and CosmosDB store providers
+
 ## OpenCQRS 7.1.2
 _**Released 10/09/2025**_
 - Rename IDomainEvent to IEvent
