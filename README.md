@@ -11,8 +11,8 @@ OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple medi
 ## Main Features
 
 - Multiple aggregates per stream
-- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent 
-- In memory aggregate reconstruction up to a specific event sequence or date if provided _(soon up to aggregate version)_
+- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent _**(in the next version there will be the option to disable immediate snapshot storage)**_
+- In memory aggregate reconstruction up to a specific event sequence or date if provided _**(soon up to aggregate version)**_
 - Events applied to the aggregate filtered by event type
 - Retrieval of all domain events applied to an aggregate
 - Querying stream events from or up to a specific event sequence or date/date range
