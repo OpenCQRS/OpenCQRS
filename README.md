@@ -13,7 +13,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 ## Main Features
 
 - Multiple aggregates per stream
-- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent _**(in the next version there will be the option to disable immediate snapshot storage)**_
+- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent _**(v7.1.3 will include the option to disable the automatic snapshot creation)**_
 - In memory aggregate reconstruction up to a specific event sequence or date if provided _**(soon up to aggregate version)**_
 - Events applied to the aggregate filtered by event type
 - Retrieval of all domain events applied to an aggregate
@@ -31,7 +31,7 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ### OpenCQRS 7.1.3
 
-- Option to disable immediate snapshot storage
+- Option to disable automatic snapshot creation in the Entity Framework Core and CosmosDB store providers
 
 ### OpenCQRS 7.2.0
 
