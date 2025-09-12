@@ -16,13 +16,14 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/> to add the memory cache to.</param>
     public static void AddOpenCqrsMemoryCache(this IServiceCollection services)
     {
-        services.AddOpenCqrsMemoryCache(opt => { });
+        services.AddOpenCqrsMemoryCache(_ => { });
     }
 
     /// <summary>
     /// Adds memory caching support for OpenCqrs to the service collection.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the memory cache to.</param>
+    /// <param name="options"></param>
     public static void AddOpenCqrsMemoryCache(this IServiceCollection services, Action<Configuration.MemoryCacheOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);

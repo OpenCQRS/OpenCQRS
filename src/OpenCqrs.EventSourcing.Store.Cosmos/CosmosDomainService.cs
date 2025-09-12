@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
+using OpenCqrs.EventSourcing.Configuration;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
@@ -24,16 +25,17 @@ public class CosmosDomainService : IDomainService
     /// <summary>
     /// Initializes a new instance of the <see cref="CosmosDomainService"/> class.
     /// </summary>
-    /// <param name="options">Cosmos DB configuration options.</param>
+    /// <param name="cosmosOptions">Cosmos DB configuration options.</param>
+    /// <param name="eventSourcingOptions"></param>
     /// <param name="timeProvider">The time provider for timestamps.</param>
     /// <param name="httpContextAccessor">HTTP context accessor for user information.</param>
     /// <param name="cosmosDataStore">The Cosmos data store for document operations.</param>
-    public CosmosDomainService(IOptions<CosmosOptions> options, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
+    public CosmosDomainService(IOptions<CosmosOptions> cosmosOptions, IOptions<EventSourcingOptions> eventSourcingOptions, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
         _httpContextAccessor = httpContextAccessor;
-        _cosmosClient = new CosmosClient(options.Value.Endpoint, options.Value.AuthKey, options.Value.ClientOptions);
-        _container = _cosmosClient.GetContainer(options.Value.DatabaseName, options.Value.ContainerName);
+        _cosmosClient = new CosmosClient(cosmosOptions.Value.Endpoint, cosmosOptions.Value.AuthKey, cosmosOptions.Value.ClientOptions);
+        _container = _cosmosClient.GetContainer(cosmosOptions.Value.DatabaseName, cosmosOptions.Value.ContainerName);
         _cosmosDataStore = cosmosDataStore;
     }
 

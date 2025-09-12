@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
+using OpenCqrs.EventSourcing.Configuration;
 using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 using OpenCqrs.EventSourcing.Store.Cosmos.Tests.Models.Aggregates;
@@ -45,19 +46,25 @@ public abstract class TestBase : IDisposable
 
     private void SetupDomainService()
     {
-        var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
-        optionsSubstitute.Value.Returns(new CosmosOptions
+        var cosmosOptions = Substitute.For<IOptions<CosmosOptions>>();
+        cosmosOptions.Value.Returns(new CosmosOptions
         {
             Endpoint = "https://localhost:8081",
             AuthKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
         });
+        var eventSourcingOptions = Substitute.For<IOptions<EventSourcingOptions>>();
+        eventSourcingOptions.Value.Returns(new EventSourcingOptions
+        {
+            StoreAggregateSnapshotByDefault = true,
+            CheckForNewEventsByDefault = false
+        });
         TimeProvider = new FakeTimeProvider();
         var httpContextAccessor = CreateHttpContextAccessor();
 
-        DataStore = new CosmosDataStore(optionsSubstitute, TimeProvider, httpContextAccessor);
-        DomainService = new CosmosDomainService(optionsSubstitute, TimeProvider, httpContextAccessor, DataStore);
+        DataStore = new CosmosDataStore(cosmosOptions, TimeProvider, httpContextAccessor);
+        DomainService = new CosmosDomainService(cosmosOptions, eventSourcingOptions, TimeProvider, httpContextAccessor, DataStore);
 
-        var cosmosSetup = new CosmosSetup(optionsSubstitute);
+        var cosmosSetup = new CosmosSetup(cosmosOptions);
         _ = cosmosSetup.CreateDatabaseAndContainerIfNotExist();
     }
 
