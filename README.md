@@ -167,7 +167,7 @@ puclic class OrderAggregate : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [
-        typeof(OrderPlaced) // Only events of this type will be loaded for the aggregate from the event stream
+        typeof(OrderPlaced)
     ];
         
     public Guid OrderId { get; private set; }
@@ -206,6 +206,5 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
-// Save aggregate method stores the new events and the snapshot of the aggregate to the latest state
 var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 ```
