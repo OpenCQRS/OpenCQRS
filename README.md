@@ -207,4 +207,5 @@ var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate,
 
 ### OpenCQRS 7.2.0
 
+- Option to disable immediate snapshot storage
 - File store provider for event sourcing
