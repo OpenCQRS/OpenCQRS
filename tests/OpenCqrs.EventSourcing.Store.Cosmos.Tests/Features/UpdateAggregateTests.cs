@@ -37,4 +37,11 @@ public class UpdateAggregateTests : TestBase
             updatedAggregateResult.Value.Description.Should().Be("Updated Description");
         }
     }
+    
+    // TODO: store snapshot disabled by options for new aggregate - upgrade aggregate - stores new aggregate
+    // TODO: store snapshot disabled by options for existing aggregate - upgrade aggregate - stores upgraded aggregate
+    
+    // TODO: store snapshot disabled by override for new aggregate - upgrade aggregate - stores new aggregate           
+    // TODO: store snapshot disabled by override for existing aggregate - upgrade aggregate - stores upgraded aggregate 
 }
+

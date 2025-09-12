@@ -245,4 +245,10 @@ public class SaveAggregateTests : TestBase
             eventDocuments.Value[0].CreatedDate.Should().Be(createDate);
         }
     }
+    
+    // TODO: store snapshot disabled by options for new aggregate - snapshot not stored
+    // TODO: store snapshot disabled by options for existing aggregate - snapshot not updated
+    
+    // TODO: store snapshot disabled by override for new aggregate - snapshot not stored        
+    // TODO: store snapshot disabled by override for existing aggregate - snapshot not updated
 }
