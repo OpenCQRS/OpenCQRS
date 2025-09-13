@@ -37,4 +37,35 @@ public class UpdateAggregateTests : TestBase
             updatedAggregateResult.Value.Description.Should().Be("Updated Description");
         }
     }
+    
+    [Fact]
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateDoesNotExist_ThenAggregateIsStoredAndReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+
+        var events = new List<IEvent>
+        {
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveEvents(streamId, events.ToArray(), expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.UpdateAggregate(streamId, aggregateId);
+
+        using (new AssertionScope())
+        {
+            updatedAggregateResult.IsSuccess.Should().BeTrue();
+
+            updatedAggregateResult.Value.Should().NotBeNull();
+
+            updatedAggregateResult.Value.StreamId.Should().Be(streamId.Id);
+            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
+            updatedAggregateResult.Value.Version.Should().Be(2);
+
+            updatedAggregateResult.Value.Id.Should().Be(id);
+            updatedAggregateResult.Value.Name.Should().Be("Updated Name");
+            updatedAggregateResult.Value.Description.Should().Be("Updated Description");
+        }
+    }
 }

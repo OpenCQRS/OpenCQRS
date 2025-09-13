@@ -24,16 +24,16 @@ public class CosmosDomainService : IDomainService
     /// <summary>
     /// Initializes a new instance of the <see cref="CosmosDomainService"/> class.
     /// </summary>
-    /// <param name="options">Cosmos DB configuration options.</param>
+    /// <param name="cosmosOptions">Cosmos DB configuration options.</param>
     /// <param name="timeProvider">The time provider for timestamps.</param>
     /// <param name="httpContextAccessor">HTTP context accessor for user information.</param>
     /// <param name="cosmosDataStore">The Cosmos data store for document operations.</param>
-    public CosmosDomainService(IOptions<CosmosOptions> options, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
+    public CosmosDomainService(IOptions<CosmosOptions> cosmosOptions, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor, ICosmosDataStore cosmosDataStore)
     {
         _timeProvider = timeProvider;
         _httpContextAccessor = httpContextAccessor;
-        _cosmosClient = new CosmosClient(options.Value.Endpoint, options.Value.AuthKey, options.Value.ClientOptions);
-        _container = _cosmosClient.GetContainer(options.Value.DatabaseName, options.Value.ContainerName);
+        _cosmosClient = new CosmosClient(cosmosOptions.Value.Endpoint, cosmosOptions.Value.AuthKey, cosmosOptions.Value.ClientOptions);
+        _container = _cosmosClient.GetContainer(cosmosOptions.Value.DatabaseName, cosmosOptions.Value.ContainerName);
         _cosmosDataStore = cosmosDataStore;
     }
 
@@ -56,12 +56,12 @@ public class CosmosDomainService : IDomainService
 
         if (aggregateDocumentResult.Value != null)
         {
-            var currentAggregate = aggregateDocumentResult.Value.ToAggregate<T>();
+            var currentAggregateDocument = aggregateDocumentResult.Value;
             if (!applyNewEvents)
             {
-                return currentAggregate;
+                return currentAggregateDocument.ToAggregate<T>();
             }
-            return await UpdateAggregate(streamId, aggregateId, cancellationToken);
+            return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
         }
 
         var aggregate = new T();
@@ -608,11 +608,6 @@ public class CosmosDomainService : IDomainService
             return aggregateDocumentResult.Failure!;
         }
         var aggregateDocument = aggregateDocumentResult.Value;
-        if (aggregateDocument is null)
-        {
-            return new T();
-        }
-
         return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, aggregateDocument, cancellationToken);
     }
 

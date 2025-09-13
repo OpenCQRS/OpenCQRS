@@ -25,7 +25,7 @@ public static partial class IDomainDbContextExtensions
         }
 
         var latestEventSequenceForAggregate = newEventEntities.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
-        var trackedAggregateEntity = domainDbContext.TrackAggregateEntity(streamId, aggregateId, aggregate, latestEventSequenceForAggregate, aggregateIsNew: false);
+        var trackedAggregateEntity = domainDbContext.TrackAggregateEntity(streamId, aggregateId, aggregate, latestEventSequenceForAggregate, aggregateIsNew: currentAggregateVersion == 0);
         domainDbContext.TrackAggregateEventEntities(trackedAggregateEntity, newEventEntities);
 
         try

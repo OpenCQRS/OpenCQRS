@@ -594,9 +594,9 @@ public class CosmosDataStore : ICosmosDataStore
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the updated aggregate, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<T>> UpdateAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, AggregateDocument aggregateDocument, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T>> UpdateAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, AggregateDocument? aggregateDocument, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var aggregate = aggregateDocument.ToAggregate<T>();
+        var aggregate = aggregateDocument is null ? new T() : aggregateDocument.ToAggregate<T>();
 
         var currentAggregateVersion = aggregate.Version;
 
@@ -627,8 +627,8 @@ public class CosmosDataStore : ICosmosDataStore
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
             var aggregateDocumentToUpdate = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
-            aggregateDocumentToUpdate.CreatedDate = aggregateDocument.CreatedDate;
-            aggregateDocumentToUpdate.CreatedBy = aggregateDocument.CreatedBy;
+            aggregateDocumentToUpdate.CreatedDate = aggregateDocument?.CreatedDate ?? timeStamp;
+            aggregateDocumentToUpdate.CreatedBy = aggregateDocument?.CreatedBy ?? currentUserNameIdentifier;
             aggregateDocumentToUpdate.UpdatedDate = timeStamp;
             aggregateDocumentToUpdate.UpdatedBy = currentUserNameIdentifier;
             batch.UpsertItem(aggregateDocumentToUpdate);

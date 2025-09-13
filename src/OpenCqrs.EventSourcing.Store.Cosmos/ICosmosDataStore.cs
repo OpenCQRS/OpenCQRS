@@ -226,6 +226,6 @@ public interface ICosmosDataStore : IDisposable
     /// var aggregate = result.Value;
     /// </example>
     Task<Result<T>> UpdateAggregateDocument<T>(IStreamId streamId,
-        IAggregateId<T> aggregateId, AggregateDocument aggregateDocument,
+        IAggregateId<T> aggregateId, AggregateDocument? aggregateDocument,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new();
 }

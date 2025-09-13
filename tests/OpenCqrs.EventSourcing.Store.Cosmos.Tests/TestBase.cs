@@ -45,8 +45,8 @@ public abstract class TestBase : IDisposable
 
     private void SetupDomainService()
     {
-        var optionsSubstitute = Substitute.For<IOptions<CosmosOptions>>();
-        optionsSubstitute.Value.Returns(new CosmosOptions
+        var cosmosOptions = Substitute.For<IOptions<CosmosOptions>>();
+        cosmosOptions.Value.Returns(new CosmosOptions
         {
             Endpoint = "https://localhost:8081",
             AuthKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
@@ -54,10 +54,10 @@ public abstract class TestBase : IDisposable
         TimeProvider = new FakeTimeProvider();
         var httpContextAccessor = CreateHttpContextAccessor();
 
-        DataStore = new CosmosDataStore(optionsSubstitute, TimeProvider, httpContextAccessor);
-        DomainService = new CosmosDomainService(optionsSubstitute, TimeProvider, httpContextAccessor, DataStore);
+        DataStore = new CosmosDataStore(cosmosOptions, TimeProvider, httpContextAccessor);
+        DomainService = new CosmosDomainService(cosmosOptions, TimeProvider, httpContextAccessor, DataStore);
 
-        var cosmosSetup = new CosmosSetup(optionsSubstitute);
+        var cosmosSetup = new CosmosSetup(cosmosOptions);
         _ = cosmosSetup.CreateDatabaseAndContainerIfNotExist();
     }
 
