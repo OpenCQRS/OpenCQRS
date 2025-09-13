@@ -30,9 +30,10 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Roadmap
 
-### OpenCQRS 7.2.0
-
 - File store provider for event sourcing
+- Event Grid messaging provider
+- Kafka messaging provider
+- Amazon SQS messaging provider
 
 ## Nuget Packages
 
