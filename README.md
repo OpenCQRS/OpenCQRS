@@ -10,7 +10,9 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 - [Examples in repository](#examples)
 - [Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)
 
-_Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
+##  Give a star
+
+If you're using this repository for your learning, samples, workshop, or your project, please give a ⭐. Thank you!
 
 ## Main Features
 
