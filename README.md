@@ -10,11 +10,11 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 - [Examples in repository](#examples)
 - [Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)
 
-##  Give a star
+## ⭐ Give a star
 
-If you're using this repository for your learning, samples, workshop, or your project, please give a :star:. Thank you!
+If you're using this repository for your learning, samples, workshop, or your project, please give a star. Thank you!
 
-## Main Features
+## ⚡Main Features
 
 - Multiple aggregates per stream
 - Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent
@@ -31,14 +31,14 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Simple mediator with commands, queries, and notifications
 - Extensible architecture with providers for store, bus, caching, and validation
 
-## Roadmap
+## 🗺️ Roadmap
 
 - File store provider for event sourcing
 - Event Grid messaging provider
 - Kafka messaging provider
 - Amazon SQS messaging provider
 
-## Nuget Packages
+## 📦 Nuget Packages
 
 | Package                                                                                                                                               | Latest Stable                                                                                                                                                   |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -53,7 +53,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 | [OpenCqrs.Messaging.ServiceBus](https://www.nuget.org/packages/OpenCqrs.Messaging.ServiceBus)                                                         | [![Nuget Package](https://img.shields.io/badge/nuget-7.1.3-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Messaging.ServiceBus)                             |
 | [OpenCqrs.Validation.FluentValidation](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-7.1.3-blue.svg)](https://www.nuget.org/packages/OpenCqrs.Validation.FluentValidation)                      |
 
-## Simple mediator
+## 🔄 Simple mediator
 
 Three kinds of requests can be sent through the dispatcher:
 
@@ -156,7 +156,7 @@ public class SomethingHappenedHandlerTwo : INotifcationHandler<SomethingHappened
 await _dispatcher.Publish(new SomethingHappened());
 ```
 
-## Event Sourcing
+## 💾 Event Sourcing
 
 You can use the `IDomainService` interface to access the event-sourcing functionalities for every store provider.
 
@@ -218,7 +218,7 @@ var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggreg
 ```
 
 <a name="examples"></a>
-## Examples
+## 📚 Examples
 
 Examples of how to use OpenCQRS can be found in the repository:
 
