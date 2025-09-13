@@ -211,3 +211,14 @@ var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateI
 var saveEventsResult = await domainService.SaveEvents(streamId, aggregate.UncommittedEvents(), expectedEventSequence: 0);
 var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggregateId);
 ```
+
+## Examples
+
+Examples of how to use OpenCQRS can be found in the repository:
+
+- [OpenCQRS.Examples.Caching.Memory](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Memory)
+- [OpenCQRS.Examples.Caching.Redis](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Redis)
+- [OpenCQRS.Examples.EventSourcing.Cosmos](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.EventSourcing.Cosmos)
+- [OpenCQRS.Examples.EventSourcing.EntityFrameworkCore](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.EventSourcing.EntityFrameworkCore)
+- [OpenCQRS.Examples.Messaging.RabbitMq](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Messaging.RabbitMq)
+- [OpenCQRS.Examples.Messaging.ServiceBus](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Messaging.ServiceBus)
