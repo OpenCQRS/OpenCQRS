@@ -162,7 +162,7 @@ In the Entity Framework Core store provider, IdentityDbContext from ASP.NET Core
 
 ```C#
 [AggregateType("Order")]
-puclic class OrderAggregate : AggregateRoot
+puclic class Order : AggregateRoot
 {
     public override Type[] EventTypeFilter { get; } =
     [
@@ -202,8 +202,8 @@ puclic class OrderAggregate : AggregateRoot
 }
 
 var streamId = new CustomerStreamId(customerId);
-var aggregateId = new OrderAggregateId(orderId);
-var aggregate = new OrderAggregate(orderId, amount: 25.45m);
+var aggregateId = new OrderId(orderId);
+var aggregate = new Order(orderId, amount: 25.45m);
 
 // Save aggregate stores the uncommitted events and the snapshot of the aggregate
 var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
