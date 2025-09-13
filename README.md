@@ -16,20 +16,21 @@ If you're using this repository for your learning, samples, workshop, or your pr
 
 ## ⚡Main Features
 
+- Mediator with commands, queries, and notifications
 - Multiple aggregates per stream
-- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent
+- Option to store the aggregate snapshot alongside events for fast reads, and write model strongly consistent
 - In memory aggregate reconstruction up to a specific event sequence or date if provided _**(soon up to aggregate version)**_
 - Events applied to the aggregate filtered by event type
-- Retrieval of all domain events applied to an aggregate
+- Retrieval of all events applied to an aggregate
 - Querying stream events from or up to a specific event sequence or date/date range
 - Optimistic concurrency control with an expected event sequence
 - Automatic event/notification publication after a command is successfully processed that returns a list of results from all notification handlers
+- Automatic event/message publication after a command is successfully processed using Service Bus or RabbitMQ
 - Automatic command validation with FluentValidation if required
 - Command sequences that return a list of results from all commands in the sequence
-- Custom command handlers or services can be used instead of the automatically resolved command handler
-- Result pattern
-- Simple mediator with commands, queries, and notifications
-- Extensible architecture with providers for store, bus, caching, and validation
+- Custom command handlers or services can be used instead of the automatically resolved command handlers
+- Result pattern across handlers and providers
+- Extensible architecture with providers for store, messaging, caching, and validation
 
 ## 🗺️ Roadmap
 
