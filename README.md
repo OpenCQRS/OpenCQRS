@@ -13,8 +13,8 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 ## Main Features
 
 - Multiple aggregates per stream
-- Option to save the aggregate snapshot automatically when domain events are stored for fast reads and to have the write model strongly consistent
-- In memory aggregate reconstruction up to a specific event sequence or date if provided
+- Aggregate snapshot stored alongside events for fast reads, and write model strongly consistent
+- In memory aggregate reconstruction up to a specific event sequence or date if provided _**(soon up to aggregate version)**_
 - Events applied to the aggregate filtered by event type
 - Retrieval of all domain events applied to an aggregate
 - Querying stream events from or up to a specific event sequence or date/date range
@@ -28,6 +28,11 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 - Extensible architecture with providers for store, bus, caching, and validation
 
 ## Roadmap
+
+### OpenCQRS 7.1.3
+
+- Minor improvements
+- Fix issue when updating an aggregate that does not exist
 
 ### OpenCQRS 7.2.0
 
@@ -205,5 +210,9 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregate = new OrderAggregate(orderId, amount: 25.45m);
 
-var result = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+// Save aggregate stores the uncommitted events and the snapshot of the aggregate
+var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+// the alternative is to store the events and the snapshot separately
+var saveEventsResult = await domainService.SaveEvents(streamId, aggregate.UncommittedEvents(), expectedEventSequence: 0);
+var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggregateId);
 ```
