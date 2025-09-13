@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using OpenCqrs.EventSourcing.Store.Cosmos.Configuration;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.Extensions;
@@ -22,8 +23,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddOptions<CosmosOptions>().Configure(options);
-        services.TryAddScoped<IDomainService, CosmosDomainService>();
         services.TryAddScoped<ICosmosDataStore, CosmosDataStore>();
         services.TryAddSingleton<CosmosSetup>();
+        services.Replace(ServiceDescriptor.Scoped<IDomainService>(provider => 
+            new CosmosDomainService(
+                provider.GetRequiredService<IOptions<CosmosOptions>>(), 
+                provider.GetRequiredService<TimeProvider>(), 
+                provider.GetRequiredService<IHttpContextAccessor>(),
+                provider.GetRequiredService<ICosmosDataStore>())));
     }
 }

@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IDomainDbContext>(serviceProvider => serviceProvider.GetRequiredService<TDbContext>());
-        services.TryAddScoped<IDomainService, EntityFrameworkCoreDomainService>();
+        services.Replace(ServiceDescriptor.Scoped<IDomainService>(provider => 
+            new EntityFrameworkCoreDomainService(provider.GetRequiredService<IDomainDbContext>())));
     }
 }
