@@ -4,7 +4,7 @@
 
 .NET framework implementing DDD, Event Sourcing, and CQRS.
 
-OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
+OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
 - [Full Documentation](https://opencqrs.github.io/OpenCQRS/)
 - [Examples](#examples)
