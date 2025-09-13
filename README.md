@@ -29,11 +29,6 @@ _Note: OpenCQRS was made private when it had 681 stars and made public again in 
 
 ## Roadmap
 
-### OpenCQRS 7.1.3
-
-- Minor improvements
-- Fix issue when updating an aggregate that does not exist
-
 ### OpenCQRS 7.2.0
 
 - File store provider for event sourcing

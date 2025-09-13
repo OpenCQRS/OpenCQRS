@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using OpenCqrs.EventSourcing.Configuration;
 using OpenCqrs.EventSourcing.Domain;
 
 namespace OpenCqrs.EventSourcing.Extensions;
@@ -10,23 +9,15 @@ namespace OpenCqrs.EventSourcing.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static void AddOpenCqrsEventSourcing(this IServiceCollection services, params Type[] types)
-    {
-        services.AddOpenCqrsEventSourcing(_ => { }, types);
-    }
-
     /// <summary>
     /// Configures event sourcing by scanning assemblies for domain events and aggregates.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="options"></param>
     /// <param name="types">The types to scan.</param>
     /// <exception cref="ArgumentNullException">Thrown when services or types are null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when duplicate type-binding keys are encountered.</exception>
-    public static void AddOpenCqrsEventSourcing(this IServiceCollection services, Action<EventSourcingOptions> options, params Type[] types)
+    public static void AddOpenCqrsEventSourcing(this IServiceCollection services, params Type[] types)
     {
-        services.AddOptions<EventSourcingOptions>().Configure(options);
-        
         var eventTypeBindings = new Dictionary<string, Type>();
         var aggregateTypeBindings = new Dictionary<string, Type>();
 

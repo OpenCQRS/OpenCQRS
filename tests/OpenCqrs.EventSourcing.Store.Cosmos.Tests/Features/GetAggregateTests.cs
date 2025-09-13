@@ -229,14 +229,4 @@ public class GetAggregateTests : TestBase
             updatedAggregateResult.Value.Description.Should().Be("Updated Description");
         }
     }
-    
-    // TODO: store snapshot disabled by options for new aggregate - get aggregate with new events false - returns null
-    // TODO: store snapshot disabled by options for new aggregate - get aggregate with new events true - returns aggregate
-    // TODO: store snapshot disabled by options for existing aggregate - get aggregate with new events false - returns aggregate not updated
-    // TODO: store snapshot disabled by options for existing aggregate - get aggregate with new events true - returns updated aggregate
-    
-    // TODO: store snapshot disabled by override for new aggregate - get aggregate with new events false - returns null
-    // TODO: store snapshot disabled by override for new aggregate - get aggregate with new events true - returns aggregate
-    // TODO: store snapshot disabled by override for existing aggregate - get aggregate with new events false - returns aggregate not updated
-    // TODO: store snapshot disabled by override for existing aggregate - get aggregate with new events true - returns updated aggregate
 }

@@ -29,13 +29,7 @@ public static partial class IDomainDbContextExtensions
     public static async Task<Result<T>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
-        if (aggregateEntity is null)
-        {
-            return new T();
-        }
-
-        var aggregate = aggregateEntity.ToAggregate<T>();
-
+        var aggregate = aggregateEntity is null ? new T() : aggregateEntity.ToAggregate<T>();
         return await domainDbContext.UpdateAggregate(streamId, aggregateId, aggregate, cancellationToken);
     }
 }

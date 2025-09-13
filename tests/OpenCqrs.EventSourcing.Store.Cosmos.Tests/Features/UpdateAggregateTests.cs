@@ -37,11 +37,36 @@ public class UpdateAggregateTests : TestBase
             updatedAggregateResult.Value.Description.Should().Be("Updated Description");
         }
     }
-    
-    // TODO: store snapshot disabled by options for new aggregate - upgrade aggregate - stores new aggregate
-    // TODO: store snapshot disabled by options for existing aggregate - upgrade aggregate - stores upgraded aggregate
-    
-    // TODO: store snapshot disabled by override for new aggregate - upgrade aggregate - stores new aggregate           
-    // TODO: store snapshot disabled by override for existing aggregate - upgrade aggregate - stores upgraded aggregate 
+
+    [Fact]
+    public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateDoesNotExist_ThenAggregateIsStoredAndReturned()
+    {
+        var id = Guid.NewGuid().ToString();
+        var streamId = new TestStreamId(id);
+        var aggregateId = new TestAggregate1Id(id);
+
+        var events = new List<IEvent>
+        {
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveEvents(streamId, events.ToArray(), expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.UpdateAggregate(streamId, aggregateId);
+
+        using (new AssertionScope())
+        {
+            updatedAggregateResult.IsSuccess.Should().BeTrue();
+
+            updatedAggregateResult.Value.Should().NotBeNull();
+
+            updatedAggregateResult.Value.StreamId.Should().Be(streamId.Id);
+            updatedAggregateResult.Value.AggregateId.Should().Be(aggregateId.ToStoreId());
+            updatedAggregateResult.Value.Version.Should().Be(2);
+
+            updatedAggregateResult.Value.Id.Should().Be(id);
+            updatedAggregateResult.Value.Name.Should().Be("Updated Name");
+            updatedAggregateResult.Value.Description.Should().Be("Updated Description");
+        }
+    }
 }
 
