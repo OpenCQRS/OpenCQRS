@@ -1,4 +1,4 @@
-# OpenCQRS&trade;
+# 🚀 OpenCQRS&trade;
 
 [![.Build](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml/badge.svg)](https://github.com/OpenCQRS/OpenCQRS/actions/workflows/build.yml)
 
