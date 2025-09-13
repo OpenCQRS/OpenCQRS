@@ -77,7 +77,8 @@ var saveEventsResult = await domainService.SaveEvents(streamId, events, expected
 
 <a name="update-aggregate"></a>
 ### Update Aggregate
-Updates an existing aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.
+Updates an aggregate with new events from its stream, applying any events that occurred after the aggregate's last known state.
+If the aggregate does not exist, a new one is stored.
 ```C#
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
