@@ -6,7 +6,8 @@
 
 OpenCQRS 7 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
-[Full Documentation](https://opencqrs.github.io/OpenCQRS/)
+- [Full Documentation](https://opencqrs.github.io/OpenCQRS/)
+- [Examples](#examples)
 
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
@@ -212,6 +213,7 @@ var saveEventsResult = await domainService.SaveEvents(streamId, aggregate.Uncomm
 var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggregateId);
 ```
 
+<a name="examples"></a>
 ## Examples
 
 Examples of how to use OpenCQRS can be found in the repository:
