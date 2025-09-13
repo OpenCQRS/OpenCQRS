@@ -10,7 +10,7 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
       <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.53.1" />
-      <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9" />
     </ItemGroup>
 
     <ItemGroup>

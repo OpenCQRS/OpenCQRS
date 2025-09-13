@@ -1,5 +1,9 @@
 # Release Notes
 
+## OpenCQRS 7.1.4
+_**Released 13/09/2025**_
+- Upgrade Nuget packages to latest versions
+
 ## OpenCQRS 7.1.3
 _**Released 13/09/2025**_
 - UpdateAggregate stores a new aggregate if it doesn't exist
