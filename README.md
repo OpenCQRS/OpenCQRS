@@ -12,7 +12,7 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 
 ##  Give a star
 
-If you're using this repository for your learning, samples, workshop, or your project, please give a ⭐. Thank you!
+If you're using this repository for your learning, samples, workshop, or your project, please give a :star:. Thank you!
 
 ## Main Features
 
