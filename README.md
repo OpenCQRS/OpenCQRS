@@ -6,8 +6,9 @@
 
 OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
-- [Full Documentation](https://opencqrs.github.io/OpenCQRS/)
-- [Examples](#examples)
+- [Full documentation](https://opencqrs.github.io/OpenCQRS/)
+- [Examples in repository](#examples)
+- [Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)
 
 _Note: OpenCQRS was made private when it had 681 stars and made public again in preparation of version 7._
 
