@@ -114,7 +114,7 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredButNotApplied_ThenDefaultAggregateIsReturned()
+    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredButNotApplied_ThenNullIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -126,14 +126,13 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         using (new AssertionScope())
         {
             getAggregateResult.IsSuccess.Should().BeTrue();
             getAggregateResult.Failure.Should().BeNull();
-            getAggregateResult.Value.Should().NotBeNull();
-            getAggregateResult.Value.Version.Should().Be(0);
+            getAggregateResult.Value.Should().BeNull();
         }
     }
 
@@ -151,7 +150,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        await DomainService.GetAggregate(streamId, aggregateId);
+        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
         var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
 
         using (new AssertionScope())
@@ -177,7 +176,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         using (new AssertionScope())
         {

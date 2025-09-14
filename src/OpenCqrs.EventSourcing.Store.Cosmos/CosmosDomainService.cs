@@ -64,11 +64,11 @@ public class CosmosDomainService : IDomainService
             return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
         }
 
-        if(!applyNewEvents)
+        if (!applyNewEvents)
         {
             return default(T);
         }
-        
+
         var aggregate = new T();
 
         var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);

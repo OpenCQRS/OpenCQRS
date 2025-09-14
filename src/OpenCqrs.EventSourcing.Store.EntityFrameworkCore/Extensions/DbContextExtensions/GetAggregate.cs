@@ -44,7 +44,7 @@ public static partial class IDomainDbContextExtensions
         {
             return default(T);
         }
-        
+
         var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntities(streamId, aggregate.EventTypeFilter, cancellationToken);

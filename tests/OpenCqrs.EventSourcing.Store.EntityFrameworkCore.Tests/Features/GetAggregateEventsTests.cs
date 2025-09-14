@@ -112,7 +112,7 @@ public class GetAggregateEventsTests : TestBase
         timeProvider.SetUtcNow(date2);
         await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
         {
-            await dbContext.GetAggregate(streamId, aggregateId);
+            await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
             var result = await dbContext.GetAggregateEventEntities(aggregateId);
 

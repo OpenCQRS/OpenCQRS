@@ -25,10 +25,10 @@ public static class ServiceCollectionExtensions
         services.AddOptions<CosmosOptions>().Configure(options);
         services.TryAddScoped<ICosmosDataStore, CosmosDataStore>();
         services.TryAddSingleton<CosmosSetup>();
-        services.Replace(ServiceDescriptor.Scoped<IDomainService>(provider => 
+        services.Replace(ServiceDescriptor.Scoped<IDomainService>(provider =>
             new CosmosDomainService(
-                provider.GetRequiredService<IOptions<CosmosOptions>>(), 
-                provider.GetRequiredService<TimeProvider>(), 
+                provider.GetRequiredService<IOptions<CosmosOptions>>(),
+                provider.GetRequiredService<TimeProvider>(),
                 provider.GetRequiredService<IHttpContextAccessor>(),
                 provider.GetRequiredService<ICosmosDataStore>())));
     }

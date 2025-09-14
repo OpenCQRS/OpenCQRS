@@ -34,13 +34,14 @@ public static partial class IDomainDbContextExtensions
             return (null, null);
         }
 
-        var aggregateResult = await domainDbContext.GetAggregate(streamId, aggregateId, cancellationToken: cancellationToken);
+        var aggregateResult = await domainDbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true, cancellationToken: cancellationToken);
         if (aggregateResult.IsNotSuccess)
         {
             return aggregateResult.Failure!;
         }
+        var aggregate = aggregateResult.Value;
+        aggregate ??= new T();
 
-        var aggregate = aggregateResult.Value!;
         var aggregateIsNew = aggregate.Version == 0;
 
         var eventEntitiesHandledByTheAggregate = new Dictionary<int, EventEntity>();

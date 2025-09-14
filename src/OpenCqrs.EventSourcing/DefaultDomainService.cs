@@ -100,7 +100,7 @@ public class DefaultDomainService : IDomainService
     {
         throw new NotImplementedException(NotImplementedMessage);
     }
-    
+
     public void Dispose()
     {
         throw new NotImplementedException(NotImplementedMessage);
