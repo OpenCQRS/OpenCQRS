@@ -594,7 +594,7 @@ public class CosmosDataStore : ICosmosDataStore
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A result containing the updated aggregate, or a failure if an error occurred.</returns>
     /// <exception cref="Exception">Thrown when the aggregate type does not have an AggregateType attribute.</exception>
-    public async Task<Result<T>> UpdateAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, AggregateDocument? aggregateDocument, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T?>> UpdateAggregateDocument<T>(IStreamId streamId, IAggregateId<T> aggregateId, AggregateDocument? aggregateDocument, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregate = aggregateDocument is null ? new T() : aggregateDocument.ToAggregate<T>();
 
@@ -608,14 +608,14 @@ public class CosmosDataStore : ICosmosDataStore
         var newEventDocuments = newEventDocumentsResult.Value!;
         if (newEventDocuments.Count == 0)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var newEvents = newEventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
         aggregate.Apply(newEvents);
         if (aggregate.Version == currentAggregateVersion)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var newLatestEventSequenceForAggregate = newEventDocuments.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;

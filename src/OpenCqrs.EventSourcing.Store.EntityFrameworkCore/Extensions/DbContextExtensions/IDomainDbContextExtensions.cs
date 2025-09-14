@@ -13,7 +13,7 @@ public static partial class IDomainDbContextExtensions
         var newEventEntities = await domainDbContext.GetEventEntitiesFromSequence(streamId, fromSequence: aggregate.LatestEventSequence + 1, aggregate.EventTypeFilter, cancellationToken);
         if (newEventEntities.Count == 0)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var newEvents = newEventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
@@ -21,7 +21,7 @@ public static partial class IDomainDbContextExtensions
 
         if (aggregate.Version == currentAggregateVersion)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var latestEventSequenceForAggregate = newEventEntities.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
