@@ -27,7 +27,7 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<T>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public static async Task<Result<T?>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
@@ -40,12 +40,17 @@ public static partial class IDomainDbContextExtensions
             return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
         }
 
+        if (!applyNewEvents)
+        {
+            return default(T);
+        }
+        
         var aggregate = new T();
 
         var eventEntities = await domainDbContext.GetEventEntities(streamId, aggregate.EventTypeFilter, cancellationToken);
         if (eventEntities.Count == 0)
         {
-            return aggregate;
+            return default(T);
         }
 
         var events = eventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
@@ -53,7 +58,7 @@ public static partial class IDomainDbContextExtensions
 
         if (aggregate.Version == 0)
         {
-            return aggregate;
+            return default(T);
         }
 
         var latestEventSequenceForAggregate = eventEntities.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;

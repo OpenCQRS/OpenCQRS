@@ -6,7 +6,7 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextE
 
 public static partial class IDomainDbContextExtensions
 {
-    private static async Task<Result<T>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    private static async Task<Result<T?>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var currentAggregateVersion = aggregate.Version;
 

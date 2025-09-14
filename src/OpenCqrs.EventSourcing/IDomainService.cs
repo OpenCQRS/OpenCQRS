@@ -22,7 +22,7 @@ public interface IDomainService : IDisposable
     /// }
     /// var aggregate = result.Value;
     /// </example>
-    Task<Result<T>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
+    Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
         bool applyNewEvents = false, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
 
@@ -330,6 +330,6 @@ public interface IDomainService : IDisposable
     /// }
     /// var aggregate = result.Value;
     /// </example>
-    Task<Result<T>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
+    Task<Result<T?>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new();
 }
