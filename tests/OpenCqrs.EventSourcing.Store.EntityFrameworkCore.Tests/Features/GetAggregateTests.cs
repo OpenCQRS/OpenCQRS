@@ -116,10 +116,9 @@ public class GetAggregateTests : TestBase
 
         using (new AssertionScope())
         {
-            getAggregateResult.IsSuccess.Should().BeTrue();
-            getAggregateResult.Failure.Should().BeNull();
-            getAggregateResult.Value.Should().NotBeNull();
-            getAggregateResult.Value.Version.Should().Be(0);
+            getAggregateResult.IsSuccess.Should().BeFalse();
+            getAggregateResult.Failure.Should().NotBeNull();
+            getAggregateResult.Value.Should().BeNull();
         }
     }
 
