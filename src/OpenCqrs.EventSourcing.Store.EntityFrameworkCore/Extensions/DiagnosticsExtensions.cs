@@ -9,6 +9,21 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions;
 public static class DiagnosticsExtensions
 {
     /// <summary>
+    /// Adds an activity event with specified stream and aggregate information.
+    /// </summary>
+    /// <param name="streamId">The identifier of the stream associated with the activity event.</param>
+    /// <param name="aggregateId">The identifier of the aggregate associated with the activity event.</param>
+    /// <param name="name">The name of the activity event to add.</param>
+    public static void AddActivityEvent(IStreamId streamId, IAggregateId aggregateId, string name)
+    {
+        Activity.Current?.AddEvent(new ActivityEvent(name, timestamp: default, tags: new ActivityTagsCollection
+        {
+            { "streamId", streamId.Id },
+            { "aggregateId", aggregateId.Id }
+        }));
+    }
+
+    /// <summary>
     /// Adds an activity event for concurrency exceptions with sequence information.
     /// </summary>
     /// <param name="streamId">The stream identifier where the concurrency exception occurred.</param>
