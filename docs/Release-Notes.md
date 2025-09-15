@@ -1,7 +1,7 @@
 # Release Notes
 
 ## OpenCQRS 7.1.5
-_**Released ??/09/2025**_
+_**Released 15/09/2025**_
 - Get aggregate with apply new events false returns now null if the aggregate doesn't exist
 - Update aggregate returns null if aggregate doesn't exist
 
