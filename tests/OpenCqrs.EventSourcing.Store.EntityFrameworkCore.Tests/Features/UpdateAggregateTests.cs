@@ -37,7 +37,7 @@ public class UpdateAggregateTests : TestBase
             updatedAggregateResult.Value.Description.Should().Be("Updated Description");
         }
     }
-    
+
     [Fact]
     public async Task GivenEventsHandledByTheAggregateAreStoredSeparately_WhenAggregateDoesNotExist_ThenAggregateIsStoredAndReturned()
     {

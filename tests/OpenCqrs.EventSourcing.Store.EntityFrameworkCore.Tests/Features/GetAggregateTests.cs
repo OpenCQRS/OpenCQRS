@@ -118,13 +118,12 @@ public class GetAggregateTests : TestBase
         {
             getAggregateResult.IsSuccess.Should().BeTrue();
             getAggregateResult.Failure.Should().BeNull();
-            getAggregateResult.Value.Should().NotBeNull();
-            getAggregateResult.Value.Version.Should().Be(0);
+            getAggregateResult.Value.Should().BeNull();
         }
     }
 
     [Fact]
-    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredButNotApplied_ThenDefaultAggregateIsReturned()
+    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredButNotApplied_ThenNullIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -141,8 +140,7 @@ public class GetAggregateTests : TestBase
         {
             getAggregateResult.IsSuccess.Should().BeTrue();
             getAggregateResult.Failure.Should().BeNull();
-            getAggregateResult.Value.Should().NotBeNull();
-            getAggregateResult.Value.Version.Should().Be(0);
+            getAggregateResult.Value.Should().BeNull();
         }
     }
 
@@ -159,7 +157,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
 
-        await dbContext.GetAggregate(streamId, aggregateId);
+        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
 
         using (new AssertionScope())
@@ -184,7 +182,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
 
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         using (new AssertionScope())
         {

@@ -31,7 +31,8 @@ public static partial class IDomainDbContextExtensions
     {
         if (!aggregate.UncommittedEvents.Any())
         {
-            return (null, null, null);
+            DiagnosticsExtensions.AddActivityEvent(streamId, aggregateId, name: "NoUncommittedEvents");
+            return ErrorHandling.DefaultFailure;
         }
 
         var latestEventSequence = await domainDbContext.GetLatestEventSequence(streamId, cancellationToken: cancellationToken);

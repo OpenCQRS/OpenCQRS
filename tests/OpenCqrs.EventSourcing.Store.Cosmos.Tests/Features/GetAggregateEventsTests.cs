@@ -63,7 +63,7 @@ public class GetAggregateEventsTests : TestBase
         var appliedDate = new DateTime(2024, 6, 10, 12, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(appliedDate);
         await DomainService.SaveAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
-        await DomainService.GetAggregate(streamId, testAggregate2Key);
+        await DomainService.GetAggregate(streamId, testAggregate2Key, applyNewEvents: true);
         var result = await DataStore.GetAggregateEventDocuments(streamId, testAggregate2Key);
 
         using (new AssertionScope())
@@ -94,7 +94,7 @@ public class GetAggregateEventsTests : TestBase
 
         var date2 = new DateTime(2024, 6, 10, 13, 0, 0, DateTimeKind.Utc);
         TimeProvider.SetUtcNow(date2);
-        await DomainService.GetAggregate(streamId, aggregateId);
+        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
 
         var result = await DataStore.GetAggregateEventDocuments(streamId, aggregateId);
 

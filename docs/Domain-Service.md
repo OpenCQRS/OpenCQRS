@@ -11,14 +11,14 @@ Every store provider has its own implementation of the `IDomainService` interfac
 - [Update Aggregate](#update-aggregate)
 - [Get Aggregate](#get-aggregate)
 - [Get In-Memory Aggregate](#get-in-memory-aggregate)
-- [Get Domain Events](#get-domain-events)
-- [Get Domain Events From Sequence](#get-domain-events-from-sequence)
-- [Get Domain Events Up To Sequence](#get-domain-events-up-to-sequence)
-- [Get Domain Events Between Sequences](#get-domain-events-between-sequences)
-- [Get Domain Events From Date](#get-domain-events-from-date)
-- [Get Domain Events Up To Date](#get-domain-events-up-to-date)
-- [Get Domain Events Between Dates](#get-domain-events-between-dates)
-- [Get Domain Events Applied To Aggregate](#get-domain-events-applied-to-aggregate)
+- [Get Events](#get-domain-events)
+- [Get Events From Sequence](#get-domain-events-from-sequence)
+- [Get Events Up To Sequence](#get-domain-events-up-to-sequence)
+- [Get Events Between Sequences](#get-domain-events-between-sequences)
+- [Get Events From Date](#get-domain-events-from-date)
+- [Get Events Up To Date](#get-domain-events-up-to-date)
+- [Get Events Between Dates](#get-domain-events-between-dates)
+- [Get Events Applied To Aggregate](#get-domain-events-applied-to-aggregate)
 - [Get Latest Event Sequence](#get-latest-event-sequence)
 
 <a name="save-aggregate"></a>
@@ -89,19 +89,17 @@ var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggreg
 ### Get Aggregate
 Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.
 
-If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
-
-```C#
-var streamId = new CustomerStreamId(customerId);
-var aggregateId = new OrderAggregateId(orderId);
-var aggregateResult = await domainService.GetAggregate(streamId, aggregateId);
-```
-
-Optionally, it can be forced to apply any new domain events that occurred after the snapshot was created. This is useful when you want to ensure the aggregate is up to date with the latest events. If new events are found, the aggregate snapshot is updated automatically.
+If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically if applyNewEvents is true. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
 ```C#
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+```
+If the aggregate does not exist and applyNewEvents is false, the method returns null even if events that can be applied to the aggregate exist.
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+var aggregateResult = await domainService.GetAggregate(streamId, aggregateId);
 ```
 
 <a name="get-in-memory-aggregate"></a>
@@ -122,7 +120,7 @@ var aggregateResult = await domainService.GetInMemoryAggregate(streamId, aggrega
 ```
 
 <a name="get-domain-events"></a>
-### Get Domain Events
+### Get Events
 Retrieves all domain events from a specified stream, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -136,7 +134,7 @@ var eventsResult = await domainService.GetEvents(streamId, eventTypes);
 ```
 
 <a name="get-domain-events-from-sequence"></a>
-### Get Domain Events From Sequence
+### Get Events From Sequence
 Retrieves domain events from a specified stream starting from a specific sequence number onwards, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -152,7 +150,7 @@ var eventsResult = await domainService.GetEventsFromSequence(streamId, fromSeque
 ```
 
 <a name="get-domain-events-up-to-sequence"></a>
-### Get Domain Events Up To Sequence
+### Get Events Up To Sequence
 Retrieves domain events from a specified stream up to and including a specific sequence number, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -168,7 +166,7 @@ var eventsResult = await domainService.GetEventsUpToSequence(streamId, upToSeque
 ```
 
 <a name="get-domain-events-between-sequences"></a>
-### Get Domain Events Between Sequences
+### Get Events Between Sequences
 Retrieves domain events from a specified stream from and to specific sequence numbers, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -186,7 +184,7 @@ var eventsResult = await domainService.GetEventsBetweenSequences(streamId, fromS
 ```
 
 <a name="get-domain-events-from-date"></a>
-### Get Domain Events From Date
+### Get Events From Date
 Retrieves domain events from a specified stream starting from a specific date onwards, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -202,7 +200,7 @@ var eventsResult = await domainService.GetEventsFromDate(streamId, fromDate, eve
 ```
 
 <a name="get-domain-events-up-to-date"></a>
-### Get Domain Events Up To Date
+### Get Events Up To Date
 Retrieves domain events from a specified stream up to and including a specific date, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -218,7 +216,7 @@ var eventsResult = await domainService.GetEventsUpToDate(streamId, upToDate, eve
 ```
 
 <a name="get-domain-events-between-dates"></a>
-### Get Domain Events Between Dates
+### Get Events Between Dates
 Retrieves domain events from a specified stream from and to specific dates, with optional filtering by event types.
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -236,7 +234,7 @@ var eventsResult = await domainService.GetEventsBetweenDates(streamId, fromDate,
 ```
 
 <a name="get-domain-events-applied-to-aggregate"></a>
-### Get Domain Events Applied To Aggregate
+### Get Events Applied To Aggregate
 Retrieves all domain events that have been applied to a specific aggregate instance, using the explicit aggregate-event relationship tracking. This method provides precise access to the events that actually contributed to an aggregate's current state.
 ```C#
 var streamId = new CustomerStreamId(customerId);

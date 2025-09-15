@@ -46,7 +46,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="applyNewEvents">Whether to apply new domain events to update the aggregate.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the aggregate or failure information.</returns>
-    public async Task<Result<T>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)
@@ -64,6 +64,11 @@ public class CosmosDomainService : IDomainService
             return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
         }
 
+        if (!applyNewEvents)
+        {
+            return default(T);
+        }
+
         var aggregate = new T();
 
         var eventDocumentsResult = await _cosmosDataStore.GetEventDocuments(streamId, aggregate.EventTypeFilter, cancellationToken);
@@ -74,14 +79,14 @@ public class CosmosDomainService : IDomainService
         var eventDocuments = eventDocumentsResult.Value!.ToList();
         if (eventDocuments.Count == 0)
         {
-            return aggregate;
+            return default(T);
         }
 
         var events = eventDocuments.Select(eventDocument => eventDocument.ToDomainEvent()).ToList();
         aggregate.Apply(events);
         if (aggregate.Version == 0)
         {
-            return aggregate;
+            return default(T);
         }
 
         var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDocument => eventDocument.Sequence).Last().Sequence;
@@ -600,7 +605,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result containing the updated aggregate or failure information.</returns>
-    public async Task<Result<T>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T?>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)

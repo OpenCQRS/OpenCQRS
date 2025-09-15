@@ -6,14 +6,14 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Extensions.DbContextE
 
 public static partial class IDomainDbContextExtensions
 {
-    private static async Task<Result<T>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    private static async Task<Result<T?>> UpdateAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var currentAggregateVersion = aggregate.Version;
 
         var newEventEntities = await domainDbContext.GetEventEntitiesFromSequence(streamId, fromSequence: aggregate.LatestEventSequence + 1, aggregate.EventTypeFilter, cancellationToken);
         if (newEventEntities.Count == 0)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var newEvents = newEventEntities.Select(eventEntity => eventEntity.ToDomainEvent()).ToList();
@@ -21,7 +21,7 @@ public static partial class IDomainDbContextExtensions
 
         if (aggregate.Version == currentAggregateVersion)
         {
-            return aggregate;
+            return aggregate.Version > 0 ? aggregate : default;
         }
 
         var latestEventSequenceForAggregate = newEventEntities.OrderBy(eventEntity => eventEntity.Sequence).Last().Sequence;
