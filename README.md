@@ -38,6 +38,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Event Grid messaging provider
 - Kafka messaging provider
 - Amazon SQS messaging provider
+- EventSourcingDB store provider
 
 ## 📦 Nuget Packages
 
