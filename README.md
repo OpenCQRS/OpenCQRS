@@ -34,11 +34,17 @@ If you're using this repository for your learning, samples, workshop, or your pr
 
 ## 🗺️ Roadmap
 
+### ⏳ In Progress
+- Create an ecommerce demo application to showcase OpenCQRS features
+
+### ⏭️ Next
 - Option to automaticaaly validate a commnd
 - Option to automatically apply new events when getting an aggregate snapshot
-- File store provider for event sourcing
+
+### 🕙 To Follow
 - Event Grid messaging provider
 - Kafka messaging provider
+- File store provider for event sourcing
 - Amazon SQS messaging provider
 - EventSourcingDB store provider
 
