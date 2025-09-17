@@ -38,7 +38,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Create an ecommerce demo application to showcase OpenCQRS features
 
 ### ⏭️ Next
-- Option to automaticaaly validate a commnd
+- Option to automatically validate a commnd
 - Option to automatically apply new events when getting an aggregate snapshot
 
 ### 🕙 To Follow
