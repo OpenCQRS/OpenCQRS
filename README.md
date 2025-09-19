@@ -48,6 +48,8 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Amazon SQS messaging provider
 - EventSourcingDB store provider
 
+📣 _**[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)**_
+
 ## 📦 Nuget Packages
 
 | Package                                                                                                                                               | Latest Stable                                                                                                                                                   |
