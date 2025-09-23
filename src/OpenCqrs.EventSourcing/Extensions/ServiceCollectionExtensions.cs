@@ -56,5 +56,7 @@ public static class ServiceCollectionExtensions
 
         TypeBindings.EventTypeBindings = eventTypeBindings;
         TypeBindings.AggregateTypeBindings = aggregateTypeBindings;
+
+        services.AddScoped<IDomainService, DefaultDomainService>();
     }
 }
