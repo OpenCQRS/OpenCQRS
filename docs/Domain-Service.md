@@ -89,7 +89,7 @@ var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggreg
 ### Get Aggregate
 Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.
 
-**Read modes**:
+**Read mode**:
 - **SnapshotOnly** _(default)_: Retrieves the aggregate from its snapshot only. If no snapshot exists, returns null.
 - **SnapshotWithNewEvents**: Retrieves the aggregate from its snapshot if it exists and applies any new events that have occurred since the snapshot. If no snapshot exists, returns null.
 - **SnapshotOrCreate**: Retrieves the aggregate from its snapshot if it exists; otherwise, reconstructs it from events. If no events exist, returns null.
