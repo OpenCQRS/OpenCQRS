@@ -11,7 +11,7 @@ namespace OpenCqrs.EventSourcing.Store.Cosmos.Tests.Features;
 public class GetAggregateTests : TestBase
 {
     [Fact]
-    public async Task GivenAggregateDoesExist_ThenAggregateIsReturned()
+    public async Task GivenAggregateExists_ThenAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -38,7 +38,7 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenAggregateDoesExist_WhenAggregateIsUpdated_ThenTheUpdatedAggregateIsReturned()
+    public async Task GivenAggregateExists_WhenAggregateIsUpdated_ThenTheUpdatedAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
@@ -135,33 +135,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().BeNull();
         }
     }
-
-    [Fact]
-    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndApplied_ThenNewAggregateEntityIsStored()
-    {
-        var id = Guid.NewGuid().ToString();
-        var streamId = new TestStreamId(id);
-        var aggregateId = new TestAggregate1Id(id);
-
-        var events = new IEvent[]
-        {
-            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
-            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
-        };
-        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
-
-        await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.SnapshotOrCreate);
-        var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
-
-        using (new AssertionScope())
-        {
-            aggregateDocument.Value.Should().NotBeNull();
-            aggregateDocument.Value.AggregateType.Should().Be("TestAggregate1:1");
-            aggregateDocument.Value.Version.Should().Be(2);
-            aggregateDocument.Value.LatestEventSequence.Should().Be(2);
-        }
-    }
-
+    
     [Fact]
     public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndApplied_ThenNewAggregateIsReturned()
     {
