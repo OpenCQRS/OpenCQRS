@@ -26,10 +26,19 @@ public interface IDomainService : IDisposable
         bool applyNewEvents = false, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
 
+    /// <summary>
+    /// Retrieves an aggregate of the specified type with the provided identifiers and read mode.
+    /// </summary>
+    /// <typeparam name="T">The type of the aggregate to retrieve.</typeparam>
+    /// <param name="streamId">The unique identifier of the stream associated with the aggregate.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
+    /// <param name="readMode">The mode in which the aggregate should be read.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
         ReadMode readMode, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
-    
+
     /// <summary>
     /// Retrieves the domain events associated with the specified stream.
     /// </summary>

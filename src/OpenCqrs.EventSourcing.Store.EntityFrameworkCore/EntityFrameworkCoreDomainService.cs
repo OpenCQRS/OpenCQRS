@@ -23,6 +23,16 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewEvents, cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves an aggregate from the specified stream, applying the selected read mode.
+    /// </summary>
+    /// <typeparam name="T">The type of aggregate to retrieve, which must implement IAggregateRoot.</typeparam>
+    /// <param name="streamId">The identifier of the stream the aggregate is associated with.</param>
+    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
+    /// <param name="readMode">The read mode determining how the aggregate is populated (e.g., from snapshots or events).</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, containing a result with the retrieved aggregate.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
     public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {

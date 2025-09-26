@@ -129,6 +129,16 @@ public class CosmosDomainService : IDomainService
         }
     }
 
+    /// <summary>
+    /// Retrieves the aggregate of a specified type associated with a stream and aggregate ID.
+    /// </summary>
+    /// <typeparam name="T">The type of the aggregate, which must implement <see cref="IAggregateRoot"/> and have a parameterless constructor.</typeparam>
+    /// <param name="streamId">The identifier of the event stream containing the aggregate.</param>
+    /// <param name="aggregateId">The identifier of the aggregate to retrieve.</param>
+    /// <param name="readMode">The mode specifying how the aggregate should be read from the store.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="Result{T}"/> representing the operation outcome.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
     public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
