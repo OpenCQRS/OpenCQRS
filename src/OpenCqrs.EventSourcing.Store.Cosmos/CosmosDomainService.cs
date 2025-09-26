@@ -129,6 +129,12 @@ public class CosmosDomainService : IDomainService
         }
     }
 
+    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Gets all domain events from a stream with optional event type filtering.
     /// </summary>

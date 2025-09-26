@@ -26,6 +26,10 @@ public interface IDomainService : IDisposable
         bool applyNewEvents = false, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
 
+    Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
+        ReadMode readMode, CancellationToken cancellationToken = default)
+        where T : IAggregateRoot, new();
+    
     /// <summary>
     /// Retrieves the domain events associated with the specified stream.
     /// </summary>

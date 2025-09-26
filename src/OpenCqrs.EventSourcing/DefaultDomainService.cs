@@ -13,6 +13,12 @@ public class DefaultDomainService : IDomainService
         throw new NotImplementedException(NotImplementedMessage);
     }
 
+    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException(NotImplementedMessage);
+    }
+
     public Task<Result<List<IEvent>>> GetEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException(NotImplementedMessage);

@@ -23,6 +23,12 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
         return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewEvents, cancellationToken);
     }
 
+    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Gets domain events from the specified stream with optional event type filtering.
     /// </summary>
