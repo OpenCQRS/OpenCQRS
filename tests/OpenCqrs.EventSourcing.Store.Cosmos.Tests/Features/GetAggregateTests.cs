@@ -135,7 +135,7 @@ public class GetAggregateTests : TestBase
             getAggregateResult.Value.Should().BeNull();
         }
     }
-    
+
     [Fact]
     public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndApplied_ThenNewAggregateIsReturned()
     {

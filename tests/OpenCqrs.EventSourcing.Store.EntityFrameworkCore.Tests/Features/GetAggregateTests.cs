@@ -20,7 +20,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-        
+
         await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
         var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
