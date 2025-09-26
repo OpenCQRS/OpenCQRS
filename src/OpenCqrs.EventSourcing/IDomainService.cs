@@ -15,7 +15,7 @@ public interface IDomainService : IDisposable
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
-        ReadMode readMode = ReadMode.LatestSnapshot, CancellationToken cancellationToken = default)
+        ReadMode readMode = ReadMode.SnapshotOnly, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
 
     /// <summary>

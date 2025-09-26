@@ -6,20 +6,22 @@ namespace OpenCqrs.EventSourcing;
 public enum ReadMode
 {
     /// <summary>
-    /// Specifies that the latest snapshot should be used when getting
-    /// an aggregate, without including any subsequent new events.
+    /// Uses only the latest snapshot without applying any subsequent events.
     /// </summary>
-    LatestSnapshot,
+    SnapshotOnly,
 
     /// <summary>
-    /// Specifies that both the latest snapshot and any subsequent new events
-    /// should be used when getting an aggregate.
+    /// Uses the latest snapshot and applies any subsequent events.
     /// </summary>
-    LatestSnapshotPlusNewEvents,
+    SnapshotWithNewEvents,
 
     /// <summary>
-    /// Specifies that the system should use the latest snapshot if available
-    /// or create a new snapshot if no existing snapshot is found.
+    /// Uses the latest snapshot if available, otherwise creates a new aggregate from events.
     /// </summary>
-    LatestSnapshotOrCreateNew
+    SnapshotOrCreate,
+
+    /// <summary>
+    /// Uses the latest snapshot with subsequent events or creates a new aggregate if no snapshot exists.
+    /// </summary>
+    SnapshotWithNewEventsOrCreate
 }

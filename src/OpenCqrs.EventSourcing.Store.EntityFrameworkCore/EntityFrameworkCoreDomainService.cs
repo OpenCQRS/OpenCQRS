@@ -19,7 +19,7 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation, containing a result with the retrieved aggregate.</returns>
     /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.LatestSnapshot,
+    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         return await domainDbContext.GetAggregate(streamId, aggregateId, readMode, cancellationToken);

@@ -47,7 +47,7 @@ public class CosmosDomainService : IDomainService
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="Result{T}"/> representing the operation outcome.</returns>
     /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.LatestSnapshot,
+    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
@@ -59,14 +59,16 @@ public class CosmosDomainService : IDomainService
         if (aggregateDocumentResult.Value != null)
         {
             var currentAggregateDocument = aggregateDocumentResult.Value;
-            if (readMode == ReadMode.LatestSnapshotPlusNewEvents)
+            switch (readMode)
             {
-                return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
+                case ReadMode.SnapshotOnly or ReadMode.SnapshotOrCreate:
+                    return currentAggregateDocument.ToAggregate<T>();
+                case ReadMode.SnapshotWithNewEvents or ReadMode.SnapshotWithNewEventsOrCreate:
+                    return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
             }
-            return currentAggregateDocument.ToAggregate<T>();
         }
 
-        if (readMode == ReadMode.LatestSnapshot)
+        if (readMode is ReadMode.SnapshotOnly or ReadMode.SnapshotWithNewEvents)
         {
             return default(T);
         }

@@ -27,20 +27,22 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<T?>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.LatestSnapshot, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public static async Task<Result<T?>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
         {
             var currentAggregate = aggregateEntity.ToAggregate<T>();
-            if (readMode == ReadMode.LatestSnapshotPlusNewEvents)
+            switch (readMode)
             {
-                return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
+                case ReadMode.SnapshotOnly or ReadMode.SnapshotOrCreate:
+                    return currentAggregate;
+                case ReadMode.SnapshotWithNewEvents or ReadMode.SnapshotWithNewEventsOrCreate:
+                    return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
             }
-            return currentAggregate;
         }
 
-        if (readMode == ReadMode.LatestSnapshot)
+        if (readMode is ReadMode.SnapshotOnly or ReadMode.SnapshotWithNewEvents)
         {
             return default(T);
         }

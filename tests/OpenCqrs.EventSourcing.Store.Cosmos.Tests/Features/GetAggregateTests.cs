@@ -126,7 +126,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotOrCreateNew);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 
         using (new AssertionScope())
         {
@@ -150,7 +150,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.LatestSnapshotOrCreateNew);
+        await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.SnapshotOrCreate);
         var aggregateDocument = await DataStore.GetAggregateDocument(streamId, aggregateId);
 
         using (new AssertionScope())
@@ -176,7 +176,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.LatestSnapshotOrCreateNew);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.SnapshotOrCreate);
 
         using (new AssertionScope())
         {
@@ -210,7 +210,7 @@ public class GetAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
-        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotPlusNewEvents);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
 
         using (new AssertionScope())
         {

@@ -34,7 +34,7 @@ public static partial class IDomainDbContextExtensions
             return (null, null);
         }
 
-        var aggregateResult = await domainDbContext.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotOrCreateNew, cancellationToken: cancellationToken);
+        var aggregateResult = await domainDbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate, cancellationToken: cancellationToken);
         if (aggregateResult.IsNotSuccess)
         {
             return aggregateResult.Failure!;

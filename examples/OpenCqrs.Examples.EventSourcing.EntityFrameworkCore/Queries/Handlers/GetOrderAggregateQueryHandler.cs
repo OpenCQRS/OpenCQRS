@@ -13,6 +13,6 @@ public class GetOrderAggregateQueryHandler(IDomainService domainService) : IQuer
         var customerStreamId = new CustomerStreamId(query.CustomerId);
         var orderAggregateId = new OrderId(query.OrderId);
 
-        return await domainService.GetAggregate(customerStreamId, orderAggregateId, ReadMode.LatestSnapshot, cancellationToken);
+        return await domainService.GetAggregate(customerStreamId, orderAggregateId, ReadMode.SnapshotOnly, cancellationToken);
     }
 }
