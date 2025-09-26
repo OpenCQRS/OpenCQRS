@@ -89,13 +89,13 @@ var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggreg
 ### Get Aggregate
 Retrieves an aggregate from the event store, either from its snapshot or by reconstructing it from events.
 
-If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically if applyNewEvents is true. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
+If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically if read mode is SnapshotOrCreate or SnapshotWithNewEventOrCreate. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
 ```C#
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
-var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 ```
-If the aggregate does not exist and applyNewEvents is false, the method returns null even if events that can be applied to the aggregate exist.
+If the aggregate does not exist and read mode is SnapshotOnly (default), the method returns null even if events that can be applied to the aggregate exist.
 ```C#
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);

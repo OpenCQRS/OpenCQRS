@@ -82,7 +82,7 @@ var saveDomainsEventResult = await domainService.SaveEvents(streamId, events, ex
 
 // The new event stored separately is applied to the aggregate when retrieved,
 // and the snapshot of the aggregate is stored to the latest state
-var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 ```
 
 <a name="2"></a>
@@ -147,7 +147,7 @@ aggregate = aggregateResult.Value;
 aggregate.UpdateAmount(amount: 15.00m);
 
 var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: latestEventSequence);
-var anotherAggregateResult = await domainService.GetAggregate(streamId, anotherAggregateId, applyNewEvents: true);
+var anotherAggregateResult = await domainService.GetAggregate(streamId, anotherAggregateId, ReadMode.SnapshotWithNewEvents);
 ```
 
 or save domain events and aggregate snapshots separately
@@ -169,6 +169,6 @@ var saveDomainsEventResult = await domainService.SaveEvents(streamId, events, ex
 
 // The new event stored separately is applied to the aggregate when retrieved,
 // and the snapshot of the aggregate is stored to the latest state
-var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
-var anotherAggregateResult = await domainService.GetAggregate(streamId, anotherAggregateId, applyNewEvents: true);
+var aggregateResult = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
+var anotherAggregateResult = await domainService.GetAggregate(streamId, anotherAggregateId, ReadMode.SnapshotOrCreate);
 ```

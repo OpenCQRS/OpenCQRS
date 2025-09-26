@@ -7,12 +7,6 @@ public class DefaultDomainService : IDomainService
 {
     private static string NotImplementedMessage => "No store provider has been configured. Please register a store provider such as Cosmos or Entity Framework Core.";
 
-    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false,
-        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
-    {
-        throw new NotImplementedException(NotImplementedMessage);
-    }
-
     public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {

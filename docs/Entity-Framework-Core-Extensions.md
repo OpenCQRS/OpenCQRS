@@ -204,7 +204,7 @@ Optionally, it can be forced to apply any new domain events that occurred after 
 ```C#
 var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
-var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+var aggregateResult = await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
 ```
 
 <a name="get-in-memory-aggregate"></a>
