@@ -134,7 +134,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new SomethingHappenedEvent(Something: "Something").ToEventEntity(streamId, sequence: 1));
         await dbContext.SaveChangesAsync();
 
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 
         using (new AssertionScope())
         {
