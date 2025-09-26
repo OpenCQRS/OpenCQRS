@@ -93,7 +93,7 @@ Retrieves an aggregate from the event store, either from its snapshot or by reco
 - **SnapshotOnly** _(default)_: Retrieves the aggregate from its snapshot only. If no snapshot exists, returns null.
 - **SnapshotWithNewEvents**: Retrieves the aggregate from its snapshot if it exists and applies any new events that have occurred since the snapshot. If no snapshot exists, returns null.
 - **SnapshotOrCreate**: Retrieves the aggregate from its snapshot if it exists; otherwise, reconstructs it from events. If no events exist, returns null.
-- **SnapshotWithNewEventOrCreate**: Retrieves the aggregate from its snapshot if it exists, applies any new events that have occurred since the snapshot, or reconstructs it from events if no snapshot exists. If no events exist, returns null.
+- **SnapshotWithNewEventsOrCreate**: Retrieves the aggregate from its snapshot if it exists, applies any new events that have occurred since the snapshot, or reconstructs it from events if no snapshot exists. If no events exist, returns null.
 
 If the aggregate does not exist, but domain events that can be applied to the aggregate exist, the aggregate snapshot is stored automatically if read mode is SnapshotOrCreate or SnapshotWithNewEventOrCreate. This is useful when the domain changes, and you need a different aggregate structure. Increase the version of the aggregate type to force a snapshot creation.
 ```C#
