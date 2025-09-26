@@ -38,15 +38,17 @@ public class CosmosDomainService : IDomainService
     }
 
     /// <summary>
-    /// Gets an aggregate from the event store and optionally applies new domain events.
+    /// Retrieves the aggregate of a specified type associated with a stream and aggregate ID.
     /// </summary>
-    /// <typeparam name="T">The type of aggregate to retrieve.</typeparam>
-    /// <param name="streamId">The stream identifier.</param>
-    /// <param name="aggregateId">The aggregate identifier.</param>
-    /// <param name="applyNewEvents">Whether to apply new domain events to update the aggregate.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A result containing the aggregate or failure information.</returns>
-    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    /// <typeparam name="T">The type of the aggregate, which must implement <see cref="IAggregateRoot"/> and have a parameterless constructor.</typeparam>
+    /// <param name="streamId">The identifier of the event stream containing the aggregate.</param>
+    /// <param name="aggregateId">The identifier of the aggregate to retrieve.</param>
+    /// <param name="readMode">The mode specifying how the aggregate should be read from the store.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="Result{T}"/> representing the operation outcome.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
+    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.LatestSnapshot,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateDocumentResult = await _cosmosDataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
         if (aggregateDocumentResult.IsNotSuccess)
@@ -57,14 +59,14 @@ public class CosmosDomainService : IDomainService
         if (aggregateDocumentResult.Value != null)
         {
             var currentAggregateDocument = aggregateDocumentResult.Value;
-            if (!applyNewEvents)
+            if (readMode == ReadMode.LatestSnapshotPlusNewEvents)
             {
-                return currentAggregateDocument.ToAggregate<T>();
+                return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
             }
-            return await _cosmosDataStore.UpdateAggregateDocument(streamId, aggregateId, currentAggregateDocument, cancellationToken);
+            return currentAggregateDocument.ToAggregate<T>();
         }
 
-        if (!applyNewEvents)
+        if (readMode == ReadMode.LatestSnapshot)
         {
             return default(T);
         }
@@ -127,22 +129,6 @@ public class CosmosDomainService : IDomainService
             ex.AddException(streamId, operation: "Get Aggregate");
             return ErrorHandling.DefaultFailure;
         }
-    }
-
-    /// <summary>
-    /// Retrieves the aggregate of a specified type associated with a stream and aggregate ID.
-    /// </summary>
-    /// <typeparam name="T">The type of the aggregate, which must implement <see cref="IAggregateRoot"/> and have a parameterless constructor.</typeparam>
-    /// <param name="streamId">The identifier of the event stream containing the aggregate.</param>
-    /// <param name="aggregateId">The identifier of the aggregate to retrieve.</param>
-    /// <param name="readMode">The mode specifying how the aggregate should be read from the store.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="Result{T}"/> representing the operation outcome.</returns>
-    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
-        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
-    {
-        throw new NotImplementedException();
     }
 
     /// <summary>

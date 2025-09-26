@@ -157,7 +157,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
 
-        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        await dbContext.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotOrCreateNew);
         var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
 
         using (new AssertionScope())
@@ -182,7 +182,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
 
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotOrCreateNew);
 
         using (new AssertionScope())
         {
@@ -214,7 +214,7 @@ public class GetAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.Save();
 
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, ReadMode.LatestSnapshotPlusNewEvents);
 
         using (new AssertionScope())
         {
