@@ -2,7 +2,7 @@
 
 ## OpenCQRS 7.2.0
 _**Released 27/09/2025**_
-- Read mode when getting an aggregate:
+- Read modes when getting an aggregate _(BREAKING CHANGE)_:
   - SnapshotOnly
   - SnapshotWithNewEvents
   - SnapshotOrCreate
