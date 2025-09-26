@@ -20,11 +20,9 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
-
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -50,13 +48,12 @@ public class GetAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregate = updatedAggregateResult.Value!;
         aggregate.Update("Updated Name", "Updated Description");
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -83,9 +80,8 @@ public class GetAggregateTests : TestBase
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
         aggregate.Update("Updated Name", "Updated Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -110,9 +106,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
