@@ -6,9 +6,11 @@
 
 OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It can be used as a simple mediator or as a full Event Sourcing solution with Cosmos DB or Entity Framework Core as storage.
 
-- [Full documentation](https://opencqrs.github.io/OpenCQRS/)
-- [Examples in repository](#examples)
-- [Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)
+📘 _**[Full documentation](https://opencqrs.github.io/OpenCQRS/)**_
+
+📚 _**[Examples in repository](#examples)**_
+
+🛒 _**[Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)**_
 
 ## ⭐ Give a star
 
@@ -32,23 +34,6 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Custom command handlers or services can be used instead of the automatically resolved command handlers
 - Result pattern across handlers and providers
 - Extensible architecture with providers for store, messaging, caching, and validation
-
-## 🗺️ Roadmap
-
-### ⏳ In Progress
-- Create an ecommerce demo application to showcase OpenCQRS features
-
-### ⏭️ Next
-- Option to automatically validate commands
-
-### 🕙 To Follow
-- Event Grid messaging provider
-- Kafka messaging provider
-- File store provider for event sourcing
-- Amazon SQS messaging provider
-- EventSourcingDB store provider
-
-📣 _**[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)**_
 
 ## 📦 Nuget Packages
 
@@ -177,7 +162,7 @@ In the Cosmos DB store provider you can also use the `ICosmosDataStore` interfac
 In the Entity Framework Core store provider you can also use the `IDomainDbContext` extensions to access Entity Framework Core specific features.
 In the Entity Framework Core store provider, IdentityDbContext from ASP.NET Core Identity is also supported.
 
-### Save events and aggregate snapshots
+### Save Events and Aggregate Snapshot
 
 Defines an aggregate with an event filter and applies events to update its state.
 
@@ -226,14 +211,15 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderId(orderId);
 var aggregate = new Order(orderId, amount: 25.45m);
 
-// Save aggregate stores the uncommitted events and the snapshot of the aggregate
+// SaveAggregate stores the uncommitted events and the snapshot of the aggregate
 var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-// the alternative is to store the events and the snapshot separately
+
+// The alternative is to store the events and the snapshot separately
 var saveEventsResult = await domainService.SaveEvents(streamId, aggregate.UncommittedEvents(), expectedEventSequence: 0);
 var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggregateId);
 ```
 
-### Get aggregate snapshot
+### Get Aggregate Snapshot
 
 Retrieves an aggregate using one of four read modes, allowing for flexible read/write patterns based on specific needs.
 
@@ -258,9 +244,9 @@ var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode
 var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEventsOrCreate);
 ```
 
-### Get in-memory aggregate
+### Get InMemory Aggregate
 
-Reconstructs an aggregate entirely from events without using snapshots, providing a pure event-sourced view of the aggregate state.
+With OpenCQRS, you can replay events in-memory up to a specific event sequence or date, giving you precise control for debugging or auditing.
 
 ```C#
 var streamId = new CustomerStreamId(customerId);
@@ -276,10 +262,64 @@ var aggregate = await domainService.GetInMemoryAggregate(streamId, aggregateId, 
 var aggregate = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToDate);
 ```
 
+### Get Events
+
+Need to inspect your event stream? OpenCQRS makes it easy to retrieve events with flexible querying.
+
+Get all events, filter by sequence, date, or event type. Whether you’re auditing, debugging, or building reports, these methods give you full control over your event history.
+
+```C#
+var streamId = new CustomerStreamId(customerId);
+
+// Get all events for the stream
+var result = await domainService.GetEvents(streamId);
+
+// Get events from a specific event sequence number
+var result = await domainService.GetEventsFromSequence(streamId, fromSequence);
+
+// Get events up to a specific event sequence number
+var result = await domainService.GetEventsUpToSequence(streamId, toSequence);
+
+// Get events between two specific event sequence numbers
+var result = await domainService.GetEventsBetweenSequences(streamId, fromSequence, toSequence);
+
+// Get events from a specific date
+var result = await domainService.GetEventsFromDate(streamId, fromDate);
+
+// Get events up to a specific date
+var result = await domainService.GetEventsUpToDate(streamId, toDate);
+
+// Get events between two specific dates
+var result = await domainService.GetEventsBetweenDates(streamId, fromDate, toDate);
+
+// Event type filter can be applied to all previous queries
+var eventTypes = new Type[] { typeof(OrderPlaced), typeof(OrderShipped) };
+var result = await domainService.GetEvents(streamId, eventTypes);
+```
+
+📘 _**[Full documentation](https://opencqrs.github.io/OpenCQRS/)**_
+
+## 🗺️ Roadmap
+
+### ⏳ In Progress
+- Create an ecommerce demo application to showcase OpenCQRS features
+
+### ⏭️ Next
+- Option to automatically validate commands
+
+### 🕙 To Follow
+- Event Grid messaging provider
+- Kafka messaging provider
+- File store provider for event sourcing
+- Amazon SQS messaging provider
+- EventSourcingDB store provider
+
+📣 _**[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)**_
+
 <a name="examples"></a>
 ## 📚 Examples
 
-Examples of how to use OpenCQRS can be found in the repository:
+Examples of how to configure and use OpenCQRS can be found in the repository:
 
 - [OpenCQRS.Examples.Caching.Memory](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Memory)
 - [OpenCQRS.Examples.Caching.Redis](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Redis)
