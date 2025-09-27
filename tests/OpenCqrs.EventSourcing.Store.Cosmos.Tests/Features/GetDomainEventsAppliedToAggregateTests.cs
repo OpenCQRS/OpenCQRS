@@ -53,7 +53,7 @@ public class GetEventsAppliedToAggregateTests : TestBase
         var testAggregate1 = new TestAggregate1(id, "Test Name", "Test Description");
 
         await DomainService.SaveAggregate(streamId, testAggregate1Key, testAggregate1, expectedEventSequence: 0);
-        await DomainService.GetAggregate(streamId, testAggregate2Key, applyNewEvents: true);
+        await DomainService.GetAggregate(streamId, testAggregate2Key, ReadMode.SnapshotOrCreate);
         var result = await DomainService.GetEventsAppliedToAggregate(streamId, testAggregate2Key);
 
         using (new AssertionScope())
@@ -78,7 +78,7 @@ public class GetEventsAppliedToAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        await DomainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
         var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
@@ -105,7 +105,7 @@ public class GetEventsAppliedToAggregateTests : TestBase
         };
         await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
-        await DomainService.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.SnapshotWithNewEvents);
         var result = await DomainService.GetEventsAppliedToAggregate(streamId, aggregateId);
 
         using (new AssertionScope())

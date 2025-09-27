@@ -82,7 +82,7 @@ public class GetEventsAppliedToAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.SaveChangesAsync();
 
-        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
         var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())
@@ -107,7 +107,7 @@ public class GetEventsAppliedToAggregateTests : TestBase
         dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
         await dbContext.Save();
 
-        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
         var result = await dbContext.GetEventsAppliedToAggregate(aggregateId);
 
         using (new AssertionScope())

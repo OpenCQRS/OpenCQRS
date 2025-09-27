@@ -1,5 +1,13 @@
 # Release Notes
 
+## OpenCQRS 7.2.0
+_**Released 27/09/2025**_
+- Read mode when getting an aggregate _(BREAKING CHANGE)_:
+  - SnapshotOnly
+  - SnapshotWithNewEvents
+  - SnapshotOrCreate
+  - SnapshotWithNewEventsOrCreate
+
 ## OpenCQRS 7.1.5
 _**Released 15/09/2025**_
 - Get aggregate with apply new events false returns now null if the aggregate doesn't exist

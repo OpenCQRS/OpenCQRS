@@ -10,20 +10,6 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore;
 public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) : IDomainService
 {
     /// <summary>
-    /// Gets an aggregate from the specified stream with optional application of new domain events.
-    /// </summary>
-    /// <typeparam name="T">The type of aggregate to retrieve.</typeparam>
-    /// <param name="streamId">The stream identifier.</param>
-    /// <param name="aggregateId">The aggregate identifier.</param>
-    /// <param name="applyNewEvents">Whether to apply new domain events.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A result containing the aggregate.</returns>
-    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
-    {
-        return await domainDbContext.GetAggregate(streamId, aggregateId, applyNewEvents, cancellationToken);
-    }
-
-    /// <summary>
     /// Retrieves an aggregate from the specified stream, applying the selected read mode.
     /// </summary>
     /// <typeparam name="T">The type of aggregate to retrieve, which must implement IAggregateRoot.</typeparam>
@@ -33,10 +19,10 @@ public class EntityFrameworkCoreDomainService(IDomainDbContext domainDbContext) 
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation, containing a result with the retrieved aggregate.</returns>
     /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode,
+    public async Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        throw new NotImplementedException();
+        return await domainDbContext.GetAggregate(streamId, aggregateId, readMode, cancellationToken);
     }
 
     /// <summary>

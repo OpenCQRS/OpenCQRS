@@ -6,27 +6,6 @@ namespace OpenCqrs.EventSourcing;
 public interface IDomainService : IDisposable
 {
     /// <summary>
-    /// Retrieves an aggregate of the specified type.
-    /// </summary>
-    /// <typeparam name="T">The type of the aggregate to retrieve.</typeparam>
-    /// <param name="streamId">The unique identifier of the stream to which the aggregate belongs.</param>
-    /// <param name="aggregateId">The unique identifier of the aggregate to retrieve.</param>
-    /// <param name="applyNewEvents">Indicates whether new domain events should be applied to the aggregate before returning it.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
-    /// <example>
-    /// var result = await domainService.GetAggregate&lt;T&gt;(streamId, aggregateId);
-    /// if (!result.IsSuccess)
-    /// {
-    ///     return result.Failure;
-    /// }
-    /// var aggregate = result.Value;
-    /// </example>
-    Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
-        bool applyNewEvents = false, CancellationToken cancellationToken = default)
-        where T : IAggregateRoot, new();
-
-    /// <summary>
     /// Retrieves an aggregate of the specified type with the provided identifiers and read mode.
     /// </summary>
     /// <typeparam name="T">The type of the aggregate to retrieve.</typeparam>
@@ -36,7 +15,7 @@ public interface IDomainService : IDisposable
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the aggregate wrapped in a <see cref="Result{TValue}"/>.</returns>
     Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
-        ReadMode readMode, CancellationToken cancellationToken = default)
+        ReadMode readMode = ReadMode.SnapshotOnly, CancellationToken cancellationToken = default)
         where T : IAggregateRoot, new();
 
     /// <summary>

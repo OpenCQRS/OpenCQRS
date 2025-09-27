@@ -14,17 +14,15 @@ namespace OpenCqrs.EventSourcing.Store.EntityFrameworkCore.Tests.Features;
 public class GetAggregateTests : TestBase
 {
     [Fact]
-    public async Task GivenAggregateDoesExist_ThenAggregateIsReturned()
+    public async Task GivenAggregateExists_ThenAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -43,20 +41,19 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenAggregateDoesExist_WhenAggregateIsUpdated_ThenTheUpdatedAggregateIsReturned()
+    public async Task GivenAggregateExists_WhenAggregateIsUpdated_ThenTheUpdatedAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
         aggregate = updatedAggregateResult.Value!;
         aggregate.Update("Updated Name", "Updated Description");
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 1);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -83,9 +80,8 @@ public class GetAggregateTests : TestBase
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
         aggregate.Update("Updated Name", "Updated Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -110,9 +106,7 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId);
 
         using (new AssertionScope())
         {
@@ -129,12 +123,13 @@ public class GetAggregateTests : TestBase
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
+        var events = new IEvent[]
+        {
+            new SomethingHappenedEvent(Something: "Something")
+        };
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        dbContext.Add(new SomethingHappenedEvent(Something: "Something").ToEventEntity(streamId, sequence: 1));
-        await dbContext.SaveChangesAsync();
-
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 
         using (new AssertionScope())
         {
@@ -145,44 +140,20 @@ public class GetAggregateTests : TestBase
     }
 
     [Fact]
-    public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndApplied_ThenNewAggregateEntityIsStored()
-    {
-        var id = Guid.NewGuid().ToString();
-        var streamId = new TestStreamId(id);
-        var aggregateId = new TestAggregate1Id(id);
-
-        await using var dbContext = Shared.CreateTestDbContext();
-
-        dbContext.Add(new TestAggregateCreatedEvent(id, "Test Name", "Test Description").ToEventEntity(streamId, sequence: 1));
-        dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
-        await dbContext.SaveChangesAsync();
-
-        await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
-        var aggregateEntity = await dbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(a => a.Id == aggregateId.ToStoreId());
-
-        using (new AssertionScope())
-        {
-            aggregateEntity.Should().NotBeNull();
-            aggregateEntity.AggregateType.Should().Be("TestAggregate1:1");
-            aggregateEntity.Version.Should().Be(2);
-            aggregateEntity.LatestEventSequence.Should().Be(2);
-        }
-    }
-
-    [Fact]
     public async Task GivenAggregateDoesNotExist_WhenEventsAreStoredAndApplied_ThenNewAggregateIsReturned()
     {
         var id = Guid.NewGuid().ToString();
         var streamId = new TestStreamId(id);
         var aggregateId = new TestAggregate1Id(id);
 
-        await using var dbContext = Shared.CreateTestDbContext();
+        var events = new IEvent[]
+        {
+            new TestAggregateCreatedEvent(id, "Test Name", "Test Description"),
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 0);
 
-        dbContext.Add(new TestAggregateCreatedEvent(id, "Test Name", "Test Description").ToEventEntity(streamId, sequence: 1));
-        dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
-        await dbContext.SaveChangesAsync();
-
-        var getAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var getAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, readMode: ReadMode.SnapshotOrCreate);
 
         using (new AssertionScope())
         {
@@ -208,13 +179,15 @@ public class GetAggregateTests : TestBase
         var aggregateId = new TestAggregate1Id(id);
         var aggregate = new TestAggregate1(id, "Test Name", "Test Description");
 
-        await using var dbContext = Shared.CreateTestDbContext();
-        await dbContext.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
+        await DomainService.SaveAggregate(streamId, aggregateId, aggregate, expectedEventSequence: 0);
 
-        dbContext.Add(new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description").ToEventEntity(streamId, sequence: 2));
-        await dbContext.Save();
+        var events = new IEvent[]
+        {
+            new TestAggregateUpdatedEvent(id, "Updated Name", "Updated Description")
+        };
+        await DomainService.SaveEvents(streamId, events, expectedEventSequence: 1);
 
-        var updatedAggregateResult = await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+        var updatedAggregateResult = await DomainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
 
         using (new AssertionScope())
         {

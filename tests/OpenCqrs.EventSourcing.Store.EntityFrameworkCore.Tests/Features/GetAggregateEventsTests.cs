@@ -112,7 +112,7 @@ public class GetAggregateEventsTests : TestBase
         timeProvider.SetUtcNow(date2);
         await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
         {
-            await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+            await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 
             var result = await dbContext.GetAggregateEventEntities(aggregateId);
 
@@ -156,7 +156,7 @@ public class GetAggregateEventsTests : TestBase
         timeProvider.SetUtcNow(date3);
         await using (var dbContext = new TestDbContext(Shared.CreateContextOptions(), timeProvider, Shared.CreateHttpContextAccessor()))
         {
-            await dbContext.GetAggregate(streamId, aggregateId, applyNewEvents: true);
+            await dbContext.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
             var result = await dbContext.GetAggregateEventEntities(aggregateId);
 
             using (new AssertionScope())

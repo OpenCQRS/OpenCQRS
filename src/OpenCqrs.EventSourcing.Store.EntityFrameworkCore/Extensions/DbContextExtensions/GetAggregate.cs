@@ -14,7 +14,7 @@ public static partial class IDomainDbContextExtensions
     /// <param name="domainDbContext">The domain database context.</param>
     /// <param name="streamId">The unique identifier for the event stream.</param>
     /// <param name="aggregateId">The unique identifier for the aggregate instance.</param>
-    /// <param name="applyNewEvents">Whether to apply new events after the snapshot.</param>
+    /// <param name="readMode">The mode in which the aggregate should be read.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A result containing the aggregate or a failure.</returns>
     /// <example>
@@ -27,20 +27,22 @@ public static partial class IDomainDbContextExtensions
     /// var aggregate = result.Value;
     /// </code>
     /// </example>
-    public static async Task<Result<T?>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, bool applyNewEvents = false, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public static async Task<Result<T?>> GetAggregate<T>(this IDomainDbContext domainDbContext, IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
         var aggregateEntity = await domainDbContext.Aggregates.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == aggregateId.ToStoreId(), cancellationToken);
         if (aggregateEntity is not null)
         {
             var currentAggregate = aggregateEntity.ToAggregate<T>();
-            if (!applyNewEvents)
+            switch (readMode)
             {
-                return currentAggregate;
+                case ReadMode.SnapshotOnly or ReadMode.SnapshotOrCreate:
+                    return currentAggregate;
+                case ReadMode.SnapshotWithNewEvents or ReadMode.SnapshotWithNewEventsOrCreate:
+                    return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
             }
-            return await domainDbContext.UpdateAggregate(streamId, aggregateId, currentAggregate, cancellationToken);
         }
 
-        if (!applyNewEvents)
+        if (readMode is ReadMode.SnapshotOnly or ReadMode.SnapshotWithNewEvents)
         {
             return default(T);
         }
