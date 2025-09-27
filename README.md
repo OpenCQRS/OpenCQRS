@@ -243,20 +243,20 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 
 // Retrieves the aggregate from its snapshot only. If no snapshot exists, returns null.
-var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOnly);
+var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOnly);
 
 // Retrieves the aggregate from its snapshot if it exists and applies any new events that 
 // have occurred since the snapshot. If no snapshot exists, returns null.
-var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
+var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
 
 // Retrieves the aggregate from its snapshot if it exists; otherwise, reconstructs it from events. 
 // If no events exist, returns null.
-var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
+var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
 
 // Retrieves the aggregate from its snapshot if it exists, applies any new events that 
 // have occurred since the snapshot, or reconstructs it from events if no snapshot exists. 
 // If no events exist, returns null.
-var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEventsOrCreate);
+var aggregate = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEventsOrCreate);
 ```
 
 ### Get in-memory aggregate
@@ -268,13 +268,13 @@ var streamId = new CustomerStreamId(customerId);
 var aggregateId = new OrderAggregateId(orderId);
 
 // Reconstructs the aggregate from all its events
-var result = await domainService.GetInMemoryAggregate(streamId, aggregateId);
+var aggregate = await domainService.GetInMemoryAggregate(streamId, aggregateId);
 
 // Reconstructs the aggregate up to a specific event sequence number
-var result = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence);
+var aggregate = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence);
 
 // Reconstructs the aggregate up to a specific date
-var result = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToDate);
+var aggregate = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToDate);
 ```
 
 <a name="examples"></a>
