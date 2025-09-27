@@ -6,7 +6,7 @@ namespace OpenCqrs.EventSourcing;
 public enum ReadMode
 {
     /// <summary>
-    /// Uses only the latest snapshot without applying any subsequent events.
+    /// Uses only the latest snapshot without trying to apply any subsequent events.
     /// </summary>
     SnapshotOnly,
 
