@@ -178,6 +178,10 @@ In the Cosmos DB store provider you can also use the `ICosmosDataStore` interfac
 In the Entity Framework Core store provider you can also use the `IDomainDbContext` extensions to access Entity Framework Core specific features.
 In the Entity Framework Core store provider, IdentityDbContext from ASP.NET Core Identity is also supported.
 
+### Save events and aggregate snapshots
+
+Defines an aggregate with an event filter and applies events to update its state.
+
 ```C#
 [AggregateType("Order")]
 puclic class Order : AggregateRoot
@@ -228,6 +232,49 @@ var saveAggregateResult = await domainService.SaveAggregate(streamId, aggregateI
 // the alternative is to store the events and the snapshot separately
 var saveEventsResult = await domainService.SaveEvents(streamId, aggregate.UncommittedEvents(), expectedEventSequence: 0);
 var updateAggregateResult = await domainService.UpdateAggregate(streamId, aggregateId);
+```
+
+### Get aggregate snapshot
+
+Retrieves an aggregate using one of four read modes, allowing for flexible read/write patterns based on specific needs.
+
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+
+// Retrieves the aggregate from its snapshot only. If no snapshot exists, returns null.
+var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOnly);
+
+// Retrieves the aggregate from its snapshot if it exists and applies any new events that 
+// have occurred since the snapshot. If no snapshot exists, returns null.
+var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEvents);
+
+// Retrieves the aggregate from its snapshot if it exists; otherwise, reconstructs it from events. 
+// If no events exist, returns null.
+var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotOrCreate);
+
+// Retrieves the aggregate from its snapshot if it exists, applies any new events that 
+// have occurred since the snapshot, or reconstructs it from events if no snapshot exists. 
+// If no events exist, returns null.
+var result = await domainService.GetAggregate(streamId, aggregateId, ReadMode.SnapshotWithNewEventsOrCreate);
+```
+
+### Get in-memory aggregate
+
+Reconstructs an aggregate entirely from events without using snapshots, providing a pure event-sourced view of the aggregate state.
+
+```C#
+var streamId = new CustomerStreamId(customerId);
+var aggregateId = new OrderAggregateId(orderId);
+
+// Reconstructs the aggregate from all its events
+var result = await domainService.GetInMemoryAggregate(streamId, aggregateId);
+
+// Reconstructs the aggregate up to a specific event sequence number
+var result = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToSequence);
+
+// Reconstructs the aggregate up to a specific date
+var result = await domainService.GetInMemoryAggregate(streamId, aggregateId, upToDate);
 ```
 
 <a name="examples"></a>
