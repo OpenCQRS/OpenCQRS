@@ -8,6 +8,7 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 
 - 📘 _[Full documentation](https://opencqrs.github.io/OpenCQRS/)_
 - 📣 _[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)_
+- 📚 _[Examples in repository](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples)_
 - 🛒 _[Ecommerce demo application (WIP)](https://github.com/OpenCQRS/EventShop)_
 
 ## ⭐ Give a star
@@ -296,17 +297,6 @@ var result = await domainService.GetEvents(streamId, eventTypes);
 ```
 
 📘 _[Full documentation](https://opencqrs.github.io/OpenCQRS/)_
-
-## 📚 Examples
-
-Examples of how to configure and use OpenCQRS can be found in the repository:
-
-- [OpenCQRS.Examples.Caching.Memory](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Memory)
-- [OpenCQRS.Examples.Caching.Redis](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Caching.Redis)
-- [OpenCQRS.Examples.EventSourcing.Cosmos](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.EventSourcing.Cosmos)
-- [OpenCQRS.Examples.EventSourcing.EntityFrameworkCore](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.EventSourcing.EntityFrameworkCore)
-- [OpenCQRS.Examples.Messaging.RabbitMq](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Messaging.RabbitMq)
-- [OpenCQRS.Examples.Messaging.ServiceBus](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples/OpenCqrs.Examples.Messaging.ServiceBus)
 
 ## 🗺️ Roadmap
 
