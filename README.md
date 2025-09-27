@@ -19,7 +19,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Mediator with commands, queries, and notifications
 - Multiple aggregates per stream
 - Option to store the aggregate snapshot alongside events for fast reads, and write model strongly consistent
-- Four different read modes that allow multiple write/read patterns based on specific needs of a bounded context.
+- Four different read modes that allow multiple write/read patterns based on specific needs.
 - In memory aggregate reconstruction up to a specific event sequence or date if provided _**(soon up to aggregate version)**_
 - Events applied to the aggregate filtered by event type
 - Retrieval of all events applied to an aggregate
