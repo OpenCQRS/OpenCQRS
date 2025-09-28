@@ -11,6 +11,10 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 - 📚 _[Examples in repository](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples)_
 - 🛒 _[EventShop (ecommerce demo application)](https://github.com/OpenCQRS/EventShop)_
 
+## ✨ Custom Implementations
+
+OpenCQRS is designed to be extensible, supporting custom store, messaging, caching, and validation providers. Need a specific implementation for your existing code or a new provider (e.g., a custom database store or messaging bus)? Please reach out to request tailored integrations. Contact me via [LinkedIn](https://www.linkedin.com/in/lucabriguglia) to discuss your needs and enhance your event sourcing or CQRS workflows.
+
 ## ⭐ Give a star
 
 If you're using this repository for your learning, samples, workshop, or your project, please give a star. Thank you!
