@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/OpenCQRS/OpenCQRS</RepositoryUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>logo.jpg</PackageIcon>
+    <PackageIcon>logo.png</PackageIcon>
     <Version>7.2.0</Version>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
