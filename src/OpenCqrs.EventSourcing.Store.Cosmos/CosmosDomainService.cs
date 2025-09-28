@@ -93,9 +93,6 @@ public class CosmosDomainService : IDomainService
             return default(T);
         }
 
-        var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDocument => eventDocument.Sequence).Last().Sequence;
-        var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
-
         var timeStamp = _timeProvider.GetUtcNow();
         var currentUserNameIdentifier = _httpContextAccessor.GetCurrentUserNameIdentifier();
 
@@ -103,6 +100,8 @@ public class CosmosDomainService : IDomainService
         {
             var batch = _container.CreateTransactionalBatch(new PartitionKey(streamId.Id));
 
+            var latestEventSequenceForAggregate = eventDocuments.OrderBy(eventDocument => eventDocument.Sequence).Last().Sequence;
+            var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, latestEventSequenceForAggregate);
             aggregateDocument.CreatedDate = timeStamp;
             aggregateDocument.CreatedBy = currentUserNameIdentifier;
             aggregateDocument.UpdatedDate = timeStamp;
