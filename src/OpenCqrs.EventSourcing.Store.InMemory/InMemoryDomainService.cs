@@ -1,0 +1,106 @@
+﻿using OpenCqrs.EventSourcing.Domain;
+using OpenCqrs.Results;
+
+namespace OpenCqrs.EventSourcing.Store.InMemory;
+
+public class InMemoryDomainService : IDomainService
+{
+    public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEvents(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsAppliedToAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsBetweenSequences(IStreamId streamId, int fromSequence, int toSequence, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsFromSequence(IStreamId streamId, int fromSequence, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsUpToSequence(IStreamId streamId, int upToSequence, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsUpToDate(IStreamId streamId, DateTimeOffset upToDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsFromDate(IStreamId streamId, DateTimeOffset fromDate, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<List<IEvent>>> GetEventsBetweenDates(IStreamId streamId, DateTimeOffset fromDate, DateTimeOffset toDate,
+        Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<T>> GetInMemoryAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<T>> GetInMemoryAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, int upToSequence,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<T>> GetInMemoryAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, DateTimeOffset upToDate,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<int>> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result> SaveAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, int expectedEventSequence,
+        CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result> SaveEvents(IStreamId streamId, IEvent[] events, int expectedEventSequence,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<T?>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    {
+        throw new NotImplementedException();
+    }
+    
+    public void Dispose()
+    {
+        throw new NotImplementedException();
+    }
+}
