@@ -310,12 +310,15 @@ var result = await domainService.GetEvents(streamId, eventTypes);
 ## 🗺️ Roadmap
 
 ### ⏳ In Progress
-- Create an ecommerce demo application to showcase OpenCQRS features
+- New package for in-memory storage for easier testing in projects using OpenCQRS
 
 ### ⏭️ Next
-- Option to automatically validate commands
+- New package for in-memory RabbitMQ for easier testing in projects using OpenCQRS
+- New package for in-memory Service Bus for easier testing in projects using OpenCQRS
 
 ### 🕙 To Follow
+- Create an ecommerce demo application to showcase OpenCQRS features
+- Option to automatically validate commands
 - Event Grid messaging provider
 - Kafka messaging provider
 - File store provider for event sourcing
