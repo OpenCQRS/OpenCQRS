@@ -15,7 +15,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         IAggregateId<T> aggregateId,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var key = storage.CreateAggregateKey(streamId, aggregateId);
+        var key = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
         var document = storage.AggregateDocuments.TryGetValue(key, out var aggregateDocument) 
             ? aggregateDocument 
             : null;
@@ -27,7 +27,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         IAggregateId<T> aggregateId,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var key = storage.CreateAggregateKey(streamId, aggregateId);
+        var key = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
         var documents = storage.AggregateEventDocuments.TryGetValue(key, out var eventDocuments)
             ? eventDocuments.OrderBy(d => d.AppliedDate).ToList()
             : [];
@@ -41,7 +41,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
     {
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -71,7 +71,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.Sequence >= fromSequence && doc.Sequence <= toSequence)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -87,7 +87,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.Sequence >= fromSequence)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -103,7 +103,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.Sequence <= upToSequence)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -119,7 +119,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.CreatedDate <= upToDate)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -135,7 +135,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.CreatedDate >= fromDate)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -152,7 +152,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         var documents = storage.EventDocuments.Values
             .Where(doc => doc.StreamId == streamId.Id)
             .Where(doc => doc.CreatedDate >= fromDate && doc.CreatedDate <= toDate)
-            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => storage.GetEventTypeName(t) == doc.EventType))
+            .Where(doc => eventTypeFilter == null || eventTypeFilter.Any(t => InMemoryCosmosStorage.GetEventTypeName(t) == doc.EventType))
             .OrderBy(doc => doc.Sequence)
             .ToList();
         
@@ -165,7 +165,7 @@ public class InMemoryCosmosDataStore(InMemoryCosmosStorage storage) : ICosmosDat
         AggregateDocument? aggregateDocument,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        var key = storage.CreateAggregateKey(streamId, aggregateId);
+        var key = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
 
         if (aggregateDocument == null)
         {

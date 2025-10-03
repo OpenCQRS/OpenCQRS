@@ -15,12 +15,12 @@ public class InMemoryCosmosStorage
     public ConcurrentDictionary<string, ConcurrentBag<AggregateEventDocument>> AggregateEventDocuments { get; } = new();
     public ConcurrentDictionary<string, int> StreamSequences { get; } = new();
 
-    public string CreateAggregateKey<T>(IStreamId streamId, IAggregateId<T> aggregateId) where T : IAggregateRoot, new()
+    public static string CreateAggregateKey<T>(IStreamId streamId, IAggregateId<T> aggregateId) where T : IAggregateRoot, new()
     {
         return $"{streamId.Id}#{aggregateId.Id}";
     }
 
-    public string GetEventTypeName(Type eventType)
+    public static string GetEventTypeName(Type eventType)
     {
         var eventTypeName = TypeBindings.EventTypeBindings.FirstOrDefault(kvp => kvp.Value == eventType).Key;
         return eventTypeName ?? eventType.Name;
