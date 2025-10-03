@@ -17,9 +17,14 @@ public class InMemoryCosmosStorage
 
     public static string CreateAggregateKey<T>(IStreamId streamId, IAggregateId<T> aggregateId) where T : IAggregateRoot, new()
     {
-        return $"{streamId.Id}#{aggregateId.Id}";
+        return $"{streamId.Id}#{aggregateId.ToStoreId()}";
     }
 
+    public static string CreateEventKey(IStreamId streamId, int sequence)
+    {
+        return $"{streamId.Id}#{sequence}";
+    }
+    
     public static string GetEventTypeName(Type eventType)
     {
         var eventTypeName = TypeBindings.EventTypeBindings.FirstOrDefault(kvp => kvp.Value == eventType).Key;

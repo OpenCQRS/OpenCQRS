@@ -72,8 +72,8 @@ public class InMemoryCosmosDomainService(
             aggregateDocument.UpdatedDate = timeStamp;
             aggregateDocument.UpdatedBy = currentUserNameIdentifier;
             
-            var key = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
-            var aggregateAdded = storage.AggregateDocuments.TryAdd(key, aggregateDocument);
+            var aggregateKey = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
+            var aggregateAdded = storage.AggregateDocuments.TryAdd(aggregateKey, aggregateDocument);
             if (!aggregateAdded)
             {
                 throw new Exception("Could not add aggregate");
@@ -90,10 +90,10 @@ public class InMemoryCosmosDomainService(
                     AppliedDate = timeStamp
                 };
                 
-                if (!storage.AggregateEventDocuments.TryGetValue(key, out var bag))
+                if (!storage.AggregateEventDocuments.TryGetValue(aggregateKey, out var bag))
                 {
                     bag = [];
-                    storage.AggregateEventDocuments.TryAdd(key, bag);
+                    storage.AggregateEventDocuments.TryAdd(aggregateKey, bag);
                 }
                 bag.Add(aggregateEventDocument);
             }
@@ -273,9 +273,112 @@ public class InMemoryCosmosDomainService(
         throw new NotImplementedException();
     }
 
-    public Task<Result> SaveAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result> SaveAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        throw new NotImplementedException();
+        if (!aggregate.UncommittedEvents.Any())
+        {
+            return Result.Ok();
+        }
+
+        var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+        if (latestEventSequenceResult.IsNotSuccess)
+        {
+            return latestEventSequenceResult.Failure!;
+        }
+        var latestEventSequence = latestEventSequenceResult.Value;
+        if (latestEventSequence != expectedEventSequence)
+        {
+            DiagnosticsExtensions.AddActivityEvent(streamId, expectedEventSequence, latestEventSequence);
+            return ErrorHandling.DefaultFailure;
+        }
+
+        var newLatestEventSequenceForAggregate = latestEventSequence + aggregate.UncommittedEvents.Count();
+        var currentAggregateVersion = aggregate.Version - aggregate.UncommittedEvents.Count();
+        var aggregateIsNew = currentAggregateVersion == 0;
+
+        var timeStamp = timeProvider.GetUtcNow();
+        var currentUserNameIdentifier = httpContextAccessor.GetCurrentUserNameIdentifier();
+
+        try
+        {
+            var aggregateDocument = aggregate.ToAggregateDocument(streamId, aggregateId, newLatestEventSequenceForAggregate);
+            aggregateDocument.UpdatedDate = timeStamp;
+            aggregateDocument.UpdatedBy = currentUserNameIdentifier;
+            if (aggregateIsNew)
+            {
+                aggregateDocument.CreatedDate = timeStamp;
+                aggregateDocument.CreatedBy = currentUserNameIdentifier;
+            }
+            else
+            {
+                var existingAggregateDocumentResult = await _dataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
+                if (existingAggregateDocumentResult.IsNotSuccess)
+                {
+                    return existingAggregateDocumentResult.Failure!;
+                }
+                var existingAggregateDocument = existingAggregateDocumentResult.Value;
+                if (existingAggregateDocument != null)
+                {
+                    aggregateDocument.CreatedDate = existingAggregateDocument.CreatedDate;
+                    aggregateDocument.CreatedBy = existingAggregateDocument.CreatedBy;
+                }
+                else
+                {
+                    aggregateDocument.CreatedDate = timeStamp;
+                    aggregateDocument.CreatedBy = currentUserNameIdentifier;
+                }
+            }
+
+            var aggregateKey = InMemoryCosmosStorage.CreateAggregateKey(streamId, aggregateId);
+            var aggregateAlreadyExists = storage.AggregateDocuments.ContainsKey(aggregateKey);
+            if (!aggregateAlreadyExists)
+            {
+                var aggregateAdded = storage.AggregateDocuments.TryAdd(aggregateKey, aggregateDocument);
+                if (!aggregateAdded)
+                {
+                    throw new Exception("Could not add aggregate");
+                }
+            }
+            else
+            {
+                storage.AggregateDocuments[aggregateKey] = aggregateDocument;
+            }
+            
+            foreach (var @event in aggregate.UncommittedEvents)
+            {
+                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
+                eventDocument.CreatedDate = timeStamp;
+                eventDocument.CreatedBy = currentUserNameIdentifier;
+                var eventKey = InMemoryCosmosStorage.CreateEventKey(streamId, eventDocument.Sequence);
+                var evenAdded = storage.EventDocuments.TryAdd(eventKey, eventDocument);
+                if (!evenAdded)
+                {
+                    throw new Exception("Could not add event");
+                }
+
+                var aggregateEventDocument = new AggregateEventDocument
+                {
+                    Id = $"{aggregateId.ToStoreId()}|{eventDocument.Id}",
+                    StreamId = streamId.Id,
+                    AggregateId = aggregateId.ToStoreId(),
+                    EventId = eventDocument.Id,
+                    AppliedDate = timeStamp
+                };
+                if (!storage.AggregateEventDocuments.TryGetValue(aggregateKey, out var bag))
+                {
+                    bag = [];
+                    storage.AggregateEventDocuments.TryAdd(aggregateKey, bag);
+                }
+                bag.Add(aggregateEventDocument);
+            }
+            
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operation: "Save Aggregate");
+            return ErrorHandling.DefaultFailure;
+        }
     }
 
     public Task<Result> SaveEvents(IStreamId streamId, IEvent[] events, int expectedEventSequence, CancellationToken cancellationToken = default)
