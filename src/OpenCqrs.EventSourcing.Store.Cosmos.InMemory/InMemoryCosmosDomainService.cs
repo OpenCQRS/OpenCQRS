@@ -1,9 +1,9 @@
 ﻿using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.Results;
 
-namespace OpenCqrs.EventSourcing.Store.InMemory;
+namespace OpenCqrs.EventSourcing.Store.Cosmos.InMemory;
 
-public class InMemoryDomainService : IDomainService
+public class InMemoryCosmosDomainService : IDomainService
 {
     public Task<Result<T?>> GetAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, ReadMode readMode = ReadMode.SnapshotOnly,
         CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
