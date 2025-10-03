@@ -1,5 +1,5 @@
-
 using System.Collections.Concurrent;
+using OpenCqrs.EventSourcing.Domain;
 using OpenCqrs.EventSourcing.Store.Cosmos.Documents;
 
 namespace OpenCqrs.EventSourcing.Store.Cosmos.InMemory;
@@ -15,6 +15,17 @@ public class InMemoryCosmosStorage
     public ConcurrentDictionary<string, ConcurrentBag<AggregateEventDocument>> AggregateEventDocuments { get; } = new();
     public ConcurrentDictionary<string, int> StreamSequences { get; } = new();
 
+    public string CreateAggregateKey<T>(IStreamId streamId, IAggregateId<T> aggregateId) where T : IAggregateRoot, new()
+    {
+        return $"{streamId.Id}#{aggregateId.Id}";
+    }
+
+    public string GetEventTypeName(Type eventType)
+    {
+        var eventTypeName = TypeBindings.EventTypeBindings.FirstOrDefault(kvp => kvp.Value == eventType).Key;
+        return eventTypeName ?? eventType.Name;
+    }
+    
     /// <summary>
     /// Clears all stored data. Useful for test cleanup.
     /// </summary>
