@@ -11,15 +11,6 @@ OpenCQRS 7 released in September 2025 is extremely flexible and expandable. It c
 - 📚 _[Examples in repository](https://github.com/OpenCQRS/OpenCQRS/tree/main/examples)_
 - 🛒 _[EventShop (ecommerce demo application)](https://github.com/OpenCQRS/EventShop)_
 
-## ✨ Custom Implementations and Project Support
-
-OpenCQRS is designed to be extensible, supporting custom store, messaging, caching, and validation providers. 
-
-Need a specific implementation for your existing code or a new provider (e.g., a custom database store or messaging bus)? I’ve got you covered! 
-I can also work directly on your projects to implement OpenCQRS for your specific event sourcing or CQRS needs. 
-
-Please reach out to request custom integrations, new providers, or project assistance via [LinkedIn](https://www.linkedin.com/in/lucabriguglia).
-
 ## ⭐ Give a star
 
 If you're using this repository for your learning, samples, workshop, or your project, please give a star. Thank you!
@@ -42,6 +33,26 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Custom command handlers or services can be used instead of the automatically resolved command handlers
 - Result pattern across handlers and providers
 - Extensible architecture with providers for store, messaging, caching, and validation
+
+## 🗺️ Roadmap
+
+### ⏳ In Progress
+- New package for in-memory storage for easier testing in projects using OpenCQRS
+
+### ⏭️ Next
+- New package for in-memory RabbitMQ for easier testing in projects using OpenCQRS
+- New package for in-memory Service Bus for easier testing in projects using OpenCQRS
+
+### 🕙 To Follow
+- Create an ecommerce demo application to showcase OpenCQRS features
+- Option to automatically validate commands
+- Event Grid messaging provider
+- Kafka messaging provider
+- File store provider for event sourcing
+- Amazon SQS messaging provider
+- EventSourcingDB store provider
+
+📣 _[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)_
 
 ## 📦 Nuget Packages
 
@@ -308,19 +319,11 @@ var result = await domainService.GetEvents(streamId, eventTypes);
 
 📘 _[Full documentation](https://opencqrs.github.io/OpenCQRS/)_
 
-## 🗺️ Roadmap
+## ✨ Custom Implementations and Project Support
 
-### ⏳ In Progress
-- Create an ecommerce demo application to showcase OpenCQRS features
+OpenCQRS is designed to be extensible, supporting custom store, messaging, caching, and validation providers. 
 
-### ⏭️ Next
-- Option to automatically validate commands
+Need a specific implementation for your existing code or a new provider (e.g., a custom database store or messaging bus)? I’ve got you covered! 
+I can also work directly on your projects to implement OpenCQRS for your specific event sourcing or CQRS needs. 
 
-### 🕙 To Follow
-- Event Grid messaging provider
-- Kafka messaging provider
-- File store provider for event sourcing
-- Amazon SQS messaging provider
-- EventSourcingDB store provider
-
-📣 _[Release Notes](https://opencqrs.github.io/OpenCQRS/Release-Notes.html)_
+Please reach out to request custom integrations, new providers, or project assistance via [LinkedIn](https://www.linkedin.com/in/lucabriguglia).
