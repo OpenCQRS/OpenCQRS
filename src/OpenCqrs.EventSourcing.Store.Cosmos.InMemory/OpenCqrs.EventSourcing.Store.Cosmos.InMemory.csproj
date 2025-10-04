@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OpenCqrs.EventSourcing.Store.Cosmos\OpenCqrs.EventSourcing.Store.Cosmos.csproj" />
+      <ProjectReference Include="..\OpenCqrs.EventSourcing\OpenCqrs.EventSourcing.csproj" />
+      <ProjectReference Include="..\OpenCqrs\OpenCqrs.csproj" />
+    </ItemGroup>
+
+</Project>
