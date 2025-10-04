@@ -270,7 +270,8 @@ public class InMemoryCosmosDomainService(
 
     public Task<Result<int>> GetLatestEventSequence(IStreamId streamId, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var latestSequence = storage.StreamSequences.GetOrAdd(streamId.Id, 0);
+        return Task.FromResult(Result<int>.Ok(latestSequence));
     }
 
     public async Task<Result> SaveAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, T aggregate, int expectedEventSequence, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
@@ -346,7 +347,8 @@ public class InMemoryCosmosDomainService(
             
             foreach (var @event in aggregate.UncommittedEvents)
             {
-                var eventDocument = @event.ToEventDocument(streamId, sequence: ++latestEventSequence);
+                latestEventSequence++;
+                var eventDocument = @event.ToEventDocument(streamId, sequence: latestEventSequence);
                 eventDocument.CreatedDate = timeStamp;
                 eventDocument.CreatedBy = currentUserNameIdentifier;
                 var eventKey = InMemoryCosmosStorage.CreateEventKey(streamId, eventDocument.Sequence);
@@ -355,6 +357,9 @@ public class InMemoryCosmosDomainService(
                 {
                     throw new Exception("Could not add event");
                 }
+                
+                var sequence = latestEventSequence;
+                storage.StreamSequences.AddOrUpdate(streamId.Id, sequence, (key, oldValue) => sequence);
 
                 var aggregateEventDocument = new AggregateEventDocument
                 {
@@ -381,14 +386,65 @@ public class InMemoryCosmosDomainService(
         }
     }
 
-    public Task<Result> SaveEvents(IStreamId streamId, IEvent[] events, int expectedEventSequence, CancellationToken cancellationToken = default)
+    public async Task<Result> SaveEvents(IStreamId streamId, IEvent[] events, int expectedEventSequence, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        if (events.Length == 0)
+        {
+            return Result.Ok();
+        }
+
+        var latestEventSequenceResult = await GetLatestEventSequence(streamId, cancellationToken: cancellationToken);
+        if (latestEventSequenceResult.IsNotSuccess)
+        {
+            return latestEventSequenceResult.Failure!;
+        }
+        var latestEventSequence = latestEventSequenceResult.Value;
+        if (latestEventSequence != expectedEventSequence)
+        {
+            DiagnosticsExtensions.AddActivityEvent(streamId, expectedEventSequence, latestEventSequence);
+            return ErrorHandling.DefaultFailure;
+        }
+
+        var timeStamp = timeProvider.GetUtcNow();
+        var currentUserNameIdentifier = httpContextAccessor.GetCurrentUserNameIdentifier();
+
+        try
+        {
+            foreach (var @event in events)
+            {
+                latestEventSequence++;
+                var eventDocument = @event.ToEventDocument(streamId, sequence: latestEventSequence);
+                eventDocument.CreatedDate = timeStamp;
+                eventDocument.CreatedBy = currentUserNameIdentifier;
+                var eventKey = InMemoryCosmosStorage.CreateEventKey(streamId, eventDocument.Sequence);
+                var evenAdded = storage.EventDocuments.TryAdd(eventKey, eventDocument);
+                if (!evenAdded)
+                {
+                    throw new Exception("Could not add event");
+                }
+
+                var sequence = latestEventSequence;
+                storage.StreamSequences.AddOrUpdate(streamId.Id, sequence, (key, oldValue) => sequence);
+            }
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            ex.AddException(streamId, operation: "Save Domain Events");
+            return ErrorHandling.DefaultFailure;
+        }
     }
 
-    public Task<Result<T?>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
+    public async Task<Result<T?>> UpdateAggregate<T>(IStreamId streamId, IAggregateId<T> aggregateId, CancellationToken cancellationToken = default) where T : IAggregateRoot, new()
     {
-        throw new NotImplementedException();
+        var aggregateDocumentResult = await _dataStore.GetAggregateDocument(streamId, aggregateId, cancellationToken);
+        if (aggregateDocumentResult.IsNotSuccess)
+        {
+            return aggregateDocumentResult.Failure!;
+        }
+        var aggregateDocument = aggregateDocumentResult.Value;
+        return await _dataStore.UpdateAggregateDocument(streamId, aggregateId, aggregateDocument, cancellationToken);
     }
     
     public void Dispose()
