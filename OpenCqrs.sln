@@ -92,6 +92,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.Examples.Caching.M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.EventSourcing.Store.Cosmos.InMemory", "src\OpenCqrs.EventSourcing.Store.Cosmos.InMemory\OpenCqrs.EventSourcing.Store.Cosmos.InMemory.csproj", "{CC231C0F-83E5-4481-BAAE-35407A415995}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCqrs.EventSourcing.Store.Tests", "tests\OpenCqrs.EventSourcing.Store.Tests\OpenCqrs.EventSourcing.Store.Tests.csproj", "{59236643-1C12-415A-8FB8-193A480DEA0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -198,6 +200,10 @@ Global
 		{CC231C0F-83E5-4481-BAAE-35407A415995}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC231C0F-83E5-4481-BAAE-35407A415995}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC231C0F-83E5-4481-BAAE-35407A415995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59236643-1C12-415A-8FB8-193A480DEA0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59236643-1C12-415A-8FB8-193A480DEA0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59236643-1C12-415A-8FB8-193A480DEA0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59236643-1C12-415A-8FB8-193A480DEA0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -228,6 +234,7 @@ Global
 		{B841B955-D8EE-43F9-B3AC-75355EF16405} = {DFBB5E4C-0C58-497D-A013-0DC8312B7192}
 		{376BBF21-7E58-45FF-BD05-3E70C7B9B052} = {DFBB5E4C-0C58-497D-A013-0DC8312B7192}
 		{CC231C0F-83E5-4481-BAAE-35407A415995} = {90721148-631D-47AB-845C-8472AE48BC89}
+		{59236643-1C12-415A-8FB8-193A480DEA0D} = {8E88F39E-B2DF-4122-821F-0EECC7343773}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {154500C3-9A83-4F15-9D78-E1C285AD80AE}
