@@ -1,4 +1,6 @@
 @page "/dcb/aggregates"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
 
 <PageTitle>DCB aggregates</PageTitle>
 
@@ -10,4 +12,128 @@
     <span aria-current="page">Aggregates</span>
 </nav>
 
-<p><em>TBD</em></p>
+<h1>Aggregates</h1>
+
+@if (AggregateTypes.Count == 0)
+{
+    <p class="lede">
+        No DCB aggregates are registered. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+else
+{
+    <div class="panels">
+        <nav class="panel panel-index" aria-label="Aggregates">
+            <ul>
+                @foreach (var aggregate in AggregateTypes)
+                {
+                    <li>
+                        @* A link rather than a click handler: the page renders statically like the
+                           rest, and the choice stays in the address so it can be shared. *@
+                        <a href="@Link(aggregate)" class="@CurrentClass(aggregate)" aria-current="@CurrentFlag(aggregate)">
+                            <span class="index-name">@aggregate.Name</span>
+                            <span class="index-detail">@aggregate.Namespace</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+        <section class="panel panel-detail">
+            @if (Selected is null)
+            {
+                <p class="lede">Choose an aggregate.</p>
+            }
+            else
+            {
+                <h2>@Selected.Type.Name</h2>
+                <dl class="facts">
+                    <dt>Full name</dt>
+                    <dd><code>@Selected.Type.FullName</code></dd>
+
+                    <dt>Bound as</dt>
+                    <dd>
+                        @if (Selected.BindingKey is null)
+                        {
+                            <span class="missing">not bound — it carries no [AggregateType]</span>
+                        }
+                        else
+                        {
+                            <code>@Selected.BindingKey</code>
+                        }
+                    </dd>
+
+                    <dt>Assembly</dt>
+                    <dd>@Selected.AssemblyName</dd>
+                </dl>
+
+                <h3>Identifiers</h3>
+                @if (Selected.Identifiers.Count == 0)
+                {
+                    <p class="missing">Nothing addresses this aggregate.</p>
+                }
+                else
+                {
+                    <ul class="plain">
+                        @foreach (var identifier in Selected.Identifiers)
+                        {
+                            <li><code>@identifier.Name</code></li>
+                        }
+                    </ul>
+                }
+
+                <h3>Events applied</h3>
+                @if (Selected.EventTypes.Count == 0)
+                {
+                    <p class="missing">No event type filter — it applies every event in its boundary.</p>
+                }
+                else
+                {
+                    <ul class="plain">
+                        @foreach (var eventType in Selected.EventTypes)
+                        {
+                            <li><code>@eventType.Name</code></li>
+                        }
+                    </ul>
+                }
+
+                <h3>State</h3>
+                @if (Selected.Properties.Count == 0)
+                {
+                    <p class="missing">It declares no properties of its own.</p>
+                }
+                else
+                {
+                    <ul class="plain">
+                        @foreach (var property in Selected.Properties)
+                        {
+                            <li><code>@property.TypeName</code> @property.Name</li>
+                        }
+                    </ul>
+                }
+            }
+        </section>
+    </div>
+}
+
+@code {
+
+    [SupplyParameterFromQuery(Name = "type")]
+    private string? SelectedName { get; set; }
+
+    private IReadOnlyList<Type> AggregateTypes => Types.Current.DcbAggregates;
+
+    private DomainTypeDescription? Selected =>
+        DomainTypeDescriber.Select(AggregateTypes, SelectedName) is { } type
+            ? DomainTypeDescriber.Describe(type, Types.Current.DcbAggregateIds)
+            : null;
+
+    private static string Link(Type aggregate) =>
+        $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}";
+
+    private string? CurrentClass(Type aggregate) => aggregate == Selected?.Type ? "current" : null;
+
+    private string? CurrentFlag(Type aggregate) => aggregate == Selected?.Type ? "true" : null;
+
+}

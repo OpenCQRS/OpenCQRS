@@ -42,7 +42,9 @@ public class SampleProjectionId(string id) : IProjectionId<SampleProjection>
 [AggregateType("SampleDcbAggregate", 1)]
 public class SampleDcbAggregate : DcbAggregateRoot
 {
-    public override Type[]? EventTypeFilter => null;
+    public override Type[]? EventTypeFilter => [typeof(SampleHappenedEvent)];
+
+    public string Name { get; private set; } = string.Empty;
 
     protected override bool Apply<T>(T @event) => false;
 }

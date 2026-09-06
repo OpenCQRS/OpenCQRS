@@ -1,4 +1,6 @@
 @page "/dcb"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
 
 <PageTitle>DCB overview</PageTitle>
 
@@ -8,4 +10,52 @@
     <span aria-current="page">DCB</span>
 </nav>
 
-<p><em>TBD</em></p>
+<h1>Dynamic consistency boundaries</h1>
+<p class="lede">
+    The types uploaded through <a href="settings">settings</a> that belong to the DCB model, and
+    what they are addressed by.
+</p>
+
+<ul class="sections">
+    <li>
+        <a href="dcb/events">
+            <span class="name">Events</span>
+            <span class="detail">@Count(Catalogue.Events.Count, "event") the model can apply.</span>
+        </a>
+    </li>
+    <li>
+        <a href="dcb/aggregates">
+            <span class="name">Aggregates</span>
+            <span class="detail">
+                @Count(Catalogue.DcbAggregates.Count, "aggregate"), addressed by
+                @Count(Catalogue.DcbAggregateIds.Count, "identifier").
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="dcb/projections">
+            <span class="name">Projections</span>
+            <span class="detail">
+                @Count(Catalogue.DcbProjections.Count, "projection"), addressed by
+                @Count(Catalogue.DcbProjectionIds.Count, "identifier").
+            </span>
+        </a>
+    </li>
+</ul>
+
+@if (Catalogue.Count == 0)
+{
+    <p class="lede">
+        Nothing is registered yet. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+
+@code {
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+}
