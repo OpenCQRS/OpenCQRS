@@ -1,9 +1,54 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
-@Body
+<header>
+    <a class="brand" href="">Memoria</a>
+    <nav>
+        <NavLink href="" Match="NavLinkMatch.All">Home</NavLink>
+
+        @* <details> rather than a hover menu: it opens on touch and on the keyboard with no
+           script, which matters because these pages render statically. *@
+        <details class="menu">
+            <summary class="@(InSection("streamed") ? "active" : null)">Streamed</summary>
+            <div class="submenu">
+                <NavLink href="streamed" Match="NavLinkMatch.All">Overview</NavLink>
+                <NavLink href="streamed/events">Events</NavLink>
+                <NavLink href="streamed/aggregates">Aggregates</NavLink>
+                <NavLink href="streamed/projections">Projections</NavLink>
+            </div>
+        </details>
+
+        <details class="menu">
+            <summary class="@(InSection("dcb") ? "active" : null)">DCB</summary>
+            <div class="submenu">
+                <NavLink href="dcb" Match="NavLinkMatch.All">Overview</NavLink>
+                <NavLink href="dcb/events">Events</NavLink>
+                <NavLink href="dcb/aggregates">Aggregates</NavLink>
+                <NavLink href="dcb/projections">Projections</NavLink>
+            </div>
+        </details>
+    </nav>
+</header>
+
+<main>
+    @Body
+</main>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+
+    /// <summary>
+    /// Marks a menu current while anywhere under its section, so the section you are in is
+    /// visible without opening it. The panel itself stays shut until asked for, rather than
+    /// sitting over the page.
+    /// </summary>
+    private bool InSection(string section) => Navigation
+        .ToBaseRelativePath(Navigation.Uri)
+        .StartsWith(section, StringComparison.OrdinalIgnoreCase);
+
+}

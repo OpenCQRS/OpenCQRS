@@ -1,3 +1,100 @@
+header {
+    align-items: center;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.75rem 1.5rem;
+}
+
+    header .brand {
+        color: var(--ink);
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    header nav {
+        align-items: center;
+        display: flex;
+        gap: 1rem;
+    }
+
+        header nav ::deep a {
+            color: var(--ink-soft);
+            text-decoration: none;
+        }
+
+        header nav ::deep a:hover {
+            text-decoration: underline;
+        }
+
+        header nav ::deep a.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+/* Admin and the pages under it. */
+.menu {
+    position: relative;
+}
+
+    .menu summary {
+        align-items: center;
+        color: var(--ink-soft);
+        cursor: pointer;
+        display: flex;
+        gap: 0.35rem;
+        list-style: none;
+    }
+
+    /* Safari draws its own marker through list-style. */
+    .menu summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .menu summary:hover {
+        text-decoration: underline;
+    }
+
+    .menu summary.active {
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    /* A disclosure caret, rotated when the menu is open: the affordance that this is a menu
+       rather than a link. */
+    .menu summary::after {
+        border-left: 0.3rem solid transparent;
+        border-right: 0.3rem solid transparent;
+        border-top: 0.3rem solid currentColor;
+        content: "";
+        height: 0;
+        width: 0;
+    }
+
+    .menu[open] summary::after {
+        transform: rotate(180deg);
+    }
+
+    .menu .submenu {
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        left: 0;
+        min-width: 9rem;
+        padding: 0.6rem 0.75rem;
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        z-index: 10;
+    }
+
+main {
+    padding: 1.5rem;
+}
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;
