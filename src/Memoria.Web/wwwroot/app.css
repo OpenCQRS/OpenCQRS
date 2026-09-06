@@ -208,3 +208,22 @@ h1:focus {
         font-size: 0.875rem;
         margin: 0;
     }
+
+/* The refresh button and the line explaining what it does, on one row. */
+.refresh {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    margin: 0 0 1.5rem;
+}
+
+/* Something went right and the page is saying so. */
+.notice {
+    background: #f2f8f3;
+    border-left: 3px solid #2f7d40;
+    border-radius: 2px;
+    color: #235f30;
+    margin: 0 0 1.5rem;
+    max-width: 34rem;
+    padding: 0.6rem 0.75rem;
+}

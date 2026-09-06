@@ -1,7 +1,7 @@
 @page "/settings"
 @using Memoria.Web.Extensibility
 @inject ExtensionStore Store
-@inject DomainTypeCatalogue Catalogue
+@inject DomainTypeRegistry Types
 
 <PageTitle>Settings</PageTitle>
 
@@ -13,9 +13,15 @@
 
 <h1>Settings</h1>
 <p class="lede">
-    Upload a zip of assemblies holding your domain types. They are read on start-up, so the
-    application restarts itself once the upload is stored.
+    Upload a zip of assemblies holding your domain types. They are read straight away — the
+    application does not restart. Everyone using this server shares one set of types, so a refresh
+    here changes what they see too; their open pages catch up when the browser is reloaded.
 </p>
+
+@if (!string.IsNullOrWhiteSpace(Message))
+{
+    <p class="notice" role="status">@Message</p>
+}
 
 @if (!string.IsNullOrWhiteSpace(Error))
 {
@@ -31,30 +37,27 @@
         Assemblies are taken from anywhere in the archive and stored under one name each. An
         assembly of the same name from an earlier upload is replaced.
     </p>
-    <button type="submit" class="button">Upload and restart</button>
+    <button type="submit" class="button">Upload</button>
 </form>
 
-<h2>Installed</h2>
-@if (Archives.Count == 0)
-{
-    <p class="lede">Nothing uploaded yet.</p>
-}
-else
-{
-    <ul class="sections">
-        @foreach (var archive in Archives)
-        {
-            <li>
-                <span class="name">@archive.Name</span>
-                <span class="detail">
-                    @($"{archive.Length / 1024:n0} KB") · uploaded @archive.UploadedUtc.ToString("u")
-                </span>
-            </li>
-        }
-    </ul>
-}
-
 <h2>Types found</h2>
+<p class="lede">
+    @if (Catalogue.ReloadedUtc is { } reloaded)
+    {
+        @($"Last registered {reloaded:u}.")
+    }
+    else
+    {
+        @("Not registered yet.")
+    }
+</p>
+
+<form method="post" action="settings/refresh" class="refresh">
+    <AntiforgeryToken/>
+    <button type="submit" class="button">Refresh types</button>
+    <span class="hint">Reads every uploaded assembly again and registers the types from scratch.</span>
+</form>
+
 @if (Catalogue.Count == 0)
 {
     <p class="lede">No domain types were found in the uploaded assemblies.</p>
@@ -83,10 +86,35 @@ else
     </ul>
 }
 
+<h2>Installed</h2>
+@if (Archives.Count == 0)
+{
+    <p class="lede">Nothing uploaded yet.</p>
+}
+else
+{
+    <ul class="sections">
+        @foreach (var archive in Archives)
+        {
+            <li>
+                <span class="name">@archive.Name</span>
+                <span class="detail">
+                    @($"{archive.Length / 1024:n0} KB") · uploaded @archive.UploadedUtc.ToString("u")
+                </span>
+            </li>
+        }
+    </ul>
+}
+
 @code {
+
+    [SupplyParameterFromQuery(Name = "message")]
+    private string? Message { get; set; }
 
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
 
     private IReadOnlyList<InstalledArchive> Archives { get; set; } = [];
 

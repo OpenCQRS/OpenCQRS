@@ -17,9 +17,14 @@ public static class ExtensionLoader
     /// <param name="store">Where the assemblies were extracted to.</param>
     /// <returns>What loaded, and a line for each file that did not.</returns>
     /// <remarks>
+    /// Read into memory and loaded from the bytes rather than from the path, for two reasons that
+    /// both come from reloading without restarting. Loading from a path holds the file open, which
+    /// would stop the next upload writing over it; and it caches by path, so a replaced assembly
+    /// would go on being served from the copy loaded the first time round.
+    /// <para>
     /// A file that is not a managed assembly, or one whose dependencies are missing, is reported
-    /// rather than thrown: this runs during start-up, and a bad upload must still leave an
-    /// application running that can be used to replace it.
+    /// rather than thrown: a bad upload must leave the application running and able to say so.
+    /// </para>
     /// </remarks>
     public static LoadedExtensions Load(ExtensionStore store)
     {
@@ -38,10 +43,10 @@ public static class ExtensionLoader
         {
             try
             {
-                // LoadFrom rather than a private context: an uploaded assembly references Memoria's
-                // own assemblies, and those types must be the ones this process already loaded, or
-                // nothing it contains would satisfy IEvent or IAggregateRoot.
-                assemblies.Add(Assembly.LoadFrom(path));
+                // Into the default context, not a private one: an uploaded assembly references
+                // Memoria's own assemblies, and those types have to be the ones this process
+                // already loaded, or nothing it holds would satisfy IEvent or IAggregateRoot.
+                assemblies.Add(Assembly.Load(File.ReadAllBytes(path)));
             }
             catch (Exception exception)
             {
@@ -68,7 +73,7 @@ public static class ExtensionLoader
             AssemblyLoadContext.Default.Resolving += (_, name) =>
             {
                 var candidate = Path.Combine(libraryDirectory, $"{name.Name}.dll");
-                return File.Exists(candidate) ? Assembly.LoadFrom(candidate) : null;
+                return File.Exists(candidate) ? Assembly.Load(File.ReadAllBytes(candidate)) : null;
             };
 
             _resolverInstalled = true;

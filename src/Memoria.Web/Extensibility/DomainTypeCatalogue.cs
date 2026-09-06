@@ -37,6 +37,9 @@ public sealed record DomainTypeCatalogue
     /// </summary>
     public IReadOnlyList<string> Errors { get; init; } = [];
 
+    /// <summary>Gets when this catalogue was built, or null before the first reload.</summary>
+    public DateTime? ReloadedUtc { get; init; }
+
     /// <summary>Gets the number of domain types found, identifiers included.</summary>
     public int Count =>
         StreamedAggregates.Count + StreamedAggregateIds.Count +

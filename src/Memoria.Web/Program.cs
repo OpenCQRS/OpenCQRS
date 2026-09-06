@@ -8,6 +8,7 @@ using Memoria.Extensions;
 using Memoria.Web.Components;
 using Memoria.Web.Data;
 using Memoria.Web.Extensibility;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,26 +44,22 @@ builder.Services.AddMemoria(typeof(Program));
 builder.Services.AddMemoriaEventSourcing(typeof(Program));
 builder.Services.AddMemoriaDcb(typeof(Program));
 
-// The domain types uploaded through the settings page. Bound here, before the stores, for the
-// reason given on AddDomainExtensions.
-var extensionStore = new ExtensionStore(
-    builder.Configuration["Extensions:Directory"]
-    ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "extensions"));
-
-var catalogue = builder.Services.AddDomainExtensions(extensionStore);
-
 builder.Services.AddMemoriaEntityFrameworkCore<StreamedStoreDbContext>();
 builder.Services.AddMemoriaDcbEntityFrameworkCore<DcbStoreDbContext>();
 
+// The domain types uploaded through the settings page. Only registered here — the assemblies are
+// read below, and again whenever someone uploads or asks for a refresh.
+builder.Services.AddDomainExtensions(
+    new ExtensionStore(
+        builder.Configuration["Extensions:Directory"]
+        ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "extensions")),
+    typeof(Program).Assembly);
+
 var app = builder.Build();
 
-app.Logger.LogInformation("Loaded {TypeCount} domain types from uploaded assemblies. {ErrorCount} problem(s).",
-    catalogue.Count, catalogue.Errors.Count);
-
-foreach (var error in catalogue.Errors)
-{
-    app.Logger.LogWarning("Extension problem: {Error}", error);
-}
+var registry = app.Services.GetRequiredService<DomainTypeRegistry>();
+registry.Reload();
+LogCatalogue(app.Logger, registry.Current);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -77,24 +74,20 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-// What the page that is waiting for a restart polls. Answering at all is the whole signal.
-app.MapGet("/health", () => Results.Ok("ok"));
-
-// A plain form post rather than a Blazor upload: the settings page renders statically like the
-// rest, and the response has to outlive the shutdown it triggers. Antiforgery still applies —
-// binding the form marks the endpoint, and the form carries the token via <AntiforgeryToken/>.
+// Plain form posts rather than Blazor forms: the settings page renders statically like the rest.
+// Antiforgery still applies — binding the form marks the endpoint, and each form carries the token
+// via <AntiforgeryToken/>.
 app.MapPost("/settings/upload", (
-    HttpContext context,
-    IHostApplicationLifetime lifetime,
+    DomainTypeRegistry types,
     ExtensionStore store,
     ILoggerFactory loggerFactory,
     [FromForm] IFormFileCollection files) =>
 {
-    var logger = loggerFactory.CreateLogger("Memoria.Web.Upload");
+    var logger = loggerFactory.CreateLogger("Memoria.Web.Settings");
 
     if (files.Count == 0)
     {
-        return Results.LocalRedirect("/settings?error=Choose%20at%20least%20one%20zip%20file.");
+        return Back(error: "Choose at least one zip file.");
     }
 
     foreach (var file in files)
@@ -108,26 +101,66 @@ app.MapPost("/settings/upload", (
         catch (Exception exception)
         {
             logger.LogError(exception, "Could not install {FileName}.", file.FileName);
-
-            var reason = $"{file.FileName} could not be installed: {exception.Message}";
-            return Results.LocalRedirect($"/settings?error={Uri.EscapeDataString(reason)}");
+            return Back(error: $"{file.FileName} could not be installed: {exception.Message}");
         }
     }
 
-    // Stopped only once this response is on the wire, so the page doing the waiting is the last
-    // thing the dying process serves. Nothing here starts it again: a process manager does that,
-    // and under a plain `dotnet run` it stays down.
-    context.Response.OnCompleted(() =>
-    {
-        lifetime.StopApplication();
-        return Task.CompletedTask;
-    });
+    types.Reload();
+    LogCatalogue(logger, types.Current);
 
-    return Results.Content(RestartingPage.Html, "text/html");
+    return Back(message: $"Uploaded {files.Count} file(s). {types.Current.Count} type(s) registered.");
 });
+
+app.MapPost("/settings/refresh", async (
+    HttpContext context,
+    IAntiforgery antiforgery,
+    DomainTypeRegistry types,
+    ILoggerFactory loggerFactory) =>
+{
+    var logger = loggerFactory.CreateLogger("Memoria.Web.Settings");
+
+    // This endpoint binds no form field, so the antiforgery middleware does not treat it as a form
+    // post and would let it through unchecked. Refreshing changes what every user resolves, so it
+    // is checked here instead.
+    try
+    {
+        await antiforgery.ValidateRequestAsync(context);
+    }
+    catch (AntiforgeryValidationException)
+    {
+        return Back(error: "That request could not be verified. Reload the page and try again.");
+    }
+
+    types.Reload();
+    LogCatalogue(logger, types.Current);
+
+    return Back(message: $"{types.Current.Count} type(s) registered.");
+}).DisableAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+return;
+
+// Back to the settings page carrying what happened, so the outcome survives the redirect.
+static IResult Back(string? message = null, string? error = null)
+{
+    var query = message is not null
+        ? $"?message={Uri.EscapeDataString(message)}"
+        : $"?error={Uri.EscapeDataString(error ?? string.Empty)}";
+
+    return Results.LocalRedirect($"/settings{query}");
+}
+
+static void LogCatalogue(ILogger logger, DomainTypeCatalogue catalogue)
+{
+    logger.LogInformation("Registered {TypeCount} domain type(s). {ErrorCount} problem(s).",
+        catalogue.Count, catalogue.Errors.Count);
+
+    foreach (var error in catalogue.Errors)
+    {
+        logger.LogWarning("Extension problem: {Error}", error);
+    }
+}
