@@ -1,0 +1,107 @@
+@page "/settings"
+@using Memoria.Web.Extensibility
+@inject ExtensionStore Store
+@inject DomainTypeCatalogue Catalogue
+
+<PageTitle>Settings</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Settings</span>
+</nav>
+
+<h1>Settings</h1>
+<p class="lede">
+    Upload a zip of assemblies holding your domain types. They are read on start-up, so the
+    application restarts itself once the upload is stored.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <p class="alert" role="alert">@Error</p>
+}
+
+<h2>Upload</h2>
+<form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
+    <AntiforgeryToken/>
+    <label for="files">Zip files</label>
+    <input id="files" name="files" type="file" accept=".zip,application/zip" multiple required/>
+    <p class="hint">
+        Assemblies are taken from anywhere in the archive and stored under one name each. An
+        assembly of the same name from an earlier upload is replaced.
+    </p>
+    <button type="submit" class="button">Upload and restart</button>
+</form>
+
+<h2>Installed</h2>
+@if (Archives.Count == 0)
+{
+    <p class="lede">Nothing uploaded yet.</p>
+}
+else
+{
+    <ul class="sections">
+        @foreach (var archive in Archives)
+        {
+            <li>
+                <span class="name">@archive.Name</span>
+                <span class="detail">
+                    @($"{archive.Length / 1024:n0} KB") · uploaded @archive.UploadedUtc.ToString("u")
+                </span>
+            </li>
+        }
+    </ul>
+}
+
+<h2>Types found</h2>
+@if (Catalogue.Count == 0)
+{
+    <p class="lede">No domain types were found in the uploaded assemblies.</p>
+}
+else
+{
+    <ul class="sections">
+        @foreach (var (label, count) in Counts)
+        {
+            <li>
+                <span class="name">@label</span>
+                <span class="detail">@count</span>
+            </li>
+        }
+    </ul>
+}
+
+@if (Catalogue.Errors.Count > 0)
+{
+    <h2>Problems</h2>
+    <ul class="sections">
+        @foreach (var error in Catalogue.Errors)
+        {
+            <li><span class="detail">@error</span></li>
+        }
+    </ul>
+}
+
+@code {
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? Error { get; set; }
+
+    private IReadOnlyList<InstalledArchive> Archives { get; set; } = [];
+
+    private IReadOnlyList<(string Label, int Count)> Counts => [
+        ("Streamed aggregates", Catalogue.StreamedAggregates.Count),
+        ("Streamed aggregate ids", Catalogue.StreamedAggregateIds.Count),
+        ("Streamed projections", Catalogue.StreamedProjections.Count),
+        ("Streamed projection ids", Catalogue.StreamedProjectionIds.Count),
+        ("DCB aggregates", Catalogue.DcbAggregates.Count),
+        ("DCB aggregate ids", Catalogue.DcbAggregateIds.Count),
+        ("DCB projections", Catalogue.DcbProjections.Count),
+        ("DCB projection ids", Catalogue.DcbProjectionIds.Count),
+        ("Events", Catalogue.Events.Count)
+    ];
+
+    protected override void OnInitialized() => Archives = Store.InstalledArchives();
+
+}

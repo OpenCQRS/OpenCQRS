@@ -268,3 +268,6 @@ plans/
 
 # BenchmarkDotNet
 BenchmarkDotNet.Artifacts/
+
+# Assemblies uploaded through the Memoria.Web settings page
+src/Memoria.Web/App_Data/

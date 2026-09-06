@@ -181,3 +181,30 @@ h1:focus {
     max-width: 34rem;
     padding: 0.6rem 0.75rem;
 }
+
+/* The one form on the settings page: a file picker and the button that sends it. */
+.upload {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0 0 2rem;
+    max-width: 34rem;
+    padding: 1rem;
+}
+
+    .upload label {
+        font-weight: 600;
+    }
+
+    .upload button {
+        align-self: flex-start;
+        cursor: pointer;
+    }
+
+    .upload .hint {
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+        margin: 0;
+    }
