@@ -283,12 +283,6 @@ h2:focus {
     margin: 1.5rem 0 1.5rem;
 }
 
-    /* The aggregate detail page's explanation runs to two lines, so it wraps rather than pushing
-       the button off the row. */
-    .refresh .hint {
-        max-width: 34rem;
-    }
-
 /* Something went right and the page is saying so. */
 .notice {
     background: #f2f8f3;
@@ -371,6 +365,55 @@ h2:focus {
     letter-spacing: 0.02em;
     margin: 1.5rem 0 0.5rem;
     text-transform: uppercase;
+}
+
+/* One subject read three ways, with the row of names on top and one of them showing. Every tab is
+   an ordinary link and the view is carried in the address, so the set works with no script, each
+   view can be linked to, and the browser's back button steps between them. Global rather than
+   scoped to the page that first grew them, because a second page wants the same row. */
+.tabs {
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 1.5rem 0;
+}
+
+    .tabs a {
+        /* Drawn on every tab, transparent until one is current, so the row does not shift by two
+           pixels as the underline moves along it. The negative margin sits it on the rule below
+           rather than under it. */
+        border-bottom: 2px solid transparent;
+        color: var(--ink-soft);
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: -1px;
+        padding: 0.5rem 0.875rem;
+        text-decoration: none;
+    }
+
+    .tabs a:hover {
+        color: var(--accent);
+    }
+
+    .tabs a:focus-visible {
+        border-radius: 2px 2px 0 0;
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+    }
+
+    /* The one being read, marked by the attribute that says so — the same one the breadcrumb ends
+       on, because a tab here is a place the reader is rather than a control they toggled. */
+    .tabs a[aria-current] {
+        border-bottom-color: var(--accent);
+        color: var(--ink);
+    }
+
+/* Given focus so a jump from the pager lands in it, rather than because anyone tabbed to it — the
+   ring would be pointing at a whole panel the reader did not choose. */
+.tab-panel:focus {
+    outline: none;
 }
 
 /* Label above value, so a long type name has the width to itself. */

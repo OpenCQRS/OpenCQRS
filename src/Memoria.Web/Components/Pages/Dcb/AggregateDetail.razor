@@ -39,259 +39,313 @@ else
     <h1>@Aggregate.Name</h1>
     <p class="lede">The snapshot stored under the boundary <code>@Identifier.Name</code> carries.</p>
 
-    @* What the refresh did, carried back on the address so it survives the redirect. *@
-    @if (Message is not null)
-    {
-        <p class="notice" role="status">@Message</p>
-    }
-    else if (RefreshError is not null)
-    {
-        <p class="alert" role="alert">@RefreshError</p>
-    }
-
-    <dl class="facts">
-        @foreach (var parameter in Parameters)
-        {
-            <dt>@parameter.Name</dt>
-            <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
-        }
-
-        @if (Boundary is not null)
-        {
-            <dt>Boundary</dt>
-            <dd><code>@Boundary</code></dd>
-        }
-
-        @* All three off the row rather than out of the payload: the store's account of the write,
-           not the model's own state. The version is the stored one, so a snapshot left behind while
-           later events accumulate reads lower here than folding its boundary would give. *@
-        @if (Stored is not null)
-        {
-            <dt>Version</dt>
-            <dd>@Stored.Version</dd>
-
-            <dt>Created</dt>
-            <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
-
-            <dt>Updated</dt>
-            <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
-        }
-    </dl>
-
+    @* The store failing to answer for the aggregate at all, which leaves both the facts and the
+       state without their values — so it is said once, above the tabs, rather than in each. *@
     @if (Error is not null)
     {
         <p class="alert" role="alert">@Error</p>
     }
-    else if (Loaded is null)
+
+    @* Four views of one aggregate, switched by the address rather than by script: each tab is a
+       link, so a view can be linked to and gone back to, and the page stays statically rendered
+       like the rest of them. Marked with aria-current for the same reason the breadcrumb is —
+       these are places to go, not scripted tabs, so they say so in the language of navigation.
+       The three that read come first and the one that writes comes last. *@
+    <nav class="tabs" aria-label="Aggregate views">
+        <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
+           aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
+        <a id="tab-@StateTab" href="@TabLink(StateTab)"
+           aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+        <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
+           aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
+        <a id="tab-@UpdateTab" href="@TabLink(UpdateTab)"
+           aria-current="@(Tab == UpdateTab ? "page" : null)">Update</a>
+    </nav>
+
+    @* Each panel is named by the tab that reaches it, so the label is written once and a reader
+       arriving by fragment is told which of the four they landed in. *@
+    @if (Tab == InfoTab)
     {
-        @* Only the snapshots table is read, so this says nothing about the events: a boundary can
-           hold events that have never been folded into a row, and there would still be nothing to
-           show here. *@
-        <p class="empty">
-            No snapshot is stored under those values. Nothing has been written under the boundary
-            they describe, or it was written under a wider one.
-        </p>
-    }
-    else
-    {
-        <h2>State</h2>
-        @if (State.Count == 0)
-        {
-            <p class="missing">It declares no properties of its own.</p>
-        }
-        else
-        {
-            <table class="grid">
-                <thead>
-                <tr>
-                    <th scope="col">Property</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Value</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var property in State)
+        <section class="tab-panel" aria-labelledby="tab-@InfoTab">
+            <dl class="facts">
+                @foreach (var parameter in Parameters)
                 {
-                    <tr>
-                        <td>@property.Name</td>
-                        <td><code>@property.TypeName</code></td>
-                        <td>@(property.Value ?? "—")</td>
-                    </tr>
+                    <dt>@parameter.Name</dt>
+                    <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
                 }
-                </tbody>
-            </table>
-        }
-    }
 
-    @* Placed between the snapshot and the events because that is the seam it closes: everything
-       above is what was stored, everything below is what has happened, and this is the button that
-       makes the first account for the second. Set apart from the block above, which it acts on
-       rather than belongs to — the same shape as the refresh on the settings page. *@
-    @if (Boundary is not null)
+                @if (Boundary is not null)
+                {
+                    <dt>Boundary</dt>
+                    <dd><code>@Boundary</code></dd>
+                }
+
+                @* All three off the row rather than out of the payload: the store's account of the
+                   write, not the model's own state. The version is the stored one, so a snapshot
+                   left behind while later events accumulate reads lower here than folding its
+                   boundary would give. *@
+                @if (Stored is not null)
+                {
+                    <dt>Version</dt>
+                    <dd>@Stored.Version</dd>
+
+                    <dt>Created</dt>
+                    <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
+
+                    <dt>Updated</dt>
+                    <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
+                }
+            </dl>
+        </section>
+    }
+    else if (Tab == StateTab)
     {
-        <form method="post" action="dcb/aggregates/update" class="refresh">
-            <AntiforgeryToken/>
-            <input type="hidden" name="type" value="@Aggregate.FullName"/>
-            <input type="hidden" name="id" value="@Identifier.FullName"/>
-            @foreach (var parameter in Parameters)
+        <section class="tab-panel" aria-labelledby="tab-@StateTab">
+            @if (Error is not null)
             {
-                <input type="hidden" name="@parameter.Name" value="@Values.GetValueOrDefault(parameter.Name)"/>
+                @* Said above the tabs already; nothing to add here but the absence. *@
+                <p class="missing">There is no state to show.</p>
             }
-            <input type="hidden" name="returnUrl" value="/@EventsLink(Descending, Events.Page, toTable: false)"/>
-            <button type="submit" class="button">Update</button>
-            <span class="hint">
-                Refreshes the stored snapshot: any events below that it has not applied yet are
-                applied to it and the result is written back. Nothing is appended.
-            </span>
-        </form>
+            else if (Loaded is null)
+            {
+                @* Only the snapshots table is read, so this says nothing about the events: a
+                   boundary can hold events that have never been folded into a row, and there would
+                   still be nothing to show here. *@
+                <p class="empty">
+                    No snapshot is stored under those values. Nothing has been written under the
+                    boundary they describe, or it was written under a wider one.
+                </p>
+            }
+            else if (State.Count == 0)
+            {
+                <p class="missing">It declares no properties of its own.</p>
+            }
+            else
+            {
+                <table class="grid">
+                    <thead>
+                    <tr>
+                        <th scope="col">Property</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var property in State)
+                    {
+                        <tr>
+                            <td>@property.Name</td>
+                            <td><code>@property.TypeName</code></td>
+                            <td>@(property.Value ?? "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </section>
     }
-
-    @* Narrowed to what this aggregate applies, so the count agrees with the version above, and shown
-       whether or not a snapshot was found: the events are inside the boundary either way, and a
-       boundary holding events with no snapshot written over them is worth being able to see. *@
-    @if (Boundary is not null)
+    else if (Tab == EventsTab && Boundary is not null)
     {
-        @* Focusable as well as linkable: a fragment scrolls the heading into view, and the negative
+        @* Narrowed to what this aggregate applies, so the count agrees with the version on the info
+           tab, and shown whether or not a snapshot was found: the events are inside the boundary
+           either way, and a boundary holding events with no snapshot written over them is worth
+           being able to see. *@
+        @* Focusable as well as linkable: a fragment scrolls the panel into view, and the negative
            tabindex means the browser moves focus to it too, so tabbing on from a pager link carries
            on inside the table rather than from the top of the document. *@
-        <h2 id="@EventsAnchor" tabindex="-1">Events</h2>
+        <section class="tab-panel" id="@EventsAnchor" tabindex="-1" aria-labelledby="tab-@EventsTab">
+            @if (Events.Error is not null)
+            {
+                <p class="alert" role="alert">@Events.Error</p>
+            }
+            else if (Events.Total == 0)
+            {
+                <p class="missing">This aggregate applies no events inside the boundary.</p>
+            }
+            else
+            {
+                @* The whole count, not this page's worth: the pager says which page, and what a
+                   reader wants beside it is how much there is to page through. *@
+                <p class="lede">@EventSummary</p>
 
-        @if (Events.Error is not null)
-        {
-            <p class="alert" role="alert">@Events.Error</p>
-        }
-        else if (Events.Total == 0)
-        {
-            <p class="missing">This aggregate applies no events inside the boundary.</p>
-        }
-        else
-        {
-            @* The whole count, not this page's worth: the pager says which page, and what a reader
-               wants beside it is how much there is to page through. *@
-            <p class="lede">@EventSummary</p>
-
-            <table class="grid">
-                <thead>
-                <tr>
-                    <th scope="col">Position</th>
-                    <th scope="col" aria-sort="@(Descending ? "descending" : "ascending")">
-                        @* The only date these have, so the only thing there is to order them by. *@
-                        <a href="@EventsLink(!Descending, 1)">
-                            Appended
-                            <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
-                        </a>
-                    </th>
-                    <th scope="col">Event</th>
-                    <th scope="col">Payload</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var stored in Events.Events)
-                {
+                <table class="grid">
+                    <thead>
                     <tr>
-                        <td>@stored.Position</td>
-                        <td>@stored.Written.ToLocalTime().ToString("g")</td>
-                        <td><code>@stored.Type</code></td>
-                        <td>
-                            @if (stored.Error is not null)
+                        <th scope="col">Position</th>
+                        <th scope="col" aria-sort="@(Descending ? "descending" : "ascending")">
+                            @* The only date these have, so the only thing there is to order them by. *@
+                            <a href="@EventsLink(!Descending, 1)">
+                                Appended
+                                <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                            </a>
+                        </th>
+                        <th scope="col">Event</th>
+                        <th scope="col">Payload</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var stored in Events.Events)
+                    {
+                        <tr>
+                            <td>@stored.Position</td>
+                            <td>@stored.Written.ToLocalTime().ToString("g")</td>
+                            <td><code>@stored.Type</code></td>
+                            <td>
+                                @if (stored.Error is not null)
+                                {
+                                    <span class="missing">@stored.Error</span>
+                                }
+                                else if (stored.State.Count == 0)
+                                {
+                                    <span class="missing">It carries nothing of its own.</span>
+                                }
+                                else
+                                {
+                                    @foreach (var property in stored.State)
+                                    {
+                                        <div>@property.Name: @(property.Value ?? "—")</div>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+
+                <div class="table-footer">
+                    <div class="pagination">
+                        @if (Events.TotalPages > 1)
+                        {
+                            @if (Events.Page > 1)
                             {
-                                <span class="missing">@stored.Error</span>
-                            }
-                            else if (stored.State.Count == 0)
-                            {
-                                <span class="missing">It carries nothing of its own.</span>
+                                <a href="@EventsLink(Descending, 1)">First</a>
+                                <a href="@EventsLink(Descending, Events.Page - 1)">Previous</a>
                             }
                             else
                             {
-                                @foreach (var property in stored.State)
-                                {
-                                    <div>@property.Name: @(property.Value ?? "—")</div>
-                                }
+                                <span class="disabled">First</span>
+                                <span class="disabled">Previous</span>
                             }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
 
-            <div class="table-footer">
-                <div class="pagination">
-                    @if (Events.TotalPages > 1)
-                    {
-                        @if (Events.Page > 1)
-                        {
-                            <a href="@EventsLink(Descending, 1)">First</a>
-                            <a href="@EventsLink(Descending, Events.Page - 1)">Previous</a>
-                        }
-                        else
-                        {
-                            <span class="disabled">First</span>
-                            <span class="disabled">Previous</span>
-                        }
-
-                        @* Its own GET form, like the one on the list: the page landed on belongs in
-                           the address bar, so it can be linked to and gone back to. *@
-                        @* The fragment survives the submission — a GET form replaces the action's
-                           query with the fields and leaves the rest of it alone — so this lands at
-                           the table like the pager links do. *@
-                        <form class="page-jump" method="get" action="dcb/aggregates/detail#@EventsAnchor">
-                            <label for="page">Page</label>
-                            <select id="page" name="page" onchange="this.form.submit()">
-                                @for (var number = 1; number <= Events.TotalPages; number++)
+                            @* Its own GET form, like the one on the list: the page landed on belongs
+                               in the address bar, so it can be linked to and gone back to. *@
+                            @* The fragment survives the submission — a GET form replaces the
+                               action's query with the fields and leaves the rest of it alone — so
+                               this lands at the table like the pager links do. *@
+                            <form class="page-jump" method="get" action="dcb/aggregates/detail#@EventsAnchor">
+                                <label for="page">Page</label>
+                                <select id="page" name="page" onchange="this.form.submit()">
+                                    @for (var number = 1; number <= Events.TotalPages; number++)
+                                    {
+                                        <option value="@number" selected="@(number == Events.Page)">@number</option>
+                                    }
+                                </select>
+                                <span>of @Events.TotalPages</span>
+                                <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                                <input type="hidden" name="id" value="@Identifier.FullName"/>
+                                @foreach (var parameter in Parameters)
                                 {
-                                    <option value="@number" selected="@(number == Events.Page)">@number</option>
+                                    <input type="hidden" name="@parameter.Name"
+                                           value="@Values.GetValueOrDefault(parameter.Name)"/>
                                 }
-                            </select>
-                            <span>of @Events.TotalPages</span>
-                            <input type="hidden" name="type" value="@Aggregate.FullName"/>
-                            <input type="hidden" name="id" value="@Identifier.FullName"/>
-                            @foreach (var parameter in Parameters)
+                                @* The form replaces the whole query, so the tab it was submitted
+                                   from has to travel with it or the page comes back on the info
+                                   tab with the table it was paging out of sight. *@
+                                <input type="hidden" name="tab" value="@EventsTab"/>
+                                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                                <input type="hidden" name="size" value="@PageSize"/>
+                                <noscript>
+                                    <button type="submit">Go</button>
+                                </noscript>
+                            </form>
+
+                            @if (Events.Page < Events.TotalPages)
                             {
-                                <input type="hidden" name="@parameter.Name"
-                                       value="@Values.GetValueOrDefault(parameter.Name)"/>
+                                <a href="@EventsLink(Descending, Events.Page + 1)">Next</a>
+                                <a href="@EventsLink(Descending, Events.TotalPages)">Last</a>
                             }
-                            <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                            <input type="hidden" name="size" value="@PageSize"/>
-                            <noscript>
-                                <button type="submit">Go</button>
-                            </noscript>
-                        </form>
+                            else
+                            {
+                                <span class="disabled">Next</span>
+                                <span class="disabled">Last</span>
+                            }
+                        }
+                    </div>
 
-                        @if (Events.Page < Events.TotalPages)
+                    <form class="page-size" method="get" action="dcb/aggregates/detail#@EventsAnchor">
+                        <label for="size">Rows per page</label>
+                        <select id="size" name="size" onchange="this.form.submit()">
+                            @foreach (var option in InstanceQuery.PageSizes)
+                            {
+                                <option value="@option" selected="@(option == PageSize)">@option</option>
+                            }
+                        </select>
+                        <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                        <input type="hidden" name="id" value="@Identifier.FullName"/>
+                        @foreach (var parameter in Parameters)
                         {
-                            <a href="@EventsLink(Descending, Events.Page + 1)">Next</a>
-                            <a href="@EventsLink(Descending, Events.TotalPages)">Last</a>
+                            <input type="hidden" name="@parameter.Name"
+                                   value="@Values.GetValueOrDefault(parameter.Name)"/>
                         }
-                        else
-                        {
-                            <span class="disabled">Next</span>
-                            <span class="disabled">Last</span>
-                        }
-                    }
+                        <input type="hidden" name="tab" value="@EventsTab"/>
+                        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                        <noscript>
+                            <button type="submit">Apply</button>
+                        </noscript>
+                    </form>
                 </div>
+            }
+        </section>
+    }
 
-                <form class="page-size" method="get" action="dcb/aggregates/detail#@EventsAnchor">
-                    <label for="size">Rows per page</label>
-                    <select id="size" name="size" onchange="this.form.submit()">
-                        @foreach (var option in InstanceQuery.PageSizes)
-                        {
-                            <option value="@option" selected="@(option == PageSize)">@option</option>
-                        }
-                    </select>
+    else if (Tab == UpdateTab)
+    {
+        @* The one write these pages offer, given a tab of its own so the three that read stay
+           reading. It is the seam the other three meet at: it takes what the events tab lists and
+           writes it into what the info and state tabs show. *@
+        <section class="tab-panel" aria-labelledby="tab-@UpdateTab">
+            @if (Boundary is null)
+            {
+                <p class="missing">There is no boundary to refresh a snapshot from.</p>
+            }
+            else
+            {
+                @* Above the button rather than beside it: on a tab of its own there is the width to
+                   read it as prose, and it says what pressing the button will do, so it comes
+                   first. *@
+                <p class="lede">
+                    Refreshes the stored snapshot: any events on the events tab that it has not
+                    applied yet are applied to it and the result is written back. Nothing is
+                    appended.
+                </p>
+
+                <form method="post" action="dcb/aggregates/update" class="refresh">
+                    <AntiforgeryToken/>
                     <input type="hidden" name="type" value="@Aggregate.FullName"/>
                     <input type="hidden" name="id" value="@Identifier.FullName"/>
                     @foreach (var parameter in Parameters)
                     {
-                        <input type="hidden" name="@parameter.Name"
-                               value="@Values.GetValueOrDefault(parameter.Name)"/>
+                        <input type="hidden" name="@parameter.Name" value="@Values.GetValueOrDefault(parameter.Name)"/>
                     }
-                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                    <noscript>
-                        <button type="submit">Apply</button>
-                    </noscript>
+                    @* Back to this tab, which is where the button was pressed and where the notice
+                       saying what it did is written. *@
+                    <input type="hidden" name="returnUrl" value="/@TabLink(UpdateTab)"/>
+                    <button type="submit" class="button">Update</button>
                 </form>
-            </div>
-        }
+
+                @* What the last press did, carried back on the address so it survives the redirect.
+                   Below the button rather than at the top of the page, so the answer is read where
+                   the question was asked. *@
+                @if (Message is not null)
+                {
+                    <p class="notice" role="status">@Message</p>
+                }
+                else if (RefreshError is not null)
+                {
+                    <p class="alert" role="alert">@RefreshError</p>
+                }
+            }
+        </section>
     }
 
     <p class="back"><a href="@BackToList">Back to @Identifier.Name</a></p>
@@ -329,6 +383,26 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
+    /// The page the address asks for, which the events tab may not have read — kept apart from
+    /// <see cref="StoredEvents.Page"/>, the page actually landed on once the total is known.
+    /// </summary>
+    private int Page { get; set; } = 1;
+
+    /// <summary>
+    /// The four views the page offers, named as they appear in the address. Which one is showing
+    /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
+    /// </summary>
+    private const string InfoTab = "info";
+
+    private const string StateTab = "state";
+
+    private const string EventsTab = "events";
+
+    private const string UpdateTab = "update";
+
+    private string Tab { get; set; } = InfoTab;
+
+    /// <summary>
     /// How many events there are in all, and whose count it is — the aggregate's, because the list
     /// is narrowed to what it applies rather than to everything the boundary holds.
     /// </summary>
@@ -347,35 +421,48 @@ else
     private string? RefreshError { get; set; }
 
     /// <summary>
-    /// The anchor the events table starts at, so paging and re-ordering land on the rows that
+    /// The anchor the events panel starts at, so paging and re-ordering land on the rows that
     /// changed rather than at the top of a page whose first screen did not.
     /// </summary>
     private const string EventsAnchor = "events";
 
     /// <summary>
-    /// One address for the whole events table, carrying everything that addresses the aggregate as
-    /// well, so a pager link only changes what it means to change.
+    /// Everything that addresses the aggregate itself: the two types and the values that identify
+    /// the instance. The view and the table's own state are appended by whatever varies them.
     /// </summary>
-    /// <param name="descending">Whether the newest come first.</param>
-    /// <param name="page">The page to land on, from one.</param>
-    /// <param name="toTable">
-    /// Whether to land at the table. False for the refresh, which changes the version and the state
-    /// above it and says so in a notice at the top — the one navigation here that wants the top.
-    /// </param>
-    private string EventsLink(bool descending, int page, bool toTable = true)
-    {
-        var values = string.Concat(Parameters.Select(parameter =>
+    private string Address =>
+        $"dcb/aggregates/detail?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}" +
+        string.Concat(Parameters.Select(parameter =>
             $"&{Uri.EscapeDataString(parameter.Name)}=" +
             $"{Uri.EscapeDataString(Values.GetValueOrDefault(parameter.Name) ?? string.Empty)}"));
 
-        return $"dcb/aggregates/detail?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
-               $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}" +
-               values +
-               $"&dir={(descending ? "desc" : "asc")}" +
-               $"&size={PageSize}" +
-               $"&page={page}" +
-               (toTable ? $"#{EventsAnchor}" : string.Empty);
-    }
+    /// <summary>
+    /// One address for the whole page, carrying everything that addresses the aggregate as well as
+    /// the state of the events table, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="tab">Which of the four views to show.</param>
+    /// <param name="descending">Whether the newest events come first.</param>
+    /// <param name="page">The events page to land on, from one.</param>
+    /// <param name="toTable">
+    /// Whether to land at the events panel. False for a tab and for the refresh, which changes the
+    /// version and the state and says so in a notice at the top — the navigations that want the top.
+    /// </param>
+    private string DetailLink(string tab, bool descending, int page, bool toTable = false) =>
+        $"{Address}&tab={tab}" +
+        $"&dir={(descending ? "desc" : "asc")}" +
+        $"&size={PageSize}" +
+        $"&page={page}" +
+        (toTable ? $"#{EventsAnchor}" : string.Empty);
+
+    /// <summary>
+    /// A tab, keeping the events table where it was left, so leaving the events tab and coming back
+    /// returns to the page and order it was read at rather than to the first one.
+    /// </summary>
+    private string TabLink(string tab) => DetailLink(tab, Descending, Page);
+
+    private string EventsLink(bool descending, int page, bool toTable = true) =>
+        DetailLink(EventsTab, descending, page, toTable);
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
@@ -395,6 +482,16 @@ else
         Values = query.ToDictionary(
             pair => pair.Key, pair => (string?)pair.Value.LastOrDefault(),
             StringComparer.OrdinalIgnoreCase);
+
+        // Matched against the four the page has, so an unknown name in the address opens the one
+        // it opens with rather than a blank page.
+        Tab = (Values.GetValueOrDefault("tab") ?? string.Empty).ToLowerInvariant() switch
+        {
+            StateTab => StateTab,
+            EventsTab => EventsTab,
+            UpdateTab => UpdateTab,
+            _ => InfoTab,
+        };
 
         // Both are matched against what is registered, so a name in the address can only ever reach
         // a type this application already knows about.
@@ -442,14 +539,21 @@ else
 
         Descending = string.Equals(Values.GetValueOrDefault("dir"), "desc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Values.GetValueOrDefault("size"));
+        Page = int.TryParse(Values.GetValueOrDefault("page"), out var asked) ? asked : 1;
 
-        Events = await BoundaryEvents.Load(
-            StoreContext,
-            aggregateId.Boundary,
-            BoundaryEvents.AppliedBy(Aggregate, Loaded),
-            Descending,
-            int.TryParse(Values.GetValueOrDefault("page"), out var asked) ? asked : 1,
-            PageSize);
+        // Only when they are the view being shown. The tab labels report no counts, so nothing on
+        // the other two needs the events read, and reading them anyway would cost the info and
+        // state tabs a count and a page of rows each to render nothing from.
+        if (Tab == EventsTab)
+        {
+            Events = await BoundaryEvents.Load(
+                StoreContext,
+                aggregateId.Boundary,
+                BoundaryEvents.AppliedBy(Aggregate, Loaded),
+                Descending,
+                Page,
+                PageSize);
+        }
     }
 
 }
