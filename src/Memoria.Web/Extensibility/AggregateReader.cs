@@ -74,7 +74,14 @@ public static class AggregateReader
     /// </remarks>
     public static LoadedAggregate Read(Type aggregate, DcbSnapshotEntity snapshot)
     {
-        var stored = new StoredSnapshot(snapshot.Version, snapshot.CreatedDate, snapshot.UpdatedDate);
+        var stored = new StoredSnapshot(
+            snapshot.ModelType,
+            snapshot.Version,
+            snapshot.LatestPosition,
+            snapshot.CreatedDate,
+            snapshot.CreatedBy,
+            snapshot.UpdatedDate,
+            snapshot.UpdatedBy);
 
         try
         {
@@ -100,7 +107,18 @@ public static class AggregateReader
 public sealed record LoadedAggregate(object? Aggregate, StoredSnapshot? Snapshot, string? Error);
 
 /// <summary>The store's account of one write, as opposed to the state that was written.</summary>
+/// <param name="ModelType">The binding key the payload was stored under, as <c>name:version</c>.</param>
 /// <param name="Version">The version the row was stored at.</param>
+/// <param name="LatestPosition">The global position in the log the fold reached.</param>
 /// <param name="Created">When it was first stored.</param>
+/// <param name="CreatedBy">Who first stored it, or null when the store attributes nothing.</param>
 /// <param name="Updated">When it was last stored.</param>
-public sealed record StoredSnapshot(int Version, DateTimeOffset Created, DateTimeOffset Updated);
+/// <param name="UpdatedBy">Who last stored it, or null when the store attributes nothing.</param>
+public sealed record StoredSnapshot(
+    string ModelType,
+    int Version,
+    long LatestPosition,
+    DateTimeOffset Created,
+    string? CreatedBy,
+    DateTimeOffset Updated,
+    string? UpdatedBy);

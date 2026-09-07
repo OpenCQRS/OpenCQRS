@@ -25,9 +25,12 @@ public class AggregateReaderTests
         TagQuery = "sample:sample-1",
         ModelType = "SampleDcbAggregate:1",
         Version = 6,
+        LatestPosition = 412,
         Data = data,
         CreatedDate = Created,
-        UpdatedDate = Updated
+        CreatedBy = "importer",
+        UpdatedDate = Updated,
+        UpdatedBy = "refresher"
     };
 
     [Fact]
@@ -65,6 +68,39 @@ public class AggregateReaderTests
         read.Snapshot!.Version.Should().Be(6);
         read.Snapshot.Created.Should().Be(Created);
         read.Snapshot.Updated.Should().Be(Updated);
+    }
+
+    /// <summary>
+    /// The rest of the row's own account of the write: what it was stored as, how far through the
+    /// log the fold reached, and who each write is attributed to. None of it is in the payload.
+    /// </summary>
+    [Fact]
+    public void Reports_what_the_row_says_about_the_write_itself()
+    {
+        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
+
+        read.Snapshot.Should().NotBeNull();
+        read.Snapshot!.ModelType.Should().Be("SampleDcbAggregate:1");
+        read.Snapshot.LatestPosition.Should().Be(412);
+        read.Snapshot.CreatedBy.Should().Be("importer");
+        read.Snapshot.UpdatedBy.Should().Be("refresher");
+    }
+
+    /// <summary>
+    /// Audit is a store concern the application may leave switched off, so an unattributed row is
+    /// an ordinary row rather than a broken one.
+    /// </summary>
+    [Fact]
+    public void Reports_no_author_for_a_row_that_was_never_attributed()
+    {
+        var row = Row("""{"Name":"Kettle"}""");
+        row.CreatedBy = null;
+        row.UpdatedBy = null;
+
+        var read = AggregateReader.Read(typeof(SampleDcbAggregate), row);
+
+        read.Snapshot!.CreatedBy.Should().BeNull();
+        read.Snapshot.UpdatedBy.Should().BeNull();
     }
 
     [Fact]

@@ -80,20 +80,53 @@ else
                     <dd><code>@Boundary</code></dd>
                 }
 
-                @* All three off the row rather than out of the payload: the store's account of the
-                   write, not the model's own state. The version is the stored one, so a snapshot
-                   left behind while later events accumulate reads lower here than folding its
-                   boundary would give. *@
+                @* All of these off the row rather than out of the payload: the store's account of
+                   the write, not the model's own state. The version is the stored one, so a
+                   snapshot left behind while later events accumulate reads lower here than folding
+                   its boundary would give — and the position below says how far along the log that
+                   fold stopped. *@
                 @if (Stored is not null)
                 {
+                    <dt>Model type</dt>
+                    <dd><code>@Stored.ModelType</code></dd>
+
                     <dt>Version</dt>
                     <dd>@Stored.Version</dd>
+
+                    <dt>Latest position</dt>
+                    <dd>@Stored.LatestPosition</dd>
 
                     <dt>Created</dt>
                     <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
 
+                    @* Audit is a store concern the application may leave switched off, so a row
+                       nobody is named against is an ordinary row rather than a broken one. *@
+                    <dt>Created by</dt>
+                    <dd>
+                        @if (Stored.CreatedBy is { Length: > 0 } createdBy)
+                        {
+                            @createdBy
+                        }
+                        else
+                        {
+                            <span class="missing">not attributed</span>
+                        }
+                    </dd>
+
                     <dt>Updated</dt>
                     <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
+
+                    <dt>Updated by</dt>
+                    <dd>
+                        @if (Stored.UpdatedBy is { Length: > 0 } updatedBy)
+                        {
+                            @updatedBy
+                        }
+                        else
+                        {
+                            <span class="missing">not attributed</span>
+                        }
+                    </dd>
                 }
             </dl>
         </section>
