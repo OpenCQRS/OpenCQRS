@@ -1,3 +1,5 @@
+using Memoria.EventSourcing;
+using Memoria.EventSourcing.Dcb;
 using Memoria.EventSourcing.Dcb.Extensions;
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.Extensions;
@@ -61,30 +63,12 @@ var registry = app.Services.GetRequiredService<DomainTypeRegistry>();
 registry.Reload();
 LogCatalogue(app.Logger, registry.Current);
 
-// EF Core builds its model and compiles its first query the moment a context is first used, and
-// Npgsql opens its first connection then too — close to a second of work, which whoever opens the
-// first page that reads anything would otherwise pay. Warmed here instead, in the background so
-// the application starts serving straight away, and quietly, because a store that cannot be
-// reached is the page's problem to report rather than a reason not to start.
-_ = Task.Run(async () =>
-{
-    try
-    {
-        using var scope = app.Services.CreateScope();
-
-        await scope.ServiceProvider.GetRequiredService<IDcbDbContext>()
-            .DcbSnapshots.AsNoTracking()
-            .Select(snapshot => snapshot.Id)
-            .FirstOrDefaultAsync();
-
-        app.Logger.LogInformation("Store warmed.");
-    }
-    catch (Exception exception)
-    {
-        app.Logger.LogWarning(exception,
-            "Could not warm the store. The first page that reads it will be slower.");
-    }
-});
+// EF Core builds its model and compiles each distinct query the first time it meets it, and Npgsql
+// opens its first connection then too — close to a second of work, which whoever opens the first
+// page that reads anything would otherwise pay. Warmed here instead, in the background so the
+// application starts serving straight away, and quietly, because a store that cannot be reached is
+// the page's problem to report rather than a reason not to start.
+_ = Task.Run(() => WarmStore(app));
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -187,5 +171,79 @@ static void LogCatalogue(ILogger logger, DomainTypeCatalogue catalogue)
     foreach (var error in catalogue.Errors)
     {
         logger.LogWarning("Extension problem: {Error}", error);
+    }
+}
+
+/// <summary>
+/// Runs the list page's own query once, so nobody's first page load pays for building the model
+/// and compiling it.
+/// </summary>
+/// <remarks>
+/// The real query rather than a stand-in: EF compiles each distinct shape separately, so a simpler
+/// warming query builds the model but leaves the page's own plan to be compiled when it is asked
+/// for. Both orders and the filtered form are warmed alongside it, since those are what the column
+/// headings and the filter box lead to. Failure is logged and dropped — the store being unreachable
+/// is something the pages report, not a reason to hold up start-up.
+/// </remarks>
+static async Task WarmStore(WebApplication app)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+
+        var store = scope.ServiceProvider.GetRequiredService<IDcbDbContext>();
+        var types = app.Services.GetRequiredService<DomainTypeRegistry>().Current;
+
+        foreach (var aggregate in types.DcbAggregates)
+        {
+            var shape = DomainTypeDescriber.Describe(aggregate, types.DcbAggregateIds).Identifiers
+                .Select(IdentifierShape.Of)
+                .FirstOrDefault(candidate => candidate is not null);
+
+            if (shape is null)
+            {
+                continue;
+            }
+
+            var modelType = DcbTypeBindings.GetAggregateBindingKey(aggregate);
+            IReadOnlyList<Instance> listed = [];
+
+            foreach (var sort in Enum.GetValues<InstanceSort>())
+            {
+                foreach (var tag in new string?[] { null, "warm" })
+                {
+                    var page = await IdentifierInstances.Page(store, shape, modelType, tag, sort,
+                        descending: true, page: 1, size: InstanceQuery.DefaultPageSize);
+
+                    listed = listed.Count > 0 ? listed : page.Rows;
+                }
+            }
+
+            // The detail page reads through the domain service instead, which has queries of its
+            // own to compile — folding one real aggregate warms those the same way.
+            if (listed.FirstOrDefault() is { } instance &&
+                IdentifierFactory.Create(shape.Identifier, instance.Values.ToDictionary(
+                    value => value.Key, value => (string?)value.Value)).Instance is { } identifier)
+            {
+                await AggregateReader.Load(
+                    scope.ServiceProvider.GetRequiredService<IDcbDomainService>(),
+                    aggregate,
+                    identifier,
+                    ReadMode.SnapshotWithNewEventsOrCreate);
+            }
+
+            app.Logger.LogInformation("Store warmed on {Aggregate}.", aggregate.Name);
+            return;
+        }
+
+        // Nothing uploaded yet, so there is no real query to run. The model is still worth building.
+        await store.DcbSnapshots.AsNoTracking().Select(snapshot => snapshot.Id).FirstOrDefaultAsync();
+
+        app.Logger.LogInformation("Store warmed.");
+    }
+    catch (Exception exception)
+    {
+        app.Logger.LogWarning(exception,
+            "Could not warm the store. The first page that reads it will be slower.");
     }
 }

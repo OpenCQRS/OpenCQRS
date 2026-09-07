@@ -7,8 +7,42 @@ namespace Memoria.Web.Tests.Features;
 /// <summary>
 /// Working out which tag an identifier's value ends up in, so what already exists can be listed.
 /// </summary>
+[Collection(nameof(TypeBindingsCollection))]
 public class IdentifierShapeTests
 {
+    /// <summary>
+    /// Probing means building an identifier and reading the boundary it produces, and the answer
+    /// never changes for a given type — so it is worked out once.
+    /// </summary>
+    [Fact]
+    public void Works_a_shape_out_once_and_keeps_it()
+    {
+        var first = IdentifierShape.Of(typeof(SampleTwoPartId));
+
+        IdentifierShape.Of(typeof(SampleTwoPartId)).Should().BeSameAs(first);
+    }
+
+    /// <summary>
+    /// An upload replaces the assembly its identifiers came from, so what was worked out about the
+    /// old ones has to go with them.
+    /// </summary>
+    [Fact]
+    public void Works_it_out_again_after_the_types_are_reloaded()
+    {
+        var first = IdentifierShape.Of(typeof(SampleTwoPartId));
+
+        IdentifierShape.Forget();
+
+        IdentifierShape.Of(typeof(SampleTwoPartId)).Should().NotBeSameAs(first);
+    }
+
+    [Fact]
+    public void Keeps_the_absence_of_a_shape_as_well()
+    {
+        IdentifierShape.Of(typeof(SampleUnmappedId)).Should().BeNull();
+        IdentifierShape.Of(typeof(SampleUnmappedId)).Should().BeNull();
+    }
+
     [Fact]
     public void Reads_the_tag_one_value_is_written_into()
     {

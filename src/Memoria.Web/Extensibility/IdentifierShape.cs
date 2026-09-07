@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using Memoria.EventSourcing.Dcb;
 
@@ -38,6 +39,8 @@ public sealed class IdentifierShape
     /// </remarks>
     public string BoundaryPattern { get; }
 
+    private static readonly ConcurrentDictionary<Type, IdentifierShape?> Known = new();
+
     /// <summary>
     /// Works out the shape of an identifier.
     /// </summary>
@@ -47,7 +50,19 @@ public sealed class IdentifierShape
     /// cannot be built from values, or one of its values reaches no tag and so could never be
     /// recovered from the store.
     /// </returns>
-    public static IdentifierShape? Of(Type identifier)
+    /// <remarks>
+    /// Kept once worked out, including the finding that there is no shape: probing means building
+    /// an identifier and reading the boundary it produces, and neither the type nor its answer
+    /// changes while it is loaded. <see cref="Forget"/> clears it when the types are reloaded.
+    /// </remarks>
+    public static IdentifierShape? Of(Type identifier) => Known.GetOrAdd(identifier, Probe);
+
+    /// <summary>
+    /// Drops what has been worked out, for when the uploaded assemblies are read again.
+    /// </summary>
+    public static void Forget() => Known.Clear();
+
+    private static IdentifierShape? Probe(Type identifier)
     {
         if (!typeof(IDcbAggregateId).IsAssignableFrom(identifier) &&
             !typeof(IDcbProjectionId).IsAssignableFrom(identifier))
