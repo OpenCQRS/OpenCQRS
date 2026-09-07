@@ -1,3 +1,4 @@
+using System.Text;
 using Memoria.EventSourcing.Dcb;
 
 namespace Memoria.Web.Extensibility;
@@ -13,10 +14,11 @@ namespace Memoria.Web.Extensibility;
 /// </remarks>
 public sealed class IdentifierShape
 {
-    private IdentifierShape(Type identifier, IReadOnlyList<TagSlot> slots)
+    private IdentifierShape(Type identifier, IReadOnlyList<TagSlot> slots, string boundaryPattern)
     {
         Identifier = identifier;
         Slots = slots;
+        BoundaryPattern = boundaryPattern;
     }
 
     /// <summary>Gets the identifier type this describes.</summary>
@@ -24,6 +26,17 @@ public sealed class IdentifierShape
 
     /// <summary>Gets one slot per value, in constructor order.</summary>
     public IReadOnlyList<TagSlot> Slots { get; }
+
+    /// <summary>
+    /// Gets the pattern a boundary of this shape matches, with a wildcard where each value goes.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the identifier's own canonical rendering with the probe values swapped for
+    /// wildcards, rather than assembled from the tag keys. However the boundary is really put
+    /// together — which tags are grouped, how they are ordered, what separates them — the pattern
+    /// is that same rendering, so it matches what was stored.
+    /// </remarks>
+    public string BoundaryPattern { get; }
 
     /// <summary>
     /// Works out the shape of an identifier.
@@ -88,7 +101,10 @@ public sealed class IdentifierShape
             slots.Add(new TagSlot(tag.Key, name));
         }
 
-        return new IdentifierShape(identifier, slots);
+        var pattern = probes.Aggregate(boundary.ToString(),
+            (rendered, probe) => rendered.Replace(probe.Probe!, "%", StringComparison.Ordinal));
+
+        return new IdentifierShape(identifier, slots, pattern);
     }
 
     /// <summary>
@@ -123,6 +139,46 @@ public sealed class IdentifierShape
 
     /// <summary>The tag keys an instance has to carry to be one of these.</summary>
     public IReadOnlyList<string> TagKeys => Slots.Select(slot => slot.TagKey).ToList();
+
+    /// <summary>
+    /// Turns a stored boundary back into the values its identifier was built from.
+    /// </summary>
+    /// <param name="boundary">The boundary in canonical form, as the store holds it.</param>
+    /// <returns>The values by parameter name, or null when a tag the shape needs is not there.</returns>
+    /// <remarks>
+    /// Tags are separated by a comma between groups and an ampersand inside one, either of which a
+    /// tag may itself contain escaped with a backslash — so the split has to respect the escape
+    /// rather than call <c>Split</c>.
+    /// </remarks>
+    public IReadOnlyDictionary<string, string>? ValuesFromBoundary(string boundary) =>
+        ValuesFrom(SplitTags(boundary));
+
+    private static IEnumerable<string> SplitTags(string boundary)
+    {
+        var tag = new StringBuilder();
+
+        for (var index = 0; index < boundary.Length; index++)
+        {
+            var character = boundary[index];
+
+            if (character == '\\' && index + 1 < boundary.Length)
+            {
+                tag.Append(boundary[++index]);
+                continue;
+            }
+
+            if (character is ',' or '&')
+            {
+                yield return tag.ToString();
+                tag.Clear();
+                continue;
+            }
+
+            tag.Append(character);
+        }
+
+        yield return tag.ToString();
+    }
 
     /// <summary>
     /// Values distinctive enough to be spotted again in the tags they end up in.

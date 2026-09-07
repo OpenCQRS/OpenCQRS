@@ -63,4 +63,40 @@ public class IdentifierShapeTests
 
         shape.ValuesFrom(["sample:abc"]).Should().BeNull();
     }
+
+    /// <summary>
+    /// The pattern a stored boundary of this shape matches, with a wildcard where each value goes.
+    /// It is the identifier's own canonical rendering with the probe values taken out, so whatever
+    /// shape the boundary really has is the shape that is matched.
+    /// </summary>
+    [Fact]
+    public void Renders_the_pattern_a_stored_boundary_matches()
+    {
+        IdentifierShape.Of(typeof(SampleDcbAggregateId))!.BoundaryPattern.Should().Be("sample:%");
+    }
+
+    [Fact]
+    public void Renders_a_wildcard_for_each_value_of_a_wider_boundary()
+    {
+        IdentifierShape.Of(typeof(SampleTwoPartId))!.BoundaryPattern.Should().Be("label:%,sample:%");
+    }
+
+    [Fact]
+    public void Reads_the_values_back_out_of_a_stored_boundary()
+    {
+        var shape = IdentifierShape.Of(typeof(SampleTwoPartId))!;
+
+        shape.ValuesFromBoundary("label:widget,sample:abc")
+            .Should().BeEquivalentTo(new Dictionary<string, string>
+            {
+                ["id"] = "abc", ["label"] = "widget"
+            });
+    }
+
+    [Fact]
+    public void Reads_the_values_out_of_a_single_tag_boundary()
+    {
+        IdentifierShape.Of(typeof(SampleDcbAggregateId))!.ValuesFromBoundary("sample:abc")
+            .Should().BeEquivalentTo(new Dictionary<string, string> { ["id"] = "abc" });
+    }
 }

@@ -1,5 +1,6 @@
 @page "/dcb/aggregates/load"
 @using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
+@using Memoria.EventSourcing.Dcb
 @using Memoria.EventSourcing.Domain
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
@@ -39,14 +40,6 @@ else if (Shape is null)
         <code>@Identifier.Name</code> takes a value its boundary never mentions, so which of these
         exist cannot be worked out from the stored tags. Try another identifier from
         <a href="@BackToAggregate">@Aggregate.Name</a>.
-    </p>
-}
-else if (TooManyTags)
-{
-    <h1>@Aggregate.Name</h1>
-    <p class="alert" role="alert">
-        <code>@Identifier.Name</code> is built from @Shape.Slots.Count tags. At most
-        @IdentifierInstances.MaxSlots can be paired up in one query, so these cannot be listed.
     </p>
 }
 else
@@ -179,7 +172,7 @@ else
                 <input type="hidden" name="type" value="@Aggregate.FullName"/>
                 <input type="hidden" name="id" value="@Identifier.FullName"/>
                 <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
-        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                 @if (IsFiltered)
                 {
                     <input type="hidden" name="tag" value="@Tag"/>
@@ -199,8 +192,6 @@ else
     private Type? Identifier { get; set; }
 
     private IdentifierShape? Shape { get; set; }
-
-    private bool TooManyTags { get; set; }
 
     private IReadOnlyList<Instance> Rows { get; set; } = [];
 
@@ -284,13 +275,6 @@ else
         return $"dcb/aggregates/detail?{Names}&{values}";
     }
 
-    /// <summary>
-    /// The events the aggregate applies, named the way the store records them, so a version can be
-    /// counted without folding anything.
-    /// </summary>
-    private static IReadOnlyList<string> EventTypeKeys(DomainTypeDescription described) =>
-        described.EventTypes.Select(TypeBindings.GetEventBindingKey).ToList();
-
     protected override async Task OnParametersSetAsync()
     {
         var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
@@ -320,12 +304,6 @@ else
             return;
         }
 
-        if (Shape.Slots.Count > IdentifierInstances.MaxSlots)
-        {
-            TooManyTags = true;
-            return;
-        }
-
         Tag = Value("tag");
         Sort = InstanceQuery.SortOf(Value("sort"));
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
@@ -334,7 +312,7 @@ else
         var page = await IdentifierInstances.Page(
             StoreContext,
             Shape,
-            EventTypeKeys(described!),
+            DcbTypeBindings.GetAggregateBindingKey(Aggregate),
             Tag,
             Sort,
             Descending,
