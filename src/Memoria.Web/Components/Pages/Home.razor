@@ -2,4 +2,70 @@
 
 <PageTitle>Memoria</PageTitle>
 
-<p><em>TBD</em></p>
+<h1>Memoria</h1>
+<p class="lede">
+    Two models of the same domain, side by side: streams addressed by aggregate, and dynamic
+    consistency boundaries addressed by identifier.
+</p>
+
+<div class="models">
+    <section class="model">
+        <h2><a href="streamed">Streamed</a></h2>
+        <ul class="sections">
+            <li>
+                <a href="streamed">
+                    <span class="name">Overview</span>
+                    <span class="detail">What is registered under the streamed model.</span>
+                </a>
+            </li>
+            <li>
+                <a href="streamed/events">
+                    <span class="name">Events</span>
+                    <span class="detail">The events the model can apply.</span>
+                </a>
+            </li>
+            <li>
+                <a href="streamed/aggregates">
+                    <span class="name">Aggregates</span>
+                    <span class="detail">The write models, and the streams they are held in.</span>
+                </a>
+            </li>
+            <li>
+                <a href="streamed/projections">
+                    <span class="name">Projections</span>
+                    <span class="detail">The read models built from those events.</span>
+                </a>
+            </li>
+        </ul>
+    </section>
+
+    <section class="model">
+        <h2><a href="dcb">DCB</a></h2>
+        <ul class="sections">
+            <li>
+                <a href="dcb">
+                    <span class="name">Overview</span>
+                    <span class="detail">What is registered under the DCB model.</span>
+                </a>
+            </li>
+            <li>
+                <a href="dcb/events">
+                    <span class="name">Events</span>
+                    <span class="detail">The events the model can apply.</span>
+                </a>
+            </li>
+            <li>
+                <a href="dcb/aggregates">
+                    <span class="name">Aggregates</span>
+                    <span class="detail">The write models, and the identifiers they are addressed by.</span>
+                </a>
+            </li>
+            <li>
+                <a href="dcb/projections">
+                    <span class="name">Projections</span>
+                    <span class="detail">The read models, and the identifiers they are addressed by.</span>
+                </a>
+            </li>
+        </ul>
+    </section>
+</div>

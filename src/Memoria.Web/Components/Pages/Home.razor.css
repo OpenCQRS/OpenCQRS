@@ -1,0 +1,32 @@
+/* The two models set beside each other, so the pages under one are read against the pages
+   under the other rather than as one long list. Palette tokens and the section-list furniture
+   live in wwwroot/app.css. */
+
+.models {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 52rem;
+}
+
+/* One column below the width where two stop being readable. */
+@media (max-width: 40rem) {
+    .models {
+        grid-template-columns: 1fr;
+    }
+}
+
+.model h2 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+    .model h2 a {
+        color: var(--ink);
+        text-decoration: none;
+    }
+
+    .model h2 a:hover {
+        text-decoration: underline;
+    }
