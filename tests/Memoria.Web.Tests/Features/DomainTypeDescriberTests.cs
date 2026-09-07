@@ -15,16 +15,48 @@ public class DomainTypeDescriberTests
     private static DomainTypeDescription Describe(Type type) =>
         DomainTypeDescriber.Describe(type, Identifiers);
 
+    /// <summary>
+    /// The name and the version are read apart rather than as one key, because a page shows them
+    /// as two facts about the type — the key is what the store writes them as.
+    /// </summary>
     [Fact]
-    public void Reports_the_name_the_type_is_bound_under()
+    public void Reports_the_name_and_version_the_type_is_bound_under()
     {
-        Describe(typeof(SampleDcbAggregate)).BindingKey.Should().Be("SampleDcbAggregate:1");
+        var binding = Describe(typeof(SampleDcbAggregate)).Binding;
+
+        binding.Should().NotBeNull();
+        binding!.Name.Should().Be("SampleDcbAggregate");
+        binding.Version.Should().Be(1);
+        binding.Key.Should().Be("SampleDcbAggregate:1");
     }
 
     [Fact]
-    public void Reports_no_binding_key_for_a_type_that_carries_no_attribute()
+    public void Reports_no_binding_for_a_type_that_carries_no_attribute()
     {
-        Describe(typeof(SampleDcbAggregateId)).BindingKey.Should().BeNull();
+        Describe(typeof(SampleDcbAggregateId)).Binding.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Reachable for a bare type, so a list can label its rows by what they are bound as without
+    /// describing each one in full.
+    /// </summary>
+    [Fact]
+    public void Reads_the_binding_of_a_type_on_its_own()
+    {
+        DomainTypeDescriber.BindingOf(typeof(SampleDcbAggregate))!.Key
+            .Should().Be("SampleDcbAggregate:1");
+
+        DomainTypeDescriber.BindingOf(typeof(SampleDcbAggregateId)).Should().BeNull();
+    }
+
+    /// <summary>
+    /// Projections and events carry their own attributes, and are bound the same way.
+    /// </summary>
+    [Fact]
+    public void Reads_the_binding_of_a_projection()
+    {
+        DomainTypeDescriber.BindingOf(typeof(SampleDcbProjection))!.Key
+            .Should().Be("SampleDcbProjection:1");
     }
 
     [Fact]

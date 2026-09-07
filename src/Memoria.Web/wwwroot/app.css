@@ -471,10 +471,22 @@ h2:focus {
         font-size: 0.8125rem;
     }
 
+    /* Every value read the same way, whatever it happens to be. A boundary, a date and a count are
+       all things the store said, and setting only some of them in monospace made those look like a
+       different kind of fact from the rest. */
     .facts dd {
+        font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+        font-size: 0.8125rem;
         margin: 0.1rem 0 0.75rem;
         overflow-wrap: anywhere;
     }
+
+        /* The <code> wrappers stay where a value really is code. They just no longer set a size of
+           their own, which is what made those values smaller than their neighbours. */
+        .facts dd code {
+            font-family: inherit;
+            font-size: inherit;
+        }
 
 .plain {
     list-style: none;

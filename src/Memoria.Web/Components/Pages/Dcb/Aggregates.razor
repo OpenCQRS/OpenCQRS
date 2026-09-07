@@ -32,7 +32,10 @@ else
                         @* A link rather than a click handler: the page renders statically like the
                            rest, and the choice stays in the address so it can be shared. *@
                         <a href="@Link(aggregate)" class="@CurrentClass(aggregate)" aria-current="@CurrentFlag(aggregate)">
-                            <span class="index-name">@aggregate.Name</span>
+                            @* Named by what it is bound as rather than by the class: that is the
+                               name the store writes and the one a stored row is found under, and it
+                               is the name that stays put when the class is renamed. *@
+                            <span class="index-name">@BoundAs(aggregate)</span>
                             <span class="index-detail">@aggregate.Namespace</span>
                         </a>
                     </li>
@@ -44,7 +47,10 @@ else
             @* Selected is only null when the list is empty, which the branch above already covers. *@
             @if (Selected is not null)
             {
-                <h2>@Selected.Type.Name</h2>
+                @* The same name the row in the list carries, so the heading answers the click that
+                   reached it — and the version is part of it, because two versions of one name are
+                   two rows there. The class it is bound from is the first fact on the info tab. *@
+                <h2>@BoundAs(Selected.Type)</h2>
 
                 @* Three views of the chosen aggregate, switched by the address rather than by
                    script: each tab is a link, so a view can be linked to and gone back to, and the
@@ -152,20 +158,34 @@ else
                 {
                     <section class="tab-panel" aria-labelledby="tab-@InfoTab">
                         <dl class="facts">
-                            <dt>Full name</dt>
+                            @* The class the binding below is carried by. Not "Full name", which
+                               read as the long form of the name under it once that name became the
+                               bound one, and not "Type", which the detail page already uses for the
+                               binding key — this is the one fact here that is plainly the CLR
+                               class, so it says so. *@
+                            <dt>Class</dt>
                             <dd><code>@Selected.Type.FullName</code></dd>
 
-                            <dt>Bound as</dt>
+                            @* The two halves of what the store writes it under, apart: the name
+                               outlives a rename of the class, and the version is what a change to
+                               the shape stored under that name is answered with. *@
+                            <dt>Name</dt>
                             <dd>
-                                @if (Selected.BindingKey is null)
+                                @if (Selected.Binding is { } named)
                                 {
-                                    <span class="missing">not bound — it carries no [AggregateType]</span>
+                                    <code>@named.Name</code>
                                 }
                                 else
                                 {
-                                    <code>@Selected.BindingKey</code>
+                                    <span class="missing">not bound — it carries no [AggregateType]</span>
                                 }
                             </dd>
+
+                            @if (Selected.Binding is { } versioned)
+                            {
+                                <dt>Version</dt>
+                                <dd>@versioned.Version</dd>
+                            }
 
                             <dt>Assembly</dt>
                             <dd>@Selected.AssemblyName</dd>
@@ -272,6 +292,13 @@ else
         (DomainTypeDescriber.Select(AggregateTypes, SelectedName) ?? AggregateTypes.FirstOrDefault()) is { } type
             ? DomainTypeDescriber.Describe(type, Types.Current.DcbAggregateIds)
             : null;
+
+    /// <summary>
+    /// What an aggregate is stored under, falling back to the class when it carries no attribute —
+    /// an unbound type is still worth listing, and the panel beside the list says it is unbound.
+    /// </summary>
+    private static string BoundAs(Type aggregate) =>
+        DomainTypeDescriber.BindingOf(aggregate)?.Key ?? aggregate.Name;
 
     /// <summary>
     /// The tags an identifier's boundary is built from, by name. The values are left out: they are

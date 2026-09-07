@@ -32,19 +32,29 @@ public static class DomainTypeDescriber
     public static DomainTypeDescription Describe(Type type, IReadOnlyList<Type> identifiers) =>
         new(
             type,
-            BindingKeyOf(type),
+            BindingOf(type),
             type.Assembly.GetName().Name ?? "unknown",
             identifiers.Where(identifier => Addresses(identifier, type)).ToList(),
             EventTypesOf(type),
             PropertiesOf(type));
 
-    private static string? BindingKeyOf(Type type) =>
+    /// <summary>
+    /// Reads what a type is bound as, off whichever of the three attributes it carries.
+    /// </summary>
+    /// <param name="type">The type to read.</param>
+    /// <returns>The binding, or null when the type carries none of them.</returns>
+    /// <remarks>
+    /// Reachable for a bare type, so a list can label its rows by what they are bound as without
+    /// describing each one in full — describing constructs the model to read its event filter, and
+    /// a list has no use for that.
+    /// </remarks>
+    public static DomainTypeBinding? BindingOf(Type type) =>
         type.GetCustomAttribute<AggregateType>() is { } aggregate
-            ? TypeBindings.GetTypeBindingKey(aggregate.Name, aggregate.Version)
+            ? new DomainTypeBinding(aggregate.Name, aggregate.Version)
             : type.GetCustomAttribute<ProjectionType>() is { } projection
-                ? TypeBindings.GetTypeBindingKey(projection.Name, projection.Version)
+                ? new DomainTypeBinding(projection.Name, projection.Version)
                 : type.GetCustomAttribute<EventType>() is { } @event
-                    ? TypeBindings.GetTypeBindingKey(@event.Name, @event.Version)
+                    ? new DomainTypeBinding(@event.Name, @event.Version)
                     : null;
 
     /// <summary>
@@ -185,18 +195,31 @@ public static class DomainTypeDescriber
 /// What one page shows about a single domain type.
 /// </summary>
 /// <param name="Type">The type itself.</param>
-/// <param name="BindingKey">The <c>name:version</c> it is stored under, or null if it carries no attribute.</param>
+/// <param name="Binding">What it is stored under, or null if it carries no attribute.</param>
 /// <param name="AssemblyName">The assembly it was uploaded in.</param>
 /// <param name="Identifiers">The identifier types that address it.</param>
 /// <param name="EventTypes">The events it applies.</param>
 /// <param name="Properties">The properties it declares.</param>
 public sealed record DomainTypeDescription(
     Type Type,
-    string? BindingKey,
+    DomainTypeBinding? Binding,
     string AssemblyName,
     IReadOnlyList<Type> Identifiers,
     IReadOnlyList<Type> EventTypes,
     IReadOnlyList<DomainProperty> Properties);
+
+/// <summary>
+/// What a type is bound as: the stable name the store writes it under, and the schema version of
+/// that name. Kept apart because they are two facts about the type, and only the store needs them
+/// as one string.
+/// </summary>
+/// <param name="Name">The logical name, which outlives a rename of the class.</param>
+/// <param name="Version">The schema version of that name.</param>
+public sealed record DomainTypeBinding(string Name, byte Version)
+{
+    /// <summary>Gets the two as the single key the store keeps them under.</summary>
+    public string Key => TypeBindings.GetTypeBindingKey(Name, Version);
+}
 
 /// <summary>One declared property.</summary>
 /// <param name="Name">Its name.</param>
