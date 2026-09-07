@@ -49,17 +49,17 @@ else
         <p class="alert" role="alert">@RefreshError</p>
     }
 
-    <dl class="facts">
+    @* What addresses this aggregate and what the store recorded about it, banded across the page
+       rather than read down a column: it heads the state and the events below in the same way a
+       table's header row heads its rows, and each fact is short enough that a column of one-line
+       values wastes the width the tables use. *@
+    <dl class="summary">
         @foreach (var parameter in Parameters)
         {
-            <dt>@parameter.Name</dt>
-            <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
-        }
-
-        @if (Boundary is not null)
-        {
-            <dt>Boundary</dt>
-            <dd><code>@Boundary</code></dd>
+            <div>
+                <dt>@parameter.Name</dt>
+                <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
+            </div>
         }
 
         @* All three off the row rather than out of the payload: the store's account of the write,
@@ -67,14 +67,31 @@ else
            later events accumulate reads lower here than folding its boundary would give. *@
         @if (Stored is not null)
         {
-            <dt>Version</dt>
-            <dd>@Stored.Version</dd>
+            <div>
+                <dt>Version</dt>
+                <dd>@Stored.Version</dd>
+            </div>
 
-            <dt>Created</dt>
-            <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
+            <div>
+                <dt>Created</dt>
+                <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
+            </div>
 
-            <dt>Updated</dt>
-            <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
+            <div>
+                <dt>Updated</dt>
+                <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
+            </div>
+        }
+
+        @* Last and across the whole row: it is the longest value here by some way, and the one the
+           two reads below are both addressed by, so it reads as the band's footing rather than as
+           one cell among the identifier's. *@
+        @if (Boundary is not null)
+        {
+            <div class="wide">
+                <dt>Boundary</dt>
+                <dd><code>@Boundary</code></dd>
+            </div>
         }
     </dl>
 
