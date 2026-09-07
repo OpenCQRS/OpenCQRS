@@ -113,6 +113,144 @@ else
         }
     }
 
+    @* Narrowed to what this aggregate applies, so the count agrees with the version above, and shown
+       whether or not a snapshot was found: the events are inside the boundary either way, and a
+       boundary holding events with no snapshot written over them is worth being able to see. *@
+    @if (Boundary is not null)
+    {
+        <h2>Events</h2>
+
+        @if (Events.Error is not null)
+        {
+            <p class="alert" role="alert">@Events.Error</p>
+        }
+        else if (Events.Total == 0)
+        {
+            <p class="missing">This aggregate applies no events inside the boundary.</p>
+        }
+        else
+        {
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th scope="col">Position</th>
+                    <th scope="col" aria-sort="@(Descending ? "descending" : "ascending")">
+                        @* The only date these have, so the only thing there is to order them by. *@
+                        <a href="@EventsLink(!Descending, 1)">
+                            Appended
+                            <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                        </a>
+                    </th>
+                    <th scope="col">Event</th>
+                    <th scope="col">Payload</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var stored in Events.Events)
+                {
+                    <tr>
+                        <td>@stored.Position</td>
+                        <td>@stored.Written.ToLocalTime().ToString("g")</td>
+                        <td><code>@stored.Type</code></td>
+                        <td>
+                            @if (stored.Error is not null)
+                            {
+                                <span class="missing">@stored.Error</span>
+                            }
+                            else if (stored.State.Count == 0)
+                            {
+                                <span class="missing">It carries nothing of its own.</span>
+                            }
+                            else
+                            {
+                                @foreach (var property in stored.State)
+                                {
+                                    <div>@property.Name: @(property.Value ?? "—")</div>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            <div class="table-footer">
+                <div class="pagination">
+                    @if (Events.TotalPages > 1)
+                    {
+                        @if (Events.Page > 1)
+                        {
+                            <a href="@EventsLink(Descending, 1)">First</a>
+                            <a href="@EventsLink(Descending, Events.Page - 1)">Previous</a>
+                        }
+                        else
+                        {
+                            <span class="disabled">First</span>
+                            <span class="disabled">Previous</span>
+                        }
+
+                        @* Its own GET form, like the one on the list: the page landed on belongs in
+                           the address bar, so it can be linked to and gone back to. *@
+                        <form class="page-jump" method="get" action="dcb/aggregates/detail">
+                            <label for="page">Page</label>
+                            <select id="page" name="page" onchange="this.form.submit()">
+                                @for (var number = 1; number <= Events.TotalPages; number++)
+                                {
+                                    <option value="@number" selected="@(number == Events.Page)">@number</option>
+                                }
+                            </select>
+                            <span>of @Events.TotalPages</span>
+                            <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                            <input type="hidden" name="id" value="@Identifier.FullName"/>
+                            @foreach (var parameter in Parameters)
+                            {
+                                <input type="hidden" name="@parameter.Name"
+                                       value="@Values.GetValueOrDefault(parameter.Name)"/>
+                            }
+                            <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                            <input type="hidden" name="size" value="@PageSize"/>
+                            <noscript>
+                                <button type="submit">Go</button>
+                            </noscript>
+                        </form>
+
+                        @if (Events.Page < Events.TotalPages)
+                        {
+                            <a href="@EventsLink(Descending, Events.Page + 1)">Next</a>
+                            <a href="@EventsLink(Descending, Events.TotalPages)">Last</a>
+                        }
+                        else
+                        {
+                            <span class="disabled">Next</span>
+                            <span class="disabled">Last</span>
+                        }
+                    }
+                </div>
+
+                <form class="page-size" method="get" action="dcb/aggregates/detail">
+                    <label for="size">Rows per page</label>
+                    <select id="size" name="size" onchange="this.form.submit()">
+                        @foreach (var option in InstanceQuery.PageSizes)
+                        {
+                            <option value="@option" selected="@(option == PageSize)">@option</option>
+                        }
+                    </select>
+                    <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                    <input type="hidden" name="id" value="@Identifier.FullName"/>
+                    @foreach (var parameter in Parameters)
+                    {
+                        <input type="hidden" name="@parameter.Name"
+                               value="@Values.GetValueOrDefault(parameter.Name)"/>
+                    }
+                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                    <noscript>
+                        <button type="submit">Apply</button>
+                    </noscript>
+                </form>
+            </div>
+        }
+    }
+
     <p class="back"><a href="@BackToList">Back to @Identifier.Name</a></p>
 }
 
@@ -135,6 +273,35 @@ else
     private string? Error { get; set; }
 
     private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
+
+    private StoredEvents Events { get; set; } = new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+    /// <summary>
+    /// A boundary reads as a history, so it starts at the beginning until the column is clicked.
+    /// The list of aggregates starts newest first instead, because a list is scanned rather than
+    /// read through.
+    /// </summary>
+    private bool Descending { get; set; }
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// One address for the whole events table, carrying everything that addresses the aggregate as
+    /// well, so a pager link only changes what it means to change.
+    /// </summary>
+    private string EventsLink(bool descending, int page)
+    {
+        var values = string.Concat(Parameters.Select(parameter =>
+            $"&{Uri.EscapeDataString(parameter.Name)}=" +
+            $"{Uri.EscapeDataString(Values.GetValueOrDefault(parameter.Name) ?? string.Empty)}"));
+
+        return $"dcb/aggregates/detail?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+               $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}" +
+               values +
+               $"&dir={(descending ? "desc" : "asc")}" +
+               $"&size={PageSize}" +
+               $"&page={page}";
+    }
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
@@ -181,19 +348,15 @@ else
             return;
         }
 
-        // The boundary is the aggregate's own account of which events it was folded from, and it is
-        // also what the row is addressed by: a snapshot is only ever a valid answer for the boundary
-        // that produced it.
-        Boundary = created.Instance switch
-        {
-            IDcbAggregateId aggregateId => aggregateId.Boundary.ToString(),
-            _ => null
-        };
-
-        if (Boundary is null)
+        if (created.Instance is not IDcbAggregateId aggregateId)
         {
             return;
         }
+
+        // The boundary is the aggregate's own account of which events it was folded from, and it
+        // addresses both reads below: the snapshot row it produced, which is only ever a valid
+        // answer for the boundary that produced it, and the events it selects.
+        Boundary = aggregateId.Boundary.ToString();
 
         var loaded = await AggregateReader.Load(
             StoreContext, Aggregate, DcbTypeBindings.GetAggregateBindingKey(Aggregate), Boundary);
@@ -202,6 +365,17 @@ else
         Stored = loaded.Snapshot;
         Error = loaded.Error;
         State = Loaded is null ? [] : DomainTypeDescriber.ReadState(Loaded);
+
+        Descending = string.Equals(Values.GetValueOrDefault("dir"), "desc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Values.GetValueOrDefault("size"));
+
+        Events = await BoundaryEvents.Load(
+            StoreContext,
+            aggregateId.Boundary,
+            BoundaryEvents.AppliedBy(Aggregate, Loaded),
+            Descending,
+            int.TryParse(Values.GetValueOrDefault("page"), out var asked) ? asked : 1,
+            PageSize);
     }
 
 }
