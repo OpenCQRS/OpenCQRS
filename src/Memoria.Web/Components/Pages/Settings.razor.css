@@ -49,6 +49,42 @@ table {
         width: 1%;
     }
 
+/* On the home page a model's name is a heading you go through; here it names a column of rows, the
+   same job the installed list's column headings do, so it is written the same way. Its rule is the
+   list's top edge — the list must not draw a second one under it. */
+.model h2 {
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 0 0 0.5rem;
+}
+
+/* The section list points at pages, so it stacks a name over a line saying what is there. Here each
+   row is a name and a number instead, which reads better side by side: the counts line up down the
+   right-hand edge and can be compared without reading the labels again. */
+.counts li {
+    align-items: baseline;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0.625rem 0;
+}
+
+    .counts li:first-child {
+        border-top: none;
+    }
+
+    .counts .name {
+        color: var(--ink);
+    }
+
+    .counts .detail {
+        font-variant-numeric: tabular-nums;
+        margin-top: 0;
+    }
+
 /* Quiet until you go near it: destructive, but not the point of the row. */
 .delete {
     background: none;
@@ -76,11 +112,6 @@ table {
 .actions-row {
     margin: 0 0 2rem;
 }
-
-    .actions-row button {
-        cursor: pointer;
-        font: inherit;
-    }
 
 /* The upload form, brought up over the page rather than sitting on it. */
 .dialog {
@@ -115,27 +146,9 @@ table {
     margin-top: 0.5rem;
 }
 
-.quiet {
-    background: #fff;
-    border: 1px solid #c6ccd4;
-    border-radius: 4px;
-    color: var(--ink);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-}
-
-    .quiet:hover {
-        border-color: var(--ink-soft);
-    }
-
-    .quiet:focus-visible {
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
-        outline: none;
-    }
-
-/* The button that goes through with a removal, in the dialog that asks about it. */
+/* The button that goes through with a removal, in the dialog that asks about it. The one place the
+   application says something is destructive, so it stays here rather than joining the pair in
+   app.css; it takes their shape and padding so the two buttons in the dialog match. */
 .danger {
     background: var(--danger);
     border: 1px solid var(--danger);

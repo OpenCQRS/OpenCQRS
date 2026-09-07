@@ -85,6 +85,9 @@ table {
     text-align: center;
 }
 
+/* The filter field and the button that submits it. The button is the shared .quiet from app.css, so
+   it is the size of every other button on a form rather than one this page invented; the field's
+   padding is set to match it, so the two are the same height. */
 .search {
     align-items: center;
     display: flex;
@@ -99,7 +102,7 @@ table {
         color: var(--ink);
         font: inherit;
         font-size: 0.9375rem;
-        padding: 0.45rem 0.625rem;
+        padding: 0.5rem 0.625rem;
         width: 18rem;
     }
 
@@ -111,26 +114,6 @@ table {
 
     .search input[type="search"]::placeholder {
         color: #9aa3ad;
-    }
-
-    .search button {
-        background: #fff;
-        border: 1px solid #c6ccd4;
-        border-radius: 4px;
-        color: var(--ink);
-        cursor: pointer;
-        font: inherit;
-        font-weight: 600;
-        padding: 0.45rem 0.9rem;
-    }
-
-    .search button:hover {
-        border-color: var(--ink-soft);
-    }
-
-    .search button:focus-visible {
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
-        outline: none;
     }
 
     .search a {

@@ -58,7 +58,7 @@ else
         <input type="hidden" name="size" value="@PageSize"/>
         <label class="visually-hidden" for="tag">Filter by tag</label>
         <input id="tag" type="search" name="tag" value="@Tag" placeholder="@TagPlaceholder" autocomplete="off"/>
-        <button type="submit">Filter</button>
+        <button type="submit" class="quiet">Filter</button>
         @if (IsFiltered)
         {
             <a href="@Link(Sort, Descending, 1, clearTag: true)">Clear</a>

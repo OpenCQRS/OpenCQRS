@@ -20,6 +20,17 @@ body {
 /* Shared page furniture. Global rather than scoped per page, so every section stays
    one visual system instead of several that drift apart. */
 
+/* One colour whether or not the address has been opened before. Without this the browser's own
+   visited purple shows through on every link no rule below names a colour for, and a row would
+   read as a different kind of thing for having been looked at once.
+
+   Held in :where() so it counts for nothing when specificity is weighed: it is the colour a link
+   has when nothing else has an opinion. Written plainly, a:visited would outweigh a single class
+   and take the white out of a .button the moment someone had followed it. */
+:where(a, a:visited) {
+    color: var(--accent);
+}
+
 h1 {
     color: var(--ink);
     font-size: 1.5rem;
@@ -62,15 +73,27 @@ h1 {
         margin-bottom: 0;
     }
 
-.button {
-    background: var(--accent);
-    border: 1px solid var(--accent);
+/* The two buttons the application has, and one padding between them. Both are written to sit on an
+   <a> or a <button> without either giving itself away: a button does not inherit the page's font,
+   and a link does not lose its underline, unless it is said here. Kept together and global so a new
+   page picks the pair up rather than growing a third size of its own. The pager has smaller ones,
+   below, because they belong to a row of controls at the table's own size. */
+.button,
+.quiet {
     border-radius: 4px;
-    color: #fff;
+    cursor: pointer;
+    font: inherit;
     font-weight: 600;
     padding: 0.5rem 1rem;
     text-decoration: none;
     white-space: nowrap;
+}
+
+/* What the page wants you to do. */
+.button {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #fff;
 }
 
     .button:hover {
@@ -79,6 +102,22 @@ h1 {
     }
 
     .button:focus-visible {
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
+        outline: none;
+    }
+
+/* The same shape, stepping back: a way out of a dialog, or a control beside a field. */
+.quiet {
+    background: #fff;
+    border: 1px solid #c6ccd4;
+    color: var(--ink);
+}
+
+    .quiet:hover {
+        border-color: var(--ink-soft);
+    }
+
+    .quiet:focus-visible {
         box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
         outline: none;
     }
@@ -174,6 +213,28 @@ h2:focus {
         margin-top: 0.15rem;
     }
 
+/* The two models set beside each other, so what belongs to one is read against the other rather
+   than as one long list. Shared by any page that has something to say about both. */
+.models {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 52rem;
+}
+
+/* One column below the width where two stop being readable. */
+@media (max-width: 40rem) {
+    .models {
+        grid-template-columns: 1fr;
+    }
+}
+
+.model h2 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
 /* Something went wrong and the page is saying what. */
 .alert {
     background: #fdf3f3;
@@ -203,7 +264,6 @@ h2:focus {
 
     .upload button {
         align-self: flex-start;
-        cursor: pointer;
     }
 
 /* The line under or beside a control saying what it will do. Not scoped to the upload form it
@@ -466,6 +526,31 @@ h2:focus {
     .page-jump select:focus-visible {
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        outline: none;
+    }
+
+    /* The submit button either picker falls back to without scripting. Sized to the select it
+       stands next to rather than to the page's buttons, so the row keeps one height. */
+    .page-size button,
+    .page-jump button {
+        background: #fff;
+        border: 1px solid #c6ccd4;
+        border-radius: 4px;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .page-size button:hover,
+    .page-jump button:hover {
+        border-color: var(--ink-soft);
+    }
+
+    .page-size button:focus-visible,
+    .page-jump button:focus-visible {
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
         outline: none;
     }
 

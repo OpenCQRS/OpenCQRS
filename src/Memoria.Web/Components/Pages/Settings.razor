@@ -126,15 +126,36 @@ else
 }
 else
 {
-    <ul class="sections">
-        @foreach (var (label, count) in Counts)
-        {
-            <li>
-                <span class="name">@label</span>
-                <span class="detail">@count</span>
-            </li>
-        }
-    </ul>
+    @* Set beside each other the same way the home page sets the two models, so what one model
+       registered is read against the other rather than down one list. The events are one bound
+       set that either model applies, so the same count is shown in both columns. *@
+    <div class="models">
+        <section class="model">
+            <h2>Streamed</h2>
+            <ul class="sections counts">
+                @foreach (var (label, count) in StreamedCounts)
+                {
+                    <li>
+                        <span class="name">@label</span>
+                        <span class="detail">@count</span>
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <section class="model">
+            <h2>DCB</h2>
+            <ul class="sections counts">
+                @foreach (var (label, count) in DcbCounts)
+                {
+                    <li>
+                        <span class="name">@label</span>
+                        <span class="detail">@count</span>
+                    </li>
+                }
+            </ul>
+        </section>
+    </div>
 }
 
 <form method="post" action="settings/refresh" class="refresh">
@@ -172,16 +193,22 @@ else
 
     private IReadOnlyList<InstalledArchive> Archives { get; set; } = [];
 
-    private IReadOnlyList<(string Label, int Count)> Counts => [
-        ("Streamed aggregates", Catalogue.StreamedAggregates.Count),
-        ("Streamed aggregate ids", Catalogue.StreamedAggregateIds.Count),
-        ("Streamed projections", Catalogue.StreamedProjections.Count),
-        ("Streamed projection ids", Catalogue.StreamedProjectionIds.Count),
-        ("DCB aggregates", Catalogue.DcbAggregates.Count),
-        ("DCB aggregate ids", Catalogue.DcbAggregateIds.Count),
-        ("DCB projections", Catalogue.DcbProjections.Count),
-        ("DCB projection ids", Catalogue.DcbProjectionIds.Count),
-        ("Events", Catalogue.Events.Count)
+    @* The model each column belongs to is said by its heading, so the labels no longer carry it.
+       Events are counted in both: one set is bound, and either model can apply them. *@
+    private IReadOnlyList<(string Label, int Count)> StreamedCounts => [
+        ("Events", Catalogue.Events.Count),
+        ("Aggregates", Catalogue.StreamedAggregates.Count),
+        ("Aggregate ids", Catalogue.StreamedAggregateIds.Count),
+        ("Projections", Catalogue.StreamedProjections.Count),
+        ("Projection ids", Catalogue.StreamedProjectionIds.Count)
+    ];
+
+    private IReadOnlyList<(string Label, int Count)> DcbCounts => [
+        ("Events", Catalogue.Events.Count),
+        ("Aggregates", Catalogue.DcbAggregates.Count),
+        ("Aggregate ids", Catalogue.DcbAggregateIds.Count),
+        ("Projections", Catalogue.DcbProjections.Count),
+        ("Projection ids", Catalogue.DcbProjectionIds.Count)
     ];
 
     protected override void OnInitialized() => Archives = Store.InstalledArchives();
