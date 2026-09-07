@@ -83,7 +83,10 @@ h1 {
         outline: none;
     }
 
-h1:focus {
+/* A heading given focus so a jump lands on it, rather than because anyone tabbed to it — the ring
+   would be pointing at something the reader did not choose. */
+h1:focus,
+h2:focus {
     outline: none;
 }
 

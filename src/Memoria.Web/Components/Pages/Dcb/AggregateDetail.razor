@@ -137,7 +137,7 @@ else
             {
                 <input type="hidden" name="@parameter.Name" value="@Values.GetValueOrDefault(parameter.Name)"/>
             }
-            <input type="hidden" name="returnUrl" value="/@EventsLink(Descending, Events.Page)"/>
+            <input type="hidden" name="returnUrl" value="/@EventsLink(Descending, Events.Page, toTable: false)"/>
             <button type="submit" class="button">Update</button>
             <span class="hint">
                 Refreshes the stored snapshot: any events below that it has not applied yet are
@@ -151,7 +151,10 @@ else
        boundary holding events with no snapshot written over them is worth being able to see. *@
     @if (Boundary is not null)
     {
-        <h2>Events</h2>
+        @* Focusable as well as linkable: a fragment scrolls the heading into view, and the negative
+           tabindex means the browser moves focus to it too, so tabbing on from a pager link carries
+           on inside the table rather than from the top of the document. *@
+        <h2 id="@EventsAnchor" tabindex="-1">Events</h2>
 
         @if (Events.Error is not null)
         {
@@ -163,6 +166,10 @@ else
         }
         else
         {
+            @* The whole count, not this page's worth: the pager says which page, and what a reader
+               wants beside it is how much there is to page through. *@
+            <p class="lede">@EventSummary</p>
+
             <table class="grid">
                 <thead>
                 <tr>
@@ -224,7 +231,10 @@ else
 
                         @* Its own GET form, like the one on the list: the page landed on belongs in
                            the address bar, so it can be linked to and gone back to. *@
-                        <form class="page-jump" method="get" action="dcb/aggregates/detail">
+                        @* The fragment survives the submission — a GET form replaces the action's
+                           query with the fields and leaves the rest of it alone — so this lands at
+                           the table like the pager links do. *@
+                        <form class="page-jump" method="get" action="dcb/aggregates/detail#@EventsAnchor">
                             <label for="page">Page</label>
                             <select id="page" name="page" onchange="this.form.submit()">
                                 @for (var number = 1; number <= Events.TotalPages; number++)
@@ -260,7 +270,7 @@ else
                     }
                 </div>
 
-                <form class="page-size" method="get" action="dcb/aggregates/detail">
+                <form class="page-size" method="get" action="dcb/aggregates/detail#@EventsAnchor">
                     <label for="size">Rows per page</label>
                     <select id="size" name="size" onchange="this.form.submit()">
                         @foreach (var option in InstanceQuery.PageSizes)
@@ -319,6 +329,14 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
+    /// How many events there are in all, and whose count it is — the aggregate's, because the list
+    /// is narrowed to what it applies rather than to everything the boundary holds.
+    /// </summary>
+    private string EventSummary => Events.Total == 1
+        ? $"One event, applied by {Aggregate?.Name}."
+        : $"{Events.Total} events, applied by {Aggregate?.Name}.";
+
+    /// <summary>
     /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
     /// to answer for the aggregate at all rather than a button failing to do its job.
     /// </summary>
@@ -329,10 +347,22 @@ else
     private string? RefreshError { get; set; }
 
     /// <summary>
+    /// The anchor the events table starts at, so paging and re-ordering land on the rows that
+    /// changed rather than at the top of a page whose first screen did not.
+    /// </summary>
+    private const string EventsAnchor = "events";
+
+    /// <summary>
     /// One address for the whole events table, carrying everything that addresses the aggregate as
     /// well, so a pager link only changes what it means to change.
     /// </summary>
-    private string EventsLink(bool descending, int page)
+    /// <param name="descending">Whether the newest come first.</param>
+    /// <param name="page">The page to land on, from one.</param>
+    /// <param name="toTable">
+    /// Whether to land at the table. False for the refresh, which changes the version and the state
+    /// above it and says so in a notice at the top — the one navigation here that wants the top.
+    /// </param>
+    private string EventsLink(bool descending, int page, bool toTable = true)
     {
         var values = string.Concat(Parameters.Select(parameter =>
             $"&{Uri.EscapeDataString(parameter.Name)}=" +
@@ -343,7 +373,8 @@ else
                values +
                $"&dir={(descending ? "desc" : "asc")}" +
                $"&size={PageSize}" +
-               $"&page={page}";
+               $"&page={page}" +
+               (toTable ? $"#{EventsAnchor}" : string.Empty);
     }
 
     private string Title => string.Join(" · ",
