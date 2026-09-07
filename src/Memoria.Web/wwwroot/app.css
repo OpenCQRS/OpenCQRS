@@ -416,6 +416,36 @@ h2:focus {
         max-width: none;
     }
 
+    /* Name beside value rather than above it: the facts about a stored model are read by scanning
+       the labels for one of them, and a column of labels is quicker to run down than a list that
+       alternates. The label column takes the width of its longest label and the value column the
+       rest, so the values line up whatever they are. */
+    .tab-panel .facts {
+        align-items: baseline;
+        column-gap: 2rem;
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        row-gap: 0.6rem;
+    }
+
+        /* The stacking margin belongs to the layout this replaces. */
+        .tab-panel .facts dd {
+            margin: 0;
+        }
+
+    /* Too narrow for two: a boundary naming several tags would be left wrapping in a few
+       characters' worth of column. Back to the label above its value, at the same width the page
+       already decides two columns have stopped being readable. */
+    @media (max-width: 40rem) {
+        .tab-panel .facts {
+            display: block;
+        }
+
+            .tab-panel .facts dd {
+                margin: 0.1rem 0 0.75rem;
+            }
+    }
+
     /* A second section inside a panel. The tab names the first, so only what follows it needs a
        name of its own. */
     .tab-panel h3 {
@@ -485,6 +515,12 @@ h2:focus {
 
     .grid td {
         overflow-wrap: anywhere;
+    }
+
+    /* A note set beside a value in a cell — how a boundary's tags combine, beside the tags. Spaced
+       here rather than by a space in the markup, which a conditional block swallows. */
+    .grid .hint {
+        margin-left: 0.5rem;
     }
 
     /* A sortable heading: the whole label is the control, so the target is the width of the word. */

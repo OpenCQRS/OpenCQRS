@@ -177,8 +177,9 @@ else
                         <p class="lede">
                             The identifiers that address this aggregate. Each one names it a
                             different way and resolves to a boundary of events to fold, built from
-                            the tags beside it. (AnyOf) takes in every event carrying one of those
-                            tags; (AllOf) only those carrying all of them.
+                            the tags beside it. Where there is more than one, (AnyOf) takes in every
+                            event carrying one of those tags and (AllOf) only those carrying all of
+                            them.
                         </p>
 
                         @if (Selected.Identifiers.Count == 0)
@@ -204,7 +205,10 @@ else
                                             @if (IdentifierShape.Of(identifier) is { } shape)
                                             {
                                                 <code>@Tags(shape)</code>
-                                                <span class="hint">@Combination(shape)</span>
+                                                @if (Combination(shape) is { } combination)
+                                                {
+                                                    <span class="hint">@combination</span>
+                                                }
                                             }
                                             else
                                             {
@@ -277,14 +281,15 @@ else
     private static string Tags(IdentifierShape shape) => string.Join(", ", shape.TagKeys);
 
     /// <summary>
-    /// Which of the two shapes a boundary comes in, in the words the library itself uses. Over one
-    /// tag they are the same boundary, so the cell says that instead of choosing one arbitrarily.
+    /// Which of the two shapes a boundary comes in, in the words the library itself uses, or null
+    /// over a single tag — the two are the same boundary there, so there is nothing to tell apart
+    /// and a marker would only be a word to read past on every such row.
     /// </summary>
-    private static string Combination(IdentifierShape shape) => shape.Combination switch
+    private static string? Combination(IdentifierShape shape) => shape.Combination switch
     {
         TagCombination.AnyOf => "(AnyOf)",
         TagCombination.AllOf => "(AllOf)",
-        _ => "(one tag)"
+        _ => null
     };
 
     /// <summary>
