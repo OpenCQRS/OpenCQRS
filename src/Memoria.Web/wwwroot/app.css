@@ -9,11 +9,15 @@
     --accent-strong: #175ca2;
     --danger: #b32121;
     --ground: #f7f8fa;
+
+    /* The page's own voice, as a token because a place that sets monospace sometimes has to set it
+       back for the prose inside. */
+    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {
     margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: var(--font);
     color: var(--ink);
 }
 
@@ -488,6 +492,13 @@ h2:focus {
             font-size: inherit;
         }
 
+        /* Not a value but a note saying there is none, so it reads as prose rather than as
+           something the store wrote. */
+        .facts dd .missing {
+            font-family: var(--font);
+            font-size: 1rem;
+        }
+
 .plain {
     list-style: none;
     margin: 0;
@@ -533,6 +544,36 @@ h2:focus {
        here rather than by a space in the markup, which a conditional block swallows. */
     .grid .hint {
         margin-left: 0.5rem;
+    }
+
+/* What one event carries, as the pairs it is made of: a name and the value it names, one to a line.
+   Global rather than scoped to the page that first grew it, because a payload is a payload. */
+.pairs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .pairs li {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.1rem 0;
+    }
+
+    /* The name, set back so the values it labels are what the eye lands on. */
+    .pairs .pair-name {
+        color: var(--ink-soft);
+    }
+
+        /* The colon belongs to the pair, not to the name, so it is drawn rather than typed — a
+           value copied out of the cell then comes away without it. */
+        .pairs .pair-name::after {
+            content: ":";
+        }
+
+    .pairs .pair-value {
+        overflow-wrap: anywhere;
     }
 
     /* A sortable heading: the whole label is the control, so the target is the width of the word. */

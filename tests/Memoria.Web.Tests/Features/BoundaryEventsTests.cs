@@ -65,6 +65,45 @@ public class BoundaryEventsTests : IDisposable
         read.Error.Should().Contain("NeverUploaded:1");
     }
 
+    /// <summary>
+    /// The key is one string in the store and two facts on a page — the name a type is written
+    /// under, and the version of that name — so a row can say each of them in its own column.
+    /// </summary>
+    [Fact]
+    public void Reads_the_name_and_version_out_of_the_key_it_was_stored_under()
+    {
+        var read = BoundaryEvents.Read(position: 7, "SampleHappened:1", """{"Id":"abc-1"}""", Written);
+
+        read.Name.Should().Be("SampleHappened");
+        read.Version.Should().Be("1");
+    }
+
+    /// <summary>
+    /// A key is written as name:version, so a name that contains a colon of its own still leaves
+    /// the version as everything after the last one.
+    /// </summary>
+    [Fact]
+    public void Takes_the_version_from_the_last_separator_in_the_key()
+    {
+        var read = BoundaryEvents.Read(position: 7, "Sample:Happened:2", "{}", Written);
+
+        read.Name.Should().Be("Sample:Happened");
+        read.Version.Should().Be("2");
+    }
+
+    /// <summary>
+    /// A row is listed whatever its type string turns out to be, so one that carries no version at
+    /// all is a name with nothing to say beside it rather than a row that cannot be drawn.
+    /// </summary>
+    [Fact]
+    public void Reports_no_version_for_a_key_that_carries_none()
+    {
+        var read = BoundaryEvents.Read(position: 7, "SampleHappened", "{}", Written);
+
+        read.Name.Should().Be("SampleHappened");
+        read.Version.Should().BeNull();
+    }
+
     [Fact]
     public void Reports_a_payload_that_cannot_be_read_back()
     {

@@ -212,7 +212,9 @@ else
                                 <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
                             </a>
                         </th>
-                        <th scope="col">Event</th>
+                        @* The key the row was stored under, as the two facts it is made of. *@
+                        <th scope="col">Type</th>
+                        <th scope="col">Version</th>
                         <th scope="col">Payload</th>
                     </tr>
                     </thead>
@@ -222,7 +224,17 @@ else
                         <tr>
                             <td>@stored.Position</td>
                             <td>@stored.Written.ToLocalTime().ToString("g")</td>
-                            <td><code>@stored.Type</code></td>
+                            <td><code>@stored.Name</code></td>
+                            <td>
+                                @if (stored.Version is { } version)
+                                {
+                                    <code>@version</code>
+                                }
+                                else
+                                {
+                                    <span class="missing">—</span>
+                                }
+                            </td>
                             <td>
                                 @if (stored.Error is not null)
                                 {
@@ -234,10 +246,19 @@ else
                                 }
                                 else
                                 {
-                                    @foreach (var property in stored.State)
-                                    {
-                                        <div>@property.Name: @(property.Value ?? "—")</div>
-                                    }
+                                    @* A list, because that is what it is: one name and value per
+                                       item, in the same shape the aggregate's own state is read in.
+                                       The name is set apart from the value it names, so a cell of
+                                       several pairs is scanned rather than read through. *@
+                                    <ul class="pairs">
+                                        @foreach (var property in stored.State)
+                                        {
+                                            <li>
+                                                <span class="pair-name">@property.Name</span>
+                                                <span class="pair-value">@(property.Value ?? "—")</span>
+                                            </li>
+                                        }
+                                    </ul>
                                 }
                             </td>
                         </tr>
