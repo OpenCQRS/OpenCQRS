@@ -237,3 +237,26 @@ table tr.clickable > :first-child a {
 table tr.clickable > :last-child a {
     padding-right: 0;
 }
+
+/* The page number, as a control rather than a label. Cut from the same cloth as the rows-per-page
+   picker beside it, since they do the same kind of job. */
+.page-jump {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+}
+
+    .page-jump select {
+        background: #fff;
+        border: 1px solid #c6ccd4;
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .page-jump select:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        outline: none;
+    }

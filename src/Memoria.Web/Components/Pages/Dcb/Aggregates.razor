@@ -41,11 +41,8 @@ else
         </nav>
 
         <section class="panel panel-detail">
-            @if (Selected is null)
-            {
-                <p class="lede">Choose an aggregate.</p>
-            }
-            else
+            @* Selected is only null when the list is empty, which the branch above already covers. *@
+            @if (Selected is not null)
             {
                 <h2>@Selected.Type.Name</h2>
                 <dl class="facts">
@@ -124,8 +121,13 @@ else
 
     private IReadOnlyList<Type> AggregateTypes => Types.Current.DcbAggregates;
 
+    /// <summary>
+    /// The aggregate being shown: the one asked for, or the first in the list. Arriving with nothing
+    /// chosen shows the first rather than an empty panel, because there is nothing to decide before
+    /// something can be read.
+    /// </summary>
     private DomainTypeDescription? Selected =>
-        DomainTypeDescriber.Select(AggregateTypes, SelectedName) is { } type
+        (DomainTypeDescriber.Select(AggregateTypes, SelectedName) ?? AggregateTypes.FirstOrDefault()) is { } type
             ? DomainTypeDescriber.Describe(type, Types.Current.DcbAggregateIds)
             : null;
 
