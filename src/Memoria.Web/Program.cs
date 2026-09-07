@@ -61,6 +61,31 @@ var registry = app.Services.GetRequiredService<DomainTypeRegistry>();
 registry.Reload();
 LogCatalogue(app.Logger, registry.Current);
 
+// EF Core builds its model and compiles its first query the moment a context is first used, and
+// Npgsql opens its first connection then too — close to a second of work, which whoever opens the
+// first page that reads anything would otherwise pay. Warmed here instead, in the background so
+// the application starts serving straight away, and quietly, because a store that cannot be
+// reached is the page's problem to report rather than a reason not to start.
+_ = Task.Run(async () =>
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+
+        await scope.ServiceProvider.GetRequiredService<IDcbDbContext>()
+            .DcbSnapshots.AsNoTracking()
+            .Select(snapshot => snapshot.Id)
+            .FirstOrDefaultAsync();
+
+        app.Logger.LogInformation("Store warmed.");
+    }
+    catch (Exception exception)
+    {
+        app.Logger.LogWarning(exception,
+            "Could not warm the store. The first page that reads it will be slower.");
+    }
+});
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
