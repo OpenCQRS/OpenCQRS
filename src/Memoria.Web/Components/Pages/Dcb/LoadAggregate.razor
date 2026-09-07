@@ -1,0 +1,350 @@
+@page "/dcb/aggregates/load"
+@using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
+@using Memoria.EventSourcing.Domain
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IDcbDbContext StoreContext
+@inject NavigationManager Navigation
+
+<PageTitle>@(Aggregate?.Name ?? "Aggregates") by @(Identifier?.Name ?? "identifier")</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb/aggregates">Aggregates</a>
+    @if (Aggregate is not null)
+    {
+        <span aria-hidden="true">/</span>
+        <a href="@BackToAggregate">@Aggregate.Name</a>
+    }
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">@(Identifier?.Name ?? "Load")</span>
+</nav>
+
+@if (Aggregate is null || Identifier is null)
+{
+    <h1>Load</h1>
+    <p class="alert" role="alert">
+        That aggregate and identifier are not among the registered types. They may have been
+        replaced by a later upload — start again from <a href="dcb/aggregates">aggregates</a>.
+    </p>
+}
+else if (Shape is null)
+{
+    <h1>@Aggregate.Name</h1>
+    <p class="alert" role="alert">
+        <code>@Identifier.Name</code> takes a value its boundary never mentions, so which of these
+        exist cannot be worked out from the stored tags. Try another identifier from
+        <a href="@BackToAggregate">@Aggregate.Name</a>.
+    </p>
+}
+else if (TooManyTags)
+{
+    <h1>@Aggregate.Name</h1>
+    <p class="alert" role="alert">
+        <code>@Identifier.Name</code> is built from @Shape.Slots.Count tags. At most
+        @IdentifierInstances.MaxSlots can be paired up in one query, so these cannot be listed.
+    </p>
+}
+else
+{
+    <h1>@Aggregate.Name</h1>
+    <p class="lede">@Summary</p>
+
+    @* A plain GET form: filtering is a link to a narrower list, so it belongs in the address bar
+       where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
+       narrowing the list does not silently reorder it. *@
+    <form class="search" method="get" action="dcb/aggregates/load">
+        <input type="hidden" name="type" value="@Aggregate.FullName"/>
+        <input type="hidden" name="id" value="@Identifier.FullName"/>
+        <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+        <input type="hidden" name="size" value="@PageSize"/>
+        <label class="visually-hidden" for="tag">Filter by tag</label>
+        <input id="tag" type="search" name="tag" value="@Tag" placeholder="@TagPlaceholder" autocomplete="off"/>
+        <button type="submit">Filter</button>
+        @if (IsFiltered)
+        {
+            <a href="@Link(Sort, Descending, 1, clearTag: true)">Clear</a>
+        }
+    </form>
+
+    @if (Rows.Count == 0)
+    {
+        <p class="empty">
+            @if (IsFiltered)
+            {
+                <text>No aggregates carry a tag matching &ldquo;@Tag&rdquo;.</text>
+            }
+            else
+            {
+                <text>Nothing has been written under this identifier yet.</text>
+            }
+        </p>
+    }
+    else
+    {
+        @* Everything here is read off the tags. The aggregate itself is not folded to draw a row —
+           that is what the details page is for, one at a time. *@
+        <table>
+            <thead>
+            <tr>
+                @foreach (var slot in Shape.Slots)
+                {
+                    <th>@slot.ParameterName</th>
+                }
+                <th class="numeric">Version</th>
+                @foreach (var column in Columns)
+                {
+                    <th aria-sort="@AriaSort(column.Sort)">
+                        <a href="@SortLink(column.Sort)">
+                            @column.Label
+                            @if (Sort == column.Sort)
+                            {
+                                <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                            }
+                        </a>
+                    </th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Rows)
+            {
+                var link = DetailLink(row);
+
+                <tr class="clickable">
+                    @* The whole row is the target, so every cell carries the same link. Only the
+                       first is reachable by keyboard or read out: the rest repeat it. *@
+                    @foreach (var slot in Shape.Slots)
+                    {
+                        <td class="sku">
+                            <a href="@link">@row.Values.GetValueOrDefault(slot.ParameterName)</a>
+                        </td>
+                    }
+                    <td class="numeric">
+                        <a href="@link" tabindex="-1" aria-hidden="true">@row.Version</a>
+                    </td>
+                    <td class="muted">
+                        <a href="@link" tabindex="-1" aria-hidden="true">@row.Created.ToLocalTime().ToString("g")</a>
+                    </td>
+                    <td class="muted">
+                        <a href="@link" tabindex="-1" aria-hidden="true">@row.Updated.ToLocalTime().ToString("g")</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            <div class="pagination">
+                @if (TotalPages > 1)
+                {
+                    @if (CurrentPage > 1)
+                    {
+                        <a href="@Link(Sort, Descending, CurrentPage - 1)">Previous</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">Previous</span>
+                    }
+
+                    <span>Page @CurrentPage of @TotalPages</span>
+
+                    @if (CurrentPage < TotalPages)
+                    {
+                        <a href="@Link(Sort, Descending, CurrentPage + 1)">Next</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">Next</span>
+                    }
+                }
+            </div>
+
+            @* Its own GET form, so the choice lands in the address bar like the order and the
+               filter. Submitting on change saves a click; the button is the fallback when
+               scripting is off. *@
+            <form class="page-size" method="get" action="dcb/aggregates/load">
+                <label for="size">Rows per page</label>
+                <select id="size" name="size" onchange="this.form.submit()">
+                    @foreach (var option in InstanceQuery.PageSizes)
+                    {
+                        <option value="@option" selected="@(option == PageSize)">@option</option>
+                    }
+                </select>
+                <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                <input type="hidden" name="id" value="@Identifier.FullName"/>
+                <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                @if (IsFiltered)
+                {
+                    <input type="hidden" name="tag" value="@Tag"/>
+                }
+                <noscript>
+                    <button type="submit">Apply</button>
+                </noscript>
+            </form>
+        </div>
+    }
+}
+
+@code {
+
+    private Type? Aggregate { get; set; }
+
+    private Type? Identifier { get; set; }
+
+    private IdentifierShape? Shape { get; set; }
+
+    private bool TooManyTags { get; set; }
+
+    private IReadOnlyList<Instance> Rows { get; set; } = [];
+
+    private int Total { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+
+    private int TotalPages { get; set; } = 1;
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    private string? Tag { get; set; }
+
+    private InstanceSort Sort { get; set; } = InstanceSort.Updated;
+
+    private bool Descending { get; set; } = true;
+
+    /// <summary>
+    /// The sortable columns and their query-string keys, in one place, so the header row and the
+    /// links cannot disagree about what can be sorted.
+    /// </summary>
+    private static readonly Column[] Columns =
+    [
+        new(InstanceSort.Created, "Created"),
+        new(InstanceSort.Updated, "Updated")
+    ];
+
+    private sealed record Column(InstanceSort Sort, string Label);
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Tag);
+
+    private string? AriaSort(InstanceSort column) =>
+        Sort != column ? null : Descending ? "descending" : "ascending";
+
+    /// <summary>
+    /// Clicking the column already sorted by turns it around; clicking another starts it newest
+    /// first, which is the way a date is usually wanted.
+    /// </summary>
+    private string SortLink(InstanceSort column) =>
+        Link(column, Sort == column ? !Descending : true, 1);
+
+    private string TagPlaceholder => $"Filter by tag, such as {Shape?.TagKeys.FirstOrDefault()}:…";
+
+    private string Summary => Total switch
+    {
+        0 when IsFiltered => $"No aggregates match, addressed by {Identifier?.Name}.",
+        0 => $"Nothing stored yet, addressed by {Identifier?.Name}.",
+        1 => $"One aggregate, addressed by {Identifier?.Name}.",
+        _ => $"{Total} aggregates, addressed by {Identifier?.Name}."
+    };
+
+    private string BackToAggregate =>
+        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}";
+
+    private string Names =>
+        $"type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
+
+    /// <summary>
+    /// One address for the whole table state, so a link only changes what it means to change.
+    /// </summary>
+    private string Link(InstanceSort sort, bool descending, int page, bool clearTag = false)
+    {
+        var link = $"dcb/aggregates/load?{Names}" +
+                   $"&sort={sort.ToString().ToLowerInvariant()}" +
+                   $"&dir={(descending ? "desc" : "asc")}" +
+                   $"&size={PageSize}" +
+                   $"&page={page}";
+
+        return clearTag || !IsFiltered ? link : $"{link}&tag={Uri.EscapeDataString(Tag!)}";
+    }
+
+    /// <summary>
+    /// Through to one aggregate's whole state, carrying the values its identifier is built from.
+    /// </summary>
+    private string DetailLink(Instance instance)
+    {
+        var values = string.Join("&", instance.Values
+            .Select(value => $"{Uri.EscapeDataString(value.Key)}={Uri.EscapeDataString(value.Value)}"));
+
+        return $"dcb/aggregates/detail?{Names}&{values}";
+    }
+
+    /// <summary>
+    /// The events the aggregate applies, named the way the store records them, so a version can be
+    /// counted without folding anything.
+    /// </summary>
+    private static IReadOnlyList<string> EventTypeKeys(DomainTypeDescription described) =>
+        described.EventTypes.Select(TypeBindings.GetEventBindingKey).ToList();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        // Both are matched against what is registered, so a name in the address can only ever reach
+        // a type this application already knows about.
+        Aggregate = DomainTypeDescriber.Select(Types.Current.DcbAggregates, Value("type"));
+
+        var described = Aggregate is null
+            ? null
+            : DomainTypeDescriber.Describe(Aggregate, Types.Current.DcbAggregateIds);
+
+        Identifier = described?.Identifiers.FirstOrDefault(identifier => identifier.FullName == Value("id"));
+
+        if (Aggregate is null || Identifier is null)
+        {
+            return;
+        }
+
+        Shape = IdentifierShape.Of(Identifier);
+
+        if (Shape is null)
+        {
+            return;
+        }
+
+        if (Shape.Slots.Count > IdentifierInstances.MaxSlots)
+        {
+            TooManyTags = true;
+            return;
+        }
+
+        Tag = Value("tag");
+        Sort = InstanceQuery.SortOf(Value("sort"));
+        Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+
+        var page = await IdentifierInstances.Page(
+            StoreContext,
+            Shape,
+            EventTypeKeys(described!),
+            Tag,
+            Sort,
+            Descending,
+            int.TryParse(Value("page"), out var asked) ? asked : 1,
+            PageSize);
+
+        Rows = page.Rows;
+        Total = page.Total;
+        CurrentPage = page.Page;
+        TotalPages = page.TotalPages;
+    }
+
+}

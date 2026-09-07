@@ -331,3 +331,32 @@ h1:focus {
     color: var(--ink-soft);
     margin: 0;
 }
+
+/* Values read back out of the store, one row each. */
+.grid {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+    .grid th,
+    .grid td {
+        border-bottom: 1px solid var(--rule);
+        padding: 0.5rem 0.75rem 0.5rem 0;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .grid th {
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .grid td {
+        overflow-wrap: anywhere;
+    }
+
+/* The way back from a page reached by clicking a row. */
+.back {
+    margin-top: 2rem;
+}

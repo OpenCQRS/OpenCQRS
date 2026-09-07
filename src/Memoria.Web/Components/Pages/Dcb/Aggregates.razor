@@ -78,7 +78,7 @@ else
                     <ul class="plain">
                         @foreach (var identifier in Selected.Identifiers)
                         {
-                            <li><code>@identifier.Name</code></li>
+                            <li><a href="@LoadLink(identifier)"><code>@identifier.Name</code></a></li>
                         }
                     </ul>
                 }
@@ -128,6 +128,15 @@ else
         DomainTypeDescriber.Select(AggregateTypes, SelectedName) is { } type
             ? DomainTypeDescriber.Describe(type, Types.Current.DcbAggregateIds)
             : null;
+
+    /// <summary>
+    /// Through to the page that loads one of these from the store. The aggregate travels with the
+    /// identifier because an identifier alone does not say what it addresses.
+    /// </summary>
+    private string LoadLink(Type identifier) =>
+        "dcb/aggregates/load" +
+        $"?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(identifier.FullName ?? string.Empty)}";
 
     private static string Link(Type aggregate) =>
         $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}";

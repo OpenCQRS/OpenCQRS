@@ -70,3 +70,27 @@ public class SampleDcbProjectionId(string id) : IDcbProjectionId<SampleDcbProjec
 
     public TagQuery Boundary { get; } = TagQuery.AnyOf(new Tag("sample", id));
 }
+
+/// <summary>
+/// An identifier whose boundary is built from two of its values, like a product's id and the sku
+/// it has to be unique against.
+/// </summary>
+public class SampleTwoPartId(string id, string label) : IDcbAggregateId<SampleDcbAggregate>
+{
+    public string Id { get; } = id;
+
+    public TagQuery Boundary { get; } = TagQuery.AnyOf(new Tag("sample", id), new Tag("label", label));
+}
+
+/// <summary>
+/// An identifier taking a value its boundary never mentions, so what exists cannot be worked out
+/// from the tags alone.
+/// </summary>
+public class SampleUnmappedId(string id, string note) : IDcbAggregateId<SampleDcbAggregate>
+{
+    public string Id { get; } = id;
+
+    public string Note { get; } = note;
+
+    public TagQuery Boundary { get; } = TagQuery.AnyOf(new Tag("sample", id));
+}

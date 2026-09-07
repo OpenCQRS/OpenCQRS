@@ -93,11 +93,46 @@ public static class DomainTypeDescriber
     /// events the model applies.
     /// </summary>
     private static IReadOnlyList<DomainProperty> PropertiesOf(Type type) =>
-        type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Where(property => !Overrides(property))
+        Declared(type)
             .Select(property => new DomainProperty(property.Name, Readable(property.PropertyType)))
             .OrderBy(property => property.Name, StringComparer.Ordinal)
             .ToList();
+
+    /// <summary>
+    /// Reads the state off a model that has been loaded, through the same filter the description
+    /// uses, so the page shows the same properties with values against them.
+    /// </summary>
+    /// <param name="model">The loaded aggregate or projection.</param>
+    public static IReadOnlyList<DomainPropertyValue> ReadState(object model) =>
+        Declared(model.GetType())
+            .Select(property => new DomainPropertyValue(
+                property.Name,
+                Readable(property.PropertyType),
+                Read(property, model)))
+            .OrderBy(property => property.Name, StringComparer.Ordinal)
+            .ToList();
+
+    private static string? Read(PropertyInfo property, object model)
+    {
+        try
+        {
+            return property.GetValue(model) switch
+            {
+                null => null,
+                IEnumerable<object> many => string.Join(", ", many),
+                var value => value.ToString()
+            };
+        }
+        catch (Exception exception)
+        {
+            // A getter that throws is the model's business, not a reason to lose the page.
+            return $"could not be read: {exception.Message}";
+        }
+    }
+
+    private static IEnumerable<PropertyInfo> Declared(Type type) =>
+        type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(property => !Overrides(property));
 
     /// <summary>
     /// Whether a property is an override of one declared further up, rather than the model's own.
@@ -111,7 +146,7 @@ public static class DomainTypeDescriber
     }
 
     /// <summary>Spells a type the way it would be written in source.</summary>
-    private static string Readable(Type type)
+    internal static string Readable(Type type)
     {
         if (Nullable.GetUnderlyingType(type) is { } underlying)
         {
@@ -164,3 +199,9 @@ public sealed record DomainTypeDescription(
 /// <param name="Name">Its name.</param>
 /// <param name="TypeName">Its type, as it would be written in source.</param>
 public sealed record DomainProperty(string Name, string TypeName);
+
+/// <summary>One declared property, with what it currently holds.</summary>
+/// <param name="Name">Its name.</param>
+/// <param name="TypeName">Its type, as it would be written in source.</param>
+/// <param name="Value">What it holds, or null.</param>
+public sealed record DomainPropertyValue(string Name, string TypeName, string? Value);

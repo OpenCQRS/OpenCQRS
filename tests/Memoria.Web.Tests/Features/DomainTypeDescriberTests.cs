@@ -8,7 +8,8 @@ public class DomainTypeDescriberTests
 {
     private static readonly Type[] Identifiers =
     [
-        typeof(SampleDcbAggregateId), typeof(SampleAggregateId), typeof(SampleDcbProjectionId)
+        typeof(SampleDcbAggregateId), typeof(SampleTwoPartId), typeof(SampleUnmappedId),
+        typeof(SampleAggregateId), typeof(SampleDcbProjectionId)
     ];
 
     private static DomainTypeDescription Describe(Type type) =>
@@ -35,7 +36,8 @@ public class DomainTypeDescriberTests
     [Fact]
     public void Finds_the_identifiers_that_address_the_type()
     {
-        Describe(typeof(SampleDcbAggregate)).Identifiers.Should().Equal(typeof(SampleDcbAggregateId));
+        Describe(typeof(SampleDcbAggregate)).Identifiers.Should().BeEquivalentTo(
+            new[] { typeof(SampleDcbAggregateId), typeof(SampleTwoPartId), typeof(SampleUnmappedId) });
     }
 
     [Fact]
@@ -84,6 +86,22 @@ public class DomainTypeDescriberTests
     public void Leaves_out_properties_that_override_the_framework()
     {
         Describe(typeof(SampleDcbAggregate)).Properties
+            .Should().NotContain(property => property.Name == "EventTypeFilter");
+    }
+
+    [Fact]
+    public void Reads_the_state_of_a_loaded_model()
+    {
+        var aggregate = new SampleDcbAggregate();
+
+        DomainTypeDescriber.ReadState(aggregate)
+            .Should().Contain(property => property.Name == "Name" && property.Value == string.Empty);
+    }
+
+    [Fact]
+    public void Reads_state_through_the_same_filter_as_the_description()
+    {
+        DomainTypeDescriber.ReadState(new SampleDcbAggregate())
             .Should().NotContain(property => property.Name == "EventTypeFilter");
     }
 

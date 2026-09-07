@@ -1,0 +1,195 @@
+@page "/dcb/aggregates/detail"
+@using Memoria.EventSourcing
+@using Memoria.EventSourcing.Dcb
+@using Memoria.EventSourcing.Domain
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IDcbDomainService Store
+@inject NavigationManager Navigation
+
+<PageTitle>@(Aggregate?.Name ?? "Aggregate") @Title</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb/aggregates">Aggregates</a>
+    @if (Aggregate is not null && Identifier is not null)
+    {
+        <span aria-hidden="true">/</span>
+        <a href="@BackToAggregate">@Aggregate.Name</a>
+        <span aria-hidden="true">/</span>
+        <a href="@BackToList">@Identifier.Name</a>
+    }
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">@(Title is { Length: > 0 } title ? title : "Detail")</span>
+</nav>
+
+@if (Aggregate is null || Identifier is null)
+{
+    <h1>Aggregate</h1>
+    <p class="alert" role="alert">
+        That aggregate and identifier are not among the registered types. They may have been
+        replaced by a later upload — start again from <a href="dcb/aggregates">aggregates</a>.
+    </p>
+}
+else
+{
+    <h1>@Aggregate.Name</h1>
+    <p class="lede">Folded from the boundary <code>@Identifier.Name</code> carries.</p>
+
+    <dl class="facts">
+        @foreach (var parameter in Parameters)
+        {
+            <dt>@parameter.Name</dt>
+            <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
+        }
+
+        @if (Boundary is not null)
+        {
+            <dt>Boundary</dt>
+            <dd><code>@Boundary</code></dd>
+        }
+
+        @if (Loaded is not null)
+        {
+            <dt>Version</dt>
+            <dd>@Version</dd>
+        }
+    </dl>
+
+    @if (Error is not null)
+    {
+        <p class="alert" role="alert">@Error</p>
+    }
+    else if (Loaded is null)
+    {
+        <p class="empty">
+            Nothing is stored under those values — no snapshot, and no events inside the boundary
+            they describe.
+        </p>
+    }
+    else
+    {
+        <h2>State</h2>
+        @if (State.Count == 0)
+        {
+            <p class="missing">It declares no properties of its own.</p>
+        }
+        else
+        {
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th scope="col">Property</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var property in State)
+                {
+                    <tr>
+                        <td>@property.Name</td>
+                        <td><code>@property.TypeName</code></td>
+                        <td>@(property.Value ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    }
+
+    <p class="back"><a href="@BackToList">Back to @Identifier.Name</a></p>
+}
+
+@code {
+
+    /// <summary>
+    /// Whatever the store has: the snapshot brought up to date with any newer events, and failing a
+    /// snapshot, the boundary's events folded from the beginning. Null only when there is genuinely
+    /// nothing there.
+    /// </summary>
+    private const ReadMode Mode = ReadMode.SnapshotWithNewEventsOrCreate;
+
+    private Type? Aggregate { get; set; }
+
+    private Type? Identifier { get; set; }
+
+    private IReadOnlyList<IdentifierParameter> Parameters { get; set; } = [];
+
+    private Dictionary<string, string?> Values { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    private string? Boundary { get; set; }
+
+    private object? Loaded { get; set; }
+
+    private string? Error { get; set; }
+
+    private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
+
+    private string? Version => Loaded is EventSourcedModel model ? model.Version.ToString() : null;
+
+    private string Title => string.Join(" · ",
+        Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
+            .Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string BackToAggregate =>
+        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}";
+
+    private string BackToList =>
+        $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        Values = query.ToDictionary(
+            pair => pair.Key, pair => (string?)pair.Value.LastOrDefault(),
+            StringComparer.OrdinalIgnoreCase);
+
+        // Both are matched against what is registered, so a name in the address can only ever reach
+        // a type this application already knows about.
+        Aggregate = DomainTypeDescriber.Select(Types.Current.DcbAggregates, Values.GetValueOrDefault("type"));
+
+        Identifier = Aggregate is null
+            ? null
+            : DomainTypeDescriber
+                .Describe(Aggregate, Types.Current.DcbAggregateIds)
+                .Identifiers
+                .FirstOrDefault(identifier => identifier.FullName == Values.GetValueOrDefault("id"));
+
+        if (Aggregate is null || Identifier is null)
+        {
+            return;
+        }
+
+        Parameters = IdentifierFactory.Parameters(Identifier);
+
+        var created = IdentifierFactory.Create(Identifier, Values);
+
+        if (created.Instance is null)
+        {
+            Error = created.Error;
+            return;
+        }
+
+        // The boundary is the aggregate's own account of which events it was folded from, so it is
+        // worth showing beside the state it produced.
+        Boundary = created.Instance switch
+        {
+            IDcbAggregateId aggregateId => aggregateId.Boundary.ToString(),
+            _ => null
+        };
+
+        var loaded = await AggregateReader.Load(Store, Aggregate, created.Instance, Mode);
+
+        Loaded = loaded.Aggregate;
+        Error = loaded.Error;
+        State = Loaded is null ? [] : DomainTypeDescriber.ReadState(Loaded);
+    }
+
+}
