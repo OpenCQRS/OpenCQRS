@@ -39,22 +39,69 @@ public sealed class ExtensionStore(string root)
         content.CopyTo(buffer);
         buffer.Position = 0;
 
-        using (var archive = new ZipArchive(buffer, ZipArchiveMode.Read, leaveOpen: true))
-        {
-            Directory.CreateDirectory(LibraryDirectory);
-
-            foreach (var entry in archive.Entries.Where(IsAssembly))
-            {
-                entry.ExtractToFile(Path.Combine(LibraryDirectory, Path.GetFileName(entry.Name)),
-                    overwrite: true);
-            }
-        }
+        ExtractAssemblies(buffer);
 
         Directory.CreateDirectory(ArchiveDirectory);
         buffer.Position = 0;
 
         using var stored = File.Create(Path.Combine(ArchiveDirectory, archiveName));
         buffer.CopyTo(stored);
+    }
+
+    /// <summary>
+    /// Takes the assemblies out of one archive.
+    /// </summary>
+    /// <param name="content">The archive, positioned at its start and left open.</param>
+    /// <exception cref="InvalidDataException">The content is not a zip archive.</exception>
+    private void ExtractAssemblies(Stream content)
+    {
+        using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
+
+        Directory.CreateDirectory(LibraryDirectory);
+
+        foreach (var entry in archive.Entries.Where(IsAssembly))
+        {
+            entry.ExtractToFile(Path.Combine(LibraryDirectory, Path.GetFileName(entry.Name)),
+                overwrite: true);
+        }
+    }
+
+    /// <summary>
+    /// Removes one archive and the assemblies it brought.
+    /// </summary>
+    /// <param name="fileName">The name it was uploaded under.</param>
+    /// <remarks>
+    /// Which assembly came from which archive is not recorded, so the library is emptied and the
+    /// archives that remain are extracted into it again. That is also what makes the case of two
+    /// archives carrying the same assembly come out right: the one still installed puts it back.
+    /// A name that is not installed is not an error — the file is already not there.
+    /// </remarks>
+    public void Remove(string fileName)
+    {
+        if (fileName != Path.GetFileName(fileName))
+        {
+            return;
+        }
+
+        var archive = Path.Combine(ArchiveDirectory, fileName);
+
+        if (!File.Exists(archive))
+        {
+            return;
+        }
+
+        File.Delete(archive);
+
+        if (Directory.Exists(LibraryDirectory))
+        {
+            Directory.Delete(LibraryDirectory, recursive: true);
+        }
+
+        foreach (var remaining in InstalledArchives())
+        {
+            using var content = File.OpenRead(Path.Combine(ArchiveDirectory, remaining.Name));
+            ExtractAssemblies(content);
+        }
     }
 
     /// <summary>Gets the archives uploaded so far, newest first.</summary>

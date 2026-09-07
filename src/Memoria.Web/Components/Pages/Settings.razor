@@ -14,7 +14,7 @@
 <h1>Settings</h1>
 <p class="lede">
     Upload a zip of assemblies holding your domain types. They are read straight away — the
-    application does not restart. Everyone using this server shares one set of types, so a refresh
+    application does not restart. Everyone using this server shares one set of types, so a change
     here changes what they see too; their open pages catch up when the browser is reloaded.
 </p>
 
@@ -28,23 +28,91 @@
     <p class="alert" role="alert">@Error</p>
 }
 
-<h2>Upload</h2>
-<form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
-    <AntiforgeryToken/>
-    <label for="files">Zip files</label>
-    <input id="files" name="files" type="file" accept=".zip,application/zip" multiple required/>
-    <p class="hint">
-        Assemblies are taken from anywhere in the archive and stored under one name each. An
-        assembly of the same name from an earlier upload is replaced.
-    </p>
-    <button type="submit" class="button">Upload</button>
-</form>
+<h2>Installed</h2>
+@if (Archives.Count == 0)
+{
+    <p class="empty">Nothing uploaded yet.</p>
+}
+else
+{
+    <table>
+        <thead>
+        <tr>
+            <th scope="col">File</th>
+            <th scope="col">Size</th>
+            <th scope="col">Uploaded</th>
+            <th><span class="visually-hidden">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (var index = 0; index < Archives.Count; index++)
+        {
+            var archive = Archives[index];
+            var dialog = $"delete-{index}";
+
+            <tr>
+                <td class="name">@archive.Name</td>
+                <td class="numeric">@($"{archive.Length / 1024:n0} KB")</td>
+                <td class="muted">@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
+                <td class="actions">
+                    @* Asked before it happens, because removing an archive takes the types it
+                       brought away from everyone, not just from whoever pressed it. Opened the same
+                       way as the upload form: the address says which one, so the question survives
+                       having no script to ask it. *@
+                    <a class="delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
+                       onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">Delete</a>
+
+                    <dialog id="@dialog" class="dialog" open="@(DeleteAsked == archive.Name)">
+                        <h2>Remove @archive.Name?</h2>
+                        <p>
+                            The types it brought are unregistered for everyone using this server.
+                            Anything it holds can be uploaded again afterwards.
+                        </p>
+                        <form method="post" action="settings/delete" class="dialog-actions">
+                            <AntiforgeryToken/>
+                            <input type="hidden" name="name" value="@archive.Name"/>
+                            <button type="submit" class="danger">Remove</button>
+                            <a class="quiet" href="settings"
+                               onclick="event.preventDefault(); document.getElementById('@dialog').close()">Cancel</a>
+                        </form>
+                    </dialog>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@* A link rather than a button, so it still opens without scripting: the address says the form is
+   wanted and the dialog is rendered open. With scripting it is a modal and the page stays put. *@
+<p class="actions-row">
+    <a class="button" href="settings?upload=1"
+       onclick="event.preventDefault(); document.getElementById('upload').showModal()">Upload</a>
+</p>
+
+<dialog id="upload" class="dialog" open="@ShowUpload">
+    <form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
+        <AntiforgeryToken/>
+        <h2>Upload</h2>
+        <label for="files">Zip files</label>
+        <input id="files" name="files" type="file" accept=".zip,application/zip" multiple required/>
+        <p class="hint">
+            Assemblies are taken from anywhere in the archive and stored under one name each. An
+            assembly of the same name from an earlier upload is replaced.
+        </p>
+        <div class="dialog-actions">
+            <button type="submit" class="button">Upload</button>
+            <a class="quiet" href="settings"
+               onclick="event.preventDefault(); document.getElementById('upload').close()">Cancel</a>
+        </div>
+    </form>
+</dialog>
 
 <h2>Types found</h2>
 <p class="lede">
     @if (Catalogue.ReloadedUtc is { } reloaded)
     {
-        @($"Last registered {reloaded:u}.")
+        @($"Last registered {reloaded.ToLocalTime():g}.")
     }
     else
     {
@@ -52,15 +120,9 @@
     }
 </p>
 
-<form method="post" action="settings/refresh" class="refresh">
-    <AntiforgeryToken/>
-    <button type="submit" class="button">Refresh types</button>
-    <span class="hint">Reads every uploaded assembly again and registers the types from scratch.</span>
-</form>
-
 @if (Catalogue.Count == 0)
 {
-    <p class="lede">No domain types were found in the uploaded assemblies.</p>
+    <p class="empty">No domain types were found in the uploaded assemblies.</p>
 }
 else
 {
@@ -75,36 +137,11 @@ else
     </ul>
 }
 
-@if (Catalogue.Errors.Count > 0)
-{
-    <h2>Problems</h2>
-    <ul class="sections">
-        @foreach (var error in Catalogue.Errors)
-        {
-            <li><span class="detail">@error</span></li>
-        }
-    </ul>
-}
-
-<h2>Installed</h2>
-@if (Archives.Count == 0)
-{
-    <p class="lede">Nothing uploaded yet.</p>
-}
-else
-{
-    <ul class="sections">
-        @foreach (var archive in Archives)
-        {
-            <li>
-                <span class="name">@archive.Name</span>
-                <span class="detail">
-                    @($"{archive.Length / 1024:n0} KB") · uploaded @archive.UploadedUtc.ToString("u")
-                </span>
-            </li>
-        }
-    </ul>
-}
+<form method="post" action="settings/refresh" class="refresh">
+    <AntiforgeryToken/>
+    <button type="submit" class="button">Refresh types</button>
+    <span class="hint">Reads every uploaded assembly again and registers the types from scratch.</span>
+</form>
 
 @code {
 
@@ -113,6 +150,23 @@ else
 
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
+
+    /// <summary>
+    /// Whether the upload form should already be open. Asked for in the address so the page decides
+    /// it, rather than the dialog's visibility depending on script having run.
+    /// </summary>
+    /// <remarks>
+    /// Taken as text rather than a boolean: the value comes from the address bar, where anything at
+    /// all can be typed, and a query string should not be able to fail the page.
+    /// </remarks>
+    [SupplyParameterFromQuery(Name = "upload")]
+    private string? UploadAsked { get; set; }
+
+    private bool ShowUpload => UploadAsked is not null;
+
+    /// <summary>The archive whose removal is being confirmed, when one is.</summary>
+    [SupplyParameterFromQuery(Name = "delete")]
+    private string? DeleteAsked { get; set; }
 
     private DomainTypeCatalogue Catalogue => Types.Current;
 

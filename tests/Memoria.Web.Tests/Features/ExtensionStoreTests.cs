@@ -126,6 +126,75 @@ public class ExtensionStoreTests : IDisposable
         File.Exists(Path.Combine(_root, "zips", "pack.zip")).Should().BeFalse();
     }
 
+    /// <summary>
+    /// Removing an archive has to take its assemblies with it, or the types it brought would go on
+    /// being registered from a library nothing accounts for.
+    /// </summary>
+    [Fact]
+    public void Removing_an_archive_removes_the_assemblies_it_brought()
+    {
+        var store = Store();
+        store.Install("pack.zip", ZipOf("Contoso.Domain.dll"));
+
+        store.Remove("pack.zip");
+
+        store.AssemblyPaths().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Removing_an_archive_leaves_the_others_alone()
+    {
+        var store = Store();
+        store.Install("one.zip", ZipOf("One.dll"));
+        store.Install("two.zip", ZipOf("Two.dll"));
+
+        store.Remove("one.zip");
+
+        store.AssemblyPaths().Select(Path.GetFileName).Should().BeEquivalentTo("Two.dll");
+        store.InstalledArchives().Select(archive => archive.Name).Should().BeEquivalentTo("two.zip");
+    }
+
+    /// <summary>
+    /// Two archives can carry an assembly of the same name, and the one still installed keeps it.
+    /// </summary>
+    [Fact]
+    public void Keeps_an_assembly_another_archive_also_carries()
+    {
+        var store = Store();
+        store.Install("one.zip", ZipOf("Shared.dll"));
+        store.Install("two.zip", ZipOf("Shared.dll"));
+
+        store.Remove("one.zip");
+
+        store.AssemblyPaths().Select(Path.GetFileName).Should().BeEquivalentTo("Shared.dll");
+    }
+
+    [Fact]
+    public void Removing_something_that_is_not_installed_does_nothing()
+    {
+        var store = Store();
+        store.Install("pack.zip", ZipOf("Contoso.Domain.dll"));
+
+        var remove = () => store.Remove("never-installed.zip");
+
+        remove.Should().NotThrow();
+        store.InstalledArchives().Should().ContainSingle();
+    }
+
+    /// <summary>
+    /// The name arrives from a form, where a path could be typed instead.
+    /// </summary>
+    [Fact]
+    public void Refuses_to_remove_anything_outside_the_store()
+    {
+        var store = Store();
+        store.Install("pack.zip", ZipOf("Contoso.Domain.dll"));
+
+        store.Remove("../../pack.zip");
+
+        store.InstalledArchives().Should().ContainSingle();
+    }
+
     [Fact]
     public void Lists_the_installed_archives()
     {

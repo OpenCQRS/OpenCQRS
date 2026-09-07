@@ -120,6 +120,31 @@ app.MapPost("/settings/upload", (
     return Back(message: $"Uploaded {files.Count} file(s). {types.Current.Count} type(s) registered.");
 });
 
+app.MapPost("/settings/delete", (
+    DomainTypeRegistry types,
+    ExtensionStore store,
+    ILoggerFactory loggerFactory,
+    [FromForm] string name) =>
+{
+    var logger = loggerFactory.CreateLogger("Memoria.Web.Settings");
+
+    try
+    {
+        store.Remove(name);
+        logger.LogInformation("Removed {FileName}.", name);
+    }
+    catch (Exception exception)
+    {
+        logger.LogError(exception, "Could not remove {FileName}.", name);
+        return Back(error: $"{name} could not be removed: {exception.Message}");
+    }
+
+    types.Reload();
+    LogCatalogue(logger, types.Current);
+
+    return Back(message: $"Removed {name}. {types.Current.Count} type(s) registered.");
+});
+
 app.MapPost("/settings/refresh", async (
     HttpContext context,
     IAntiforgery antiforgery,

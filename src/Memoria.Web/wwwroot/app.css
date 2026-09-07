@@ -30,7 +30,7 @@ h1 {
 
 .lede {
     color: var(--ink-soft);
-    margin: 0 0 1.5rem;
+    margin: 1.5rem 0 1.5rem;
     max-width: 34rem;
 }
 
@@ -209,12 +209,13 @@ h1:focus {
         margin: 0;
     }
 
-/* The refresh button and the line explaining what it does, on one row. */
+/* The refresh button and the line explaining what it does, on one row. Set apart from the list
+   above it, which it acts on rather than belongs to. */
 .refresh {
     align-items: center;
     display: flex;
     gap: 0.75rem;
-    margin: 0 0 1.5rem;
+    margin: 1.5rem 0 1.5rem;
 }
 
 /* Something went right and the page is saying so. */
