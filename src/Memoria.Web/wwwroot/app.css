@@ -203,13 +203,15 @@ h1:focus {
         cursor: pointer;
     }
 
-    .upload .hint {
-        color: var(--ink-soft);
-        font-size: 0.875rem;
-        margin: 0;
-    }
+/* The line under or beside a control saying what it will do. Not scoped to the upload form it
+   started in: the refresh buttons carry one too, and they should read the same. */
+.hint {
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    margin: 0;
+}
 
-/* The refresh button and the line explaining what it does, on one row. Set apart from the list
+/* The refresh button and the line explaining what it does, on one row. Set apart from the block
    above it, which it acts on rather than belongs to. */
 .refresh {
     align-items: center;
@@ -217,6 +219,12 @@ h1:focus {
     gap: 0.75rem;
     margin: 1.5rem 0 1.5rem;
 }
+
+    /* The aggregate detail page's explanation runs to two lines, so it wraps rather than pushing
+       the button off the row. */
+    .refresh .hint {
+        max-width: 34rem;
+    }
 
 /* Something went right and the page is saying so. */
 .notice {

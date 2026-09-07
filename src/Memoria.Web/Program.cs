@@ -171,6 +171,73 @@ app.MapPost("/settings/refresh", async (
     return Back(message: $"{types.Current.Count} type(s) registered.");
 }).DisableAntiforgery();
 
+// The one write the DCB pages offer. A form post rather than an interactive component, so the
+// detail page stays statically rendered like the rest of them — and a POST rather than a link,
+// because it writes a snapshot.
+app.MapPost("/dcb/aggregates/update", async (
+    DomainTypeRegistry types,
+    IDcbDomainService store,
+    ILoggerFactory loggerFactory,
+    HttpRequest request,
+    [FromForm] string type,
+    [FromForm] string id,
+    [FromForm] string returnUrl) =>
+{
+    var logger = loggerFactory.CreateLogger("Memoria.Web.Dcb");
+
+    // Local: the return address arrives on the form, so it may not send anyone off-site.
+    IResult BackToAggregate(string? message = null, string? error = null)
+    {
+        var separator = returnUrl.Contains('?') ? "&" : "?";
+        var carried = message is not null
+            ? $"message={Uri.EscapeDataString(message)}"
+            : $"error={Uri.EscapeDataString(error ?? string.Empty)}";
+
+        return Results.LocalRedirect($"{returnUrl}{separator}{carried}");
+    }
+
+    // Matched against what is registered, exactly as the page matches them, so a name posted here
+    // can only ever reach a type this application already knows about.
+    var aggregate = DomainTypeDescriber.Select(types.Current.DcbAggregates, type);
+
+    var identifierType = aggregate is null
+        ? null
+        : DomainTypeDescriber.Describe(aggregate, types.Current.DcbAggregateIds)
+            .Identifiers.FirstOrDefault(candidate => candidate.FullName == id);
+
+    if (aggregate is null || identifierType is null)
+    {
+        return BackToAggregate(error: "That aggregate and identifier are no longer registered.");
+    }
+
+    // The identifier's own values, posted under the names its constructor takes — the same shape
+    // the address carries them in.
+    var values = request.Form.ToDictionary(
+        field => field.Key, field => (string?)field.Value.LastOrDefault(),
+        StringComparer.OrdinalIgnoreCase);
+
+    var created = IdentifierFactory.Create(identifierType, values);
+
+    if (created.Instance is null)
+    {
+        return BackToAggregate(error: created.Error ?? "That identifier could not be built.");
+    }
+
+    var refreshed = await AggregateRefresher.Refresh(store, aggregate, created.Instance);
+
+    if (refreshed.Error is not null)
+    {
+        logger.LogWarning("Could not refresh {Aggregate}: {Error}", aggregate.Name, refreshed.Error);
+        return BackToAggregate(error: refreshed.Error);
+    }
+
+    logger.LogInformation("Refreshed the snapshot for {Aggregate}.", aggregate.Name);
+
+    return BackToAggregate(message: refreshed.Refreshed
+        ? "Snapshot refreshed."
+        : "Nothing to refresh — no snapshot, and no events inside the boundary this aggregate applies.");
+});
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

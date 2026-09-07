@@ -39,6 +39,16 @@ else
     <h1>@Aggregate.Name</h1>
     <p class="lede">The snapshot stored under the boundary <code>@Identifier.Name</code> carries.</p>
 
+    @* What the refresh did, carried back on the address so it survives the redirect. *@
+    @if (Message is not null)
+    {
+        <p class="notice" role="status">@Message</p>
+    }
+    else if (RefreshError is not null)
+    {
+        <p class="alert" role="alert">@RefreshError</p>
+    }
+
     <dl class="facts">
         @foreach (var parameter in Parameters)
         {
@@ -111,6 +121,29 @@ else
                 </tbody>
             </table>
         }
+    }
+
+    @* Placed between the snapshot and the events because that is the seam it closes: everything
+       above is what was stored, everything below is what has happened, and this is the button that
+       makes the first account for the second. Set apart from the block above, which it acts on
+       rather than belongs to — the same shape as the refresh on the settings page. *@
+    @if (Boundary is not null)
+    {
+        <form method="post" action="dcb/aggregates/update" class="refresh">
+            <AntiforgeryToken/>
+            <input type="hidden" name="type" value="@Aggregate.FullName"/>
+            <input type="hidden" name="id" value="@Identifier.FullName"/>
+            @foreach (var parameter in Parameters)
+            {
+                <input type="hidden" name="@parameter.Name" value="@Values.GetValueOrDefault(parameter.Name)"/>
+            }
+            <input type="hidden" name="returnUrl" value="/@EventsLink(Descending, Events.Page)"/>
+            <button type="submit" class="button">Update</button>
+            <span class="hint">
+                Refreshes the stored snapshot: any events below that it has not applied yet are
+                applied to it and the result is written back. Nothing is appended.
+            </span>
+        </form>
     }
 
     @* Narrowed to what this aggregate applies, so the count agrees with the version above, and shown
@@ -284,6 +317,16 @@ else
     private bool Descending { get; set; }
 
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
+    /// to answer for the aggregate at all rather than a button failing to do its job.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "message")]
+    private string? Message { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? RefreshError { get; set; }
 
     /// <summary>
     /// One address for the whole events table, carrying everything that addresses the aggregate as
