@@ -1,11 +1,10 @@
 @page "/dcb/aggregates/detail"
-@using Memoria.EventSourcing
 @using Memoria.EventSourcing.Dcb
-@using Memoria.EventSourcing.Domain
+@using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
-@inject IDcbDomainService Store
+@inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
 <PageTitle>@(Aggregate?.Name ?? "Aggregate") @Title</PageTitle>
@@ -38,7 +37,7 @@
 else
 {
     <h1>@Aggregate.Name</h1>
-    <p class="lede">Folded from the boundary <code>@Identifier.Name</code> carries.</p>
+    <p class="lede">The snapshot stored under the boundary <code>@Identifier.Name</code> carries.</p>
 
     <dl class="facts">
         @foreach (var parameter in Parameters)
@@ -53,10 +52,19 @@ else
             <dd><code>@Boundary</code></dd>
         }
 
-        @if (Loaded is not null)
+        @* All three off the row rather than out of the payload: the store's account of the write,
+           not the model's own state. The version is the stored one, so a snapshot left behind while
+           later events accumulate reads lower here than folding its boundary would give. *@
+        @if (Stored is not null)
         {
             <dt>Version</dt>
-            <dd>@Version</dd>
+            <dd>@Stored.Version</dd>
+
+            <dt>Created</dt>
+            <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
+
+            <dt>Updated</dt>
+            <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
         }
     </dl>
 
@@ -66,9 +74,12 @@ else
     }
     else if (Loaded is null)
     {
+        @* Only the snapshots table is read, so this says nothing about the events: a boundary can
+           hold events that have never been folded into a row, and there would still be nothing to
+           show here. *@
         <p class="empty">
-            Nothing is stored under those values — no snapshot, and no events inside the boundary
-            they describe.
+            No snapshot is stored under those values. Nothing has been written under the boundary
+            they describe, or it was written under a wider one.
         </p>
     }
     else
@@ -107,13 +118,6 @@ else
 
 @code {
 
-    /// <summary>
-    /// Whatever the store has: the snapshot brought up to date with any newer events, and failing a
-    /// snapshot, the boundary's events folded from the beginning. Null only when there is genuinely
-    /// nothing there.
-    /// </summary>
-    private const ReadMode Mode = ReadMode.SnapshotWithNewEventsOrCreate;
-
     private Type? Aggregate { get; set; }
 
     private Type? Identifier { get; set; }
@@ -124,13 +128,13 @@ else
 
     private string? Boundary { get; set; }
 
+    private StoredSnapshot? Stored { get; set; }
+
     private object? Loaded { get; set; }
 
     private string? Error { get; set; }
 
     private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
-
-    private string? Version => Loaded is EventSourcedModel model ? model.Version.ToString() : null;
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
@@ -177,17 +181,25 @@ else
             return;
         }
 
-        // The boundary is the aggregate's own account of which events it was folded from, so it is
-        // worth showing beside the state it produced.
+        // The boundary is the aggregate's own account of which events it was folded from, and it is
+        // also what the row is addressed by: a snapshot is only ever a valid answer for the boundary
+        // that produced it.
         Boundary = created.Instance switch
         {
             IDcbAggregateId aggregateId => aggregateId.Boundary.ToString(),
             _ => null
         };
 
-        var loaded = await AggregateReader.Load(Store, Aggregate, created.Instance, Mode);
+        if (Boundary is null)
+        {
+            return;
+        }
+
+        var loaded = await AggregateReader.Load(
+            StoreContext, Aggregate, DcbTypeBindings.GetAggregateBindingKey(Aggregate), Boundary);
 
         Loaded = loaded.Aggregate;
+        Stored = loaded.Snapshot;
         Error = loaded.Error;
         State = Loaded is null ? [] : DomainTypeDescriber.ReadState(Loaded);
     }

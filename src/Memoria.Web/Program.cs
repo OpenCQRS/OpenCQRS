@@ -244,17 +244,14 @@ static async Task WarmStore(WebApplication app)
                 }
             }
 
-            // The detail page reads through the domain service instead, which has queries of its
-            // own to compile — folding one real aggregate warms those the same way.
+            // The detail page reads the same table, but addressed by one whole boundary rather than
+            // by the shape of one. That is a distinct query for EF to compile, so warming the list
+            // alone would leave it to be compiled on the first row anyone opens.
             if (listed.FirstOrDefault() is { } instance &&
                 IdentifierFactory.Create(shape.Identifier, instance.Values.ToDictionary(
-                    value => value.Key, value => (string?)value.Value)).Instance is { } identifier)
+                    value => value.Key, value => (string?)value.Value)).Instance is IDcbAggregateId identifier)
             {
-                await AggregateReader.Load(
-                    scope.ServiceProvider.GetRequiredService<IDcbDomainService>(),
-                    aggregate,
-                    identifier,
-                    ReadMode.SnapshotWithNewEventsOrCreate);
+                await AggregateReader.Load(store, aggregate, modelType, identifier.Boundary.ToString());
             }
 
             app.Logger.LogInformation("Store warmed on {Aggregate}.", aggregate.Name);
