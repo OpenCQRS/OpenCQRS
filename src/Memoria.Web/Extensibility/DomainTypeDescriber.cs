@@ -87,12 +87,15 @@ public static class DomainTypeDescriber
     }
 
     /// <summary>
-    /// The properties the type declares itself. Inherited ones are the framework's own — Version,
-    /// StreamId and the rest — and say nothing about this model. Nor does an override of one:
-    /// EventTypeFilter is declared here but belongs to the framework, and is already shown as the
-    /// events the model applies.
+    /// Reads the properties a type declares itself.
     /// </summary>
-    private static IReadOnlyList<DomainProperty> PropertiesOf(Type type) =>
+    /// <param name="type">The type to read. Any type — a model, or an event carrying state.</param>
+    /// <remarks>
+    /// Inherited ones are the framework's own — Version, StreamId and the rest — and say nothing
+    /// about this type. Nor does an override of one: EventTypeFilter is declared on a model but
+    /// belongs to the framework, and is already shown as the events the model applies.
+    /// </remarks>
+    public static IReadOnlyList<DomainProperty> PropertiesOf(Type type) =>
         Declared(type)
             .Select(property => new DomainProperty(property.Name, Readable(property.PropertyType)))
             .OrderBy(property => property.Name, StringComparer.Ordinal)

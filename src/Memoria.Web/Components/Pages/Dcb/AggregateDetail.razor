@@ -468,8 +468,13 @@ else
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
             .Where(value => !string.IsNullOrWhiteSpace(value)));
 
+    /// <summary>
+    /// Back up to the aggregate, naming the tab the identifiers are listed under rather than
+    /// leaving it to whichever one opens by default — the step back should arrive where the other
+    /// identifiers are, and that holds if the panel's opening view ever changes.
+    /// </summary>
     private string BackToAggregate =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}";
+        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=info";
 
     private string BackToList =>
         $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +

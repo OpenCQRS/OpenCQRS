@@ -45,69 +45,183 @@ else
             @if (Selected is not null)
             {
                 <h2>@Selected.Type.Name</h2>
-                <dl class="facts">
-                    <dt>Full name</dt>
-                    <dd><code>@Selected.Type.FullName</code></dd>
 
-                    <dt>Bound as</dt>
-                    <dd>
-                        @if (Selected.BindingKey is null)
+                @* Three views of the chosen aggregate, switched by the address rather than by
+                   script: each tab is a link, so a view can be linked to and gone back to, and the
+                   page stays statically rendered like the rest of them. What the type is, then the
+                   shape it is folded into, then what it is folded from. *@
+                <nav class="tabs" aria-label="Aggregate views">
+                    <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
+                       aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
+                    <a id="tab-@StateTab" href="@TabLink(StateTab)"
+                       aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+                    <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
+                       aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
+                </nav>
+
+                @* Each panel is named by the tab that reaches it, so the label is written once
+                   rather than repeated as a heading under the row that already says it. *@
+                @if (Tab == EventsTab)
+                {
+                    <section class="tab-panel" aria-labelledby="tab-@EventsTab">
+                        <p class="lede">
+                            The event types this aggregate applies, and what each one carries.
+                            Folding a boundary runs these into its state and passes the rest over.
+                        </p>
+
+                        @if (Selected.EventTypes.Count == 0)
                         {
-                            <span class="missing">not bound — it carries no [AggregateType]</span>
+                            <p class="missing">No event type filter — it applies every event in its boundary.</p>
                         }
                         else
                         {
-                            <code>@Selected.BindingKey</code>
+                            <table class="grid">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Event</th>
+                                    <th scope="col">State</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var eventType in Selected.EventTypes)
+                                {
+                                    <tr>
+                                        <td><code>@eventType.Name</code></td>
+                                        <td>
+                                            @* Read the same way the aggregate's own state is, so an
+                                               event's payload and the state it lands in are written
+                                               in the same terms. *@
+                                            @if (DomainTypeDescriber.PropertiesOf(eventType) is { Count: > 0 } carried)
+                                            {
+                                                @foreach (var property in carried)
+                                                {
+                                                    <div><code>@property.TypeName</code> @property.Name</div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="missing">It carries nothing of its own.</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
                         }
-                    </dd>
-
-                    <dt>Assembly</dt>
-                    <dd>@Selected.AssemblyName</dd>
-                </dl>
-
-                <h3>Identifiers</h3>
-                @if (Selected.Identifiers.Count == 0)
+                    </section>
+                }
+                else if (Tab == StateTab)
                 {
-                    <p class="missing">Nothing addresses this aggregate.</p>
+                    <section class="tab-panel" aria-labelledby="tab-@StateTab">
+                        <p class="lede">
+                            The properties the aggregate declares — the shape folding its events
+                            leaves it in. These belong to the type; the values one stored instance
+                            holds are reached through an identifier on the info tab.
+                        </p>
+
+                        @if (Selected.Properties.Count == 0)
+                        {
+                            <p class="missing">It declares no properties of its own.</p>
+                        }
+                        else
+                        {
+                            @* The same two columns the detail page reads a stored instance in, so
+                               the type's shape and one instance's values are read the same way. The
+                               third column is the one this page has nothing to put in. *@
+                            <table class="grid">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Property</th>
+                                    <th scope="col">Type</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var property in Selected.Properties)
+                                {
+                                    <tr>
+                                        <td>@property.Name</td>
+                                        <td><code>@property.TypeName</code></td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        }
+                    </section>
                 }
                 else
                 {
-                    <ul class="plain">
-                        @foreach (var identifier in Selected.Identifiers)
-                        {
-                            <li><a href="@LoadLink(identifier)"><code>@identifier.Name</code></a></li>
-                        }
-                    </ul>
-                }
+                    <section class="tab-panel" aria-labelledby="tab-@InfoTab">
+                        <dl class="facts">
+                            <dt>Full name</dt>
+                            <dd><code>@Selected.Type.FullName</code></dd>
 
-                <h3>Events applied</h3>
-                @if (Selected.EventTypes.Count == 0)
-                {
-                    <p class="missing">No event type filter — it applies every event in its boundary.</p>
-                }
-                else
-                {
-                    <ul class="plain">
-                        @foreach (var eventType in Selected.EventTypes)
-                        {
-                            <li><code>@eventType.Name</code></li>
-                        }
-                    </ul>
-                }
+                            <dt>Bound as</dt>
+                            <dd>
+                                @if (Selected.BindingKey is null)
+                                {
+                                    <span class="missing">not bound — it carries no [AggregateType]</span>
+                                }
+                                else
+                                {
+                                    <code>@Selected.BindingKey</code>
+                                }
+                            </dd>
 
-                <h3>State</h3>
-                @if (Selected.Properties.Count == 0)
-                {
-                    <p class="missing">It declares no properties of its own.</p>
-                }
-                else
-                {
-                    <ul class="plain">
-                        @foreach (var property in Selected.Properties)
+                            <dt>Assembly</dt>
+                            <dd>@Selected.AssemblyName</dd>
+                        </dl>
+
+                        @* The one part of this panel that leads off the page, and the only part
+                           needing a name of its own: everything above it is what the tab is called. *@
+                        <h3>Identifiers</h3>
+                        <p class="lede">
+                            The identifiers that address this aggregate. Each one names it a
+                            different way and resolves to a boundary of events to fold, built from
+                            the tags beside it. (AnyOf) takes in every event carrying one of those
+                            tags; (AllOf) only those carrying all of them.
+                        </p>
+
+                        @if (Selected.Identifiers.Count == 0)
                         {
-                            <li><code>@property.TypeName</code> @property.Name</li>
+                            <p class="missing">Nothing addresses this aggregate.</p>
                         }
-                    </ul>
+                        else
+                        {
+                            <table class="grid">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Tags</th>
+                                    <th scope="col">Data</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var identifier in Selected.Identifiers)
+                                {
+                                    <tr>
+                                        <td><code>@identifier.Name</code></td>
+                                        <td>
+                                            @if (IdentifierShape.Of(identifier) is { } shape)
+                                            {
+                                                <code>@Tags(shape)</code>
+                                                <span class="hint">@Combination(shape)</span>
+                                            }
+                                            else
+                                            {
+                                                @* Worth saying rather than leaving the cell blank:
+                                                   an identifier with no shape is also one the
+                                                   instances page cannot list, so the gap here is
+                                                   the gap the link leads to. *@
+                                                <span class="missing">could not be worked out</span>
+                                            }
+                                        </td>
+                                        <td><a href="@LoadLink(identifier)">View</a></td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        }
+                    </section>
                 }
             }
         </section>
@@ -118,6 +232,30 @@ else
 
     [SupplyParameterFromQuery(Name = "type")]
     private string? SelectedName { get; set; }
+
+    /// <summary>
+    /// The three views the panel offers, named as they appear in the address. Which one is showing
+    /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
+    /// </summary>
+    private const string InfoTab = "info";
+
+    private const string StateTab = "state";
+
+    private const string EventsTab = "events";
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? RequestedTab { get; set; }
+
+    /// <summary>
+    /// Matched against the three the page has, so an unknown name in the address opens the one it
+    /// opens with rather than an empty panel.
+    /// </summary>
+    private string Tab => (RequestedTab ?? string.Empty).ToLowerInvariant() switch
+    {
+        StateTab => StateTab,
+        EventsTab => EventsTab,
+        _ => InfoTab,
+    };
 
     private IReadOnlyList<Type> AggregateTypes => Types.Current.DcbAggregates;
 
@@ -132,6 +270,24 @@ else
             : null;
 
     /// <summary>
+    /// The tags an identifier's boundary is built from, by name. The values are left out: they are
+    /// an instance's, not the type's, and how the names combine is said beside them rather than
+    /// spelled in separators.
+    /// </summary>
+    private static string Tags(IdentifierShape shape) => string.Join(", ", shape.TagKeys);
+
+    /// <summary>
+    /// Which of the two shapes a boundary comes in, in the words the library itself uses. Over one
+    /// tag they are the same boundary, so the cell says that instead of choosing one arbitrarily.
+    /// </summary>
+    private static string Combination(IdentifierShape shape) => shape.Combination switch
+    {
+        TagCombination.AnyOf => "(AnyOf)",
+        TagCombination.AllOf => "(AllOf)",
+        _ => "(one tag)"
+    };
+
+    /// <summary>
     /// Through to the page that loads one of these from the store. The aggregate travels with the
     /// identifier because an identifier alone does not say what it addresses.
     /// </summary>
@@ -140,8 +296,18 @@ else
         $"?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(identifier.FullName ?? string.Empty)}";
 
-    private static string Link(Type aggregate) =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}";
+    /// <summary>
+    /// A tab of the aggregate already chosen.
+    /// </summary>
+    private string TabLink(string tab) =>
+        $"dcb/aggregates?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}&tab={tab}";
+
+    /// <summary>
+    /// Another aggregate, read the same way as the one being left: the tab travels with the choice,
+    /// so a facet compared across two types is one click each rather than two.
+    /// </summary>
+    private string Link(Type aggregate) =>
+        $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}&tab={Tab}";
 
     private string? CurrentClass(Type aggregate) => aggregate == Selected?.Type ? "current" : null;
 

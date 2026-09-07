@@ -94,3 +94,14 @@ public class SampleUnmappedId(string id, string note) : IDcbAggregateId<SampleDc
 
     public TagQuery Boundary { get; } = TagQuery.AnyOf(new Tag("sample", id));
 }
+
+/// <summary>
+/// An identifier whose boundary is an intersection: only the events carrying both of its tags, like
+/// asking whether this one student is already on this one course.
+/// </summary>
+public class SampleAllOfId(string id, string label) : IDcbAggregateId<SampleDcbAggregate>
+{
+    public string Id { get; } = id;
+
+    public TagQuery Boundary { get; } = TagQuery.AllOf(new Tag("sample", id), new Tag("label", label));
+}

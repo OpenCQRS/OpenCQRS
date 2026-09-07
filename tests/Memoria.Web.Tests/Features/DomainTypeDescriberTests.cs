@@ -64,6 +64,18 @@ public class DomainTypeDescriberTests
         Describe(typeof(SampleAggregate)).EventTypes.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Reachable for a type that is neither an aggregate nor a projection — an event carries state
+    /// the same way, and the aggregates page shows what each event it applies is carrying.
+    /// </summary>
+    [Fact]
+    public void Reads_the_properties_of_a_type_that_is_not_a_model()
+    {
+        DomainTypeDescriber.PropertiesOf(typeof(SampleHappenedEvent))
+            .Should().ContainSingle()
+            .Which.Should().BeEquivalentTo(new DomainProperty("Id", "string"));
+    }
+
     [Fact]
     public void Reports_the_properties_the_type_declares()
     {

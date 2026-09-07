@@ -133,4 +133,32 @@ public class IdentifierShapeTests
         IdentifierShape.Of(typeof(SampleDcbAggregateId))!.ValuesFromBoundary("sample:abc")
             .Should().BeEquivalentTo(new Dictionary<string, string> { ["id"] = "abc" });
     }
+
+    /// <summary>
+    /// A union and an intersection over the same tags select different events, so which of the two
+    /// an identifier asks for is part of what it is rather than a detail of how it renders.
+    /// </summary>
+    [Fact]
+    public void Reports_a_boundary_matching_any_of_its_tags_as_a_union()
+    {
+        IdentifierShape.Of(typeof(SampleTwoPartId))!.Combination
+            .Should().Be(TagCombination.AnyOf);
+    }
+
+    [Fact]
+    public void Reports_a_boundary_needing_all_of_its_tags_as_an_intersection()
+    {
+        IdentifierShape.Of(typeof(SampleAllOfId))!.Combination
+            .Should().Be(TagCombination.AllOf);
+    }
+
+    /// <summary>
+    /// Over one tag the two are the same boundary, so neither word says anything the other does not.
+    /// </summary>
+    [Fact]
+    public void Reports_a_single_tag_boundary_as_neither()
+    {
+        IdentifierShape.Of(typeof(SampleDcbAggregateId))!.Combination
+            .Should().Be(TagCombination.OneTag);
+    }
 }

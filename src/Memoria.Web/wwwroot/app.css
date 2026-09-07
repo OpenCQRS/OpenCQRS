@@ -360,14 +360,7 @@ h2:focus {
     margin: 0 0 1rem;
 }
 
-.panel-detail h3 {
-    font-size: 0.9rem;
-    letter-spacing: 0.02em;
-    margin: 1.5rem 0 0.5rem;
-    text-transform: uppercase;
-}
-
-/* One subject read three ways, with the row of names on top and one of them showing. Every tab is
+/* One subject read several ways, with the row of names on top and one of them showing. Every tab is
    an ordinary link and the view is carried in the address, so the set works with no script, each
    view can be linked to, and the browser's back button steps between them. Global rather than
    scoped to the page that first grew them, because a second page wants the same row. */
@@ -416,6 +409,28 @@ h2:focus {
     outline: none;
 }
 
+    /* A panel's opening line is a caption for what is under it, so it runs to the same width rather
+       than to the narrower measure prose is set in elsewhere: a description ending short of a table
+       it describes reads as a different column. */
+    .tab-panel .lede {
+        max-width: none;
+    }
+
+    /* A second section inside a panel. The tab names the first, so only what follows it needs a
+       name of its own. */
+    .tab-panel h3 {
+        font-size: 0.9rem;
+        letter-spacing: 0.02em;
+        margin: 2rem 0 0.5rem;
+        text-transform: uppercase;
+    }
+
+    /* The line under a heading belongs to it, so it keeps the heading's own spacing rather than
+       opening a gap of its own. */
+    .tab-panel h3 + .lede {
+        margin-top: 0;
+    }
+
 /* Label above value, so a long type name has the width to itself. */
 .facts {
     margin: 0;
@@ -440,6 +455,7 @@ h2:focus {
     .plain li {
         padding: 0.2rem 0;
     }
+
 
 /* Nothing to show, and the page saying why rather than leaving a gap. */
 .missing {

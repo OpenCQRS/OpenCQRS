@@ -15,11 +15,16 @@ namespace Memoria.Web.Extensibility;
 /// </remarks>
 public sealed class IdentifierShape
 {
-    private IdentifierShape(Type identifier, IReadOnlyList<TagSlot> slots, string boundaryPattern)
+    private IdentifierShape(
+        Type identifier,
+        IReadOnlyList<TagSlot> slots,
+        string boundaryPattern,
+        TagCombination combination)
     {
         Identifier = identifier;
         Slots = slots;
         BoundaryPattern = boundaryPattern;
+        Combination = combination;
     }
 
     /// <summary>Gets the identifier type this describes.</summary>
@@ -38,6 +43,17 @@ public sealed class IdentifierShape
     /// is that same rendering, so it matches what was stored.
     /// </remarks>
     public string BoundaryPattern { get; }
+
+    /// <summary>
+    /// Gets how the identifier's tags combine to select events.
+    /// </summary>
+    /// <remarks>
+    /// Read off the groups of the boundary it produces rather than off the rendering: a union is one
+    /// group per tag and an intersection a single group holding them all, and the two select
+    /// different events, so which it is belongs beside the tags rather than being left to be
+    /// inferred from a separator.
+    /// </remarks>
+    public TagCombination Combination { get; }
 
     private static readonly ConcurrentDictionary<Type, IdentifierShape?> Known = new();
 
@@ -119,8 +135,20 @@ public sealed class IdentifierShape
         var pattern = probes.Aggregate(boundary.ToString(),
             (rendered, probe) => rendered.Replace(probe.Probe!, "%", StringComparison.Ordinal));
 
-        return new IdentifierShape(identifier, slots, pattern);
+        return new IdentifierShape(identifier, slots, pattern, Combine(boundary.TagGroups));
     }
+
+    /// <summary>
+    /// Reads the two shapes a boundary comes in off its groups. Several groups is a union — an event
+    /// inside any one of them is inside the boundary. One group holding several tags is an
+    /// intersection. One group holding one tag is both at once, and so is neither worth naming.
+    /// </summary>
+    private static TagCombination Combine(IReadOnlyCollection<IReadOnlyCollection<Tag>> groups) =>
+        groups.Count > 1
+            ? TagCombination.AnyOf
+            : groups.First().Count > 1
+                ? TagCombination.AllOf
+                : TagCombination.OneTag;
 
     /// <summary>
     /// Turns the tags of one stored instance back into the values its identifier was built from.
@@ -208,6 +236,24 @@ public sealed class IdentifierShape
             _ => null
         };
     }
+}
+
+/// <summary>
+/// How an identifier's tags combine to select the events inside its boundary.
+/// </summary>
+public enum TagCombination
+{
+    /// <summary>
+    /// One tag, so a union and an intersection over it are the same boundary and neither name says
+    /// anything the other does not.
+    /// </summary>
+    OneTag,
+
+    /// <summary>A union: every event carrying at least one of the tags is inside the boundary.</summary>
+    AnyOf,
+
+    /// <summary>An intersection: only the events carrying every one of the tags.</summary>
+    AllOf
 }
 
 /// <summary>One value of an identifier, and the tag it is written into.</summary>
