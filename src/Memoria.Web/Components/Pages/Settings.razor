@@ -151,8 +151,9 @@ else
         else
         {
             @* Set beside each other the same way the home page sets the two models, so what one model
-               registered is read against the other rather than down one list. The events are one bound
-               set that either model applies, so the same count is shown in both columns. *@
+               registered is read against the other rather than down one list. The events are one
+               bound set, but each column counts the ones its own models apply, so a column says what
+               that model can fold rather than what was uploaded. *@
             <div class="models">
                 <section class="model">
                     <h2>Streamed</h2>
@@ -272,9 +273,12 @@ else
     private IReadOnlyList<InstalledArchive> Archives { get; set; } = [];
 
     @* The model each column belongs to is said by its heading, so the labels no longer carry it.
-       Events are counted in both: one set is bound, and either model can apply them. *@
+       Events are counted per column as the ones that column's models apply, not as the whole bound
+       set: one set is bound and either model may append from it, but what a column is read for is
+       what its own models fold. An event both apply is counted in both, and the two columns
+       therefore need not add up to the events found. *@
     private IReadOnlyList<(string Label, int Count)> StreamedCounts => [
-        ("Events", Catalogue.Events.Count),
+        ("Events", Catalogue.StreamedEvents.Count),
         ("Aggregates", Catalogue.StreamedAggregates.Count),
         ("Aggregate ids", Catalogue.StreamedAggregateIds.Count),
         ("Projections", Catalogue.StreamedProjections.Count),
@@ -282,7 +286,7 @@ else
     ];
 
     private IReadOnlyList<(string Label, int Count)> DcbCounts => [
-        ("Events", Catalogue.Events.Count),
+        ("Events", Catalogue.DcbEvents.Count),
         ("Aggregates", Catalogue.DcbAggregates.Count),
         ("Aggregate ids", Catalogue.DcbAggregateIds.Count),
         ("Projections", Catalogue.DcbProjections.Count),

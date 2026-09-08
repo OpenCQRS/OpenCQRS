@@ -158,3 +158,16 @@ public class SampleAllOfId(string id, string label) : IDcbAggregateId<SampleDcbA
 
     public TagQuery Boundary { get; } = TagQuery.AllOf(new Tag("sample", id), new Tag("label", label));
 }
+
+/// <summary>
+/// A second DCB write model, applying a different event from <see cref="SampleDcbAggregate"/>, so
+/// the events one consistency model applies can be seen to be the union across its models rather
+/// than whichever one was asked first.
+/// </summary>
+[AggregateType("SampleCarryingAggregate", 1)]
+public class SampleCarryingDcbAggregate : DcbAggregateRoot
+{
+    public override Type[]? EventTypeFilter => [typeof(SampleCarriedEvent)];
+
+    protected override bool Apply<T>(T @event) => false;
+}

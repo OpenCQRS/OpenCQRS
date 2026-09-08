@@ -43,21 +43,64 @@ public static class DomainTypeScanner
             .Distinct()
             .ToList();
 
+        // A DCB model is not a streamed one and never both, so each list excludes the other's
+        // marker rather than relying on the class hierarchies staying disjoint.
+        var streamedAggregates = Implementing<IAggregateRoot>(concrete);
+        var streamedProjections = Implementing<IProjection>(concrete);
+        var dcbAggregates = Implementing<IDcbAggregateRoot>(concrete);
+        var dcbProjections = Implementing<IDcbProjection>(concrete);
+        var events = Implementing<IEvent>(concrete);
+
         return new DomainTypeCatalogue
         {
-            // A DCB model is not a streamed one and never both, so each list excludes the other's
-            // marker rather than relying on the class hierarchies staying disjoint.
-            StreamedAggregates = Implementing<IAggregateRoot>(concrete),
+            StreamedAggregates = streamedAggregates,
             StreamedAggregateIds = Implementing<IAggregateId>(concrete),
-            StreamedProjections = Implementing<IProjection>(concrete),
+            StreamedProjections = streamedProjections,
             StreamedProjectionIds = Implementing<IProjectionId>(concrete),
-            DcbAggregates = Implementing<IDcbAggregateRoot>(concrete),
+            DcbAggregates = dcbAggregates,
             DcbAggregateIds = Implementing<IDcbAggregateId>(concrete),
-            DcbProjections = Implementing<IDcbProjection>(concrete),
+            DcbProjections = dcbProjections,
             DcbProjectionIds = Implementing<IDcbProjectionId>(concrete),
-            Events = Implementing<IEvent>(concrete),
+            Events = events,
+            // Worked out here rather than by each page that wants it, because reading a filter means
+            // building a model and the answer only changes when these assemblies are read again.
+            StreamedEvents = AppliedBy([..streamedAggregates, ..streamedProjections], events),
+            DcbEvents = AppliedBy([..dcbAggregates, ..dcbProjections], events),
             Errors = errors
         };
+    }
+
+    /// <summary>
+    /// The events some model of one consistency model applies, out of the events that were found.
+    /// </summary>
+    /// <param name="models">The aggregates and projections of that consistency model.</param>
+    /// <param name="events">Every event found, which is what the answer is drawn from.</param>
+    /// <returns>
+    /// Those events, in the order they were found in. A model applying an event that was not found
+    /// adds nothing: it cannot be listed, so it is not.
+    /// </returns>
+    /// <remarks>
+    /// The union across the models, because one model applying an event is enough for the model as
+    /// a whole to. A model declaring no filter applies whatever its stream or boundary hands it, so
+    /// it applies all of them — one such model is enough to make the answer the whole set, which is
+    /// the truthful answer rather than a useful-looking one.
+    /// </remarks>
+    public static IReadOnlyList<Type> AppliedBy(
+        IReadOnlyList<Type> models, IReadOnlyList<Type> events)
+    {
+        var applied = new HashSet<Type>();
+
+        foreach (var model in models)
+        {
+            if (BoundaryEvents.AppliedBy(model, null) is not { } filter)
+            {
+                return events;
+            }
+
+            applied.UnionWith(filter);
+        }
+
+        return events.Where(applied.Contains).ToList();
     }
 
     private static IReadOnlyList<Type> Implementing<T>(IEnumerable<Type> types) =>

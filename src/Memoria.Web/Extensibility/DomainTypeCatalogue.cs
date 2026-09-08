@@ -29,7 +29,25 @@ public sealed record DomainTypeCatalogue
 
     public IReadOnlyList<Type> DcbProjectionIds { get; init; } = [];
 
+    /// <summary>
+    /// Every event found, which is the set the framework binds: an event is the same event
+    /// whichever model appends it, so there is one map and one list of them.
+    /// </summary>
     public IReadOnlyList<Type> Events { get; init; } = [];
+
+    /// <summary>
+    /// The events some streamed model applies.
+    /// </summary>
+    /// <remarks>
+    /// A subset of <see cref="Events"/>, kept apart from it because a page about one consistency
+    /// model has no use for an event nothing in that model folds. Which is not the same as an event
+    /// nothing appends: this is read off the models' own filters, and an event no model applies may
+    /// still be written to the log for something else to read.
+    /// </remarks>
+    public IReadOnlyList<Type> StreamedEvents { get; init; } = [];
+
+    /// <summary>The events some DCB model applies. See <see cref="StreamedEvents"/>.</summary>
+    public IReadOnlyList<Type> DcbEvents { get; init; } = [];
 
     /// <summary>
     /// What went wrong while loading, one line per assembly that could not be read. Held rather
@@ -41,6 +59,11 @@ public sealed record DomainTypeCatalogue
     public DateTime? ReloadedUtc { get; init; }
 
     /// <summary>Gets the number of domain types found, identifiers included.</summary>
+    /// <remarks>
+    /// The events counted are the whole set. <see cref="StreamedEvents"/> and <see cref="DcbEvents"/>
+    /// are two views of that set rather than more types, and counting them here would report one
+    /// event two or three times.
+    /// </remarks>
     public int Count =>
         StreamedAggregates.Count + StreamedAggregateIds.Count +
         StreamedProjections.Count + StreamedProjectionIds.Count +
