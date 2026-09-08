@@ -528,7 +528,7 @@ else
     /// identifiers are, and that holds if the panel's opening view ever changes.
     /// </summary>
     private string BackToAggregate =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=info";
+        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string BackToList =>
         $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
