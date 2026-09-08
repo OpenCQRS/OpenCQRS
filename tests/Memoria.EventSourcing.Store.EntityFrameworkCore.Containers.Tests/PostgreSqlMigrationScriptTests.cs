@@ -12,7 +12,7 @@ namespace Memoria.EventSourcing.Store.EntityFrameworkCore.Containers.Tests;
 /// the pre-1.5.0 index shape. Without this the script would only ever be checked by reading it.
 /// </summary>
 /// <remarks>
-/// The 1.5.0 install script stands up the fixture, not the current model: 2.0.0 renamed the event
+/// The 1.5.0 install script stands up the fixture, not the current model: 1.9.0 renamed the event
 /// table, so the model can no longer create the schema this migration is written against.
 /// </remarks>
 [Trait("Category", "Container")]

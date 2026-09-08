@@ -1,6 +1,6 @@
-# Upgrade to 2.0.0
+# Upgrade to 1.9.0
 
-Memoria 2.0.0 renames the Entity Framework Core event table from `events` to `DomainEvents`. It is a
+Memoria 1.9.0 renames the Entity Framework Core event table from `events` to `DomainEvents`. It is a
 schema change and nothing else: no column, index, entity, API or serialised payload changes with it,
 and no row is rewritten.
 
@@ -9,7 +9,7 @@ created by an earlier version. The Cosmos DB store has no tables and is untouche
 dynamic consistency boundary store, whose four tables were named `Dcb*` from the start.
 
 **An existing database must be renamed before an upgraded application runs against it.** The store
-reads and writes `DomainEvents` from 2.0.0 onwards; it will not find `events`, and the failure is a
+reads and writes `DomainEvents` from 1.9.0 onwards; it will not find `events`, and the failure is a
 missing-object error from the engine on the first read.
 
 <a name="why-the-table-was-renamed"></a>
@@ -54,8 +54,8 @@ migration as applied.
 
 Run the rename script for your engine:
 
-- [`scripts/migrations/2.0.0-rename-events-sqlserver.sql`](../../scripts/migrations/2.0.0-rename-events-sqlserver.sql)
-- [`scripts/migrations/2.0.0-rename-events-postgresql.sql`](../../scripts/migrations/2.0.0-rename-events-postgresql.sql)
+- [`scripts/migrations/1.9.0-rename-events-sqlserver.sql`](../../scripts/migrations/1.9.0-rename-events-sqlserver.sql)
+- [`scripts/migrations/1.9.0-rename-events-postgresql.sql`](../../scripts/migrations/1.9.0-rename-events-postgresql.sql)
 
 Both are metadata-only: no rows are copied and no index is rebuilt, so a stream of ten million events
 costs the same as a stream of ten. Both take a table-level lock for the duration, so run them while
@@ -64,7 +64,7 @@ nothing is writing.
 Both are safe to run more than once — a database already holding `DomainEvents` and no `events` is
 left alone.
 
-> **Do not run the 2.0.0 install script first.** It would create an empty `DomainEvents` beside your
+> **Do not run the 1.9.0 install script first.** It would create an empty `DomainEvents` beside your
 > populated `events`, and the store would then read the empty one. The rename script refuses to run
 > when both tables exist rather than quietly doing nothing, but the install script has no way to know
 > and will not stop you.
@@ -74,8 +74,8 @@ left alone.
 A new database needs no migration — run the install script for your engine, which creates the table
 under its new name:
 
-- [`scripts/install/2.0.0-install-sqlserver.sql`](../../scripts/install/2.0.0-install-sqlserver.sql)
-- [`scripts/install/2.0.0-install-postgresql.sql`](../../scripts/install/2.0.0-install-postgresql.sql)
+- [`scripts/install/1.9.0-install-sqlserver.sql`](../../scripts/install/1.9.0-install-sqlserver.sql)
+- [`scripts/install/1.9.0-install-postgresql.sql`](../../scripts/install/1.9.0-install-postgresql.sql)
 
 See [Install the store schema](install-the-store-schema.md).
 

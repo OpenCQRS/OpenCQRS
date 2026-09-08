@@ -146,9 +146,9 @@ public class DropAggregateEventsScriptTests
         {
             (await ColumnMetadata.ReadAsync(dbContext, LinkTable)).Should().BeEmpty();
 
-            // The 1.5.0 names, because that is the schema standing here — 2.0.0 renamed the event
+            // The 1.5.0 names, because that is the schema standing here — 1.9.0 renamed the event
             // table, and this drop script runs long before that rename does.
-            foreach (var table in InstallScriptComparison.TablesBefore200InDropOrder)
+            foreach (var table in InstallScriptComparison.TablesBefore190InDropOrder)
             {
                 (await ColumnMetadata.ReadAsync(dbContext, table)).Should()
                     .NotBeEmpty($"{table} must survive the drop");

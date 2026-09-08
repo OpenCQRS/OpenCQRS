@@ -8,7 +8,7 @@ namespace Memoria.EventSourcing.Store.EntityFrameworkCore.Containers.Tests;
 
 /// <summary>
 /// Rehearses the upgrade a consumer actually performs: a database standing at the 1.7.0 schema, with
-/// the event table still called <c>events</c>, has the 2.0.0 rename script applied to it.
+/// the event table still called <c>events</c>, has the 1.9.0 rename script applied to it.
 /// </summary>
 /// <remarks>
 /// The 1.7.0 install script is the fixture precisely because the current model can no longer create
@@ -28,7 +28,7 @@ public class RenameEventsScriptTests
     [Collection(SqlServerCollection.Name)]
     public class OnSqlServer(SqlServerFixture fixture)
     {
-        private const string ScriptFileName = "2.0.0-rename-events-sqlserver.sql";
+        private const string ScriptFileName = "1.9.0-rename-events-sqlserver.sql";
 
         private const string InsertOneEvent =
             """
@@ -113,7 +113,7 @@ public class RenameEventsScriptTests
 
             try
             {
-                // The 2.0.0 model creates DomainEvents and no `events`, so this is the second-run case.
+                // The 1.9.0 model creates DomainEvents and no `events`, so this is the second-run case.
                 await dbContext.Database.EnsureCreatedAsync();
 
                 var script = MigrationScript.Read(ScriptFileName);
@@ -137,9 +137,9 @@ public class RenameEventsScriptTests
 
             try
             {
-                // What running the 2.0.0 install script before the rename produces.
+                // What running the 1.9.0 install script before the rename produces.
                 await MigrationScript.ExecuteAsync(dbContext,
-                    MigrationScript.Read("2.0.0-install-sqlserver.sql", "install"));
+                    MigrationScript.Read("1.9.0-install-sqlserver.sql", "install"));
 
                 var run = async () => await MigrationScript.ExecuteAsync(dbContext, MigrationScript.Read(ScriptFileName));
 
@@ -155,7 +155,7 @@ public class RenameEventsScriptTests
     [Collection(PostgreSqlCollection.Name)]
     public class OnPostgreSql(PostgreSqlFixture fixture)
     {
-        private const string ScriptFileName = "2.0.0-rename-events-postgresql.sql";
+        private const string ScriptFileName = "1.9.0-rename-events-postgresql.sql";
 
         private const string InsertOneEvent =
             """
@@ -264,7 +264,7 @@ public class RenameEventsScriptTests
             try
             {
                 await MigrationScript.ExecuteAsync(dbContext,
-                    MigrationScript.Read("2.0.0-install-postgresql.sql", "install"));
+                    MigrationScript.Read("1.9.0-install-postgresql.sql", "install"));
 
                 var run = async () => await MigrationScript.ExecuteAsync(dbContext, MigrationScript.Read(ScriptFileName));
 

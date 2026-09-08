@@ -1,9 +1,9 @@
 /*
-    Memoria 2.0.0 — rename the event table to DomainEvents (SQL Server)
+    Memoria 1.9.0 — rename the event table to DomainEvents (SQL Server)
 
-    Memoria 2.0.0 maps EventEntity to DomainEvents. Every earlier version mapped it to `events`, the
+    Memoria 1.9.0 maps EventEntity to DomainEvents. Every earlier version mapped it to `events`, the
     one store table that did not say whose it was — and the name most likely to already be taken in a
-    database Memoria shares with anything else. The store reads and writes DomainEvents from 2.0.0
+    database Memoria shares with anything else. The store reads and writes DomainEvents from 1.9.0
     onwards, so an existing database must be renamed before the upgraded application runs against it.
 
     This is a metadata-only rename: no rows are copied and no index is rebuilt, so it costs the same
@@ -14,13 +14,13 @@
     DbContext maps them elsewhere.
 
     Safe to run more than once: a database already holding DomainEvents and no `events` is left
-    alone. A database holding BOTH is an error rather than a no-op — that is what running the 2.0.0
+    alone. A database holding BOTH is an error rather than a no-op — that is what running the 1.9.0
     install script before this one produces, and quietly doing nothing would strand every existing
     event in a table the store no longer reads.
 
     If you manage this database with EF Core migrations, do NOT run this. Your DbContext derives from
     DomainDbContext, so `dotnet ef migrations add` generates the rename from the model and keeps
-    __EFMigrationsHistory in step. See docs/guides/upgrade-2.0.0.md.
+    __EFMigrationsHistory in step. See docs/guides/upgrade-1.9.0.md.
 
     The three indexes keep their names — IX_Events_EventType, IX_Events_StreamId_CreatedDate and
     IX_Events_StreamId_Sequence — because they are named for the entity, not the table, and follow it

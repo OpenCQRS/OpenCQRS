@@ -5,23 +5,21 @@
     <Authors>Luca Cammarata Briguglia</Authors>
     <Copyright>Copyright Luca Cammarata Briguglia</Copyright>
     <Product>Memoria</Product>
-    <Description>DDD, CQRS and Event Sourcing framework for .NET.</Description>
+    <Description>Open source DDD, CQRS and Event Sourcing framework for .NET.</Description>
     <PackageTags>CQRS EventSourcing DDD OpenCQRS Memoria</PackageTags>
     <PackageProjectUrl>https://github.com/lucabriguglia/Memoria</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/lucabriguglia/Memoria</RepositoryUrl>
-    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
-    <Version>2.0.0-beta</Version>
+    <Version>1.9.0</Version>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)logo.png" Pack="true" PackagePath="" />
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" />
-    <None Include="$(MSBuildThisFileDirectory)LICENSE.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 /*
-    Memoria 2.0.0 — event store schema install (SQL Server)
+    Memoria 1.9.0 — event store schema install (SQL Server)
 
     Creates the three tables the Entity Framework Core store needs, with their keys and indexes. Run
     this to stand up a Memoria store without writing a migration yourself.
@@ -8,8 +8,8 @@
     DomainDbContext, so `dotnet ef migrations add` generates the same schema from the model and keeps
     __EFMigrationsHistory in step. See docs/guides/install-the-store-schema.md.
 
-    The event table is named DomainEvents from 2.0.0; before that it was `events`. To move an
-    existing database across, use scripts/migrations/2.0.0-rename-events-sqlserver.sql — this script
+    The event table is named DomainEvents from 1.9.0; before that it was `events`. To move an
+    existing database across, use scripts/migrations/1.9.0-rename-events-sqlserver.sql — this script
     creates a DomainEvents table beside the old one and copies nothing.
 
     Assumes the default table names and the dbo schema. Adjust the identifiers below if your
