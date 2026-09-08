@@ -904,3 +904,165 @@ h2:focus {
 .back {
     margin-top: 2rem;
 }
+
+/* The table of stored instances a list page shows, and the filter box above it. Taken from the
+   Ecommerce DCB example's products table so the two read as one system, and global rather than
+   scoped to the page that first grew it: aggregates and projections are listed the same way, and
+   two copies of this would drift apart. Named rather than left as a bare `table`, so the .grid
+   tables on the other pages are not caught by it.
+
+   The sort arrows, the pager and the rows-per-page picker are above, with the rest of the furniture
+   the detail pages share. */
+.instances {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+    .instances th {
+        border-bottom: 1px solid var(--rule);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        padding: 0 0.75rem 0.5rem;
+        text-align: left;
+    }
+
+    /* The whole heading is the control, so the target is the width of the label. */
+    .instances th a {
+        align-items: center;
+        color: var(--ink-soft);
+        display: inline-flex;
+        gap: 0.35rem;
+        text-decoration: none;
+    }
+
+    .instances th a:hover {
+        color: var(--accent);
+    }
+
+    .instances th a:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    .instances th[aria-sort="ascending"] a,
+    .instances th[aria-sort="descending"] a {
+        color: var(--ink);
+    }
+
+    .instances th.numeric a {
+        flex-direction: row-reverse;
+    }
+
+    .instances td {
+        border-bottom: 1px solid var(--rule);
+        padding: 0.625rem 0.75rem;
+    }
+
+    .instances tr > :first-child {
+        padding-left: 0;
+    }
+
+    .instances tr > :last-child {
+        padding-right: 0;
+    }
+
+    .instances .name {
+        font-weight: 600;
+    }
+
+    /* An identifier, not prose: the monospace face makes a mistyped character visible. */
+    .instances .sku {
+        font-family: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
+        font-size: 0.875rem;
+    }
+
+    .instances .numeric {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
+    .instances .muted {
+        color: var(--ink-soft);
+    }
+
+/* Nothing stored yet, said in the space the table would have filled. */
+.empty {
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    color: var(--ink-soft);
+    margin: 0;
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+/* The filter field and the button that submits it. The button is the shared .quiet, so it is the
+   size of every other button on a form rather than one this page invented; the field's padding is
+   set to match it, so the two are the same height. */
+.search {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+    .search input[type="search"] {
+        background: #fff;
+        border: 1px solid #c6ccd4;
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.9375rem;
+        padding: 0.5rem 0.625rem;
+        width: 18rem;
+    }
+
+    .search input[type="search"]:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        outline: none;
+    }
+
+    .search input[type="search"]::placeholder {
+        color: #9aa3ad;
+    }
+
+    .search a {
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+    }
+
+/* The whole row is the link. The anchor fills its cell so there is no dead space between the
+   text and the cell edge, and the padding moves off the cell onto the anchor to make that so. */
+.instances tr.clickable td {
+    padding: 0;
+}
+
+    .instances tr.clickable td a {
+        color: inherit;
+        display: block;
+        padding: 0.625rem 0.75rem;
+        text-decoration: none;
+    }
+
+.instances tr.clickable:hover td {
+    background: var(--ground);
+}
+
+    .instances tr.clickable:hover td:first-child a {
+        color: var(--accent);
+    }
+
+    /* Only the first cell's link is focusable, so it carries the focus ring for the row. */
+    .instances tr.clickable td a:focus-visible {
+        box-shadow: inset 0 0 0 2px var(--accent);
+        outline: none;
+    }
+
+.instances tr.clickable > :first-child a {
+    padding-left: 0;
+}
+
+.instances tr.clickable > :last-child a {
+    padding-right: 0;
+}

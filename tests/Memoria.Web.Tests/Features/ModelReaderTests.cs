@@ -8,11 +8,12 @@ namespace Memoria.Web.Tests.Features;
 
 /// <summary>
 /// The page reads the stored snapshot row itself, so what is left to pin here is turning one row
-/// into what the page shows — the payload back into the aggregate it was written from, and the
-/// row's own account of when it was stored. Finding the row is database work, and is covered
+/// into what the page shows — the payload back into the model it was written from, and the row's
+/// own account of when it was stored. A row reads back the same way whichever kind of model wrote
+/// it, which is why there is one reader for both. Finding the row is database work, and is covered
 /// against a real store rather than here.
 /// </summary>
-public class AggregateReaderTests
+public class ModelReaderTests
 {
     private static readonly DateTimeOffset Created = new(2026, 1, 2, 9, 30, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset Updated = new(2026, 3, 4, 17, 45, 0, TimeSpan.Zero);
@@ -34,11 +35,11 @@ public class AggregateReaderTests
     };
 
     [Fact]
-    public void Rebuilds_the_aggregate_the_payload_was_written_from()
+    public void Rebuilds_the_model_the_payload_was_written_from()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
 
-        read.Aggregate.Should().BeOfType<SampleDcbAggregate>().Which.Name.Should().Be("Kettle");
+        read.Model.Should().BeOfType<SampleDcbAggregate>().Which.Name.Should().Be("Kettle");
         read.Error.Should().BeNull();
     }
 
@@ -51,8 +52,8 @@ public class AggregateReaderTests
     {
         var data = DomainSerializer.Current.Serialize(new SampleDcbAggregate());
 
-        AggregateReader.Read(typeof(SampleDcbAggregate), Row(data))
-            .Aggregate.Should().BeOfType<SampleDcbAggregate>();
+        ModelReader.Read(typeof(SampleDcbAggregate), Row(data))
+            .Model.Should().BeOfType<SampleDcbAggregate>();
     }
 
     /// <summary>
@@ -62,7 +63,7 @@ public class AggregateReaderTests
     [Fact]
     public void Reports_the_version_and_dates_the_row_was_stored_with()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle","Version":99}"""));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle","Version":99}"""));
 
         read.Snapshot.Should().NotBeNull();
         read.Snapshot!.Version.Should().Be(6);
@@ -77,7 +78,7 @@ public class AggregateReaderTests
     [Fact]
     public void Reports_what_the_row_says_about_the_write_itself()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
 
         read.Snapshot.Should().NotBeNull();
         read.Snapshot!.ModelType.Should().Be("SampleDcbAggregate:1");
@@ -97,7 +98,7 @@ public class AggregateReaderTests
         row.CreatedBy = null;
         row.UpdatedBy = null;
 
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), row);
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), row);
 
         read.Snapshot!.CreatedBy.Should().BeNull();
         read.Snapshot.UpdatedBy.Should().BeNull();
@@ -106,18 +107,18 @@ public class AggregateReaderTests
     [Fact]
     public void Reports_a_payload_that_cannot_be_read_back()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("{not json"));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("{not json"));
 
-        read.Aggregate.Should().BeNull();
+        read.Model.Should().BeNull();
         read.Error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public void Reports_a_payload_that_reads_back_as_nothing()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("null"));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("null"));
 
-        read.Aggregate.Should().BeNull();
+        read.Model.Should().BeNull();
         read.Error.Should().Contain("empty");
     }
 
@@ -128,7 +129,7 @@ public class AggregateReaderTests
     [Fact]
     public void Keeps_the_rows_dates_even_when_its_payload_is_unreadable()
     {
-        var read = AggregateReader.Read(typeof(SampleDcbAggregate), Row("{not json"));
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("{not json"));
 
         read.Snapshot.Should().NotBeNull();
         read.Snapshot!.Updated.Should().Be(Updated);

@@ -1,39 +1,45 @@
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
-using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Memoria.Web.Extensibility;
 
 /// <summary>
-/// Lists the aggregates the store holds, read from the snapshots themselves.
+/// Lists the models the store holds, read from the snapshots themselves.
 /// </summary>
 /// <remarks>
 /// A snapshot already carries everything a row shows: the boundary it was written under, which the
 /// identifier's values are read back out of, the version it was stored at, and when it was first
 /// and last written. So this is one table and no joins.
 /// <para>
-/// It follows that an aggregate whose events have never been snapshotted is not listed. These are
-/// the stored aggregates, and its version is the stored version — a snapshot left at 6 while later
-/// events accumulate stays 6 here, and folding its boundary would give more.
+/// It follows that a model whose events have never been snapshotted is not listed. These are the
+/// stored aggregates and projections, and the version is the stored version — a snapshot left at 6
+/// while later events accumulate stays 6 here, and folding its boundary would give more.
 /// </para>
 /// </remarks>
 public static class IdentifierInstances
 {
     /// <summary>
-    /// Reads one page of the aggregates stored under this shape of identifier.
+    /// Reads one page of the models stored under this shape of identifier.
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="shape">Which tags the identifier's values live in.</param>
-    /// <param name="modelType">The aggregate's binding key, as <c>name:version</c>.</param>
+    /// <param name="kind">Whether the rows wanted are aggregates or projections.</param>
+    /// <param name="modelType">The model's binding key, as <c>name:version</c>.</param>
     /// <param name="tag">Text the boundary must contain, or null to keep them all.</param>
     /// <param name="sort">Which date to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <remarks>
+    /// The kind narrows alongside the binding key rather than being implied by it. One table holds
+    /// both models, and an aggregate and a projection may legitimately be bound to the same name and
+    /// version, so a list that asked by name alone could show one under the other's page.
+    /// </remarks>
     public static async Task<InstancePage> Page(
         IDcbDbContext context,
         IdentifierShape shape,
+        DcbModelKind kind,
         string modelType,
         string? tag,
         InstanceSort sort,
@@ -47,10 +53,11 @@ public static class IdentifierInstances
         // boundary that goes on into a second tag, so anything longer is excluded.
         var pattern = shape.BoundaryPattern;
         var longer = $"{pattern},%";
+        var snapshotKind = kind.SnapshotKind();
 
         var stored = context.DcbSnapshots
             .AsNoTracking()
-            .Where(snapshot => snapshot.SnapshotKind == DcbSnapshotEntity.AggregateKind &&
+            .Where(snapshot => snapshot.SnapshotKind == snapshotKind &&
                                snapshot.ModelType == modelType &&
                                EF.Functions.Like(snapshot.TagQuery, pattern) &&
                                !EF.Functions.Like(snapshot.TagQuery, longer));
@@ -96,7 +103,7 @@ public static class IdentifierInstances
     }
 }
 
-/// <summary>One aggregate the store holds.</summary>
+/// <summary>One model the store holds.</summary>
 /// <param name="Values">The identifier's values, by the constructor parameter each belongs to.</param>
 /// <param name="Version">The version its snapshot was stored at.</param>
 /// <param name="Created">When it was first stored.</param>

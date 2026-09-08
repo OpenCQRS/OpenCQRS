@@ -172,9 +172,9 @@ app.MapPost("/settings/refresh", async (
     return Back(message: $"{types.Current.Count} type(s) registered.", tab: "types");
 }).DisableAntiforgery();
 
-// The one write the DCB pages offer. A form post rather than an interactive component, so the
-// detail page stays statically rendered like the rest of them — and a POST rather than a link,
-// because it writes a snapshot.
+// The one write the DCB pages offer, and the same one for each of the two models. A form post
+// rather than an interactive component, so the detail pages stay statically rendered like the rest
+// of them — and a POST rather than a link, because it writes a snapshot.
 app.MapPost("/dcb/aggregates/update", async (
     DomainTypeRegistry types,
     IDcbDomainService store,
@@ -183,61 +183,17 @@ app.MapPost("/dcb/aggregates/update", async (
     [FromForm] string type,
     [FromForm] string id,
     [FromForm] string returnUrl) =>
-{
-    var logger = loggerFactory.CreateLogger("Memoria.Web.Dcb");
+    await Refresh(DcbModelKind.Aggregate, types, store, loggerFactory, request, type, id, returnUrl));
 
-    // Local: the return address arrives on the form, so it may not send anyone off-site.
-    IResult BackToAggregate(string? message = null, string? error = null)
-    {
-        var separator = returnUrl.Contains('?') ? "&" : "?";
-        var carried = message is not null
-            ? $"message={Uri.EscapeDataString(message)}"
-            : $"error={Uri.EscapeDataString(error ?? string.Empty)}";
-
-        return Results.LocalRedirect($"{returnUrl}{separator}{carried}");
-    }
-
-    // Matched against what is registered, exactly as the page matches them, so a name posted here
-    // can only ever reach a type this application already knows about.
-    var aggregate = DomainTypeDescriber.Select(types.Current.DcbAggregates, type);
-
-    var identifierType = aggregate is null
-        ? null
-        : DomainTypeDescriber.Describe(aggregate, types.Current.DcbAggregateIds)
-            .Identifiers.FirstOrDefault(candidate => candidate.FullName == id);
-
-    if (aggregate is null || identifierType is null)
-    {
-        return BackToAggregate(error: "That aggregate and identifier are no longer registered.");
-    }
-
-    // The identifier's own values, posted under the names its constructor takes — the same shape
-    // the address carries them in.
-    var values = request.Form.ToDictionary(
-        field => field.Key, field => (string?)field.Value.LastOrDefault(),
-        StringComparer.OrdinalIgnoreCase);
-
-    var created = IdentifierFactory.Create(identifierType, values);
-
-    if (created.Instance is null)
-    {
-        return BackToAggregate(error: created.Error ?? "That identifier could not be built.");
-    }
-
-    var refreshed = await AggregateRefresher.Refresh(store, aggregate, created.Instance);
-
-    if (refreshed.Error is not null)
-    {
-        logger.LogWarning("Could not refresh {Aggregate}: {Error}", aggregate.Name, refreshed.Error);
-        return BackToAggregate(error: refreshed.Error);
-    }
-
-    logger.LogInformation("Refreshed the snapshot for {Aggregate}.", aggregate.Name);
-
-    return BackToAggregate(message: refreshed.Refreshed
-        ? "Snapshot refreshed."
-        : "Nothing to refresh — no snapshot, and no events inside the boundary this aggregate applies.");
-});
+app.MapPost("/dcb/projections/update", async (
+    DomainTypeRegistry types,
+    IDcbDomainService store,
+    ILoggerFactory loggerFactory,
+    HttpRequest request,
+    [FromForm] string type,
+    [FromForm] string id,
+    [FromForm] string returnUrl) =>
+    await Refresh(DcbModelKind.Projection, types, store, loggerFactory, request, type, id, returnUrl));
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
@@ -257,6 +213,82 @@ static IResult Back(string? message = null, string? error = null, string tab = "
         : $"?error={Uri.EscapeDataString(error ?? string.Empty)}";
 
     return Results.LocalRedirect($"/settings{query}&tab={tab}");
+}
+
+/// <summary>
+/// Brings one model's snapshot up to date and goes back to the page the button was pressed on,
+/// carrying what happened.
+/// </summary>
+/// <remarks>
+/// One handler for aggregates and projections, because the two differ only in which list the posted
+/// names are matched against and which of the store's two update methods is called — and the second
+/// of those the refresher reads off the identifier rather than being told.
+/// </remarks>
+static async Task<IResult> Refresh(
+    DcbModelKind kind,
+    DomainTypeRegistry types,
+    IDcbDomainService store,
+    ILoggerFactory loggerFactory,
+    HttpRequest request,
+    string type,
+    string id,
+    string returnUrl)
+{
+    var logger = loggerFactory.CreateLogger("Memoria.Web.Dcb");
+
+    // Local: the return address arrives on the form, so it may not send anyone off-site.
+    IResult BackToModel(string? message = null, string? error = null)
+    {
+        var separator = returnUrl.Contains('?') ? "&" : "?";
+        var carried = message is not null
+            ? $"message={Uri.EscapeDataString(message)}"
+            : $"error={Uri.EscapeDataString(error ?? string.Empty)}";
+
+        return Results.LocalRedirect($"{returnUrl}{separator}{carried}");
+    }
+
+    // Matched against what is registered, exactly as the page matches them, so a name posted here
+    // can only ever reach a type this application already knows about — and only one of the two
+    // kinds, so a projection cannot be refreshed through the aggregates' address.
+    var model = DomainTypeDescriber.Select(types.Current.Models(kind), type);
+
+    var identifierType = model is null
+        ? null
+        : DomainTypeDescriber.Describe(model, types.Current.Identifiers(kind))
+            .Identifiers.FirstOrDefault(candidate => candidate.FullName == id);
+
+    if (model is null || identifierType is null)
+    {
+        return BackToModel(error: $"That {kind.ToString().ToLowerInvariant()} and identifier are no longer registered.");
+    }
+
+    // The identifier's own values, posted under the names its constructor takes — the same shape
+    // the address carries them in.
+    var values = request.Form.ToDictionary(
+        field => field.Key, field => (string?)field.Value.LastOrDefault(),
+        StringComparer.OrdinalIgnoreCase);
+
+    var created = IdentifierFactory.Create(identifierType, values);
+
+    if (created.Instance is null)
+    {
+        return BackToModel(error: created.Error ?? "That identifier could not be built.");
+    }
+
+    var refreshed = await ModelRefresher.Refresh(store, model, created.Instance);
+
+    if (refreshed.Error is not null)
+    {
+        logger.LogWarning("Could not refresh {Model}: {Error}", model.Name, refreshed.Error);
+        return BackToModel(error: refreshed.Error);
+    }
+
+    logger.LogInformation("Refreshed the snapshot for {Model}.", model.Name);
+
+    return BackToModel(message: refreshed.Refreshed
+        ? "Snapshot refreshed."
+        : $"Nothing to refresh — no snapshot, and no events inside the boundary this " +
+          $"{kind.ToString().ToLowerInvariant()} applies.");
 }
 
 static void LogCatalogue(ILogger logger, DomainTypeCatalogue catalogue)
@@ -290,43 +322,50 @@ static async Task WarmStore(WebApplication app)
         var store = scope.ServiceProvider.GetRequiredService<IDcbDbContext>();
         var types = app.Services.GetRequiredService<DomainTypeRegistry>().Current;
 
-        foreach (var aggregate in types.DcbAggregates)
+        // Either kind will do. Both pages run the same two queries, and the kind rides in as a
+        // parameter rather than as part of the SQL, so whichever is warmed first warms the other's
+        // pages too — and an application with only projections uploaded is still warmed.
+        foreach (var kind in Enum.GetValues<DcbModelKind>())
         {
-            var shape = DomainTypeDescriber.Describe(aggregate, types.DcbAggregateIds).Identifiers
-                .Select(IdentifierShape.Of)
-                .FirstOrDefault(candidate => candidate is not null);
-
-            if (shape is null)
+            foreach (var model in types.Models(kind))
             {
-                continue;
-            }
+                var shape = DomainTypeDescriber.Describe(model, types.Identifiers(kind)).Identifiers
+                    .Select(IdentifierShape.Of)
+                    .FirstOrDefault(candidate => candidate is not null);
 
-            var modelType = DcbTypeBindings.GetAggregateBindingKey(aggregate);
-            IReadOnlyList<Instance> listed = [];
-
-            foreach (var sort in Enum.GetValues<InstanceSort>())
-            {
-                foreach (var tag in new string?[] { null, "warm" })
+                if (shape is null)
                 {
-                    var page = await IdentifierInstances.Page(store, shape, modelType, tag, sort,
-                        descending: true, page: 1, size: InstanceQuery.DefaultPageSize);
-
-                    listed = listed.Count > 0 ? listed : page.Rows;
+                    continue;
                 }
-            }
 
-            // The detail page reads the same table, but addressed by one whole boundary rather than
-            // by the shape of one. That is a distinct query for EF to compile, so warming the list
-            // alone would leave it to be compiled on the first row anyone opens.
-            if (listed.FirstOrDefault() is { } instance &&
-                IdentifierFactory.Create(shape.Identifier, instance.Values.ToDictionary(
-                    value => value.Key, value => (string?)value.Value)).Instance is IDcbAggregateId identifier)
-            {
-                await AggregateReader.Load(store, aggregate, modelType, identifier.Boundary.ToString());
-            }
+                var modelType = kind.BindingKey(model);
+                IReadOnlyList<Instance> listed = [];
 
-            app.Logger.LogInformation("Store warmed on {Aggregate}.", aggregate.Name);
-            return;
+                foreach (var sort in Enum.GetValues<InstanceSort>())
+                {
+                    foreach (var tag in new string?[] { null, "warm" })
+                    {
+                        var page = await IdentifierInstances.Page(store, shape, kind, modelType, tag, sort,
+                            descending: true, page: 1, size: InstanceQuery.DefaultPageSize);
+
+                        listed = listed.Count > 0 ? listed : page.Rows;
+                    }
+                }
+
+                // The detail page reads the same table, but addressed by one whole boundary rather
+                // than by the shape of one. That is a distinct query for EF to compile, so warming
+                // the list alone would leave it to be compiled on the first row anyone opens.
+                if (listed.FirstOrDefault() is { } instance &&
+                    DcbModels.BoundaryOf(IdentifierFactory.Create(shape.Identifier,
+                        instance.Values.ToDictionary(
+                            value => value.Key, value => (string?)value.Value)).Instance) is { } boundary)
+                {
+                    await ModelReader.Load(store, model, kind, modelType, boundary.ToString());
+                }
+
+                app.Logger.LogInformation("Store warmed on {Model}.", model.Name);
+                return;
+            }
         }
 
         // Nothing uploaded yet, so there is no real query to run. The model is still worth building.

@@ -8,28 +8,28 @@ using Memoria.EventSourcing.Domain;
 namespace Memoria.Web.Extensibility;
 
 /// <summary>
-/// Reads the events an aggregate applies out of the boundary it is folded from.
+/// Reads the events an aggregate or a projection applies out of the boundary it is folded from.
 /// </summary>
 /// <remarks>
 /// Which rows are inside a boundary is the store's own question — one correlated <c>EXISTS</c> over
 /// each event's tags, and different again for an intersection — so the selection comes from
 /// <c>GetEventEntities</c> rather than being written a second time here. What is added is the
-/// narrowing to the aggregate's own filter, the ordering and paging over what that leaves, and the
+/// narrowing to the model's own filter, the ordering and paging over what that leaves, and the
 /// reading: the log stores a binding key and a payload, and the page wants the event those name.
 /// <para>
-/// These are the events the aggregate is built from, so the count agrees with the version a fold of
+/// These are the events the model is built from, so the count agrees with the version a fold of
 /// them would reach. A boundary may hold others — a wider model's events, sharing a tag — and those
-/// are not listed here, because they are not what this aggregate is made of.
+/// are not listed here, because they are not what this model is made of.
 /// </para>
 /// </remarks>
 public static class BoundaryEvents
 {
     /// <summary>
-    /// Reads one page of the events an aggregate applies inside a boundary.
+    /// Reads one page of the events a model applies inside a boundary.
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="boundary">The consistency boundary.</param>
-    /// <param name="applies">The event types the aggregate applies, or null for all of them.</param>
+    /// <param name="applies">The event types the model applies, or null for all of them.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -37,7 +37,7 @@ public static class BoundaryEvents
     /// <remarks>
     /// Ordered and paged in memory rather than in the database, because the store reads a boundary
     /// whole — that is what a fold needs, and it offers no first-<c>n</c> read to ask for instead.
-    /// The size of one aggregate's history is what makes that affordable, and it is what makes the
+    /// The size of one model's history is what makes that affordable, and it is what makes the
     /// total exact rather than an estimate.
     /// </remarks>
     public static async Task<StoredEvents> Load(
@@ -61,9 +61,9 @@ public static class BoundaryEvents
     }
 
     /// <summary>
-    /// The event types an aggregate applies.
+    /// The event types a model applies.
     /// </summary>
-    /// <param name="aggregate">The aggregate type.</param>
+    /// <param name="model">The aggregate or projection type.</param>
     /// <param name="loaded">One already read, or null to build a fresh one to ask.</param>
     /// <returns>The types, or null when it applies every event inside its boundary.</returns>
     /// <remarks>
@@ -77,16 +77,16 @@ public static class BoundaryEvents
     /// the wrong answer in a way that looks like an empty log.
     /// </para>
     /// </remarks>
-    public static Type[]? AppliedBy(Type aggregate, object? loaded)
+    public static Type[]? AppliedBy(Type model, object? loaded)
     {
-        if (loaded is EventSourcedModel model)
+        if (loaded is EventSourcedModel already)
         {
-            return model.EventTypeFilter;
+            return already.EventTypeFilter;
         }
 
         try
         {
-            return InstanceFactory.CreateInstance(aggregate) as EventSourcedModel is { } fresh
+            return InstanceFactory.CreateInstance(model) as EventSourcedModel is { } fresh
                 ? fresh.EventTypeFilter
                 : null;
         }
@@ -163,7 +163,7 @@ public static class BoundaryEvents
 
 /// <summary>One page of the events read out of a boundary.</summary>
 /// <param name="Events">Those on this page, in the order asked for.</param>
-/// <param name="Total">How many the aggregate applies, across every page.</param>
+/// <param name="Total">How many the model applies, across every page.</param>
 /// <param name="Page">The page these are, from one.</param>
 /// <param name="TotalPages">How many pages there are, never fewer than one.</param>
 /// <param name="Error">Why the log could not be read, or null when it was.</param>

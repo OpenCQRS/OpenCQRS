@@ -1,4 +1,4 @@
-@page "/dcb/aggregates/detail"
+@page "/dcb/projections/detail"
 @using Memoria.EventSourcing.Dcb
 @using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
 @using Memoria.Web.Extensibility
@@ -7,18 +7,18 @@
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@(Aggregate?.Name ?? "Aggregate") @Title</PageTitle>
+<PageTitle>@(Projection?.Name ?? "Projection") @Title</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
     <span aria-hidden="true">/</span>
     <a href="dcb">DCB</a>
     <span aria-hidden="true">/</span>
-    <a href="dcb/aggregates">Aggregates</a>
-    @if (Aggregate is not null && Identifier is not null)
+    <a href="dcb/projections">Projections</a>
+    @if (Projection is not null && Identifier is not null)
     {
         <span aria-hidden="true">/</span>
-        <a href="@BackToAggregate">@Aggregate.Name</a>
+        <a href="@BackToProjection">@Projection.Name</a>
         <span aria-hidden="true">/</span>
         <a href="@BackToList">@Identifier.Name</a>
     }
@@ -26,19 +26,17 @@
     <span aria-current="page">@(Title is { Length: > 0 } title ? title : "Detail")</span>
 </nav>
 
-@if (Aggregate is null || Identifier is null)
+@if (Projection is null || Identifier is null)
 {
-    <h1>Aggregate</h1>
+    <h1>Projection</h1>
     <p class="alert" role="alert">
-        That aggregate and identifier are not among the registered types. They may have been
-        replaced by a later upload — start again from <a href="dcb/aggregates">aggregates</a>.
+        That projection and identifier are not among the registered types. They may have been
+        replaced by a later upload — start again from <a href="dcb/projections">projections</a>.
     </p>
 }
 else
 {
-    <h1>@Aggregate.Name</h1>
-    @* Not "the boundary ProductId" any more: the boundary is on the line below, and an identifier
-       is what resolves to one rather than being one. *@
+    <h1>@Projection.Name</h1>
     <p class="lede">The snapshot stored under <code>@Identifier.Name</code> carries.</p>
 
     @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
@@ -64,19 +62,19 @@ else
         }
     </p>
 
-    @* The store failing to answer for the aggregate at all, which leaves both the facts and the
+    @* The store failing to answer for the projection at all, which leaves both the facts and the
        state without their values — so it is said once, above the tabs, rather than in each. *@
     @if (Error is not null)
     {
         <p class="alert" role="alert">@Error</p>
     }
 
-    @* Four views of one aggregate, switched by the address rather than by script: each tab is a
+    @* Four views of one projection, switched by the address rather than by script: each tab is a
        link, so a view can be linked to and gone back to, and the page stays statically rendered
        like the rest of them. Marked with aria-current for the same reason the breadcrumb is —
        these are places to go, not scripted tabs, so they say so in the language of navigation.
        The three that read come first and the one that writes comes last. *@
-    <nav class="tabs" aria-label="Aggregate views">
+    <nav class="tabs" aria-label="Projection views">
         <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
            aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
         <a id="tab-@StateTab" href="@TabLink(StateTab)"
@@ -165,7 +163,8 @@ else
             {
                 @* Only the snapshots table is read, so this says nothing about the events: a
                    boundary can hold events that have never been folded into a row, and there would
-                   still be nothing to show here. *@
+                   still be nothing to show here. A projection's row is written by a read that folds
+                   it, so the update tab is the way to make one. *@
                 <p class="empty">
                     No snapshot is stored under those values. Nothing has been written under the
                     boundary they describe, or it was written under a wider one.
@@ -194,10 +193,10 @@ else
     }
     else if (Tab == EventsTab && Boundary is not null)
     {
-        @* Narrowed to what this aggregate applies, so the count agrees with the version on the info
-           tab, and shown whether or not a snapshot was found: the events are inside the boundary
-           either way, and a boundary holding events with no snapshot written over them is worth
-           being able to see. *@
+        @* Narrowed to what this projection applies, so the count agrees with the version on the
+           info tab, and shown whether or not a snapshot was found: the events are inside the
+           boundary either way, and a boundary holding events with no snapshot written over them is
+           worth being able to see. *@
         @* Focusable as well as linkable: a fragment scrolls the panel into view, and the negative
            tabindex means the browser moves focus to it too, so tabbing on from a pager link carries
            on inside the table rather than from the top of the document. *@
@@ -208,7 +207,7 @@ else
             }
             else if (Events.Total == 0)
             {
-                <p class="missing">This aggregate applies no events inside the boundary.</p>
+                <p class="missing">This projection applies no events inside the boundary.</p>
             }
             else
             {
@@ -262,9 +261,9 @@ else
                                 else
                                 {
                                     @* A list, because that is what it is: one name and value per
-                                       item, in the same shape the aggregate's own state is read in.
-                                       The name is set apart from the value it names, so a cell of
-                                       several pairs is scanned rather than read through — and a
+                                       item, in the same shape the projection's own state is read
+                                       in. The name is set apart from the value it names, so a cell
+                                       of several pairs is scanned rather than read through — and a
                                        value with a shape inside it is opened under its own name. *@
                                     @Pairs(stored.State)
                                 }
@@ -294,7 +293,7 @@ else
                             @* The fragment survives the submission — a GET form replaces the
                                action's query with the fields and leaves the rest of it alone — so
                                this lands at the table like the pager links do. *@
-                            <form class="page-jump" method="get" action="dcb/aggregates/detail#@EventsAnchor">
+                            <form class="page-jump" method="get" action="dcb/projections/detail#@EventsAnchor">
                                 <label for="page">Page</label>
                                 <select id="page" name="page" onchange="this.form.submit()">
                                     @for (var number = 1; number <= Events.TotalPages; number++)
@@ -303,7 +302,7 @@ else
                                     }
                                 </select>
                                 <span>of @Events.TotalPages</span>
-                                <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                                <input type="hidden" name="type" value="@Projection.FullName"/>
                                 <input type="hidden" name="id" value="@Identifier.FullName"/>
                                 @foreach (var parameter in Parameters)
                                 {
@@ -334,7 +333,7 @@ else
                         }
                     </div>
 
-                    <form class="page-size" method="get" action="dcb/aggregates/detail#@EventsAnchor">
+                    <form class="page-size" method="get" action="dcb/projections/detail#@EventsAnchor">
                         <label for="size">Rows per page</label>
                         <select id="size" name="size" onchange="this.form.submit()">
                             @foreach (var option in InstanceQuery.PageSizes)
@@ -342,7 +341,7 @@ else
                                 <option value="@option" selected="@(option == PageSize)">@option</option>
                             }
                         </select>
-                        <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                        <input type="hidden" name="type" value="@Projection.FullName"/>
                         <input type="hidden" name="id" value="@Identifier.FullName"/>
                         @foreach (var parameter in Parameters)
                         {
@@ -377,13 +376,13 @@ else
                    first. *@
                 <p class="lede">
                     Refreshes the stored snapshot: any events on the events tab that it has not
-                    applied yet are applied to it and the result is written back. Nothing is
-                    appended.
+                    applied yet are applied to it and the result is written back. A read model
+                    produces no events of its own, so the snapshot is the only thing this writes.
                 </p>
 
-                <form method="post" action="dcb/aggregates/update" class="refresh">
+                <form method="post" action="dcb/projections/update" class="refresh">
                     <AntiforgeryToken/>
-                    <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                    <input type="hidden" name="type" value="@Projection.FullName"/>
                     <input type="hidden" name="id" value="@Identifier.FullName"/>
                     @foreach (var parameter in Parameters)
                     {
@@ -419,9 +418,9 @@ else
     /// Which of the two DCB models this page reads, which is what tells the store's one snapshot
     /// table which of its rows are this page's.
     /// </summary>
-    private const DcbModelKind Kind = DcbModelKind.Aggregate;
+    private const DcbModelKind Kind = DcbModelKind.Projection;
 
-    private Type? Aggregate { get; set; }
+    private Type? Projection { get; set; }
 
     private Type? Identifier { get; set; }
 
@@ -438,7 +437,7 @@ else
     private TagQuery? Boundary { get; set; }
 
     /// <summary>
-    /// How the boundary's tags combine, in the same words the identifiers table on the aggregates
+    /// How the boundary's tags combine, in the same words the identifiers table on the projections
     /// page uses. Only worth saying when there is more than one tag: a boundary of a single tag
     /// combines with nothing.
     /// </summary>
@@ -465,7 +464,7 @@ else
 
     /// <summary>
     /// A boundary reads as a history, so it starts at the beginning until the column is clicked.
-    /// The list of aggregates starts newest first instead, because a list is scanned rather than
+    /// The list of projections starts newest first instead, because a list is scanned rather than
     /// read through.
     /// </summary>
     private bool Descending { get; set; }
@@ -493,16 +492,16 @@ else
     private string Tab { get; set; } = InfoTab;
 
     /// <summary>
-    /// How many events there are in all, and whose count it is — the aggregate's, because the list
+    /// How many events there are in all, and whose count it is — the projection's, because the list
     /// is narrowed to what it applies rather than to everything the boundary holds.
     /// </summary>
     private string EventSummary => Events.Total == 1
-        ? $"One event, applied by {Aggregate?.Name}."
-        : $"{Events.Total} events, applied by {Aggregate?.Name}.";
+        ? $"One event, applied by {Projection?.Name}."
+        : $"{Events.Total} events, applied by {Projection?.Name}.";
 
     /// <summary>
     /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
-    /// to answer for the aggregate at all rather than a button failing to do its job.
+    /// to answer for the projection at all rather than a button failing to do its job.
     /// </summary>
     [SupplyParameterFromQuery(Name = "message")]
     private string? Message { get; set; }
@@ -517,18 +516,18 @@ else
     private const string EventsAnchor = "events";
 
     /// <summary>
-    /// Everything that addresses the aggregate itself: the two types and the values that identify
+    /// Everything that addresses the projection itself: the two types and the values that identify
     /// the instance. The view and the table's own state are appended by whatever varies them.
     /// </summary>
     private string Address =>
-        $"dcb/aggregates/detail?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"dcb/projections/detail?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}" +
         string.Concat(Parameters.Select(parameter =>
             $"&{Uri.EscapeDataString(parameter.Name)}=" +
             $"{Uri.EscapeDataString(Values.GetValueOrDefault(parameter.Name) ?? string.Empty)}"));
 
     /// <summary>
-    /// One address for the whole page, carrying everything that addresses the aggregate as well as
+    /// One address for the whole page, carrying everything that addresses the projection as well as
     /// the state of the events table, so a link only changes what it means to change.
     /// </summary>
     /// <param name="tab">Which of the four views to show.</param>
@@ -559,15 +558,15 @@ else
             .Where(value => !string.IsNullOrWhiteSpace(value)));
 
     /// <summary>
-    /// Back up to the aggregate, naming the tab the identifiers are listed under rather than
+    /// Back up to the projection, naming the tab the identifiers are listed under rather than
     /// leaving it to whichever one opens by default — the step back should arrive where the other
     /// identifiers are, and that holds if the panel's opening view ever changes.
     /// </summary>
-    private string BackToAggregate =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=identifiers";
+    private string BackToProjection =>
+        $"dcb/projections?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string BackToList =>
-        $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"dcb/projections/load?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
 
     /// <summary>
@@ -575,7 +574,7 @@ else
     /// under it.
     /// </summary>
     /// <remarks>
-    /// The same rows the aggregates page lists the type's shape in, with the column this page has
+    /// The same rows the projections page lists the type's shape in, with the column this page has
     /// something to put in. A nested property keeps its own row so that its value stays under the
     /// value column, which is the column a reader came to this page for.
     /// </remarks>
@@ -660,16 +659,16 @@ else
 
         // Both are matched against what is registered, so a name in the address can only ever reach
         // a type this application already knows about.
-        Aggregate = DomainTypeDescriber.Select(Types.Current.DcbAggregates, Values.GetValueOrDefault("type"));
+        Projection = DomainTypeDescriber.Select(Types.Current.DcbProjections, Values.GetValueOrDefault("type"));
 
-        Identifier = Aggregate is null
+        Identifier = Projection is null
             ? null
             : DomainTypeDescriber
-                .Describe(Aggregate, Types.Current.DcbAggregateIds)
+                .Describe(Projection, Types.Current.DcbProjectionIds)
                 .Identifiers
                 .FirstOrDefault(identifier => identifier.FullName == Values.GetValueOrDefault("id"));
 
-        if (Aggregate is null || Identifier is null)
+        if (Projection is null || Identifier is null)
         {
             return;
         }
@@ -684,18 +683,18 @@ else
             return;
         }
 
-        if (created.Instance is not IDcbAggregateId aggregateId)
+        if (created.Instance is not IDcbProjectionId projectionId)
         {
             return;
         }
 
-        // The boundary is the aggregate's own account of which events it was folded from, and it
+        // The boundary is the projection's own account of which events it was folded from, and it
         // addresses both reads below: the snapshot row it produced, which is only ever a valid
         // answer for the boundary that produced it, and the events it selects.
-        Boundary = aggregateId.Boundary;
+        Boundary = projectionId.Boundary;
 
         var loaded = await ModelReader.Load(
-            StoreContext, Aggregate, Kind, Kind.BindingKey(Aggregate), Boundary.ToString());
+            StoreContext, Projection, Kind, Kind.BindingKey(Projection), Boundary.ToString());
 
         Loaded = loaded.Model;
         Stored = loaded.Snapshot;
@@ -713,8 +712,8 @@ else
         {
             Events = await BoundaryEvents.Load(
                 StoreContext,
-                aggregateId.Boundary,
-                BoundaryEvents.AppliedBy(Aggregate, Loaded),
+                projectionId.Boundary,
+                BoundaryEvents.AppliedBy(Projection, Loaded),
                 Descending,
                 Page,
                 PageSize);

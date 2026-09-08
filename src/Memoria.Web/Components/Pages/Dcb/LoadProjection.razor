@@ -1,57 +1,55 @@
-@page "/dcb/aggregates/load"
+@page "/dcb/projections/load"
 @using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
-@using Memoria.EventSourcing.Dcb
-@using Memoria.EventSourcing.Domain
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@(Aggregate?.Name ?? "Aggregates") by @(Identifier?.Name ?? "identifier")</PageTitle>
+<PageTitle>@(Projection?.Name ?? "Projections") by @(Identifier?.Name ?? "identifier")</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
     <span aria-hidden="true">/</span>
     <a href="dcb">DCB</a>
     <span aria-hidden="true">/</span>
-    <a href="dcb/aggregates">Aggregates</a>
-    @if (Aggregate is not null)
+    <a href="dcb/projections">Projections</a>
+    @if (Projection is not null)
     {
         <span aria-hidden="true">/</span>
-        <a href="@BackToAggregate">@Aggregate.Name</a>
+        <a href="@BackToProjection">@Projection.Name</a>
     }
     <span aria-hidden="true">/</span>
     <span aria-current="page">@(Identifier?.Name ?? "Load")</span>
 </nav>
 
-@if (Aggregate is null || Identifier is null)
+@if (Projection is null || Identifier is null)
 {
     <h1>Load</h1>
     <p class="alert" role="alert">
-        That aggregate and identifier are not among the registered types. They may have been
-        replaced by a later upload — start again from <a href="dcb/aggregates">aggregates</a>.
+        That projection and identifier are not among the registered types. They may have been
+        replaced by a later upload — start again from <a href="dcb/projections">projections</a>.
     </p>
 }
 else if (Shape is null)
 {
-    <h1>@Aggregate.Name</h1>
+    <h1>@Projection.Name</h1>
     <p class="alert" role="alert">
         <code>@Identifier.Name</code> takes a value its boundary never mentions, so which of these
         exist cannot be worked out from the stored tags. Try another identifier from
-        <a href="@BackToAggregate">@Aggregate.Name</a>.
+        <a href="@BackToProjection">@Projection.Name</a>.
     </p>
 }
 else
 {
-    <h1>@Aggregate.Name</h1>
+    <h1>@Projection.Name</h1>
     <p class="lede">@Summary</p>
 
     @* A plain GET form: filtering is a link to a narrower list, so it belongs in the address bar
        where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
        narrowing the list does not silently reorder it. *@
-    <form class="search" method="get" action="dcb/aggregates/load">
-        <input type="hidden" name="type" value="@Aggregate.FullName"/>
+    <form class="search" method="get" action="dcb/projections/load">
+        <input type="hidden" name="type" value="@Projection.FullName"/>
         <input type="hidden" name="id" value="@Identifier.FullName"/>
         <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
@@ -70,17 +68,19 @@ else
         <p class="empty">
             @if (IsFiltered)
             {
-                <text>No aggregates carry a tag matching &ldquo;@Tag&rdquo;.</text>
+                <text>No projections carry a tag matching &ldquo;@Tag&rdquo;.</text>
             }
             else
             {
+                @* A projection's snapshot is written by a read that folds one, so an empty list can
+                   mean nobody has asked for one yet as much as it can mean nothing happened. *@
                 <text>Nothing has been written under this identifier yet.</text>
             }
         </p>
     }
     else
     {
-        @* Everything here is read off the tags. The aggregate itself is not folded to draw a row —
+        @* Everything here is read off the tags. The projection itself is not folded to draw a row —
            that is what the details page is for, one at a time. *@
         <table class="instances">
             <thead>
@@ -150,7 +150,7 @@ else
                     @* The page number is a control rather than a label, so a long table can be
                        crossed without stepping through it. Its own GET form, like the order and the
                        rows per page, so the page it lands on is in the address bar. *@
-                    <form class="page-jump" method="get" action="dcb/aggregates/load">
+                    <form class="page-jump" method="get" action="dcb/projections/load">
                         <label for="page">Page</label>
                         <select id="page" name="page" onchange="this.form.submit()">
                             @for (var number = 1; number <= TotalPages; number++)
@@ -159,7 +159,7 @@ else
                             }
                         </select>
                         <span>of @TotalPages</span>
-                        <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                        <input type="hidden" name="type" value="@Projection.FullName"/>
                         <input type="hidden" name="id" value="@Identifier.FullName"/>
                         <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
                         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
@@ -189,7 +189,7 @@ else
             @* Its own GET form, so the choice lands in the address bar like the order and the
                filter. Submitting on change saves a click; the button is the fallback when
                scripting is off. *@
-            <form class="page-size" method="get" action="dcb/aggregates/load">
+            <form class="page-size" method="get" action="dcb/projections/load">
                 <label for="size">Rows per page</label>
                 <select id="size" name="size" onchange="this.form.submit()">
                     @foreach (var option in InstanceQuery.PageSizes)
@@ -197,7 +197,7 @@ else
                         <option value="@option" selected="@(option == PageSize)">@option</option>
                     }
                 </select>
-                <input type="hidden" name="type" value="@Aggregate.FullName"/>
+                <input type="hidden" name="type" value="@Projection.FullName"/>
                 <input type="hidden" name="id" value="@Identifier.FullName"/>
                 <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
                 <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
@@ -219,9 +219,9 @@ else
     /// Which of the two DCB models this page lists, which is what tells the store's one snapshot
     /// table which of its rows are this page's.
     /// </summary>
-    private const DcbModelKind Kind = DcbModelKind.Aggregate;
+    private const DcbModelKind Kind = DcbModelKind.Projection;
 
-    private Type? Aggregate { get; set; }
+    private Type? Projection { get; set; }
 
     private Type? Identifier { get; set; }
 
@@ -271,22 +271,22 @@ else
 
     private string Summary => Total switch
     {
-        0 when IsFiltered => $"No aggregates match, addressed by {Identifier?.Name}.",
+        0 when IsFiltered => $"No projections match, addressed by {Identifier?.Name}.",
         0 => $"Nothing stored yet, addressed by {Identifier?.Name}.",
-        1 => $"One aggregate, addressed by {Identifier?.Name}.",
-        _ => $"{Total} aggregates, addressed by {Identifier?.Name}."
+        1 => $"One projection, addressed by {Identifier?.Name}.",
+        _ => $"{Total} projections, addressed by {Identifier?.Name}."
     };
 
     /// <summary>
-    /// Back up to the aggregate, naming the tab the identifiers are listed under rather than
+    /// Back up to the projection, naming the tab the identifiers are listed under rather than
     /// leaving it to whichever one opens by default — the step back should arrive where the other
     /// identifiers are, and that holds if the panel's opening view ever changes.
     /// </summary>
-    private string BackToAggregate =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=identifiers";
+    private string BackToProjection =>
+        $"dcb/projections?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string Names =>
-        $"type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
 
     /// <summary>
@@ -294,7 +294,7 @@ else
     /// </summary>
     private string Link(InstanceSort sort, bool descending, int page, bool clearTag = false)
     {
-        var link = $"dcb/aggregates/load?{Names}" +
+        var link = $"dcb/projections/load?{Names}" +
                    $"&sort={sort.ToString().ToLowerInvariant()}" +
                    $"&dir={(descending ? "desc" : "asc")}" +
                    $"&size={PageSize}" +
@@ -304,14 +304,14 @@ else
     }
 
     /// <summary>
-    /// Through to one aggregate's whole state, carrying the values its identifier is built from.
+    /// Through to one projection's whole state, carrying the values its identifier is built from.
     /// </summary>
     private string DetailLink(Instance instance)
     {
         var values = string.Join("&", instance.Values
             .Select(value => $"{Uri.EscapeDataString(value.Key)}={Uri.EscapeDataString(value.Value)}"));
 
-        return $"dcb/aggregates/detail?{Names}&{values}";
+        return $"dcb/projections/detail?{Names}&{values}";
     }
 
     protected override async Task OnParametersSetAsync()
@@ -323,15 +323,15 @@ else
 
         // Both are matched against what is registered, so a name in the address can only ever reach
         // a type this application already knows about.
-        Aggregate = DomainTypeDescriber.Select(Types.Current.DcbAggregates, Value("type"));
+        Projection = DomainTypeDescriber.Select(Types.Current.DcbProjections, Value("type"));
 
-        var described = Aggregate is null
+        var described = Projection is null
             ? null
-            : DomainTypeDescriber.Describe(Aggregate, Types.Current.DcbAggregateIds);
+            : DomainTypeDescriber.Describe(Projection, Types.Current.DcbProjectionIds);
 
         Identifier = described?.Identifiers.FirstOrDefault(identifier => identifier.FullName == Value("id"));
 
-        if (Aggregate is null || Identifier is null)
+        if (Projection is null || Identifier is null)
         {
             return;
         }
@@ -352,7 +352,7 @@ else
             StoreContext,
             Shape,
             Kind,
-            Kind.BindingKey(Aggregate),
+            Kind.BindingKey(Projection),
             Tag,
             Sort,
             Descending,
