@@ -210,13 +210,13 @@ else
                                         <td>
                                             @* Read the same way the aggregate's own state is, so an
                                                event's payload and the state it lands in are written
-                                               in the same terms. *@
+                                               in the same terms. A property holding a value of the
+                                               domain's own is unfolded under the line that holds
+                                               it: the type name on its own says there is a shape
+                                               and not what is in it. *@
                                             @if (DomainTypeDescriber.PropertiesOf(eventType) is { Count: > 0 } carried)
                                             {
-                                                @foreach (var property in carried)
-                                                {
-                                                    <div><code>@property.TypeName</code> @property.Name</div>
-                                                }
+                                                @Carried(carried)
                                             }
                                             else
                                             {
@@ -439,6 +439,36 @@ else
                rest of what is true of the class rather than of the binding. *@
             <span class="index-name">@BoundAs(aggregate)</span>
         </a>;
+
+    /// <summary>
+    /// What an event carries: one line per property, and the shape of any value of the domain's own
+    /// unfolded under the line holding it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A fragment that draws itself, because the shape nests and how deep is the describer's to
+    /// decide — this only draws what came back. Written as a property rather than a field so the
+    /// reference to itself is resolved when it is drawn rather than when the field is built.
+    /// </para>
+    /// <para>
+    /// Nested lists rather than one flat one with indentation on it: what is under a property is
+    /// under it in the markup too, so a reader following the indent and a reader following the
+    /// structure are following the same thing.
+    /// </para>
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainProperty>> Carried => properties =>
+        @<ul class="carried">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <code>@property.TypeName</code> @property.Name
+                    @if (property.Children.Count > 0)
+                    {
+                        @Carried(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
 
     /// <summary>
     /// The lens that stands for looking at what is stored under an identifier. Written once because

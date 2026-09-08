@@ -9,6 +9,42 @@ namespace Memoria.Web.Tests;
 [EventType("SampleHappened", 1)]
 public record SampleHappenedEvent(string Id) : IEvent;
 
+/// <summary>
+/// A value an event carries whole, rather than as loose numbers beside each other.
+/// </summary>
+public record SampleMeasurement(decimal Width, decimal Height);
+
+/// <summary>
+/// A value holding another value, so there is a second level under it to unfold.
+/// </summary>
+public record SampleLabel(string Text, SampleMeasurement Size);
+
+/// <summary>
+/// A value that holds another of its own kind, which anything unfolding it has to stop on.
+/// </summary>
+public record SampleChain(string Name, SampleChain? Next);
+
+/// <summary>Where a sample got to, so an enum is among the shapes described.</summary>
+public enum SampleState
+{
+    None = 0,
+    Open = 1
+}
+
+/// <summary>
+/// An event carrying every shape a page has to tell apart: plain values, a value of its own, a list
+/// of plain values, a list of values of its own, an enum, and a framework type.
+/// </summary>
+[EventType("SampleCarried", 1)]
+public record SampleCarriedEvent(
+    string Id,
+    SampleMeasurement Measurement,
+    IReadOnlyList<string> Notes,
+    IReadOnlyList<SampleLabel> Labels,
+    SampleChain Chain,
+    SampleState State,
+    DateTimeOffset OccurredOn) : IEvent;
+
 [AggregateType("SampleAggregate", 1)]
 public class SampleAggregate : AggregateRoot
 {
@@ -45,6 +81,9 @@ public class SampleDcbAggregate : DcbAggregateRoot
     public override Type[]? EventTypeFilter => [typeof(SampleHappenedEvent)];
 
     public string Name { get; private set; } = string.Empty;
+
+    /// <summary>A value the model holds whole, as a write model folded from an event would.</summary>
+    public SampleMeasurement Measurement { get; private set; } = new(0, 0);
 
     protected override bool Apply<T>(T @event) => false;
 }

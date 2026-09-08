@@ -126,6 +126,94 @@ public class DomainTypeDescriberTests
             .Which.Should().BeEquivalentTo(new DomainProperty("Id", "string"));
     }
 
+    /// <summary>
+    /// A property holding a value of the domain's own says nothing on its own — the shape is inside
+    /// it, and the events tab is where someone goes to find out what an event carries.
+    /// </summary>
+    [Fact]
+    public void Reads_the_properties_of_a_property_holding_a_value_of_its_own()
+    {
+        Carried("Measurement").Children.Select(child => child.Name)
+            .Should().Equal("Height", "Width");
+    }
+
+    /// <summary>
+    /// A list is described by what it holds. <c>IReadOnlyList&lt;SampleLabel&gt;</c> is already in
+    /// the type column, so unfolding the list itself would repeat it and show nothing.
+    /// </summary>
+    [Fact]
+    public void Reads_the_properties_of_what_a_list_holds()
+    {
+        Carried("Labels").Children.Select(child => child.Name).Should().Equal("Size", "Text");
+    }
+
+    [Fact]
+    public void Unfolds_a_value_held_inside_another_value()
+    {
+        Carried("Labels").Children.Single(child => child.Name == "Size")
+            .Children.Select(child => child.Name).Should().Equal("Height", "Width");
+    }
+
+    [Fact]
+    public void Reads_nothing_beneath_a_plain_value()
+    {
+        Carried("Id").Children.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Reads_nothing_beneath_a_list_of_plain_values()
+    {
+        Carried("Notes").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// An enum has no state to unfold, and its members are not properties of anything.
+    /// </summary>
+    [Fact]
+    public void Reads_nothing_beneath_an_enum()
+    {
+        Carried("State").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// The framework's own types are not the domain's shape. Unfolding one would fill the page with
+    /// <c>DateTimeOffset</c>'s dozen properties and say nothing about the event.
+    /// </summary>
+    [Fact]
+    public void Reads_nothing_beneath_a_framework_type()
+    {
+        Carried("OccurredOn").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// A type reachable from itself would unfold forever. It is shown once, and the property that
+    /// leads back to it is left folded rather than dropped, so the shape is still readable.
+    /// </summary>
+    [Fact]
+    public void Stops_unfolding_a_value_that_holds_its_own_kind()
+    {
+        var chain = Carried("Chain");
+
+        chain.Children.Select(child => child.Name).Should().Equal("Name", "Next");
+        chain.Children.Single(child => child.Name == "Next").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// The state tab reads the same properties, so a model holding a value of its own is unfolded
+    /// there too rather than only where events are listed.
+    /// </summary>
+    [Fact]
+    public void Unfolds_a_value_a_model_declares_as_well_as_one_an_event_carries()
+    {
+        Describe(typeof(SampleDcbAggregate)).Properties
+            .Single(property => property.Name == "Measurement")
+            .Children.Select(child => child.Name).Should().Equal("Height", "Width");
+    }
+
+    private static DomainProperty Carried(string name) =>
+        DomainTypeDescriber.PropertiesOf(typeof(SampleCarriedEvent))
+            .Single(property => property.Name == name);
+
     [Fact]
     public void Reports_the_properties_the_type_declares()
     {

@@ -582,6 +582,34 @@ h2:focus {
         padding: 0.2rem 0;
     }
 
+/* What an event carries, in the cell that lists it: one property to a line, and the shape of a
+   value of the domain's own under the line that holds it. No markers, because these are the parts
+   of a type rather than points in an argument. */
+.carried {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .carried li {
+        padding: 0.1rem 0;
+    }
+
+    /* A level under a property steps in and hangs off a rule. Nothing here discloses — there is no
+       caret and nothing to click — so the indent is doing all the work of saying what belongs to
+       what, and the rule is what keeps it readable once a name is long enough to wrap. */
+    .carried .carried {
+        border-left: 1px solid var(--rule);
+        margin: 0.1rem 0 0.2rem 0.15rem;
+        padding-left: 0.6rem;
+    }
+
+        /* Softer the further in it goes, so the event's own properties stay the ones the eye lands
+           on and what is inside them reads as detail rather than as more of the same list. */
+        .carried .carried > li {
+            color: var(--ink-soft);
+        }
+
 
 /* Nothing to show, and the page saying why rather than leaving a gap. */
 .missing {
