@@ -162,13 +162,14 @@ app.MapPost("/settings/refresh", async (
     }
     catch (AntiforgeryValidationException)
     {
-        return Back(error: "That request could not be verified. Reload the page and try again.");
+        return Back(error: "That request could not be verified. Reload the page and try again.",
+            tab: "types");
     }
 
     types.Reload();
     LogCatalogue(logger, types.Current);
 
-    return Back(message: $"{types.Current.Count} type(s) registered.");
+    return Back(message: $"{types.Current.Count} type(s) registered.", tab: "types");
 }).DisableAntiforgery();
 
 // The one write the DCB pages offer. A form post rather than an interactive component, so the
@@ -246,13 +247,16 @@ app.Run();
 return;
 
 // Back to the settings page carrying what happened, so the outcome survives the redirect.
-static IResult Back(string? message = null, string? error = null)
+// The tab is carried back with the message because the settings page writes each one under the
+// button that produced it: an upload's answer belongs on the installed tab, a refresh's on the
+// types tab, and landing on the other one would leave the answer where it was not asked for.
+static IResult Back(string? message = null, string? error = null, string tab = "installed")
 {
     var query = message is not null
         ? $"?message={Uri.EscapeDataString(message)}"
         : $"?error={Uri.EscapeDataString(error ?? string.Empty)}";
 
-    return Results.LocalRedirect($"/settings{query}");
+    return Results.LocalRedirect($"/settings{query}&tab={tab}");
 }
 
 static void LogCatalogue(ILogger logger, DomainTypeCatalogue catalogue)

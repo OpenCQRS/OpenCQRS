@@ -12,168 +12,186 @@
 </nav>
 
 <h1>Settings</h1>
+@* What is true of both tabs stays above them; what each one is gets said inside it. The warning
+   belongs here because either tab can set it off: uploading, removing and refreshing all change
+   what everyone resolves. *@
 <p class="lede">
-    Upload a zip of assemblies holding your domain types. They are read straight away — the
-    application does not restart. Everyone using this server shares one set of types, so a change
-    here changes what they see too; their open pages catch up when the browser is reloaded.
+    Everyone using this server shares one set of domain types, so a change here changes what they
+    see too; their open pages catch up when the browser is reloaded.
 </p>
 
-@if (!string.IsNullOrWhiteSpace(Message))
+@* Two views of one setting: the archives that were uploaded and the types they turned out to hold.
+   Switched by the address rather than by script, the same way the aggregate pages switch theirs, so
+   a view can be linked to and the back button steps between them. Marked with aria-current because
+   these are places to go, not scripted tabs. *@
+<nav class="tabs" aria-label="Settings views">
+    <a id="tab-@InstalledTab" href="settings?tab=@InstalledTab"
+       aria-current="@(Tab == InstalledTab ? "page" : null)">Installed</a>
+    <a id="tab-@TypesTab" href="settings?tab=@TypesTab"
+       aria-current="@(Tab == TypesTab ? "page" : null)">Types</a>
+</nav>
+
+@* Each panel is named by the tab that reaches it, so the label is written once. *@
+@if (Tab == InstalledTab)
 {
-    <p class="notice" role="status">@Message</p>
-}
-
-@if (!string.IsNullOrWhiteSpace(Error))
-{
-    <p class="alert" role="alert">@Error</p>
-}
-
-<h2>Installed</h2>
-@if (Archives.Count == 0)
-{
-    <p class="empty">Nothing uploaded yet.</p>
-}
-else
-{
-    <table>
-        <thead>
-        <tr>
-            <th scope="col">File</th>
-            <th scope="col">Size</th>
-            <th scope="col">Uploaded</th>
-            <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-        </thead>
-        <tbody>
-        @for (var index = 0; index < Archives.Count; index++)
-        {
-            var archive = Archives[index];
-            var dialog = $"delete-{index}";
-
-            <tr>
-                <td class="name">@archive.Name</td>
-                <td class="numeric">@($"{archive.Length / 1024:n0} KB")</td>
-                <td class="muted">@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
-                <td class="actions">
-                    @* Asked before it happens, because removing an archive takes the types it
-                       brought away from everyone, not just from whoever pressed it. Opened the same
-                       way as the upload form: the address says which one, so the question survives
-                       having no script to ask it. *@
-                    @* A bin rather than a word: the column is one link per row and the word repeats
-                       down it. The name it is read out by carries the file, so a row is told apart
-                       by more than its position — and the dialog it opens still asks in words. *@
-                    <a class="delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
-                       aria-label="Delete @archive.Name" title="Delete @archive.Name"
-                       onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">
-                        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
-                             fill="none" stroke="currentColor" stroke-width="1.5"
-                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.6 9a1 1 0 0 0 1 1h4.8a1 1 0 0 0 1-1L12 4" />
-                            <path d="M6.75 6.75v4.5M9.25 6.75v4.5" />
-                        </svg>
-                    </a>
-
-                    <dialog id="@dialog" class="dialog" open="@(DeleteAsked == archive.Name)">
-                        <h2>Remove @archive.Name?</h2>
-                        <p>
-                            The types it brought are unregistered for everyone using this server.
-                            Anything it holds can be uploaded again afterwards.
-                        </p>
-                        <form method="post" action="settings/delete" class="dialog-actions">
-                            <AntiforgeryToken/>
-                            <input type="hidden" name="name" value="@archive.Name"/>
-                            <button type="submit" class="danger">Remove</button>
-                            <a class="quiet" href="settings"
-                               onclick="event.preventDefault(); document.getElementById('@dialog').close()">Cancel</a>
-                        </form>
-                    </dialog>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
-
-@* A link rather than a button, so it still opens without scripting: the address says the form is
-   wanted and the dialog is rendered open. With scripting it is a modal and the page stays put. *@
-<p class="actions-row">
-    <a class="button" href="settings?upload=1"
-       onclick="event.preventDefault(); document.getElementById('upload').showModal()">Upload</a>
-</p>
-
-<dialog id="upload" class="dialog" open="@ShowUpload">
-    <form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
-        <AntiforgeryToken/>
-        <h2>Upload</h2>
-        <label for="files">Zip files</label>
-        <input id="files" name="files" type="file" accept=".zip,application/zip" multiple required/>
-        <p class="hint">
-            Assemblies are taken from anywhere in the archive and stored under one name each. An
-            assembly of the same name from an earlier upload is replaced.
+    <section class="tab-panel" aria-labelledby="tab-@InstalledTab">
+        <p class="lede">
+            The zips of assemblies you have uploaded, each holding domain types. They are read as
+            soon as they arrive — the application does not restart.
         </p>
-        <div class="dialog-actions">
-            <button type="submit" class="button">Upload</button>
-            <a class="quiet" href="settings"
-               onclick="event.preventDefault(); document.getElementById('upload').close()">Cancel</a>
-        </div>
-    </form>
-</dialog>
 
-<h2>Types found</h2>
-<p class="lede">
-    @if (Catalogue.ReloadedUtc is { } reloaded)
-    {
-        @($"Last registered {reloaded.ToLocalTime():g}.")
-    }
-    else
-    {
-        @("Not registered yet.")
-    }
-</p>
+        @if (Archives.Count == 0)
+        {
+            <p class="empty">Nothing uploaded yet.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">File</th>
+                    <th scope="col">Size</th>
+                    <th scope="col">Uploaded</th>
+                    <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                @for (var index = 0; index < Archives.Count; index++)
+                {
+                    var archive = Archives[index];
+                    var dialog = $"delete-{index}";
 
-@if (Catalogue.Count == 0)
-{
-    <p class="empty">No domain types were found in the uploaded assemblies.</p>
+                    <tr>
+                        <td class="name">@archive.Name</td>
+                        <td class="numeric">@($"{archive.Length / 1024:n0} KB")</td>
+                        <td class="muted">@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
+                        <td class="actions">
+                            @* Asked before it happens, because removing an archive takes the types it
+                               brought away from everyone, not just from whoever pressed it. Opened the same
+                               way as the upload form: the address says which one, so the question survives
+                               having no script to ask it. *@
+                            @* A bin rather than a word: the column is one link per row and the word repeats
+                               down it. The name it is read out by carries the file, so a row is told apart
+                               by more than its position — and the dialog it opens still asks in words. *@
+                            <a class="delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
+                               aria-label="Delete @archive.Name" title="Delete @archive.Name"
+                               onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">
+                                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+                                     fill="none" stroke="currentColor" stroke-width="1.5"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.6 9a1 1 0 0 0 1 1h4.8a1 1 0 0 0 1-1L12 4" />
+                                    <path d="M6.75 6.75v4.5M9.25 6.75v4.5" />
+                                </svg>
+                            </a>
+
+                            <dialog id="@dialog" class="dialog" open="@(DeleteAsked == archive.Name)">
+                                <h2>Remove @archive.Name?</h2>
+                                <p>
+                                    The types it brought are unregistered for everyone using this server.
+                                    Anything it holds can be uploaded again afterwards.
+                                </p>
+                                <form method="post" action="settings/delete" class="dialog-actions">
+                                    <AntiforgeryToken/>
+                                    <input type="hidden" name="name" value="@archive.Name"/>
+                                    <button type="submit" class="danger">Remove</button>
+                                    <a class="quiet" href="settings"
+                                       onclick="event.preventDefault(); document.getElementById('@dialog').close()">Cancel</a>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+
+        @* A link rather than a button, so it still opens without scripting: the address says the form is
+           wanted and the dialog is rendered open. With scripting it is a modal and the page stays put. *@
+        <p class="actions-row">
+            <a class="button" href="settings?upload=1"
+               onclick="event.preventDefault(); document.getElementById('upload').showModal()">Upload</a>
+        </p>
+
+        @* What the last upload or removal did, read where the button that did it was pressed. *@
+        @Notice
+
+        <dialog id="upload" class="dialog" open="@ShowUpload">
+            <form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
+                <AntiforgeryToken/>
+                <h2>Upload</h2>
+                <label for="files">Zip files</label>
+                <input id="files" name="files" type="file" accept=".zip,application/zip" multiple required/>
+                <p class="hint">
+                    Assemblies are taken from anywhere in the archive and stored under one name each. An
+                    assembly of the same name from an earlier upload is replaced.
+                </p>
+                <div class="dialog-actions">
+                    <button type="submit" class="button">Upload</button>
+                    <a class="quiet" href="settings"
+                       onclick="event.preventDefault(); document.getElementById('upload').close()">Cancel</a>
+                </div>
+            </form>
+        </dialog>
+    </section>
 }
 else
 {
-    @* Set beside each other the same way the home page sets the two models, so what one model
-       registered is read against the other rather than down one list. The events are one bound
-       set that either model applies, so the same count is shown in both columns. *@
-    <div class="models">
-        <section class="model">
-            <h2>Streamed</h2>
-            <ul class="sections counts">
-                @foreach (var (label, count) in StreamedCounts)
-                {
-                    <li>
-                        <span class="name">@label</span>
-                        <span class="detail">@count</span>
-                    </li>
-                }
-            </ul>
-        </section>
+    <section class="tab-panel" aria-labelledby="tab-@TypesTab">
+        @* What the tab is, then when it was last true — one paragraph, because the second sentence
+           is only worth reading against the first. *@
+        <p class="lede">
+            The domain types found in the uploaded assemblies, counted for each model that can use
+            them. @Registered
+        </p>
 
-        <section class="model">
-            <h2>DCB</h2>
-            <ul class="sections counts">
-                @foreach (var (label, count) in DcbCounts)
-                {
-                    <li>
-                        <span class="name">@label</span>
-                        <span class="detail">@count</span>
-                    </li>
-                }
-            </ul>
-        </section>
-    </div>
+        @if (Catalogue.Count == 0)
+        {
+            <p class="empty">No domain types were found in the uploaded assemblies.</p>
+        }
+        else
+        {
+            @* Set beside each other the same way the home page sets the two models, so what one model
+               registered is read against the other rather than down one list. The events are one bound
+               set that either model applies, so the same count is shown in both columns. *@
+            <div class="models">
+                <section class="model">
+                    <h2>Streamed</h2>
+                    <ul class="sections counts">
+                        @foreach (var (label, count) in StreamedCounts)
+                        {
+                            <li>
+                                <span class="name">@label</span>
+                                <span class="detail">@count</span>
+                            </li>
+                        }
+                    </ul>
+                </section>
+
+                <section class="model">
+                    <h2>DCB</h2>
+                    <ul class="sections counts">
+                        @foreach (var (label, count) in DcbCounts)
+                        {
+                            <li>
+                                <span class="name">@label</span>
+                                <span class="detail">@count</span>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            </div>
+        }
+
+        <form method="post" action="settings/refresh" class="refresh">
+            <AntiforgeryToken/>
+            <button type="submit" class="button">Refresh types</button>
+            <span class="hint">Reads every uploaded assembly again and registers the types from scratch.</span>
+        </form>
+
+        @* What the last refresh did, read where the button that did it was pressed. *@
+        @Notice
+    </section>
 }
-
-<form method="post" action="settings/refresh" class="refresh">
-    <AntiforgeryToken/>
-    <button type="submit" class="button">Refresh types</button>
-    <span class="hint">Reads every uploaded assembly again and registers the types from scratch.</span>
-</form>
 
 @code {
 
@@ -182,6 +200,46 @@ else
 
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
+
+    /// <summary>
+    /// The two views the page offers, named as they appear in the address. Which one is showing is
+    /// the address's to say, so a view can be linked to, bookmarked, and gone back to — and so the
+    /// redirect after an upload or a refresh comes back to the tab the button was pressed on.
+    /// </summary>
+    private const string InstalledTab = "installed";
+
+    private const string TypesTab = "types";
+
+    /// <summary>
+    /// Which view the address asks for. Taken as text and matched against the two the page has, so
+    /// anything else in the query string opens the one the page opens with rather than a blank page.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? TabAsked { get; set; }
+
+    private string Tab => (TabAsked ?? string.Empty).ToLowerInvariant() switch
+    {
+        TypesTab => TypesTab,
+        _ => InstalledTab,
+    };
+
+    /// <summary>
+    /// What the last press did, rendered under the button that did it rather than at the top of the
+    /// page, so the answer is read where the question was asked. Written once because both panels
+    /// end the same way; only the showing panel renders it.
+    /// </summary>
+    private RenderFragment Notice =>
+        @<text>
+            @if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <p class="notice" role="status">@Message</p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Error))
+            {
+                <p class="alert" role="alert">@Error</p>
+            }
+        </text>;
 
     /// <summary>
     /// Whether the upload form should already be open. Asked for in the address so the page decides
@@ -201,6 +259,15 @@ else
     private string? DeleteAsked { get; set; }
 
     private DomainTypeCatalogue Catalogue => Types.Current;
+
+    /// <summary>
+    /// When the types showing were last read from the assemblies, or that they never have been.
+    /// Written as a value rather than a branch in the markup: a conditional block in the middle of
+    /// a sentence takes the space before it with it, and the sentence closes up.
+    /// </summary>
+    private string Registered => Catalogue.ReloadedUtc is { } reloaded
+        ? $"Last registered {reloaded.ToLocalTime():g}."
+        : "Not registered yet.";
 
     private IReadOnlyList<InstalledArchive> Archives { get; set; } = [];
 

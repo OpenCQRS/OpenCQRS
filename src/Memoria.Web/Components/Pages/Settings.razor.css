@@ -119,8 +119,17 @@ table {
         outline: none;
     }
 
+/* Each tab ends with its button and, under it, what the last press did. The gap is the same on both
+   so the answer reads as belonging to the button above it rather than floating at the foot of the
+   panel — and it is written here rather than in app.css because it is this pairing, not the button
+   row itself, that wants the tighter space. */
+.actions-row,
+.refresh {
+    margin-bottom: 1rem;
+}
+
 .actions-row {
-    margin: 0 0 2rem;
+    margin-top: 0;
 }
 
 /* The upload form, brought up over the page rather than sitting on it. */
