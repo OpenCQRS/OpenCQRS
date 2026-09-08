@@ -25,7 +25,14 @@ namespace Memoria.Web.Samples.Seeding;
 /// </remarks>
 public static class DcbSampleData
 {
-    private sealed record SeededProduct(string ProductId, string Sku, string Name, decimal Price);
+    private sealed record SeededProduct(
+        string ProductId,
+        string Sku,
+        string Name,
+        decimal Price,
+        PackagedSize Packaging,
+        IReadOnlyList<string> Keywords,
+        IReadOnlyList<ProductVariant> Variants);
 
     public static async Task Add(
         IDcbDomainService dcb,
@@ -72,12 +79,17 @@ public static class DcbSampleData
         IDcbDomainService dcb, Random random, SeedReport report, CancellationToken cancellationToken)
     {
         var name = ProductName(random);
-        var product = new SeededProduct(Id(random, "p"), Sku(random, name), name, Price(random, 5, 250));
+        var price = Price(random, 5, 250);
+
+        var product = new SeededProduct(
+            Id(random, "p"), Sku(random, name), name, price,
+            Packaging(random), ProductKeywords(random, random.Next(2, 5)), Variants(random, price));
 
         var creationId = new ProductCreationId(product.ProductId, product.Sku);
 
         await Decide(dcb, creationId, report, cancellationToken,
-            model => model.Create(product.ProductId, product.Name, product.Sku, product.Price));
+            model => model.Create(product.ProductId, product.Name, product.Sku, product.Price,
+                product.Packaging, product.Keywords, product.Variants));
 
         var stockId = new StockLevelId(product.ProductId);
 
@@ -420,6 +432,29 @@ public static class DcbSampleData
     private static IEnumerable<SeededProduct> Sample(
         IReadOnlyList<SeededProduct> products, int count, Random random) =>
         products.OrderBy(_ => random.Next()).Take(Math.Min(count, products.Count)).ToList();
+
+    /// <summary>
+    /// A box for the product, in centimetres and kilogrammes.
+    /// </summary>
+    private static PackagedSize Packaging(Random random) =>
+        new(Measurement(random, 5, 60), Measurement(random, 5, 45),
+            Measurement(random, 2, 40), Measurement(random, 1, 15));
+
+    /// <summary>
+    /// The finishes the product is sold in, priced around the product's own price.
+    /// </summary>
+    /// <remarks>
+    /// A discount is capped at the price, so no variant is ever worth less than nothing. Sample data
+    /// has to be data the domain would have accepted, or the tool it is seeded for shows states the
+    /// application could never reach.
+    /// </remarks>
+    private static IReadOnlyList<ProductVariant> Variants(Random random, decimal price) =>
+    [
+        ..ProductFinishes(random, random.Next(1, 4)).Select(finish => new ProductVariant(
+            finish.ToLowerInvariant(),
+            finish,
+            Math.Max(-price, Math.Round(random.Next(-1500, 4001) / 100m, 2))))
+    ];
 
     private static void Check(Result result)
     {

@@ -32,6 +32,17 @@ public static class SampleVocabulary
         "supplier stopped making it", "replaced by the new model", "poor margin"
     ];
 
+    private static readonly string[] Keywords =
+    [
+        "kitchen", "gift", "handmade", "compact", "best seller", "outdoor", "hard wearing",
+        "clearance", "premium", "everyday"
+    ];
+
+    private static readonly string[] Finishes =
+    [
+        "Oak", "Charcoal", "Brass", "Sage", "Ivory", "Slate", "Copper"
+    ];
+
     private static readonly string[] AdjustmentReasons =
     [
         "stock count", "damaged in the warehouse", "found behind the racking"
@@ -69,10 +80,29 @@ public static class SampleVocabulary
     }
 
     /// <summary>
+    /// A few words a catalogue search might find the product by, without repeating one.
+    /// </summary>
+    public static IReadOnlyList<string> ProductKeywords(Random random, int count) =>
+        [..Keywords.OrderBy(_ => random.Next()).Take(Math.Min(count, Keywords.Length))];
+
+    /// <summary>
+    /// The finishes a product is sold in, without repeating one.
+    /// </summary>
+    public static IReadOnlyList<string> ProductFinishes(Random random, int count) =>
+        [..Finishes.OrderBy(_ => random.Next()).Take(Math.Min(count, Finishes.Length))];
+
+    /// <summary>
     /// A price with two decimal places, which is what a price has.
     /// </summary>
     public static decimal Price(Random random, int lowest, int highest) =>
         Math.Round(random.Next(lowest * 100, highest * 100) / 100m, 2);
+
+    /// <summary>
+    /// A measurement with one decimal place, which is as precise as a tape measure or a set of
+    /// warehouse scales gets.
+    /// </summary>
+    public static decimal Measurement(Random random, int lowest, int highest) =>
+        Math.Round(random.Next(lowest * 10, highest * 10) / 10m, 1);
 
     /// <summary>
     /// A moment in the last few weeks, so a listing sorted by date is not all one instant.

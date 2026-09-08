@@ -33,6 +33,41 @@ public class Product : DcbAggregateRoot
     public bool Discontinued { get; private set; }
 
     /// <summary>
+    /// How big the box is and what it weighs.
+    /// </summary>
+    /// <remarks>
+    /// A whole value held on the model rather than four loose decimals, and it comes back off the
+    /// snapshot the same way it went on: a private setter over a replacement value, never a value
+    /// edited in place. <c>PrivateSetterContractResolver</c> is what lets the serializer restore it
+    /// without the model having to expose a setter to the rest of the application.
+    /// </remarks>
+    public PackagedSize Packaging { get; private set; } = new(0, 0, 0, 0);
+
+    /// <summary>
+    /// The words the catalogue search knows this product by.
+    /// </summary>
+    /// <remarks>
+    /// A list of plain strings, and the simplest case of the same rule: replaced whole on every
+    /// fold, so nothing reading the model can catch it halfway through a change and the serializer
+    /// has one value to write.
+    /// </remarks>
+    public IReadOnlyList<string> Keywords { get; private set; } = [];
+
+    /// <summary>
+    /// The finishes this product is sold in, and what each does to the price.
+    /// </summary>
+    /// <remarks>
+    /// A list of values rather than of strings, which is where a snapshot earns its round trip:
+    /// <see cref="ProductVariant"/> has to survive being written and read back with every field
+    /// intact, or a fold from the snapshot and a fold from the events would disagree.
+    /// </remarks>
+    public IReadOnlyList<ProductVariant> Variants { get; private set; } = [];
+
+    /// <summary>The cheapest a variant of this product can be had for.</summary>
+    public decimal LowestVariantPrice =>
+        Variants.Count == 0 ? Price : Price + Variants.Min(variant => variant.PriceDifference);
+
+    /// <summary>
     /// Stock events are outside this filter on purpose. What a product is called and what it costs
     /// has nothing to do with how many are on the shelf, and a model that reads a tag does not have
     /// to read everything written under it — see <see cref="StockLevel"/>, which reads the same tag
@@ -65,14 +100,21 @@ public class Product : DcbAggregateRoot
     /// here, because it is the only one that needs the fold — the shape of the input is a
     /// validator's job.
     /// </remarks>
-    public string? Create(string productId, string name, string sku, decimal price)
+    public string? Create(
+        string productId,
+        string name,
+        string sku,
+        decimal price,
+        PackagedSize packaging,
+        IReadOnlyList<string> keywords,
+        IReadOnlyList<ProductVariant> variants)
     {
         if (Exists) return $"A product with SKU '{sku}' already exists.";
         if (price < 0) return "A price cannot be negative.";
 
         // Staged with no tags of its own, so it inherits the aggregate's — which the store set from
         // the boundary, and which is exactly product:{id} and sku:{sku}.
-        Add(new ProductCreatedEvent(productId, name, sku, price));
+        Add(new ProductCreatedEvent(productId, name, sku, price, packaging, keywords, variants));
 
         return null;
     }
@@ -137,6 +179,11 @@ public class Product : DcbAggregateRoot
                 Name = created.Name;
                 Sku = created.Sku;
                 Price = created.Price;
+                Packaging = created.Packaging;
+                // Copied into a list of this model's own rather than held by reference, so the
+                // event stays the immutable record of what happened whatever the model does next.
+                Keywords = [..created.Keywords];
+                Variants = [..created.Variants];
                 return true;
 
             case ProductDetailsChangedEvent changed:
