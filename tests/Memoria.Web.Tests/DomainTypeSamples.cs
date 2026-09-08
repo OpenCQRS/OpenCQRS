@@ -171,3 +171,10 @@ public class SampleCarryingDcbAggregate : DcbAggregateRoot
 
     protected override bool Apply<T>(T @event) => false;
 }
+
+/// <summary>
+/// An event carrying no <see cref="EventType"/>, so nothing writes it into the log and nothing
+/// reads it back. Listed all the same, because a type a model applies is worth seeing whether or
+/// not it is bound.
+/// </summary>
+public record SampleUnboundEvent(string Id) : IEvent;

@@ -211,15 +211,31 @@ else
             }
             else
             {
-                @* The whole count, not this page's worth: the pager says which page, and what a
-                   reader wants beside it is how much there is to page through. *@
-                <p class="lede">@EventSummary</p>
+                @* The lede and the fold, at the two ends of the line above the table, in the same
+                   shape as the pager and the rows-per-page picker at the two ends of the line
+                   below it. *@
+                <div class="table-header">
+                    @* The whole count, not this page's worth: the pager says which page, and what a
+                       reader wants beside it is how much there is to page through. *@
+                    <p class="lede">@EventSummary</p>
 
-                <table class="grid">
+                    @* Opens or closes every payload on the page at once. A link rather than a
+                       control with script behind it, like the order and the page beside it: the
+                       state lives in the address, so a page opened out can be linked to and gone
+                       back to, and the rows stay foldable one at a time either way. It stays on
+                       this page — this is a way of looking at the rows, not a way of moving
+                       between them. *@
+                    <a class="fold-all" href="@FoldLink">
+                        @(PayloadsOpen ? "Collapse all" : "Expand all")
+                        <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+                    </a>
+                </div>
+
+                <table class="grid events">
                     <thead>
                     <tr>
-                        <th scope="col">Position</th>
-                        <th scope="col" aria-sort="@(Descending ? "descending" : "ascending")">
+                        <th scope="col" class="col-position">Position</th>
+                        <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
                             @* The only date these have, so the only thing there is to order them by. *@
                             <a href="@EventsLink(!Descending, 1)">
                                 Appended
@@ -227,9 +243,9 @@ else
                             </a>
                         </th>
                         @* The key the row was stored under, as the two facts it is made of. *@
-                        <th scope="col">Type</th>
-                        <th scope="col">Version</th>
-                        <th scope="col">Payload</th>
+                        <th scope="col" class="col-type">Type</th>
+                        <th scope="col" class="col-version">Version</th>
+                        <th scope="col" class="col-payload">Payload</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -260,12 +276,26 @@ else
                                 }
                                 else
                                 {
-                                    @* A list, because that is what it is: one name and value per
-                                       item, in the same shape the projection's own state is read
-                                       in. The name is set apart from the value it names, so a cell
-                                       of several pairs is scanned rather than read through — and a
-                                       value with a shape inside it is opened under its own name. *@
-                                    @Pairs(stored.State)
+                                    @* Folded away, and closed to begin with: a payload is the only
+                                       cell tall enough to push the row about the event off its own
+                                       line, and a history is read by running down the positions and
+                                       the types first. A <details> rather than script, like the
+                                       rows on the events page, because these pages render
+                                       statically. *@
+                                    <details class="payload" open="@PayloadsOpen">
+                                        @* How much is under it, so a closed row still says whether
+                                           opening it is worth it. What it holds is the pairs'
+                                           to say. *@
+                                        <summary>@Held(stored.State.Count)</summary>
+
+                                        @* A list, because that is what it is: one name and value
+                                           per item, in the same shape the projection's own state is
+                                           read in. The name is set apart from the value it names,
+                                           so a cell of several pairs is scanned rather than read
+                                           through — and a value with a shape inside it is opened
+                                           under its own name. *@
+                                        @Pairs(stored.State)
+                                    </details>
                                 }
                             </td>
                         </tr>
@@ -315,6 +345,10 @@ else
                                 <input type="hidden" name="tab" value="@EventsTab"/>
                                 <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                                 <input type="hidden" name="size" value="@PageSize"/>
+                                @if (PayloadsOpen)
+                                {
+                                    <input type="hidden" name="payloads" value="@Open"/>
+                                }
                                 <noscript>
                                     <button type="submit">Go</button>
                                 </noscript>
@@ -350,6 +384,10 @@ else
                         }
                         <input type="hidden" name="tab" value="@EventsTab"/>
                         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                        @if (PayloadsOpen)
+                        {
+                            <input type="hidden" name="payloads" value="@Open"/>
+                        }
                         <noscript>
                             <button type="submit">Apply</button>
                         </noscript>
@@ -478,6 +516,29 @@ else
     private int Page { get; set; } = 1;
 
     /// <summary>
+    /// Whether every payload on the events tab starts open. Closed unless the address says
+    /// otherwise: a history is read by running down the positions and the types, and the payloads
+    /// are what is opened once something on a row is worth following.
+    /// </summary>
+    /// <remarks>
+    /// The state of the table rather than of any row. A reader still folds one row at a time, and
+    /// this only says what they are all folded to on arrival — which is why it travels through
+    /// <see cref="DetailLink"/> with everything else: paging, re-ordering or leaving the tab and
+    /// coming back with the payloads out should not quietly shut them.
+    /// </remarks>
+    private bool PayloadsOpen { get; set; }
+
+    /// <summary>What the address says when the payloads are out.</summary>
+    private const string Open = "open";
+
+    /// <summary>
+    /// How much a folded payload has under it, so a closed row still says whether opening it is
+    /// worth it. The properties it declares, not the ones nested inside them: the count belongs to
+    /// what the fold hides at its first line.
+    /// </summary>
+    private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
+
+    /// <summary>
     /// The four views the page offers, named as they appear in the address. Which one is showing
     /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
     /// </summary>
@@ -537,11 +598,17 @@ else
     /// Whether to land at the events panel. False for a tab and for the refresh, which changes the
     /// version and the state and says so in a notice at the top — the navigations that want the top.
     /// </param>
-    private string DetailLink(string tab, bool descending, int page, bool toTable = false) =>
+    /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
+    /// <remarks>
+    /// The payloads are named only when they are out. Folded is what the table opens as, so a link
+    /// to a folded table is a link with nothing to say about them.
+    /// </remarks>
+    private string DetailLink(string tab, bool descending, int page, bool toTable = false, bool? open = null) =>
         $"{Address}&tab={tab}" +
         $"&dir={(descending ? "desc" : "asc")}" +
         $"&size={PageSize}" +
         $"&page={page}" +
+        ((open ?? PayloadsOpen) ? $"&payloads={Open}" : string.Empty) +
         (toTable ? $"#{EventsAnchor}" : string.Empty);
 
     /// <summary>
@@ -552,6 +619,13 @@ else
 
     private string EventsLink(bool descending, int page, bool toTable = true) =>
         DetailLink(EventsTab, descending, page, toTable);
+
+    /// <summary>
+    /// The table as it stands, with the payloads turned the other way. It stays on the page the
+    /// reader is on: this changes how the rows are looked at, not which of them are.
+    /// </summary>
+    private string FoldLink =>
+        DetailLink(EventsTab, Descending, Events.Page, toTable: true, open: !PayloadsOpen);
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
@@ -704,6 +778,8 @@ else
         Descending = string.Equals(Values.GetValueOrDefault("dir"), "desc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Values.GetValueOrDefault("size"));
         Page = int.TryParse(Values.GetValueOrDefault("page"), out var asked) ? asked : 1;
+        PayloadsOpen = string.Equals(
+            Values.GetValueOrDefault("payloads"), Open, StringComparison.OrdinalIgnoreCase);
 
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
         // the other two needs the events read, and reading them anyway would cost the info and

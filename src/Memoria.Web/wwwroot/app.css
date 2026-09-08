@@ -15,6 +15,14 @@
     --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* The room for the scrollbar is kept whether or not there is one, so a page that grows past the
+   window does not narrow itself by the width of the bar as it appears. Opening a payload is what
+   made that visible — the rows below it grow downwards and the columns hold, and the page should
+   not step sideways underneath them all the same. */
+html {
+    scrollbar-gutter: stable;
+}
+
 body {
     margin: 0;
     font-family: var(--font);
@@ -774,6 +782,91 @@ h2:focus {
         padding-left: 0.6rem;
     }
 
+/* The table of stored events, wherever it is drawn: on its own page, or on the events tab of a
+   model folded from them. Its columns are declared rather than measured, because a folded payload
+   is the width of "3 values" and an opened one is the width of what it holds — left to size itself,
+   the table would step sideways every time a row was opened, and the columns a reader was running
+   down would move out from under them. Declared, a payload opens downwards and nothing else moves.
+
+   In parts of the width rather than in ems, so the columns keep their proportions at any width and
+   the sum cannot overflow the page. The four to the left are as wide as what they hold: a position,
+   a date, a bound name, a version. What is left over is the payload's, because it is the column
+   with something to open. */
+.grid.events {
+    table-layout: fixed;
+}
+
+    .grid.events .col-position {
+        width: 10%;
+    }
+
+    .grid.events .col-appended {
+        width: 17%;
+    }
+
+    .grid.events .col-type {
+        width: 21%;
+    }
+
+    .grid.events .col-version {
+        width: 9%;
+    }
+
+    .grid.events .col-payload {
+        width: 43%;
+    }
+
+/* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
+   pairs. Closed unless the address says otherwise, and opened one row at a time or all at once from
+   the control above the table. */
+.payload > summary {
+    align-items: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    gap: 0.35rem;
+    /* Both defaults off: Firefox draws its marker through list-style, Safari through its own
+       pseudo-element, and the caret below is drawn where the cell wants it. */
+    list-style: none;
+}
+
+    .payload > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .payload > summary:hover {
+        color: var(--accent);
+    }
+
+    .payload > summary:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* The disclosure caret, in front of what it opens rather than across the cell from it: a table
+       cell is as wide as its column and the far side of it is nowhere in particular. Drawn the same
+       way the index list's and the header menu's are, so a caret means one thing across the site. */
+    .payload > summary::before {
+        border-left: 0.3rem solid transparent;
+        border-right: 0.3rem solid transparent;
+        border-top: 0.3rem solid currentColor;
+        content: "";
+        flex: none;
+        height: 0;
+        width: 0;
+    }
+
+.payload[open] > summary::before {
+    transform: rotate(180deg);
+}
+
+/* Set under the line that opened it rather than tight against it, so the pairs read as what is
+   inside the fold. */
+.payload > .pairs {
+    margin-top: 0.25rem;
+}
+
     /* A sortable heading: the whole label is the control, so the target is the width of the word. */
     .grid th a {
         align-items: center;
@@ -841,6 +934,39 @@ h2:focus {
     justify-content: space-between;
     margin-top: 1.25rem;
 }
+
+/* What is above a table, in the same shape as what is below it: something said about the whole
+   table at one end, and a control over it at the other. Aligned on the first line rather than the
+   middle, because the count beside it is a sentence and may wrap to two. */
+.table-header {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+/* Opens or closes every folded cell in the table at once. Quiet, because it acts on how the table
+   is looked at rather than on what is in it, and the rows are still folded one at a time. */
+.fold-all {
+    align-items: center;
+    color: var(--ink-soft);
+    display: inline-flex;
+    flex: none;
+    font-size: 0.875rem;
+    gap: 0.35rem;
+    text-decoration: none;
+}
+
+    .fold-all:hover {
+        color: var(--accent);
+    }
+
+    .fold-all:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
 
 .page-size {
     align-items: center;
@@ -1030,6 +1156,30 @@ h2:focus {
     .search a {
         color: var(--ink-soft);
         font-size: 0.875rem;
+    }
+
+    /* Narrowing by choosing from a list rather than by typing. Cut to the same height as the field
+       beside it in the other filter rows, so a page that narrows one way and a page that narrows
+       the other put their tables at the same place. */
+    .search label {
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+    }
+
+    .search select {
+        background: #fff;
+        border: 1px solid #c6ccd4;
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.9375rem;
+        padding: 0.5rem 0.625rem;
+    }
+
+    .search select:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        outline: none;
     }
 
 /* The whole row is the link. The anchor fills its cell so there is no dead space between the
