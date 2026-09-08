@@ -28,31 +28,45 @@ else
             <ul>
                 @foreach (var aggregate in AggregateTypes)
                 {
-                    <li>
-                        @* A link rather than a click handler: the page renders statically like the
-                           rest, and the choice stays in the address so it can be shared. *@
-                        <a href="@Link(aggregate)" class="@CurrentClass(aggregate)" aria-current="@CurrentFlag(aggregate)">
-                            @* Named by what it is bound as rather than by the class: that is the
-                               name the store writes and the one a stored row is found under, and it
-                               is the name that stays put when the class is renamed. *@
-                            <span class="index-name">@BoundAs(aggregate)</span>
-                            <span class="index-detail">@aggregate.Namespace</span>
-                        </a>
-
-                        @* The identifiers it can be loaded by, under the row itself: the same links
-                           the identifiers tab lists, reached without first choosing the aggregate
-                           and then the tab. Outside the anchor above, because one link cannot hold
-                           another. *@
+                    @* The whole group is marked as the current one, not just its first row, so an
+                       open row and the identifiers under it read as one selected block. *@
+                    <li class="@CurrentClass(aggregate)">
+                        @* The identifiers it can be loaded by, folded under the row that names it:
+                           the same links the identifiers tab lists, reached without first choosing
+                           the aggregate and then the tab. A <details> rather than script, like the
+                           header menu, because these pages render statically — and open for the
+                           aggregate being read, so choosing one is what opens it while any other
+                           can still be peeked into without leaving the one on the right. *@
                         @if (Identifiers(aggregate) is { Count: > 0 } identifiers)
                         {
-                            <ul class="index-links">
-                                @foreach (var identifier in identifiers)
-                                {
-                                    <li>
-                                        <a href="@LoadLink(aggregate, identifier)">@identifier.Name</a>
-                                    </li>
-                                }
-                            </ul>
+                            <details open="@IsCurrent(aggregate)">
+                                @* The name is a link inside the summary rather than the summary
+                                   itself: a click on it selects the aggregate, and a click beside
+                                   it only opens the row. *@
+                                <summary>@NameRow(aggregate)</summary>
+
+                                <ul class="index-links">
+                                    @foreach (var identifier in identifiers)
+                                    {
+                                        <li>
+                                            @* The same lens the identifiers tab reads a row by, in
+                                               front of the name rather than opposite it: here the
+                                               whole row is the one link, and the lens says what
+                                               kind of place it leads to rather than which row. *@
+                                            <a href="@LoadLink(aggregate, identifier)">
+                                                @Lens
+                                                @identifier.Name
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                        else
+                        {
+                            @* Nothing addresses it, so there is nothing to disclose and no caret
+                               offering to. The row is the plain link it looks like. *@
+                            @NameRow(aggregate)
                         }
                     </li>
                 }
@@ -141,14 +155,7 @@ else
                                         <td>
                                             <a class="icon-link" href="@LoadLink(Selected.Type, identifier)"
                                                aria-label="View data for @identifier.Name"
-                                               title="View data for @identifier.Name">
-                                                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
-                                                     fill="none" stroke="currentColor" stroke-width="1.5"
-                                                     stroke-linecap="round">
-                                                    <circle cx="7" cy="7" r="4.25" />
-                                                    <path d="M10.2 10.2 13.5 13.5" />
-                                                </svg>
-                                            </a>
+                                               title="View data for @identifier.Name">@Lens</a>
                                         </td>
                                     </tr>
                                 }
@@ -335,8 +342,16 @@ else
     /// What an aggregate is stored under, falling back to the class when it carries no attribute —
     /// an unbound type is still worth listing, and the panel beside the list says it is unbound.
     /// </summary>
+    /// <remarks>
+    /// Written as the name and a version after it rather than as the store's own key: the key joins
+    /// the two with a colon because something has to read them back apart, which is the store's
+    /// need and not the reader's. Here they are a name and its version, said the way a version is
+    /// said. The key itself is on the info tab, in the two halves it is made of.
+    /// </remarks>
     private static string BoundAs(Type aggregate) =>
-        DomainTypeDescriber.BindingOf(aggregate)?.Key ?? aggregate.Name;
+        DomainTypeDescriber.BindingOf(aggregate) is { } binding
+            ? $"{binding.Name} v{binding.Version}"
+            : aggregate.Name;
 
     /// <summary>
     /// The tags an identifier's boundary is built from, by name. The values are left out: they are
@@ -388,8 +403,36 @@ else
     private string Link(Type aggregate) =>
         $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}&tab={Tab}";
 
-    private string? CurrentClass(Type aggregate) => aggregate == Selected?.Type ? "current" : null;
+    private bool IsCurrent(Type aggregate) => aggregate == Selected?.Type;
 
-    private string? CurrentFlag(Type aggregate) => aggregate == Selected?.Type ? "true" : null;
+    private string? CurrentClass(Type aggregate) => IsCurrent(aggregate) ? "current" : null;
+
+    private string? CurrentFlag(Type aggregate) => IsCurrent(aggregate) ? "true" : null;
+
+    /// <summary>
+    /// The row that names one aggregate and selects it. A link rather than a click handler: the
+    /// page renders statically like the rest, and the choice stays in the address so it can be
+    /// shared. Written once because it is the same row whether or not identifiers fold under it.
+    /// </summary>
+    private RenderFragment<Type> NameRow => aggregate =>
+        @<a class="index-row" href="@Link(aggregate)" aria-current="@CurrentFlag(aggregate)">
+            @* Named by what it is bound as rather than by the class: that is the name the store
+               writes and the one a stored row is found under, and it is the name that stays put
+               when the class is renamed. The namespace it came from is on the info tab, with the
+               rest of what is true of the class rather than of the binding. *@
+            <span class="index-name">@BoundAs(aggregate)</span>
+        </a>;
+
+    /// <summary>
+    /// The lens that stands for looking at what is stored under an identifier. Written once because
+    /// the index and the identifiers tab reach the same page by it, and the two should not drift
+    /// into being two different marks for one destination.
+    /// </summary>
+    private RenderFragment Lens =>
+        @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="7" cy="7" r="4.25"/>
+            <path d="M10.2 10.2 13.5 13.5"/>
+        </svg>;
 
 }

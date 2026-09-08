@@ -316,70 +316,119 @@ h2:focus {
     min-width: 0;
 }
 
-.panel-index ul {
+/* The index as one bordered group rather than a bare column of links: an aggregate to a row,
+   divided by rules, with the identifiers it can be loaded by folded under its own row. Bounded so
+   that a row opening does not read as the page growing a new section, and rounded because the
+   group is a single object beside the panel it drives. */
+.panel-index > ul {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
     list-style: none;
     margin: 0;
+    /* The first and last rows take the group's corners; without this a row's own background
+       squares them off again. */
+    overflow: hidden;
     padding: 0;
 }
 
-    .panel-index li + li {
+    .panel-index > ul > li + li {
         border-top: 1px solid var(--rule);
     }
 
-    .panel-index a {
-        display: block;
-        padding: 0.6rem 0.5rem;
-        text-decoration: none;
-    }
-
-    .panel-index a:hover {
-        background: var(--ground);
-    }
-
-    /* The one being shown on the right. */
-    .panel-index a.current {
+    /* The whole group of the aggregate being shown on the right, so an open row and the
+       identifiers under it are marked as one block rather than only its first line. */
+    .panel-index > ul > li.current {
         background: var(--ground);
         box-shadow: inset 0.2rem 0 0 var(--accent);
     }
 
+    /* The row that names an aggregate, whether it stands alone or opens the ones under it. */
+    .panel-index .index-row {
+        display: block;
+        min-width: 0;
+        padding: 0.6rem 0.5rem;
+        text-decoration: none;
+    }
+
+    .panel-index summary:hover,
+    .panel-index .index-row:hover {
+        background: var(--ground);
+    }
+
+    .panel-index summary {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        /* Both defaults off: Firefox draws its marker through list-style, Safari through its own
+           pseudo-element, and the caret below is drawn where the row can spare the room. */
+        list-style: none;
+    }
+
+    .panel-index summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .panel-index summary .index-row {
+        flex: 1;
+    }
+
+    /* The disclosure caret, on the far side of the row from the name and outside the link: what is
+       under the row is opened here, and the name beside it still selects the aggregate. Drawn the
+       same way the header menu's is, so a caret means one thing across the site. */
+    .panel-index summary::after {
+        border-left: 0.3rem solid transparent;
+        border-right: 0.3rem solid transparent;
+        border-top: 0.3rem solid var(--ink-soft);
+        content: "";
+        flex: none;
+        height: 0;
+        margin: 0 0.6rem;
+        width: 0;
+    }
+
+    .panel-index details[open] > summary::after {
+        transform: rotate(180deg);
+    }
+
+    /* Broken mid-word if it has to be: the column is narrow, a bound name is as long as it is, and
+       it is now the only thing on the row to give the width to. */
     .panel-index .index-name {
         color: var(--accent);
         display: block;
         font-weight: 600;
-    }
-
-    .panel-index a.current .index-name {
-        color: var(--ink);
-    }
-
-    .panel-index .index-detail {
-        color: var(--ink-soft);
-        display: block;
-        font-size: 0.8125rem;
         overflow-wrap: anywhere;
     }
 
-    /* What a row can be loaded by, under the row rather than beside it: the column is narrow and an
-       identifier's name is as long as it is. Set quieter than the name above them, because they are
-       what one row leads to and not another thing to pick from the list. */
-    .panel-index .index-links {
-        margin: -0.25rem 0 0.5rem;
-        padding: 0 0.5rem 0 1.25rem;
+    .panel-index > ul > li.current .index-name {
+        color: var(--ink);
     }
 
-        /* The rule between rows separates aggregates; these are inside one. */
-        .panel-index .index-links li + li {
-            border-top: 0;
-        }
+    /* What a row can be loaded by, as rows of the same group, set quieter than the name above them
+       because they are what one row leads to and not another thing to pick from the list. Divided
+       off from that name by a rule held back from both edges: it separates the two halves of one
+       aggregate, and a full-width rule here would be read as the end of the aggregate itself. */
+    .panel-index .index-links {
+        border-top: 1px solid var(--rule);
+        list-style: none;
+        margin: 0 0.5rem;
+        padding: 0.25rem 0 0.35rem;
+    }
 
         .panel-index .index-links a {
+            align-items: center;
+            color: var(--ink-soft);
+            display: flex;
             font-size: 0.8125rem;
+            gap: 0.4rem;
             overflow-wrap: anywhere;
-            padding: 0.15rem 0;
+            padding: 0.3rem 0.25rem;
+            text-decoration: none;
         }
 
+        /* Not a background, which the current group already has: it would be the row's only mark
+           there and would say nothing. */
         .panel-index .index-links a:hover {
-            background: none;
+            color: var(--accent);
             text-decoration: underline;
         }
 
@@ -570,8 +619,8 @@ h2:focus {
         margin-left: 0.5rem;
     }
 
-    /* A row's one link, drawn as a glyph. Sized in ems so it follows the cell's text rather than a
-       fixed pixel, and padded so the target stays bigger than the mark inside it. */
+    /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
+       it. The mark's own size is the .lens rule below, which the index list uses too. */
     .grid .icon-link {
         align-items: center;
         border-radius: 3px;
@@ -582,11 +631,6 @@ h2:focus {
         padding: 0.25rem;
     }
 
-        .grid .icon-link svg {
-            height: 1em;
-            width: 1em;
-        }
-
         .grid .icon-link:hover {
             color: var(--accent);
         }
@@ -595,6 +639,15 @@ h2:focus {
             outline: 2px solid var(--accent);
             outline-offset: 1px;
         }
+
+/* The mark for looking at what is stored, wherever it is drawn: on its own as a row's one link, or
+   in front of the name in a list. Sized in ems so it follows the text beside it rather than a fixed
+   pixel, and kept from shrinking when that text is long enough to wrap. */
+.lens {
+    flex: none;
+    height: 1em;
+    width: 1em;
+}
 
 /* What one event carries, as the pairs it is made of: a name and the value it names, one to a line.
    Global rather than scoped to the page that first grew it, because a payload is a payload. */
