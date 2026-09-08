@@ -77,6 +77,35 @@ h1 {
         margin-bottom: 0;
     }
 
+/* The boundary a page is a view of, under the title and above the tabs, so it stays put as they
+   change: each tab is a view of what it selects, and a reader checking one against it should not
+   have to leave for another tab to see it. */
+.boundary {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: -0.5rem 0 1.5rem;
+}
+
+    /* Set back like a pair's name, because that is what this is: one label and the one value it
+       names. */
+    .boundary .boundary-label {
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+    }
+
+    /* As long as its tags are, and broken mid-word rather than pushing the page wider. */
+    .boundary code {
+        overflow-wrap: anywhere;
+    }
+
+    /* How the tags combine. A note beside the value rather than part of it, spaced by the row's own
+       gap — the .grid rule that indents a hint belongs to a table cell, and this is not one. */
+    .boundary .hint {
+        color: var(--ink-soft);
+    }
+
 /* The two buttons the application has, and one padding between them. Both are written to sit on an
    <a> or a <button> without either giving itself away: a button does not inherit the page's font,
    and a link does not lose its underline, unless it is said here. Kept together and global so a new
