@@ -679,8 +679,10 @@ h2:focus {
     }
 
     /* A note set beside a value in a cell — how a boundary's tags combine, beside the tags. Spaced
-       here rather than by a space in the markup, which a conditional block swallows. */
-    .grid .hint {
+       here rather than by a space in the markup, which a conditional block swallows. Both tables
+       that list stored rows want it, so both name it. */
+    .grid .hint,
+    .instances .hint {
         margin-left: 0.5rem;
     }
 

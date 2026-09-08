@@ -194,34 +194,7 @@ public sealed class IdentifierShape
     /// rather than call <c>Split</c>.
     /// </remarks>
     public IReadOnlyDictionary<string, string>? ValuesFromBoundary(string boundary) =>
-        ValuesFrom(SplitTags(boundary));
-
-    private static IEnumerable<string> SplitTags(string boundary)
-    {
-        var tag = new StringBuilder();
-
-        for (var index = 0; index < boundary.Length; index++)
-        {
-            var character = boundary[index];
-
-            if (character == '\\' && index + 1 < boundary.Length)
-            {
-                tag.Append(boundary[++index]);
-                continue;
-            }
-
-            if (character is ',' or '&')
-            {
-                yield return tag.ToString();
-                tag.Clear();
-                continue;
-            }
-
-            tag.Append(character);
-        }
-
-        yield return tag.ToString();
-    }
+        ValuesFrom(StoredBoundary.Read(boundary).Tags);
 
     /// <summary>
     /// Values distinctive enough to be spotted again in the tags they end up in.

@@ -133,6 +133,7 @@ else
                    from, but only its own, and a column that came and went with the choice would be
                    a column a reader could not learn. *@
                 <th>Type</th>
+                <th>Identifier</th>
                 <th>Tags</th>
                 <th class="numeric">Version</th>
                 @foreach (var column in Columns)
@@ -156,6 +157,7 @@ else
                    identifier chosen the answer is the choice itself, already known for every row. *@
                 var address = Shape is null ? Stored.Of(row.ModelType, row.Boundary) : null;
                 var link = DetailLink(row, address);
+                var tags = StoredBoundary.Read(row.Boundary);
 
                 @* The whole row is the target when there is one, so every cell carries the same
                    link. Only the first is reachable by keyboard or read out: the rest repeat it. A
@@ -163,7 +165,32 @@ else
                    the store's own row, and worth seeing. *@
                 <tr class="@(link is null ? null : "clickable")">
                     <td class="sku">@Cell((link, TypeOf(address, row), false))</td>
-                    <td class="muted"><code>@Cell((link, row.Boundary, true))</code></td>
+                    <td class="muted">
+                        @if (IdentifierOf(address) is { } named)
+                        {
+                            @Cell((link, named, true))
+                        }
+                        else
+                        {
+                            @* No uploaded identifier renders this row's tags, so there is nothing to
+                               name it by — and nothing to open it with either, which is why the row
+                               carries no link. *@
+                            <span class="missing">—</span>
+                        }
+                    </td>
+                    <td class="muted">
+                        @* Both inside the one link, because the stylesheet gives a clickable row's
+                           padding to the anchor that fills the cell — anything beside it would sit
+                           flush against the edge. *@
+                        @if (link is null)
+                        {
+                            @TagsCell(tags)
+                        }
+                        else
+                        {
+                            <a href="@link" tabindex="-1" aria-hidden="true">@TagsCell(tags)</a>
+                        }
+                    </td>
                     <td class="numeric">@Cell((link, row.Version.ToString(), true))</td>
                     <td class="muted">@Cell((link, row.Created.ToLocalTime().ToString("g"), true))</td>
                     <td class="muted">@Cell((link, row.Updated.ToLocalTime().ToString("g"), true))</td>
@@ -350,6 +377,18 @@ else
             : row.ModelType;
 
     /// <summary>
+    /// What addresses one stored row, named by its class. There is no version to say beside it: an
+    /// identifier carries no binding of its own — it is a way in to a model that has one.
+    /// </summary>
+    /// <remarks>
+    /// The choice answers when it names one, and only a list spanning several reads each row's tags
+    /// back to find which identifier renders them. A row nothing here addresses has none to name,
+    /// which is the same thing that leaves it without a link.
+    /// </remarks>
+    private string? IdentifierOf(StoredModel? address) =>
+        (address?.Identifier ?? Choice.Identifier)?.Name;
+
+    /// <summary>
     /// How far the list has been narrowed, said the way the narrowing was made: by an identifier,
     /// by an projection, or not at all.
     /// </summary>
@@ -469,6 +508,25 @@ else
             <input type="hidden" name="tag" value="@Tag"/>
         }
     </text>;
+
+    /// <summary>
+    /// The tags a row was stored under, listed the same way whichever way they combine, with the
+    /// word that tells the two apart beside them.
+    /// </summary>
+    /// <remarks>
+    /// The same shape the identifiers tab of the models page lists a boundary in, so a boundary met
+    /// as a type's and met as one stored row's is read the same way. What the store joins with a
+    /// comma and what it joins with an ampersand are two different boundaries, and a reader should
+    /// not have to catch that in a punctuation mark.
+    /// </remarks>
+    private RenderFragment<StoredBoundary> TagsCell => tags =>
+        @<text>
+            <code>@tags.Text</code>
+            @if (tags.Combination is { } combines)
+            {
+                <span class="hint">@combines</span>
+            }
+        </text>;
 
     /// <summary>
     /// One cell of a row, inside the row's link when it has one.
