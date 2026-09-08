@@ -18,23 +18,38 @@
                     <span class="detail">What is registered under the streamed model.</span>
                 </a>
             </li>
+            @* Each concern is two pages, not one: the types the model declares, and what has been
+               stored of them. Named here rather than left to be found, because which of the two you
+               want is the first thing you know and the last thing a single link would ask. *@
             <li>
-                <a href="streamed/events">
+                <div class="group">
                     <span class="name">Events</span>
                     <span class="detail">The events the model can apply.</span>
-                </a>
+                    <span class="links">
+                        <a href="streamed/events">Types</a>
+                        <a href="streamed/events/data">Data</a>
+                    </span>
+                </div>
             </li>
             <li>
-                <a href="streamed/aggregates">
+                <div class="group">
                     <span class="name">Aggregates</span>
                     <span class="detail">The write models, and the streams they are held in.</span>
-                </a>
+                    <span class="links">
+                        <a href="streamed/aggregates">Types</a>
+                        <a href="streamed/aggregates/data">Data</a>
+                    </span>
+                </div>
             </li>
             <li>
-                <a href="streamed/projections">
+                <div class="group">
                     <span class="name">Projections</span>
                     <span class="detail">The read models built from those events.</span>
-                </a>
+                    <span class="links">
+                        <a href="streamed/projections">Types</a>
+                        <a href="streamed/projections/data">Data</a>
+                    </span>
+                </div>
             </li>
         </ul>
     </section>
@@ -49,22 +64,34 @@
                 </a>
             </li>
             <li>
-                <a href="dcb/events">
+                <div class="group">
                     <span class="name">Events</span>
                     <span class="detail">The events the model can apply.</span>
-                </a>
+                    <span class="links">
+                        <a href="dcb/events">Types</a>
+                        <a href="dcb/events/data">Data</a>
+                    </span>
+                </div>
             </li>
             <li>
-                <a href="dcb/aggregates">
+                <div class="group">
                     <span class="name">Aggregates</span>
                     <span class="detail">The write models, and the identifiers they are addressed by.</span>
-                </a>
+                    <span class="links">
+                        <a href="dcb/aggregates">Types</a>
+                        <a href="dcb/aggregates/data">Data</a>
+                    </span>
+                </div>
             </li>
             <li>
-                <a href="dcb/projections">
+                <div class="group">
                     <span class="name">Projections</span>
                     <span class="detail">The read models, and the identifiers they are addressed by.</span>
-                </a>
+                    <span class="links">
+                        <a href="dcb/projections">Types</a>
+                        <a href="dcb/projections/data">Data</a>
+                    </span>
+                </div>
             </li>
         </ul>
     </section>

@@ -231,13 +231,16 @@ h2:focus {
         border-top: 1px solid var(--rule);
     }
 
-    .sections a {
+    /* A row is either one link or one group of them, and both fill the row the same way. Matched
+       on the direct child so the links inside a group keep their own inline shape. */
+    .sections > li > a,
+    .sections > li > .group {
         display: block;
         padding: 0.875rem 0;
         text-decoration: none;
     }
 
-    .sections a:hover .name {
+    .sections > li > a:hover .name {
         text-decoration: underline;
     }
 
@@ -247,11 +250,25 @@ h2:focus {
         font-weight: 600;
     }
 
+    /* A group's name goes nowhere, so it is not coloured as though it did. */
+    .sections .group .name {
+        color: var(--ink);
+    }
+
     .sections .detail {
         color: var(--ink-soft);
         display: block;
         font-size: 0.875rem;
         margin-top: 0.15rem;
+    }
+
+    /* The two ways into a section, side by side under what the section holds: the types the model
+       declares, and what has been stored of them. */
+    .sections .links {
+        display: flex;
+        font-size: 0.875rem;
+        gap: 1.25rem;
+        margin-top: 0.5rem;
     }
 
 /* The two models set beside each other, so what belongs to one is read against the other rather

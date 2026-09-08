@@ -8,13 +8,33 @@
 
         @* <details> rather than a hover menu: it opens on touch and on the keyboard with no
            script, which matters because these pages render statically. *@
+        @* Each of the three concerns is a heading over the two pages that hold it rather than a
+           link of its own: the types the model declares, and what has been stored of them. The
+           heading is not a link because neither page is the other's parent — going to the section
+           means choosing which of the two you came for. Both links match exactly, so the one you
+           are on is the only one marked. *@
         <details class="menu">
             <summary class="@(InSection("streamed") ? "active" : null)">Streamed</summary>
             <div class="submenu">
                 <NavLink href="streamed" Match="NavLinkMatch.All">Overview</NavLink>
-                <NavLink href="streamed/events">Events</NavLink>
-                <NavLink href="streamed/aggregates">Aggregates</NavLink>
-                <NavLink href="streamed/projections">Projections</NavLink>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Events</span>
+                    <NavLink href="streamed/events" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="streamed/events/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Aggregates</span>
+                    <NavLink href="streamed/aggregates" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="streamed/aggregates/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Projections</span>
+                    <NavLink href="streamed/projections" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="streamed/projections/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
             </div>
         </details>
 
@@ -22,9 +42,24 @@
             <summary class="@(InSection("dcb") ? "active" : null)">DCB</summary>
             <div class="submenu">
                 <NavLink href="dcb" Match="NavLinkMatch.All">Overview</NavLink>
-                <NavLink href="dcb/events">Events</NavLink>
-                <NavLink href="dcb/aggregates">Aggregates</NavLink>
-                <NavLink href="dcb/projections">Projections</NavLink>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Events</span>
+                    <NavLink href="dcb/events" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="dcb/events/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Aggregates</span>
+                    <NavLink href="dcb/aggregates" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="dcb/aggregates/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
+
+                <div class="submenu-group">
+                    <span class="submenu-label">Projections</span>
+                    <NavLink href="dcb/projections" Match="NavLinkMatch.All">Types</NavLink>
+                    <NavLink href="dcb/projections/data" Match="NavLinkMatch.All">Data</NavLink>
+                </div>
             </div>
         </details>
 

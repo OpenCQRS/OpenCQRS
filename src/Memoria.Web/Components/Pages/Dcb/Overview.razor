@@ -16,30 +16,44 @@
     what they are addressed by.
 </p>
 
+@* The counts belong to the types the model declares, and stay on the group rather than on either
+   link: they are what the section holds, which is the same fact whichever of the two you open. *@
 <ul class="sections">
     <li>
-        <a href="dcb/events">
+        <div class="group">
             <span class="name">Events</span>
             <span class="detail">@Count(Catalogue.DcbEvents.Count, "event") the model can apply.</span>
-        </a>
+            <span class="links">
+                <a href="dcb/events">Types</a>
+                <a href="dcb/events/data">Data</a>
+            </span>
+        </div>
     </li>
     <li>
-        <a href="dcb/aggregates">
+        <div class="group">
             <span class="name">Aggregates</span>
             <span class="detail">
                 @Count(Catalogue.DcbAggregates.Count, "aggregate"), addressed by
                 @Count(Catalogue.DcbAggregateIds.Count, "identifier").
             </span>
-        </a>
+            <span class="links">
+                <a href="dcb/aggregates">Types</a>
+                <a href="dcb/aggregates/data">Data</a>
+            </span>
+        </div>
     </li>
     <li>
-        <a href="dcb/projections">
+        <div class="group">
             <span class="name">Projections</span>
             <span class="detail">
                 @Count(Catalogue.DcbProjections.Count, "projection"), addressed by
                 @Count(Catalogue.DcbProjectionIds.Count, "identifier").
             </span>
-        </a>
+            <span class="links">
+                <a href="dcb/projections">Types</a>
+                <a href="dcb/projections/data">Data</a>
+            </span>
+        </div>
     </li>
 </ul>
 
