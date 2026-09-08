@@ -34,9 +34,22 @@ public static class DomainTypeDescriber
             type,
             BindingOf(type),
             type.Assembly.GetName().Name ?? "unknown",
-            identifiers.Where(identifier => Addresses(identifier, type)).ToList(),
+            IdentifiersOf(type, identifiers),
             EventTypesOf(type),
             PropertiesOf(type));
+
+    /// <summary>
+    /// The identifiers that address one model.
+    /// </summary>
+    /// <param name="type">The model they would address.</param>
+    /// <param name="identifiers">The identifier types to look through.</param>
+    /// <remarks>
+    /// Reachable for a bare type, for the same reason the binding is: a list showing what each of
+    /// its rows can be loaded by wants this and nothing else, and describing every row in full
+    /// constructs every model to read its event filter.
+    /// </remarks>
+    public static IReadOnlyList<Type> IdentifiersOf(Type type, IReadOnlyList<Type> identifiers) =>
+        identifiers.Where(identifier => Addresses(identifier, type)).ToList();
 
     /// <summary>
     /// Reads what a type is bound as, off whichever of the three attributes it carries.

@@ -359,6 +359,30 @@ h2:focus {
         overflow-wrap: anywhere;
     }
 
+    /* What a row can be loaded by, under the row rather than beside it: the column is narrow and an
+       identifier's name is as long as it is. Set quieter than the name above them, because they are
+       what one row leads to and not another thing to pick from the list. */
+    .panel-index .index-links {
+        margin: -0.25rem 0 0.5rem;
+        padding: 0 0.5rem 0 1.25rem;
+    }
+
+        /* The rule between rows separates aggregates; these are inside one. */
+        .panel-index .index-links li + li {
+            border-top: 0;
+        }
+
+        .panel-index .index-links a {
+            font-size: 0.8125rem;
+            overflow-wrap: anywhere;
+            padding: 0.15rem 0;
+        }
+
+        .panel-index .index-links a:hover {
+            background: none;
+            text-decoration: underline;
+        }
+
 .panel-detail h2 {
     font-size: 1.2rem;
     margin: 0 0 1rem;

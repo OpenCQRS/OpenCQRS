@@ -38,6 +38,21 @@ else
                             <span class="index-name">@BoundAs(aggregate)</span>
                             <span class="index-detail">@aggregate.Namespace</span>
                         </a>
+
+                        @* The identifiers it can be loaded by, under the row itself: the same links
+                           the info tab lists, reached without first choosing the aggregate and then
+                           the tab. Outside the anchor above, because one link cannot hold another. *@
+                        @if (Identifiers(aggregate) is { Count: > 0 } identifiers)
+                        {
+                            <ul class="index-links">
+                                @foreach (var identifier in identifiers)
+                                {
+                                    <li>
+                                        <a href="@LoadLink(aggregate, identifier)">@identifier.Name</a>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </li>
                 }
             </ul>
@@ -158,14 +173,6 @@ else
                 {
                     <section class="tab-panel" aria-labelledby="tab-@InfoTab">
                         <dl class="facts">
-                            @* The class the binding below is carried by. Not "Full name", which
-                               read as the long form of the name under it once that name became the
-                               bound one, and not "Type", which the detail page already uses for the
-                               binding key — this is the one fact here that is plainly the CLR
-                               class, so it says so. *@
-                            <dt>Class</dt>
-                            <dd><code>@Selected.Type.FullName</code></dd>
-
                             @* The two halves of what the store writes it under, apart: the name
                                outlives a rename of the class, and the version is what a change to
                                the shape stored under that name is answered with. *@
@@ -186,6 +193,14 @@ else
                                 <dt>Version</dt>
                                 <dd>@versioned.Version</dd>
                             }
+
+                            @* The class the binding below is carried by. Not "Full name", which
+                               read as the long form of the name under it once that name became the
+                               bound one, and not "Type", which the detail page already uses for the
+                               binding key — this is the one fact here that is plainly the CLR
+                               class, so it says so. *@
+                            <dt>Class</dt>
+                            <dd><code>@Selected.Type.FullName</code></dd>
 
                             <dt>Assembly</dt>
                             <dd>@Selected.AssemblyName</dd>
@@ -244,7 +259,7 @@ else
                                            carries the identifier, so a row is told apart by more
                                            than its position. *@
                                         <td>
-                                            <a class="icon-link" href="@LoadLink(identifier)"
+                                            <a class="icon-link" href="@LoadLink(Selected.Type, identifier)"
                                                aria-label="View data for @identifier.Name"
                                                title="View data for @identifier.Name">
                                                 <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
@@ -335,12 +350,21 @@ else
     };
 
     /// <summary>
-    /// Through to the page that loads one of these from the store. The aggregate travels with the
-    /// identifier because an identifier alone does not say what it addresses.
+    /// The identifiers that address one aggregate. Read off the type on its own rather than out of
+    /// a full description: the list has every aggregate in it, and describing each one constructs
+    /// it to read its event filter, which nothing on a row shows.
     /// </summary>
-    private string LoadLink(Type identifier) =>
+    private IReadOnlyList<Type> Identifiers(Type aggregate) =>
+        DomainTypeDescriber.IdentifiersOf(aggregate, Types.Current.DcbAggregateIds);
+
+    /// <summary>
+    /// Through to the page that loads one of these from the store. The aggregate travels with the
+    /// identifier because an identifier alone does not say what it addresses — and it is passed in
+    /// rather than taken from the selection, because the list links rows that are not selected.
+    /// </summary>
+    private static string LoadLink(Type aggregate, Type identifier) =>
         "dcb/aggregates/load" +
-        $"?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}" +
+        $"?type={Uri.EscapeDataString(aggregate.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(identifier.FullName ?? string.Empty)}";
 
     /// <summary>

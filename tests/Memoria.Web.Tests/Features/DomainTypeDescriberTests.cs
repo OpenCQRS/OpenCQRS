@@ -84,6 +84,24 @@ public class DomainTypeDescriberTests
         Describe(typeof(SampleAggregate)).Identifiers.Should().Equal(typeof(SampleAggregateId));
     }
 
+    /// <summary>
+    /// Reachable for a bare type, for the same reason the binding is: the index lists every
+    /// aggregate, and describing each one in full constructs it to read its event filter.
+    /// </summary>
+    [Fact]
+    public void Finds_the_identifiers_of_a_type_on_its_own()
+    {
+        DomainTypeDescriber.IdentifiersOf(typeof(SampleDcbAggregate), Identifiers)
+            .Should().BeEquivalentTo(
+                new[] { typeof(SampleDcbAggregateId), typeof(SampleTwoPartId), typeof(SampleUnmappedId) });
+    }
+
+    [Fact]
+    public void Finds_no_identifiers_for_a_type_nothing_addresses()
+    {
+        DomainTypeDescriber.IdentifiersOf(typeof(SampleHappenedEvent), Identifiers).Should().BeEmpty();
+    }
+
     [Fact]
     public void Reports_the_events_the_type_applies()
     {
