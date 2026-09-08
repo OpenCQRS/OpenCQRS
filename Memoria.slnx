@@ -71,6 +71,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Memoria.Web/Memoria.Web.csproj" />
+    <Project Path="src/Memoria.Web.Samples/Memoria.Web.Samples.csproj" />
     <Project Path="src/Memoria/Memoria.csproj" />
     <Project Path="src/Memoria.EventSourcing/Memoria.EventSourcing.csproj" />
     <Project Path="src/Memoria.EventSourcing.Dcb/Memoria.EventSourcing.Dcb.csproj" />
