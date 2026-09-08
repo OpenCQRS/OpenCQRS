@@ -182,6 +182,7 @@ else
                                 <thead>
                                 <tr>
                                     <th scope="col">Event</th>
+                                    <th scope="col">Version</th>
                                     <th scope="col">State</th>
                                 </tr>
                                 </thead>
@@ -189,7 +190,23 @@ else
                                 @foreach (var eventType in Selected.EventTypes)
                                 {
                                     <tr>
-                                        <td><code>@eventType.Name</code></td>
+                                        @* Named and versioned by what it is bound as, in two cells
+                                           rather than one: that is the name written into the stream
+                                           and the one a stored event is read back under, and the
+                                           version beside it is what a change to its shape is
+                                           answered with. An event carrying no [EventType] is read
+                                           back by nothing, so the class name stands in and the
+                                           version cell says why there is none. *@
+                                        @if (DomainTypeDescriber.BindingOf(eventType) is { } binding)
+                                        {
+                                            <td><code>@binding.Name</code></td>
+                                            <td>@binding.Version</td>
+                                        }
+                                        else
+                                        {
+                                            <td><code>@eventType.Name</code></td>
+                                            <td><span class="missing">not bound</span></td>
+                                        }
                                         <td>
                                             @* Read the same way the aggregate's own state is, so an
                                                event's payload and the state it lands in are written
