@@ -9,7 +9,7 @@ public class EventEntityConfiguration : IEntityTypeConfiguration<EventEntity>
     public void Configure(EntityTypeBuilder<EventEntity> builder)
     {
         builder
-            .ToTable(name: "events")
+            .ToTable(name: "DomainEvents")
             .HasKey(eventEntity => eventEntity.Id);
 
         builder

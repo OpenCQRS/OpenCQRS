@@ -78,7 +78,7 @@ public class SchemaCharacterisationTests : RelationalTestBase
 
         using (new AssertionScope())
         {
-            script.Should().Contain("CREATE TABLE \"events\"");
+            script.Should().Contain("CREATE TABLE \"DomainEvents\"");
             script.Should().Contain("CREATE TABLE \"DomainAggregates\"");
             script.Should().Contain("CREATE TABLE \"DomainProjections\"");
 

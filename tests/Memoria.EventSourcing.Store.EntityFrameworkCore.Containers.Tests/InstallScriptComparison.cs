@@ -15,6 +15,18 @@ public static class InstallScriptComparison
     /// <summary>The store's tables, in an order safe for dropping — dependants first.</summary>
     public static readonly string[] TablesInDropOrder =
     [
+        "DomainEvents",
+        "DomainAggregates",
+        "DomainProjections"
+    ];
+
+    /// <summary>
+    /// The same tables under the names a pre-2.0.0 install script creates — 2.0.0 renamed the event
+    /// table. Tests that stand up an older schema to migrate it need this set, because the current
+    /// model can no longer create it.
+    /// </summary>
+    public static readonly string[] TablesBefore200InDropOrder =
+    [
         "events",
         "DomainAggregates",
         "DomainProjections"

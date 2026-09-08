@@ -11,6 +11,10 @@ namespace Memoria.EventSourcing.Store.EntityFrameworkCore.Containers.Tests;
 /// Runs the shipped SQL Server migration script against a real engine, from a database put back into
 /// the pre-1.5.0 index shape. Without this the script would only ever be checked by reading it.
 /// </summary>
+/// <remarks>
+/// The 1.5.0 install script stands up the fixture, not the current model: 2.0.0 renamed the event
+/// table, so the model can no longer create the schema this migration is written against.
+/// </remarks>
 [Trait("Category", "Container")]
 [Collection(SqlServerCollection.Name)]
 public class SqlServerMigrationScriptTests(SqlServerFixture fixture)
@@ -38,6 +42,11 @@ public class SqlServerMigrationScriptTests(SqlServerFixture fixture)
         try
         {
             await dbContext.Database.EnsureCreatedAsync();
+            await MigrationScript.ExecuteAsync(dbContext,
+                string.Join("\n", InstallScriptComparison.TablesInDropOrder
+                    .Select(table => $"DROP TABLE [dbo].[{table}];")));
+            await MigrationScript.ExecuteAsync(dbContext,
+                MigrationScript.Read("1.5.0-install-sqlserver.sql", "install"));
             await MigrationScript.ExecuteAsync(dbContext, RevertToPreMigrationShape);
             await act(dbContext);
         }
