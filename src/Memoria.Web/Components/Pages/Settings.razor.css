@@ -87,15 +87,25 @@ table {
 
 /* Quiet until you go near it: destructive, but not the point of the row. */
 .delete {
+    align-items: center;
     background: none;
     border: 1px solid transparent;
     border-radius: 4px;
     color: var(--ink-soft);
     cursor: pointer;
+    display: inline-flex;
     font: inherit;
     font-size: 0.875rem;
+    justify-content: center;
     padding: 0.25rem 0.5rem;
 }
+
+    /* Sized in ems so the glyph follows the row's text rather than a fixed pixel; the padding above
+       keeps the target bigger than the mark inside it. */
+    .delete svg {
+        height: 1em;
+        width: 1em;
+    }
 
     .delete:hover {
         background: #fdf3f3;

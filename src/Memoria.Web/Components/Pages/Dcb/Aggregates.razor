@@ -239,7 +239,22 @@ else
                                                 <span class="missing">could not be worked out</span>
                                             }
                                         </td>
-                                        <td><a href="@LoadLink(identifier)">View</a></td>
+                                        @* A lens rather than a word: the column is one link per row
+                                           and the word repeats down it. The name it is read out by
+                                           carries the identifier, so a row is told apart by more
+                                           than its position. *@
+                                        <td>
+                                            <a class="icon-link" href="@LoadLink(identifier)"
+                                               aria-label="View data for @identifier.Name"
+                                               title="View data for @identifier.Name">
+                                                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+                                                     fill="none" stroke="currentColor" stroke-width="1.5"
+                                                     stroke-linecap="round">
+                                                    <circle cx="7" cy="7" r="4.25" />
+                                                    <path d="M10.2 10.2 13.5 13.5" />
+                                                </svg>
+                                            </a>
+                                        </td>
                                     </tr>
                                 }
                                 </tbody>

@@ -59,8 +59,19 @@ else
                        brought away from everyone, not just from whoever pressed it. Opened the same
                        way as the upload form: the address says which one, so the question survives
                        having no script to ask it. *@
+                    @* A bin rather than a word: the column is one link per row and the word repeats
+                       down it. The name it is read out by carries the file, so a row is told apart
+                       by more than its position — and the dialog it opens still asks in words. *@
                     <a class="delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
-                       onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">Delete</a>
+                       aria-label="Delete @archive.Name" title="Delete @archive.Name"
+                       onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">
+                        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+                             fill="none" stroke="currentColor" stroke-width="1.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.6 9a1 1 0 0 0 1 1h4.8a1 1 0 0 0 1-1L12 4" />
+                            <path d="M6.75 6.75v4.5M9.25 6.75v4.5" />
+                        </svg>
+                    </a>
 
                     <dialog id="@dialog" class="dialog" open="@(DeleteAsked == archive.Name)">
                         <h2>Remove @archive.Name?</h2>

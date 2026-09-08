@@ -546,6 +546,32 @@ h2:focus {
         margin-left: 0.5rem;
     }
 
+    /* A row's one link, drawn as a glyph. Sized in ems so it follows the cell's text rather than a
+       fixed pixel, and padded so the target stays bigger than the mark inside it. */
+    .grid .icon-link {
+        align-items: center;
+        border-radius: 3px;
+        color: var(--ink-soft);
+        display: inline-flex;
+        justify-content: center;
+        margin: -0.25rem 0;
+        padding: 0.25rem;
+    }
+
+        .grid .icon-link svg {
+            height: 1em;
+            width: 1em;
+        }
+
+        .grid .icon-link:hover {
+            color: var(--accent);
+        }
+
+        .grid .icon-link:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
 /* What one event carries, as the pairs it is made of: a name and the value it names, one to a line.
    Global rather than scoped to the page that first grew it, because a payload is a payload. */
 .pairs {
