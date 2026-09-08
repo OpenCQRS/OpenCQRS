@@ -647,6 +647,32 @@ h2:focus {
         margin-left: 0.5rem;
     }
 
+    /* A property of a value another property holds, on its own row under the row that holds it.
+       Stepped in rather than set apart: the type column has to stay where the eye is already
+       running down it, and a rule across the row or a table of its own would read as a second
+       table starting. Softer as well, so the type's own properties stay the ones being listed and
+       these read as what is inside one of them.
+
+       Three steps because the describer unfolds three deep. Anything deeper shares the last step
+       rather than marching off the page. */
+    .grid .under-1 td,
+    .grid .under-2 td,
+    .grid .under-3 td {
+        color: var(--ink-soft);
+    }
+
+        .grid .under-1 td:first-child {
+            padding-left: 1rem;
+        }
+
+        .grid .under-2 td:first-child {
+            padding-left: 2rem;
+        }
+
+        .grid .under-3 td:first-child {
+            padding-left: 3rem;
+        }
+
     /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
        it. The mark's own size is the .lens rule below, which the index list uses too. */
     .grid .icon-link {

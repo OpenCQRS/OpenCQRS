@@ -256,13 +256,7 @@ else
                                 </tr>
                                 </thead>
                                 <tbody>
-                                @foreach (var property in Selected.Properties)
-                                {
-                                    <tr>
-                                        <td>@property.Name</td>
-                                        <td><code>@property.TypeName</code></td>
-                                    </tr>
-                                }
+                                @StateRows((Selected.Properties, 0))
                                 </tbody>
                             </table>
                         }
@@ -439,6 +433,49 @@ else
                rest of what is true of the class rather than of the binding. *@
             <span class="index-name">@BoundAs(aggregate)</span>
         </a>;
+
+    /// <summary>
+    /// The properties a type declares, a row each, with the properties of any value one holds in
+    /// rows under it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Rows rather than a list inside one cell, which is how the events tab shows the same shape.
+    /// There it is one column's worth of a row about something else; here it is the table itself,
+    /// and a nested property kept on its own row keeps its type under the type column, where the
+    /// eye is already running down.
+    /// </para>
+    /// <para>
+    /// Draws itself and carries how deep it has got, because the depth is what the indent is made
+    /// of. How far there is to go is the describer's to decide, not this.
+    /// </para>
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DomainProperty> Properties, int Depth)> StateRows => rows =>
+        @<text>
+            @foreach (var property in rows.Properties)
+            {
+                <tr class="@Under(rows.Depth)">
+                    <td>@property.Name</td>
+                    <td><code>@property.TypeName</code></td>
+                </tr>
+
+                @if (property.Children.Count > 0)
+                {
+                    @StateRows((property.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
+    /// is stays the stylesheet's to say.
+    /// </summary>
+    /// <remarks>
+    /// A row at the top is not under anything and carries no class at all. Past the third step the
+    /// class stops changing: the describer stops unfolding before then, and a table that keeps
+    /// stepping in stops being a table.
+    /// </remarks>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
 
     /// <summary>
     /// What an event carries: one line per property, and the shape of any value of the domain's own
