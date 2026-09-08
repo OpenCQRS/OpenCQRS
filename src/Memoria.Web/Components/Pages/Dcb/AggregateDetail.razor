@@ -15,15 +15,17 @@
     <a href="dcb">DCB</a>
     <span aria-hidden="true">/</span>
     <a href="dcb/aggregates">Aggregates</a>
-    @if (Aggregate is not null && Identifier is not null)
-    {
-        <span aria-hidden="true">/</span>
-        <a href="@BackToAggregate">@Aggregate.Name</a>
-        <span aria-hidden="true">/</span>
-        <a href="@BackToList">@Identifier.Name</a>
-    }
     <span aria-hidden="true">/</span>
-    <span aria-current="page">@(Title is { Length: > 0 } title ? title : "Detail")</span>
+    @* The list this row was opened from, narrowed to the aggregate and the identifier that address
+       it, so the step back arrives where the click came from. Neither of those is a crumb of its
+       own: they are what the list is filtered by rather than places above this one, which is why
+       the list itself dropped them too. *@
+    <a href="@BackToList">Data</a>
+    <span aria-hidden="true">/</span>
+    @* What the page is, rather than which row reached it. The trail says where this sits; the
+       heading and the tags below it say which one is open, and the browser tab still carries the
+       values so two of these are told apart where they have to be. *@
+    <span aria-current="page">Detail</span>
 </nav>
 
 @if (Aggregate is null || Identifier is null)
@@ -639,14 +641,6 @@ else
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))
             .Where(value => !string.IsNullOrWhiteSpace(value)));
-
-    /// <summary>
-    /// Back up to the aggregate, naming the tab the identifiers are listed under rather than
-    /// leaving it to whichever one opens by default — the step back should arrive where the other
-    /// identifiers are, and that holds if the panel's opening view ever changes.
-    /// </summary>
-    private string BackToAggregate =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string BackToList =>
         $"dcb/aggregates/data?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +

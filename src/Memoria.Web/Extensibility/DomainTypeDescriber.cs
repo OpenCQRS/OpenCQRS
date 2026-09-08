@@ -88,15 +88,34 @@ public static class DomainTypeDescriber
     /// </para>
     /// </remarks>
     public static string LabelOf(Type type) =>
-        BindingOf(type) is { } binding ? $"{binding.Name} v{binding.Version}" : type.Name;
+        BindingOf(type) is { } binding ? Label(binding.Name, binding.Version) : type.Name;
 
     /// <summary>
     /// The same name, worked out from a stored key rather than from a type — which is what a page
     /// saying what the store holds has to hand.
     /// </summary>
     /// <param name="key">The key, as <c>name:version</c>.</param>
+    /// <remarks>
+    /// A key whose second half is not a number is not a key this knows how to take apart, so it is
+    /// left whole rather than half-read: whatever the store turns out to hold is worth seeing as it
+    /// holds it.
+    /// </remarks>
     public static string LabelOfKey(string key) =>
-        SplitKey(key) is { Version: { } version } split ? $"{split.Name} v{version}" : key;
+        SplitKey(key) is { Version: { } version } split && int.TryParse(version, out var numbered)
+            ? Label(split.Name, numbered)
+            : key;
+
+    /// <summary>
+    /// A name and the version of it, with the version said only when it is one of several.
+    /// </summary>
+    /// <remarks>
+    /// A first version is what a name means until a second one exists, so saying it adds nothing —
+    /// and a page whose every row ends in the same two characters has taught its reader to skip
+    /// them, which is the opposite of what a version beside a name is for. The moment there is a
+    /// second, both are worth telling apart and only one of them is silent.
+    /// </remarks>
+    private static string Label(string name, int version) =>
+        version > 1 ? $"{name} v{version}" : name;
 
     /// <summary>
     /// Splits a stored key into the two halves it is made of.

@@ -190,3 +190,10 @@ public class SampleUnboundDcbAggregate : DcbAggregateRoot
 
     protected override bool Apply<T>(T @event) => false;
 }
+
+/// <summary>
+/// A second version of a name already bound, so a page has two of one name to tell apart — which is
+/// the only time the version is worth saying beside it.
+/// </summary>
+[EventType("SampleRevised", 2)]
+public record SampleRevisedEvent(string Id) : IEvent;

@@ -71,7 +71,18 @@ public class DomainTypeDescriberTests
     [Fact]
     public void Names_a_type_by_what_it_is_bound_as_and_the_version_of_that()
     {
-        DomainTypeDescriber.LabelOf(typeof(SampleDcbAggregate)).Should().Be("SampleDcbAggregate v1");
+        DomainTypeDescriber.LabelOf(typeof(SampleRevisedEvent)).Should().Be("SampleRevised v2");
+    }
+
+    /// <summary>
+    /// A first version is what a name means until a second one exists, so saying it adds nothing —
+    /// and a page whose every row ends in the same two characters has taught the reader to skip
+    /// them, which is the opposite of what a version beside a name is for.
+    /// </summary>
+    [Fact]
+    public void Leaves_a_first_version_unsaid()
+    {
+        DomainTypeDescriber.LabelOf(typeof(SampleDcbAggregate)).Should().Be("SampleDcbAggregate");
     }
 
     /// <summary>
@@ -81,7 +92,7 @@ public class DomainTypeDescriberTests
     [Fact]
     public void Names_a_type_by_its_binding_rather_than_by_its_class()
     {
-        DomainTypeDescriber.LabelOf(typeof(SampleHappenedEvent)).Should().Be("SampleHappened v1");
+        DomainTypeDescriber.LabelOf(typeof(SampleHappenedEvent)).Should().Be("SampleHappened");
     }
 
     /// <summary>
@@ -102,7 +113,19 @@ public class DomainTypeDescriberTests
     [Fact]
     public void Names_a_stored_key_the_way_it_names_a_type()
     {
-        DomainTypeDescriber.LabelOfKey("SampleDcbAggregate:1").Should().Be("SampleDcbAggregate v1");
+        DomainTypeDescriber.LabelOfKey("SampleDcbAggregate:2").Should().Be("SampleDcbAggregate v2");
+        DomainTypeDescriber.LabelOfKey("SampleDcbAggregate:1").Should().Be("SampleDcbAggregate");
+    }
+
+    /// <summary>
+    /// A key whose version is not a number is not a key this knows how to take apart, so it is left
+    /// whole rather than half-read — whatever the store turns out to hold is worth seeing as it
+    /// holds it.
+    /// </summary>
+    [Fact]
+    public void Leaves_a_key_it_cannot_read_a_version_out_of_whole()
+    {
+        DomainTypeDescriber.LabelOfKey("Some:Name:draft").Should().Be("Some:Name:draft");
     }
 
     /// <summary>

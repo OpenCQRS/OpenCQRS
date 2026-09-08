@@ -105,7 +105,7 @@ public class EventChoiceTests
     public void Names_what_is_being_read()
     {
         EventChoice.Of(Events, asked: null).Name.Should().Be("All events");
-        EventChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Name.Should().Be("SampleHappened v1");
+        EventChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Name.Should().Be("SampleHappened");
         EventChoice.Of(Events, typeof(SampleUnboundEvent).FullName).Name.Should().Be("SampleUnboundEvent");
     }
 

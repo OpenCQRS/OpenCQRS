@@ -6,7 +6,7 @@
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@Choice.Name data</PageTitle>
+<PageTitle>@Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -14,18 +14,11 @@
     <a href="dcb">DCB</a>
     <span aria-hidden="true">/</span>
     <a href="dcb/events">Events</a>
-    @* Only a chosen type has somewhere of its own to go back to. The whole log is folded under the
-       events page as a whole, so there is no row between it and here. *@
-    @if (Choice.Event is not null)
-    {
-        <span aria-hidden="true">/</span>
-        <a href="@BackToEvent">@Choice.Name</a>
-    }
     <span aria-hidden="true">/</span>
     <span aria-current="page">Data</span>
 </nav>
 
-<h1>@Choice.Name</h1>
+<h1>@Heading</h1>
 
 @if (Choice.Unknown)
 {
@@ -312,6 +305,17 @@ else
     private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
 
     /// <summary>
+    /// What the page is, for the heading and the title.
+    /// </summary>
+    /// <remarks>
+    /// The page rather than the choice, and the same however far the log is narrowed. The dropdown
+    /// above the table says what is being looked at and the line under it says how much of it there
+    /// is; a heading that changed with them would be a third voice saying the same thing, and one
+    /// that moved as the page was narrowed.
+    /// </remarks>
+    private const string Heading = "Events Data";
+
+    /// <summary>
     /// The events some DCB aggregate or projection applies, which is what the dropdown offers and
     /// what a name in the address is matched against.
     /// </summary>
@@ -335,12 +339,6 @@ else
         (_, true) => $"{Events.Total} events appended.",
         (_, false) => $"{Events.Total} events appended, of {Choice.Name}."
     };
-
-    /// <summary>
-    /// Back up to the event this page was folded under, which is where the link here came from.
-    /// </summary>
-    private string BackToEvent =>
-        $"dcb/events?type={Uri.EscapeDataString(Choice.Event?.FullName ?? string.Empty)}";
 
     /// <summary>
     /// One address for the whole table state, so a link only changes what it means to change.
