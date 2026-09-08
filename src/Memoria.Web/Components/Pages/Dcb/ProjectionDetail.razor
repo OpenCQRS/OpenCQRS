@@ -52,11 +52,11 @@ else
            written as the tags it selects on. *@
         <span class="boundary-label">Tags</span>
 
-        @if (Boundary is not null)
+        @if (Tags is not null)
         {
-            <code>@Boundary</code>
+            <code>@Tags.Text</code>
 
-            @if (Combination is { } combination)
+            @if (Tags.Combination is { } combination)
             {
                 <span class="hint">@combination</span>
             }
@@ -483,20 +483,17 @@ else
     private TagQuery? Boundary { get; set; }
 
     /// <summary>
-    /// How the boundary's tags combine, in the same words the identifiers table on the projections
-    /// page uses. Only worth saying when there is more than one tag: a boundary of a single tag
-    /// combines with nothing.
+    /// The boundary as the line above the tabs shows it: its tags listed one way whichever way they
+    /// combine, and the word that tells the two apart beside them.
     /// </summary>
     /// <remarks>
-    /// Read off the groups, which is where the answer actually is — a union is a group per tag, an
-    /// intersection one group holding them all.
+    /// Read off the canonical form through the same type the data pages read a stored boundary
+    /// with, so a boundary met here and met as a stored row's are one rendering rather than two
+    /// that drift — down to the space after the comma, which the canonical form does not have
+    /// because it is a key rather than a line to read.
     /// </remarks>
-    private string? Combination => Boundary switch
-    {
-        null or { Tags.Count: < 2 } => null,
-        { TagGroups.Count: 1 } => "(AllOf)",
-        _ => "(AnyOf)"
-    };
+    private StoredBoundary? Tags =>
+        Boundary is null ? null : StoredBoundary.Read(Boundary.ToString());
 
     private StoredSnapshot? Stored { get; set; }
 
