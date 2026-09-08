@@ -28,11 +28,33 @@ else
             <ul>
                 @foreach (var @event in EventTypes)
                 {
-                    @* A plain row, with nothing folded under it. The models fold their identifiers
-                       there because an identifier addresses one of them; nothing addresses an event,
-                       and what an event is carried by is not yet something these pages can say. *@
+                    @* The whole group is marked as the current one, not just its first row, so an
+                       open row and what is folded under it read as one selected block. *@
                     <li class="@CurrentClass(@event)">
-                        @NameRow(@event)
+                        @* One row folds under an event, where a model folds the identifiers that
+                           address it: what has been stored of this type. Nothing addresses an event,
+                           so there is one way in rather than a list of them — and it is folded here
+                           all the same, so the two lists open the same way and a reader who has
+                           learned one has learned the other. A <details> rather than script, like
+                           the header menu, because these pages render statically. *@
+                        <details open="@IsCurrent(@event)">
+                            @* The name is a link inside the summary rather than the summary itself:
+                               a click on it selects the event, and a click beside it only opens the
+                               row. *@
+                            <summary>@NameRow(@event)</summary>
+
+                            <ul class="index-links">
+                                <li>
+                                    @* The same lens the models' rows are read by, in front of the
+                                       word rather than opposite it: the whole row is the one link,
+                                       and the lens says what kind of place it leads to. *@
+                                    <a href="@DataLink(@event)">
+                                        @Lens
+                                        Data
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
                     </li>
                 }
             </ul>
@@ -203,6 +225,13 @@ else
         $"dcb/events?type={Uri.EscapeDataString(@event.FullName ?? @event.Name)}&tab={Tab}";
 
     /// <summary>
+    /// Through to what has been stored of one event type. The type is passed in rather than taken
+    /// from the selection, because the list links rows that are not selected.
+    /// </summary>
+    private static string DataLink(Type @event) =>
+        $"dcb/events/data?type={Uri.EscapeDataString(@event.FullName ?? @event.Name)}";
+
+    /// <summary>
     /// A tab of the event already chosen.
     /// </summary>
     private string TabLink(string tab) =>
@@ -250,6 +279,17 @@ else
                 }
             }
         </text>;
+
+    /// <summary>
+    /// The lens that stands for looking at what is stored, the same mark the models' lists reach
+    /// their own stored rows by, so one mark means one thing across these pages.
+    /// </summary>
+    private RenderFragment Lens =>
+        @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="7" cy="7" r="4.25"/>
+            <path d="M10.2 10.2 13.5 13.5"/>
+        </svg>;
 
     /// <summary>
     /// How far under something a row sits, as a class rather than a measurement, so how wide a step

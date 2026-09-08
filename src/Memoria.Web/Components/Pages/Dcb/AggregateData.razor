@@ -1,4 +1,4 @@
-@page "/dcb/aggregates/load"
+@page "/dcb/aggregates/data"
 @using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
 @using Memoria.EventSourcing.Dcb
 @using Memoria.EventSourcing.Domain
@@ -22,12 +22,12 @@
         <a href="@BackToAggregate">@Aggregate.Name</a>
     }
     <span aria-hidden="true">/</span>
-    <span aria-current="page">@(Identifier?.Name ?? "Load")</span>
+    <span aria-current="page">@(Identifier?.Name ?? "Data")</span>
 </nav>
 
 @if (Aggregate is null || Identifier is null)
 {
-    <h1>Load</h1>
+    <h1>Data</h1>
     <p class="alert" role="alert">
         That aggregate and identifier are not among the registered types. They may have been
         replaced by a later upload — start again from <a href="dcb/aggregates">aggregates</a>.
@@ -50,7 +50,7 @@ else
     @* A plain GET form: filtering is a link to a narrower list, so it belongs in the address bar
        where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
        narrowing the list does not silently reorder it. *@
-    <form class="search" method="get" action="dcb/aggregates/load">
+    <form class="search" method="get" action="dcb/aggregates/data">
         <input type="hidden" name="type" value="@Aggregate.FullName"/>
         <input type="hidden" name="id" value="@Identifier.FullName"/>
         <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
@@ -150,7 +150,7 @@ else
                     @* The page number is a control rather than a label, so a long table can be
                        crossed without stepping through it. Its own GET form, like the order and the
                        rows per page, so the page it lands on is in the address bar. *@
-                    <form class="page-jump" method="get" action="dcb/aggregates/load">
+                    <form class="page-jump" method="get" action="dcb/aggregates/data">
                         <label for="page">Page</label>
                         <select id="page" name="page" onchange="this.form.submit()">
                             @for (var number = 1; number <= TotalPages; number++)
@@ -189,7 +189,7 @@ else
             @* Its own GET form, so the choice lands in the address bar like the order and the
                filter. Submitting on change saves a click; the button is the fallback when
                scripting is off. *@
-            <form class="page-size" method="get" action="dcb/aggregates/load">
+            <form class="page-size" method="get" action="dcb/aggregates/data">
                 <label for="size">Rows per page</label>
                 <select id="size" name="size" onchange="this.form.submit()">
                     @foreach (var option in InstanceQuery.PageSizes)
@@ -294,7 +294,7 @@ else
     /// </summary>
     private string Link(InstanceSort sort, bool descending, int page, bool clearTag = false)
     {
-        var link = $"dcb/aggregates/load?{Names}" +
+        var link = $"dcb/aggregates/data?{Names}" +
                    $"&sort={sort.ToString().ToLowerInvariant()}" +
                    $"&dir={(descending ? "desc" : "asc")}" +
                    $"&size={PageSize}" +

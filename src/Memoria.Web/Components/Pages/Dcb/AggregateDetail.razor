@@ -567,7 +567,7 @@ else
         $"dcb/aggregates?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string BackToList =>
-        $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
+        $"dcb/aggregates/data?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
 
     /// <summary>

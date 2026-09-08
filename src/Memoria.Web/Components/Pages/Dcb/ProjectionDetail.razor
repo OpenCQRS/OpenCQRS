@@ -566,7 +566,7 @@ else
         $"dcb/projections?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}&tab=identifiers";
 
     private string BackToList =>
-        $"dcb/projections/load?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
+        $"dcb/projections/data?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
 
     /// <summary>

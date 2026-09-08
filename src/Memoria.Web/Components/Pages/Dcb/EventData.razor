@@ -1,0 +1,68 @@
+@page "/dcb/events/data"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>@Name data</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb/events">Events</a>
+    @if (Event is not null)
+    {
+        <span aria-hidden="true">/</span>
+        <a href="@BackToEvent">@Name</a>
+    }
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Data</span>
+</nav>
+
+@if (Event is null)
+{
+    <h1>Data</h1>
+    <p class="alert" role="alert">
+        That event is not among the registered types. It may have been replaced by a later upload —
+        start again from <a href="dcb/events">events</a>.
+    </p>
+}
+else
+{
+    <h1>@Name</h1>
+
+    <p><em>TBD</em></p>
+
+    <p class="back"><a href="@BackToEvent">Back to @Name</a></p>
+}
+
+@code {
+
+    [SupplyParameterFromQuery(Name = "type")]
+    private string? SelectedName { get; set; }
+
+    /// <summary>
+    /// The event asked for, matched against the ones the events page lists rather than resolved
+    /// from the name, so a name arriving in a query string can only ever reach a type this
+    /// application already knows about — and only one a DCB model applies.
+    /// </summary>
+    private Type? Event => DomainTypeDescriber.Select(Types.Current.DcbEvents, SelectedName);
+
+    /// <summary>
+    /// What the event is written into the log as, which is the name the list names it by. The class
+    /// stands in when it carries no attribute, and "Event" when there is no type at all to name.
+    /// </summary>
+    private string Name =>
+        Event is null
+            ? "Event"
+            : DomainTypeDescriber.BindingOf(Event) is { } binding
+                ? $"{binding.Name} v{binding.Version}"
+                : Event.Name;
+
+    /// <summary>
+    /// Back up to the event, which is where the link here was folded under.
+    /// </summary>
+    private string BackToEvent =>
+        $"dcb/events?type={Uri.EscapeDataString(Event?.FullName ?? string.Empty)}";
+
+}

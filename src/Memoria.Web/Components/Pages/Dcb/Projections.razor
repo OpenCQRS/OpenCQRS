@@ -53,7 +53,7 @@ else
                                                front of the name rather than opposite it: here the
                                                whole row is the one link, and the lens says what
                                                kind of place it leads to rather than which row. *@
-                                            <a href="@LoadLink(projection, identifier)">
+                                            <a href="@DataLink(projection, identifier)">
                                                 @Lens
                                                 @identifier.Name
                                             </a>
@@ -154,7 +154,7 @@ else
                                            carries the identifier, so a row is told apart by more
                                            than its position. *@
                                         <td>
-                                            <a class="icon-link" href="@LoadLink(Selected.Type, identifier)"
+                                            <a class="icon-link" href="@DataLink(Selected.Type, identifier)"
                                                aria-label="View data for @identifier.Name"
                                                title="View data for @identifier.Name">@Lens</a>
                                         </td>
@@ -394,12 +394,12 @@ else
         DomainTypeDescriber.IdentifiersOf(projection, Types.Current.DcbProjectionIds);
 
     /// <summary>
-    /// Through to the page that loads one of these from the store. The projection travels with the
-    /// identifier because an identifier alone does not say what it addresses — and it is passed in
-    /// rather than taken from the selection, because the list links rows that are not selected.
+    /// Through to what has been stored of one of these. The projection travels with the identifier
+    /// because an identifier alone does not say what it addresses — and it is passed in rather than
+    /// taken from the selection, because the list links rows that are not selected.
     /// </summary>
-    private static string LoadLink(Type projection, Type identifier) =>
-        "dcb/projections/load" +
+    private static string DataLink(Type projection, Type identifier) =>
+        "dcb/projections/data" +
         $"?type={Uri.EscapeDataString(projection.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(identifier.FullName ?? string.Empty)}";
 
