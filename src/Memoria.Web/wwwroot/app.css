@@ -733,6 +733,18 @@ h2:focus {
         overflow-wrap: anywhere;
     }
 
+    /* A value with a shape inside it: what is inside goes under the name holding it rather than
+       beside it, so a payload of several shapes is still scanned a name at a time. Given the whole
+       width of the line it sits on, because the line is a flex row and a list left to sit in it
+       would be squeezed in beside the name it belongs under. Stepped in behind the same hairline
+       the events tab of the aggregates page uses, so nesting looks the same wherever it is drawn. */
+    .pairs .pairs {
+        border-left: 1px solid var(--rule);
+        flex-basis: 100%;
+        margin: 0.1rem 0 0.2rem 0.15rem;
+        padding-left: 0.6rem;
+    }
+
     /* A sortable heading: the whole label is the control, so the target is the width of the word. */
     .grid th a {
         align-items: center;

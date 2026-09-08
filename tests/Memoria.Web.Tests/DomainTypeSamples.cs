@@ -24,6 +24,20 @@ public record SampleLabel(string Text, SampleMeasurement Size);
 /// </summary>
 public record SampleChain(string Name, SampleChain? Next);
 
+/// <summary>
+/// A shape holding one of everything, so what is read back off an instance can be checked against
+/// every kind of thing a model or an event holds.
+/// </summary>
+public record SampleHolding(
+    string Label,
+    SampleMeasurement Measurement,
+    IReadOnlyList<string> Notes,
+    IReadOnlyList<int> Counts,
+    IReadOnlyList<SampleLabel> Labels,
+    IReadOnlyList<SampleLabel> Nothing,
+    SampleChain Chain,
+    SampleMeasurement? Missing);
+
 /// <summary>Where a sample got to, so an enum is among the shapes described.</summary>
 public enum SampleState
 {

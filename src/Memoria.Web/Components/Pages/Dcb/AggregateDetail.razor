@@ -164,14 +164,7 @@ else
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var property in State)
-                    {
-                        <tr>
-                            <td>@property.Name</td>
-                            <td><code>@property.TypeName</code></td>
-                            <td>@(property.Value ?? "—")</td>
-                        </tr>
-                    }
+                    @StateRows((State, 0))
                     </tbody>
                 </table>
             }
@@ -249,16 +242,9 @@ else
                                     @* A list, because that is what it is: one name and value per
                                        item, in the same shape the aggregate's own state is read in.
                                        The name is set apart from the value it names, so a cell of
-                                       several pairs is scanned rather than read through. *@
-                                    <ul class="pairs">
-                                        @foreach (var property in stored.State)
-                                        {
-                                            <li>
-                                                <span class="pair-name">@property.Name</span>
-                                                <span class="pair-value">@(property.Value ?? "—")</span>
-                                            </li>
-                                        }
-                                    </ul>
+                                       several pairs is scanned rather than read through — and a
+                                       value with a shape inside it is opened under its own name. *@
+                                    @Pairs(stored.State)
                                 }
                             </td>
                         </tr>
@@ -533,6 +519,76 @@ else
     private string BackToList =>
         $"dcb/aggregates/load?type={Uri.EscapeDataString(Aggregate?.FullName ?? string.Empty)}" +
         $"&id={Uri.EscapeDataString(Identifier?.FullName ?? string.Empty)}";
+
+    /// <summary>
+    /// What the stored model holds, a row each, with the insides of any value one holds in rows
+    /// under it.
+    /// </summary>
+    /// <remarks>
+    /// The same rows the aggregates page lists the type's shape in, with the column this page has
+    /// something to put in. A nested property keeps its own row so that its value stays under the
+    /// value column, which is the column a reader came to this page for.
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DomainPropertyValue> Properties, int Depth)> StateRows =>
+        rows =>
+        @<text>
+            @foreach (var property in rows.Properties)
+            {
+                <tr class="@Under(rows.Depth)">
+                    <td>@property.Name</td>
+                    <td><code>@property.TypeName</code></td>
+                    @* A value holding a shape has nothing of its own to show — what it holds is on
+                       the rows below — so the cell is left as empty rather than as unread. *@
+                    <td>@(property.Value ?? (property.Children.Count > 0 ? string.Empty : "—"))</td>
+                </tr>
+
+                @if (property.Children.Count > 0)
+                {
+                    @StateRows((property.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// What one event carries, as the pairs it is made of, with a value that has a shape inside it
+    /// opened under the name that holds it.
+    /// </summary>
+    /// <remarks>
+    /// Draws itself, because a payload nests as deep as the describer read it. Inside a cell rather
+    /// than as rows, unlike <see cref="StateRows"/>: here the whole payload is one column of a row
+    /// about the event, so there are no columns of its own to keep anything lined up with.
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
+        @<ul class="pairs">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <span class="pair-name">@property.Name</span>
+
+                    @if (property.Children.Count == 0)
+                    {
+                        <span class="pair-value">@(property.Value ?? "—")</span>
+                    }
+                    else
+                    {
+                        @* How many there are, when it is a list. A single shape says nothing here
+                           that the pairs under it do not say better. *@
+                        @if (property.Value is not null)
+                        {
+                            <span class="pair-value">@property.Value</span>
+                        }
+
+                        @Pairs(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
+    /// is stays the stylesheet's to say. A row at the top is not under anything and carries none.
+    /// </summary>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
 
     protected override async Task OnParametersSetAsync()
     {

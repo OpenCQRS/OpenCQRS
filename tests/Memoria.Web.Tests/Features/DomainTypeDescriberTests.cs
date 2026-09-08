@@ -255,6 +255,107 @@ public class DomainTypeDescriberTests
             .Should().NotContain(property => property.Name == "EventTypeFilter");
     }
 
+    /// <summary>
+    /// The value of something holding a shape is the shape, so the cell that would have held one
+    /// line of a record's own printout holds nothing and the shape is read underneath it.
+    /// </summary>
+    [Fact]
+    public void Reads_the_values_inside_a_property_holding_a_value_of_its_own()
+    {
+        var measurement = Held("Measurement");
+
+        measurement.Value.Should().BeNull();
+        measurement.Children.Should().BeEquivalentTo(
+            new[]
+            {
+                new DomainPropertyValue("Height", "decimal", "3"),
+                new DomainPropertyValue("Width", "decimal", "2")
+            },
+            options => options.WithStrictOrdering());
+    }
+
+    [Fact]
+    public void Reads_a_list_of_plain_values_as_one_line()
+    {
+        Held("Notes").Value.Should().Be("first, second");
+        Held("Notes").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Numbers as well as strings. A list of them is not a list of objects, so one read through
+    /// that interface alone reports the list's own class name and none of what is in it.
+    /// </summary>
+    [Fact]
+    public void Reads_a_list_of_plain_numbers_as_one_line()
+    {
+        Held("Counts").Value.Should().Be("4, 5");
+    }
+
+    /// <summary>
+    /// A list of shapes is one row a piece rather than one line for the lot: each element has its
+    /// own values, and joining them would run several records into a sentence.
+    /// </summary>
+    [Fact]
+    public void Reads_a_list_of_values_an_element_at_a_time()
+    {
+        var labels = Held("Labels");
+
+        labels.Value.Should().Be("2 items");
+        labels.Children.Select(child => child.Name).Should().Equal("[0]", "[1]");
+        labels.Children[1].Children.Single(child => child.Name == "Text").Value.Should().Be("second");
+    }
+
+    [Fact]
+    public void Reads_the_values_inside_an_element_of_a_list()
+    {
+        Held("Labels").Children[0].Children
+            .Single(child => child.Name == "Size").Children
+            .Single(child => child.Name == "Width").Value.Should().Be("6");
+    }
+
+    [Fact]
+    public void Reads_an_empty_list_as_holding_nothing()
+    {
+        Held("Nothing").Value.Should().BeNull();
+        Held("Nothing").Children.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Reads_a_value_that_is_not_there_as_holding_nothing()
+    {
+        Held("Missing").Value.Should().BeNull();
+        Held("Missing").Children.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// The same stop the shape has to make, and the value falls back to what the type says about
+    /// itself rather than being dropped.
+    /// </summary>
+    [Fact]
+    public void Stops_reading_a_value_that_holds_its_own_kind()
+    {
+        var next = Held("Chain").Children.Single(child => child.Name == "Next");
+
+        next.Children.Should().BeEmpty();
+        next.Value.Should().NotBeNull();
+    }
+
+    private static DomainPropertyValue Held(string name) =>
+        DomainTypeDescriber.ReadState(new SampleHolding(
+                Label: "one",
+                Measurement: new SampleMeasurement(2, 3),
+                Notes: ["first", "second"],
+                Counts: [4, 5],
+                Labels:
+                [
+                    new SampleLabel("first", new SampleMeasurement(6, 7)),
+                    new SampleLabel("second", new SampleMeasurement(8, 9))
+                ],
+                Nothing: [],
+                Chain: new SampleChain("head", new SampleChain("tail", null)),
+                Missing: null))
+            .Single(property => property.Name == name);
+
     [Fact]
     public void Selects_the_type_asked_for_by_name()
     {

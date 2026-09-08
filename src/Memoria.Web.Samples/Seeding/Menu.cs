@@ -43,8 +43,8 @@ public static class Menu
         Ask("What would you like to do?",
             [
                 ("Add more sample data", SampleDataAction.Add),
-                ("Delete existing data and add more sample data", SampleDataAction.ReplaceAll),
-                ("Delete existing data", SampleDataAction.DeleteAll)
+                ("Replace existing sample data", SampleDataAction.ReplaceAll),
+                ("Delete existing sample data", SampleDataAction.DeleteAll)
             ],
             SampleDataAction.None);
 

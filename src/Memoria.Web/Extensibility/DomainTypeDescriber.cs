@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Reflection;
 using Memoria.EventSourcing.Dcb;
 using Memoria.EventSourcing.Domain;
@@ -219,31 +220,101 @@ public static class DomainTypeDescriber
     /// uses, so the page shows the same properties with values against them.
     /// </summary>
     /// <param name="model">The loaded aggregate or projection.</param>
-    public static IReadOnlyList<DomainPropertyValue> ReadState(object model) =>
+    public static IReadOnlyList<DomainPropertyValue> ReadState(object model) => ReadState(model, []);
+
+    private static IReadOnlyList<DomainPropertyValue> ReadState(
+        object model, IReadOnlyList<Type> unfolded) =>
         Declared(model.GetType())
-            .Select(property => new DomainPropertyValue(
-                property.Name,
-                Readable(property.PropertyType),
-                Read(property, model)))
+            .Select(property => Read(property, model, unfolded))
             .OrderBy(property => property.Name, StringComparer.Ordinal)
             .ToList();
 
-    private static string? Read(PropertyInfo property, object model)
+    private static DomainPropertyValue Read(
+        PropertyInfo property, object model, IReadOnlyList<Type> unfolded)
     {
+        var typeName = Readable(property.PropertyType);
+
         try
         {
-            return property.GetValue(model) switch
-            {
-                null => null,
-                IEnumerable<object> many => string.Join(", ", many),
-                var value => value.ToString()
-            };
+            return Read(property.Name, typeName, property.GetValue(model), unfolded);
         }
         catch (Exception exception)
         {
             // A getter that throws is the model's business, not a reason to lose the page.
-            return $"could not be read: {exception.Message}";
+            return new DomainPropertyValue(
+                property.Name, typeName, $"could not be read: {exception.Message}");
         }
+    }
+
+    /// <summary>
+    /// Reads one value: as a line of its own when there is nothing inside it, and as what is inside
+    /// it when there is.
+    /// </summary>
+    /// <remarks>
+    /// The value read is the one actually held rather than the one the property is declared as, so
+    /// what comes back is what the model is really carrying. The declared type stays in
+    /// <paramref name="typeName"/>, because that is the shape the model promises and it is what the
+    /// same property is listed under where there is no instance to read.
+    /// </remarks>
+    private static DomainPropertyValue Read(
+        string name, string typeName, object? value, IReadOnlyList<Type> unfolded)
+    {
+        if (value is null)
+        {
+            return new DomainPropertyValue(name, typeName, null);
+        }
+
+        if (value is not string && value is IEnumerable items)
+        {
+            return ReadList(name, typeName, items, unfolded);
+        }
+
+        var held = value.GetType();
+
+        // Left as whatever the value says about itself when the walk has to stop, rather than
+        // dropped: one line of a record's own printout is worse than the shape underneath it and
+        // better than an empty cell.
+        return Composite(held) && unfolded.Count < Depth && !unfolded.Contains(held)
+            ? new DomainPropertyValue(name, typeName, null, ReadState(value, [..unfolded, held]))
+            : new DomainPropertyValue(name, typeName, value.ToString());
+    }
+
+    /// <summary>
+    /// Reads what a collection holds: on one line when its elements have no shape of their own, and
+    /// an element to a row when they have.
+    /// </summary>
+    /// <remarks>
+    /// Read through the untyped <see cref="IEnumerable"/> so that a list of numbers is read the same
+    /// way as a list of strings. <c>IEnumerable&lt;object&gt;</c> would take the second and not the
+    /// first: variance carries reference types and leaves value types behind, so a list of numbers
+    /// matched nothing and reported its own class name instead of what was in it.
+    /// </remarks>
+    private static DomainPropertyValue ReadList(
+        string name, string typeName, IEnumerable items, IReadOnlyList<Type> unfolded)
+    {
+        var entries = items.Cast<object?>().ToList();
+
+        if (entries.Count == 0)
+        {
+            return new DomainPropertyValue(name, typeName, null);
+        }
+
+        if (entries.All(entry => entry is null || !Composite(entry.GetType())))
+        {
+            return new DomainPropertyValue(
+                name, typeName, string.Join(", ", entries.Select(entry => entry?.ToString())));
+        }
+
+        // Numbered rather than named, because an element of a list has no name of its own — and
+        // left in the order the model holds them in, which is the only order they have.
+        return new DomainPropertyValue(
+            name,
+            typeName,
+            $"{entries.Count} item{(entries.Count == 1 ? string.Empty : "s")}",
+            [
+                ..entries.Select((entry, index) => Read(
+                    $"[{index}]", Readable(entry?.GetType() ?? typeof(object)), entry, unfolded))
+            ]);
     }
 
     private static IEnumerable<PropertyInfo> Declared(Type type) =>
@@ -343,5 +414,21 @@ public sealed record DomainProperty(
 /// <summary>One declared property, with what it currently holds.</summary>
 /// <param name="Name">Its name.</param>
 /// <param name="TypeName">Its type, as it would be written in source.</param>
-/// <param name="Value">What it holds, or null.</param>
-public sealed record DomainPropertyValue(string Name, string TypeName, string? Value);
+/// <param name="Value">
+/// What it holds, or null when it holds nothing — and null as well when it holds a shape, because
+/// then what it holds is in <paramref name="Children"/> and a record's own printout beside them
+/// would be the same thing said twice. For a list of shapes it is how many there are.
+/// </param>
+/// <param name="Children">
+/// What is inside the value: the properties of a shape, or one entry per element of a list of
+/// shapes, named by position. Empty for anything that reads as a line of its own.
+/// </param>
+public sealed record DomainPropertyValue(
+    string Name, string TypeName, string? Value, IReadOnlyList<DomainPropertyValue> Children)
+{
+    /// <summary>A property whose value is a line of its own.</summary>
+    public DomainPropertyValue(string name, string typeName, string? value)
+        : this(name, typeName, value, [])
+    {
+    }
+}
