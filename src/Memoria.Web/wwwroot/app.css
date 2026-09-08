@@ -965,6 +965,14 @@ h2:focus {
     justify-content: space-between;
 }
 
+    /* Whatever this line follows — a row of tabs, a filter form — has already set how far below it
+       the table's opening line sits, so the line adds nothing of its own on top. It is a flex row,
+       so the margin the lede carries everywhere else cannot collapse into that spacing and stacked
+       on it instead. Only the top goes: the space under still holds the line off the table. */
+    .table-header .lede {
+        margin-top: 0;
+    }
+
 /* Opens or closes every folded cell in the table at once. Quiet, because it acts on how the table
    is looked at rather than on what is in it, and the rows are still folded one at a time. */
 .fold-all {
@@ -1044,11 +1052,6 @@ h2:focus {
         box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
         outline: none;
     }
-
-/* The way back from a page reached by clicking a row. */
-.back {
-    margin-top: 2rem;
-}
 
 /* The table of stored instances a list page shows, and the filter box above it. Taken from the
    Ecommerce DCB example's products table so the two read as one system, and global rather than
