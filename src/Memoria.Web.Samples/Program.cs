@@ -10,6 +10,7 @@ using Memoria.EventSourcing.Store.EntityFrameworkCore;
 using Memoria.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using Memoria.Extensions;
 using Memoria.Web.Samples.Data;
+using Memoria.Web.Samples.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,48 +59,118 @@ builder.Services.AddMemoriaDcbEntityFrameworkCore<DcbStoreDbContext>();
 var host = builder.Build();
 
 using var scope = host.Services.CreateScope();
+var services = scope.ServiceProvider;
 
-var dispatcher = scope.ServiceProvider.GetRequiredService<IDispatcher>();
-var domainService = scope.ServiceProvider.GetRequiredService<IDomainService>();
-var dcbDomainService = scope.ServiceProvider.GetRequiredService<IDcbDomainService>();
+var streamedContext = services.GetRequiredService<StreamedStoreDbContext>();
+var dcbContext = services.GetRequiredService<DcbStoreDbContext>();
 
 Console.WriteLine("Memoria.Web.Samples");
-Console.WriteLine($"  dispatcher      : {dispatcher.GetType().Name}");
-Console.WriteLine($"  streamed store  : {domainService.GetType().Name}");
-Console.WriteLine($"  dcb store       : {dcbDomainService.GetType().Name}");
-Console.WriteLine();
+Console.WriteLine($"  database : {streamedContext.Database.GetDbConnection().Database}");
+Console.WriteLine($"  bound    : {Count(TypeBindings.EventTypeBindings)} events, " +
+                  $"{Count(TypeBindings.AggregateTypeBindings)}+{Count(DcbTypeBindings.AggregateTypeBindings)} aggregates, " +
+                  $"{Count(TypeBindings.ProjectionTypeBindings)}+{Count(DcbTypeBindings.ProjectionTypeBindings)} projections " +
+                  "(streamed+dcb)");
 
-// What the registration scans actually bound. The web tool reads the same attributes out of this
-// assembly when it is uploaded, so a type missing here is a type that would not show up there
-// either — which makes this the cheapest check that the samples are shaped right.
-// Events are shared between the two models, so there is one map of them. Aggregates and
-// projections are not, so there are two of each — which is why a name may be used by both models.
-Write("events", TypeBindings.EventTypeBindings);
-Write("streamed aggregates", TypeBindings.AggregateTypeBindings);
-Write("streamed projections", TypeBindings.ProjectionTypeBindings);
-Write("dcb aggregates", DcbTypeBindings.AggregateTypeBindings);
-Write("dcb projections", DcbTypeBindings.ProjectionTypeBindings);
-
-Console.WriteLine();
-Console.WriteLine("Streamed/ folds these from a stream; Dcb/ folds them from tags. Nothing has been");
-Console.WriteLine("written to the store — point the samples at one and drive them from here.");
-
-return;
-
-void Write(string what, Dictionary<string, Type> bindings)
+// The samples have a database to themselves, which may not exist yet and will have no tables in it
+// the first time. Both stores are installed before anything asks a question, so a deletion has
+// something to delete from.
+try
 {
-    var mine = bindings
-        .Where(binding => binding.Value.Assembly == typeof(Program).Assembly)
-        .OrderBy(binding => binding.Key, StringComparer.Ordinal)
-        .ToList();
-
-    Console.WriteLine($"{mine.Count} {what}");
-
-    foreach (var binding in mine)
+    if (await StoreSchema.Ensure(streamedContext, "DomainAggregates") |
+        await StoreSchema.Ensure(dcbContext, "DcbSnapshots"))
     {
-        Console.WriteLine($"  {binding.Key,-32} {binding.Value.FullName}");
+        Console.WriteLine("  schema   : installed");
     }
 }
+catch (Exception exception) when (exception is not OperationCanceledException)
+{
+    // Almost always a server that is not running. Said plainly, because a page of Npgsql stack
+    // trace is a poor way to be told to start PostgreSQL.
+    Console.Error.WriteLine();
+    Console.Error.WriteLine($"Could not reach the database: {exception.GetBaseException().Message}");
+    Console.Error.WriteLine("Check the 'Memoria' connection string in appsettings.json and that the server is up.");
+
+    return 1;
+}
+
+var action = Menu.AskForAction();
+
+if (action == SampleDataAction.None)
+{
+    Console.WriteLine("Nothing chosen. Nothing done.");
+    return 0;
+}
+
+// A deletion on its own clears both stores; a deletion before a write clears what is about to be
+// written, so that the run leaves the store holding exactly what it just put there.
+var scopeOfRun = action == SampleDataAction.DeleteAll
+    ? SampleDataScope.Both
+    : Menu.AskForScope();
+
+if (scopeOfRun == SampleDataScope.None)
+{
+    Console.WriteLine("Nothing chosen. Nothing done.");
+    return 0;
+}
+
+if (action is SampleDataAction.ReplaceAll or SampleDataAction.DeleteAll)
+{
+    await Delete(scopeOfRun);
+}
+
+if (action is SampleDataAction.Add or SampleDataAction.ReplaceAll)
+{
+    await Seed(scopeOfRun);
+}
+
+return 0;
+
+async Task Delete(SampleDataScope what)
+{
+    Console.WriteLine();
+
+    if (what.HasFlag(SampleDataScope.Streamed))
+    {
+        Report(await SampleDataEraser.EraseStreamed(streamedContext));
+    }
+
+    if (what.HasFlag(SampleDataScope.Dcb))
+    {
+        Report(await SampleDataEraser.EraseDcb(dcbContext));
+    }
+
+    return;
+
+    static void Report(IReadOnlyList<(string Table, int Rows)> deleted)
+    {
+        foreach (var (table, rows) in deleted)
+        {
+            Console.WriteLine($"deleted {rows,7} from {table}");
+        }
+    }
+}
+
+async Task Seed(SampleDataScope what)
+{
+    var random = new Random();
+    var time = services.GetRequiredService<TimeProvider>();
+    var report = new SeedReport();
+
+    if (what.HasFlag(SampleDataScope.Streamed))
+    {
+        await StreamedSampleData.Add(services.GetRequiredService<IDomainService>(), random, time, report);
+    }
+
+    if (what.HasFlag(SampleDataScope.Dcb))
+    {
+        await DcbSampleData.Add(services.GetRequiredService<IDcbDomainService>(), random, report);
+    }
+
+    await report.Print();
+}
+
+int Count(Dictionary<string, Type> bindings) =>
+    bindings.Count(binding => binding.Value.Assembly == typeof(Program).Assembly);
 
 /// <summary>
 /// Named so that <c>typeof(Program)</c> can point the registration scans at this assembly, which a

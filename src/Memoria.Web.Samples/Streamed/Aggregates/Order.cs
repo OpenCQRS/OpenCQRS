@@ -160,6 +160,19 @@ public class Order : AggregateRoot
     }
 
     /// <summary>
+    /// Records the carrier's word that it arrived, or explains why that cannot be so.
+    /// </summary>
+    public string? Deliver(DateTimeOffset deliveredOn)
+    {
+        if (Status == OrderStatus.Delivered) return "That order is already delivered.";
+        if (Status != OrderStatus.Despatched) return $"An order that is {Describe(Status)} is not on its way.";
+
+        Add(new OrderDeliveredEvent(OrderId, deliveredOn));
+
+        return null;
+    }
+
+    /// <summary>
     /// Records a return, or explains why there is nothing to return.
     /// </summary>
     public string? Return(string sku, int quantity, decimal refund)

@@ -155,12 +155,21 @@ public class StockLevel : DcbAggregateRoot
 /// from.
 /// </summary>
 /// <remarks>
+/// <para>
 /// One tag — the same tag <see cref="ProductId"/> uses. Two models can share a boundary without
 /// sharing anything else; what they take from it is decided by their event type filters.
+/// </para>
+/// <para>
+/// The id is not the bare product code, and that is not decoration. A snapshot is identified by its
+/// kind, its store id — <c>{Id}:{type version}</c> — and a digest of its boundary, and the model
+/// type is in none of them. Two write models folded from the same boundary under the same id would
+/// therefore be the same row, and would overwrite each other. Prefixing the id keeps
+/// <see cref="StockLevel"/>'s snapshot separate from <see cref="Product"/>'s.
+/// </para>
 /// </remarks>
 public class StockLevelId(string productId) : IDcbAggregateId<StockLevel>
 {
-    public string Id { get; } = productId;
+    public string Id { get; } = $"stock-{productId}";
 
     public TagQuery Boundary { get; } = TagQuery.AnyOf(new Tag("product", productId));
 }
