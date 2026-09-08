@@ -29,8 +29,6 @@
 }
 else
 {
-    <p class="lede">@Summary</p>
-
     @* One GET form for all three, because narrowing is a link to a narrower list and the whole
        narrowing belongs in the address bar together, where it can be bookmarked, shared and gone
        back to. The order travels in a hidden field so narrowing does not silently reorder; the page
@@ -83,6 +81,8 @@ else
         }
     </form>
 
+    <p class="lede">@Summary</p>
+    
     @if (Choice.Unbound)
     {
         @* Registered, listed, and impossible to have been stored: without an [AggregateType] there
@@ -403,12 +403,24 @@ else
                 ? $"of {narrowed.Name}"
                 : "of any aggregate";
 
-    private string Summary => Total switch
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// A filtered count counts what matched, which is not the same claim as how much is stored, so
+    /// it says which it is: the number alone reads as the whole store under the chosen aggregate,
+    /// and is short by however much the text excluded. Said as what the rows are rather than as
+    /// something they do, because the scope that follows reads as a place — "matches of Product"
+    /// is not a sentence, and every one of these has to end in one.
+    /// </remarks>
+    private string Summary => (Total, IsFiltered) switch
     {
-        0 when IsFiltered => $"No aggregates match{Scope}.",
-        0 => $"Nothing stored yet{Scope}.",
-        1 => $"One aggregate{Scope}.",
-        _ => $"{Total} aggregates{Scope}."
+        (0, false) => $"Nothing stored yet{Scope}.",
+        (1, false) => $"One aggregate{Scope}.",
+        (_, false) => $"{Total} aggregates{Scope}.",
+        (0, true) => $"No matching aggregates{Scope}.",
+        (1, true) => $"One matching aggregate{Scope}.",
+        (_, true) => $"{Total} matching aggregates{Scope}."
     };
 
     /// <summary>

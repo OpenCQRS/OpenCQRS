@@ -27,6 +27,7 @@ public static class AppendedEvents
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
+    /// <param name="payload">Text the stored payload has to carry, or null for any payload.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -35,10 +36,17 @@ public static class AppendedEvents
     /// Position breaks a tie on the date, as it does in a boundary's events: everything appended in
     /// one transaction is stamped from one clock reading and so shares a date exactly, and an
     /// unstable order under paging would show one row on two pages and another on none.
+    /// <para>
+    /// The payload is matched as it was written, which is the serialized event whole — so the text
+    /// looked for reaches the property names as well as the values under them. That is the point of
+    /// it: the log is read here to find out what was appended, and a reader who knows only that an
+    /// order carried a certain reference should not have to know which property holds it.
+    /// </para>
     /// </remarks>
     public static async Task<StoredEvents> Page(
         IDcbDbContext context,
         string? eventType,
+        string? payload,
         bool descending,
         int page,
         int size,
@@ -51,6 +59,19 @@ public static class AppendedEvents
             if (!string.IsNullOrWhiteSpace(eventType))
             {
                 stored = stored.Where(appended => appended.EventType == eventType);
+            }
+
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                // Lowered on both sides rather than with a provider's case-insensitive operator, so
+                // this reads the same against SQL Server as it does against Postgres. Contains
+                // rather than the Like the tag filter is built on: this text is typed against a
+                // payload, where % and _ are ordinary characters someone may well be looking for,
+                // and Contains leaves the provider to escape them rather than reading them as
+                // wildcards.
+                var wanted = payload.Trim().ToLower();
+
+                stored = stored.Where(appended => appended.Data.ToLower().Contains(wanted));
             }
 
             var total = await stored.CountAsync(cancellationToken);

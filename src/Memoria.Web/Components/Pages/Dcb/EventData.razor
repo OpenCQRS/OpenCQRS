@@ -29,11 +29,14 @@
 }
 else
 {
-    @* Above the table, because it says what the table holds. Its own GET form submitting on change,
-       like the pickers under the table: the choice is a link to a narrower list, so it belongs in
-       the address bar where it can be bookmarked, shared and gone back to. The order travels in a
-       hidden field so narrowing does not silently reorder; the page deliberately does not, because
-       page four of one type is not page four of another. *@
+    @* Above the table, because it says what the table holds. Its own GET form, like the pickers
+       under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
+       where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
+       narrowing does not silently reorder; the page deliberately does not, because page four of one
+       type is not page four of another.
+
+       The dropdown submits on change and the box is typed into, so the button is not only the
+       fallback when scripting is off — it submits both at once, which is what one form buys. *@
     <form class="search" method="get" action="dcb/events/data">
         <label for="type">Event type</label>
         <select id="type" name="type" onchange="this.form.submit()">
@@ -48,18 +51,24 @@ else
                 </option>
             }
         </select>
+
+        @* Beside the type rather than under it, because the two narrow the same list: a type is
+           what the log wrote a row under, and this is what the row itself carries. *@
+        <label class="visually-hidden" for="payload">Filter by payload</label>
+        <input id="payload" type="search" name="payload" value="@Payload"
+               placeholder="Filter by payload" autocomplete="off"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
-        @if (PayloadsOpen)
+        @if (PayloadsAsked is not null)
         {
-            <input type="hidden" name="payloads" value="@Open"/>
+            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
         }
-        <noscript>
-            <button type="submit" class="quiet">Filter</button>
-        </noscript>
-        @if (!Choice.IsAll)
+        <button type="submit" class="quiet">Filter</button>
+        @if (!Choice.IsAll || IsFiltered)
         {
-            <a href="@Link(Descending, 1, clearType: true)">Clear</a>
+            @* One way back to the whole log, because that is the one thing a reader wants from
+               here: dropping the type but keeping the text would be a second narrowing to undo. *@
+            <a href="@Link(Descending, 1, clearType: true, clearPayload: true)">Clear</a>
         }
     </form>
 
@@ -79,7 +88,14 @@ else
     else if (Events.Total == 0)
     {
         <p class="empty">
-            @if (Choice.IsAll)
+            @* Nothing found and nothing there are two different answers, and the text asked for is
+               the difference: an empty log has none of these to match, and a log that holds plenty
+               of them has none carrying this. *@
+            @if (IsFiltered)
+            {
+                <text>No events carry a payload matching &ldquo;@Payload&rdquo;.</text>
+            }
+            else if (Choice.IsAll)
             {
                 <text>Nothing has been appended yet.</text>
             }
@@ -214,11 +230,15 @@ else
                         {
                             <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
                         }
+                        @if (IsFiltered)
+                        {
+                            <input type="hidden" name="payload" value="@Payload"/>
+                        }
                         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                         <input type="hidden" name="size" value="@PageSize"/>
-                        @if (PayloadsOpen)
+                        @if (PayloadsAsked is not null)
                         {
-                            <input type="hidden" name="payloads" value="@Open"/>
+                            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
                         }
                         <noscript>
                             <button type="submit">Go</button>
@@ -254,10 +274,14 @@ else
                 {
                     <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
                 }
-                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                @if (PayloadsOpen)
+                @if (IsFiltered)
                 {
-                    <input type="hidden" name="payloads" value="@Open"/>
+                    <input type="hidden" name="payload" value="@Payload"/>
+                }
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                @if (PayloadsAsked is not null)
+                {
+                    <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
                 }
                 <noscript>
                     <button type="submit">Apply</button>
@@ -282,6 +306,18 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
+    /// The text a row's payload has to carry, or null when the log is read whole.
+    /// </summary>
+    private string? Payload { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Payload);
+
+    /// <summary>
+    /// What the address says about the payloads, when it says anything, and null when it does not.
+    /// </summary>
+    private bool? PayloadsAsked { get; set; }
+
+    /// <summary>
     /// Whether every payload on the page starts open. Closed unless the address says otherwise: a
     /// page of the log is read by running down the positions and the types, and the payloads are
     /// what is opened once something on a row is worth following.
@@ -291,11 +327,25 @@ else
     /// this only says what they are all folded to on arrival — which is why it travels with every
     /// link and every form here: paging or narrowing with the payloads out should not quietly shut
     /// them.
+    /// <para>
+    /// Filtering turns the default over, because the text a row matched on is inside the fold: a
+    /// filtered page that opened closed would be a search whose results are all hidden. Saying so
+    /// in the address still wins either way, so Collapse all works on a filtered page as it does
+    /// anywhere else.
+    /// </para>
     /// </remarks>
-    private bool PayloadsOpen { get; set; }
+    private bool PayloadsOpen => PayloadsAsked ?? IsFiltered;
 
-    /// <summary>What the address says when the payloads are out.</summary>
+    /// <summary>What the address says when the payloads are out, and when they are folded away.</summary>
+    /// <remarks>
+    /// Folded needs a word of its own now that it is not simply what silence means. An address
+    /// written before it did carries <c>open</c> and still reads the same.
+    /// </remarks>
     private const string Open = "open";
+
+    private const string Closed = "closed";
+
+    private static string Token(bool open) => open ? Open : Closed;
 
     /// <summary>
     /// How much a folded payload has under it, so a closed row still says whether opening it is
@@ -332,12 +382,23 @@ else
     /// </summary>
     private static string BoundAs(Type @event) => DomainTypeDescriber.LabelOf(@event);
 
-    private string Summary => (Events.Total, Choice.IsAll) switch
+    /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $", of {Choice.Name}";
+
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// Appended is the whole log's word for it; a filtered table counts what matched, which is not
+    /// the same claim about what was written. Said the way the two model pages say it, so a count
+    /// means one thing across the three of them.
+    /// </remarks>
+    private string Summary => (Events.Total, IsFiltered) switch
     {
-        (1, true) => "One event appended.",
-        (1, false) => $"One event appended, of {Choice.Name}.",
-        (_, true) => $"{Events.Total} events appended.",
-        (_, false) => $"{Events.Total} events appended, of {Choice.Name}."
+        (1, false) => $"One event appended{Of}.",
+        (_, false) => $"{Events.Total} events appended{Of}.",
+        (1, true) => $"One matching event{Of}.",
+        (_, true) => $"{Events.Total} matching events{Of}."
     };
 
     /// <summary>
@@ -345,26 +406,38 @@ else
     /// </summary>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page to land on, from one.</param>
-    /// <param name="clearType">Whether to widen back to the whole log.</param>
+    /// <param name="clearType">Whether to widen back to every type.</param>
+    /// <param name="clearPayload">Whether to drop the text a payload had to carry.</param>
     /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
     /// <remarks>
-    /// The payloads are named only when they are out. Folded is what the page opens as, so a link
-    /// to a folded page is a link with nothing to say about them.
+    /// The two narrowings are named only when they are made, and the payloads only when the address
+    /// this link was built from had something to say about them — the fold link is what says it, and
+    /// it says it either way, because on a filtered page folded is no longer what silence means.
     /// </remarks>
-    private string Link(bool descending, int page, bool clearType = false, bool? open = null)
+    private string Link(
+        bool descending,
+        int page,
+        bool clearType = false,
+        bool clearPayload = false,
+        bool? open = null)
     {
         var link = $"dcb/events/data?dir={(descending ? "desc" : "asc")}" +
                    $"&size={PageSize}" +
                    $"&page={page}";
 
-        if (open ?? PayloadsOpen)
+        if ((open ?? PayloadsAsked) is { } folded)
         {
-            link += $"&payloads={Open}";
+            link += $"&payloads={Token(folded)}";
         }
 
-        return clearType || Choice.Event is null
+        if (!clearType && Choice.Event is { } chosen)
+        {
+            link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
+        }
+
+        return clearPayload || !IsFiltered
             ? link
-            : $"{link}&type={Uri.EscapeDataString(Choice.Event.FullName ?? Choice.Event.Name)}";
+            : $"{link}&payload={Uri.EscapeDataString(Payload!)}";
     }
 
     protected override async Task OnParametersSetAsync()
@@ -375,9 +448,18 @@ else
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
         Choice = EventChoice.Of(EventTypes, Value("type"));
+        Payload = Value("payload");
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
-        PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
+
+        // Anything else it might say is not an answer, and null is the one state that lets the
+        // filter decide — which is what an address that says nothing usable should fall back to.
+        PayloadsAsked = Value("payloads") switch
+        {
+            { } said when string.Equals(said, Open, StringComparison.OrdinalIgnoreCase) => true,
+            { } said when string.Equals(said, Closed, StringComparison.OrdinalIgnoreCase) => false,
+            _ => null
+        };
 
         // A choice with nothing to look for is not asked about. Its key is null, and null narrows
         // to everything rather than to nothing — so asking would answer the name of one type with
@@ -392,6 +474,7 @@ else
         Events = await AppendedEvents.Page(
             StoreContext,
             Choice.Key,
+            Payload,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
             PageSize);
