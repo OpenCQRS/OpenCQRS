@@ -212,10 +212,7 @@ else
     /// attribute — an unbound type is still worth listing, and the panel beside the list says it is
     /// unbound.
     /// </summary>
-    private static string BoundAs(Type @event) =>
-        DomainTypeDescriber.BindingOf(@event) is { } binding
-            ? $"{binding.Name} v{binding.Version}"
-            : @event.Name;
+    private static string BoundAs(Type @event) => DomainTypeDescriber.LabelOf(@event);
 
     /// <summary>
     /// Another event, read the same way as the one being left: the tab travels with the choice, so

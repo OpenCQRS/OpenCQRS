@@ -72,6 +72,49 @@ public static class DomainTypeDescriber
                     : null;
 
     /// <summary>
+    /// How a type is named wherever a page lists one: what it is bound as, and the version of that
+    /// binding after it. A type carrying no attribute is named by its class, which is all there is
+    /// to name it by.
+    /// </summary>
+    /// <param name="type">The type to name.</param>
+    /// <remarks>
+    /// Written as a name and a version rather than as the store's own key: the key joins the two
+    /// with a colon because something has to read them back apart, which is the store's need and
+    /// not the reader's. Here they are a name and its version, said the way a version is said. The
+    /// key itself belongs where a page is saying what the store holds rather than what a type is.
+    /// <para>
+    /// One name for all of them, because a type met on a list, on the panel beside it and in a
+    /// column of stored rows is the same type, and reading it two ways would make it look like two.
+    /// </para>
+    /// </remarks>
+    public static string LabelOf(Type type) =>
+        BindingOf(type) is { } binding ? $"{binding.Name} v{binding.Version}" : type.Name;
+
+    /// <summary>
+    /// The same name, worked out from a stored key rather than from a type — which is what a page
+    /// saying what the store holds has to hand.
+    /// </summary>
+    /// <param name="key">The key, as <c>name:version</c>.</param>
+    public static string LabelOfKey(string key) =>
+        SplitKey(key) is { Version: { } version } split ? $"{split.Name} v{version}" : key;
+
+    /// <summary>
+    /// Splits a stored key into the two halves it is made of.
+    /// </summary>
+    /// <param name="key">The key, as <c>name:version</c>.</param>
+    /// <returns>The name, and the version when the key carries one.</returns>
+    /// <remarks>
+    /// Split at the last separator: the two are joined with nothing escaped, so a name carrying a
+    /// colon of its own still leaves the version after the last one. A key carrying no separator at
+    /// all is a name with nothing to say beside it rather than one that cannot be read — whatever
+    /// the store turns out to hold is shown.
+    /// </remarks>
+    public static (string Name, string? Version) SplitKey(string key) =>
+        key.LastIndexOf(':') is var separator && separator < 0
+            ? (key, null)
+            : (key[..separator], key[(separator + 1)..]);
+
+    /// <summary>
     /// Whether an identifier is the identifier of this model, read off the generic argument of the
     /// identifier interface it closes — <c>IDcbAggregateId&lt;Product&gt;</c> and its streamed and
     /// projection counterparts.

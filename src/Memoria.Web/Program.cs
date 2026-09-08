@@ -338,17 +338,41 @@ static async Task WarmStore(WebApplication app)
                     continue;
                 }
 
-                var modelType = kind.BindingKey(model);
+                // Read off the attribute rather than through the framework's own lookup, which
+                // throws for a type carrying none. A model that cannot be stored has no rows to
+                // warm, so it is passed over rather than allowed to fail the warming of the rest.
+                if (DomainTypeDescriber.BindingOf(model)?.Key is not { } modelType)
+                {
+                    continue;
+                }
+
                 IReadOnlyList<Instance> listed = [];
 
                 foreach (var sort in Enum.GetValues<InstanceSort>())
                 {
                     foreach (var tag in new string?[] { null, "warm" })
                     {
-                        var page = await IdentifierInstances.Page(store, shape, kind, modelType, tag, sort,
-                            descending: true, page: 1, size: InstanceQuery.DefaultPageSize);
+                        // The three ways the list narrows: to one identifier's rows, to one model's
+                        // whatever addresses them, and to every model of the kind. Each leaves out
+                        // a different clause, so each is its own query for EF to compile — and the
+                        // page opens on the widest of them, which would otherwise be the one left
+                        // to compile on arrival.
+                        foreach (var (narrowed, narrowedShape) in new (string?, IdentifierShape?)[]
+                                 {
+                                     (modelType, shape), (modelType, null), (null, null)
+                                 })
+                        {
+                            var page = await IdentifierInstances.Page(store, kind, narrowed,
+                                narrowedShape, tag, sort, descending: true, page: 1,
+                                size: InstanceQuery.DefaultPageSize);
 
-                        listed = listed.Count > 0 ? listed : page.Rows;
+                            // Only the shaped read unfolds a boundary into the values an identifier
+                            // is built from, which is what the detail read below needs.
+                            if (narrowedShape is not null)
+                            {
+                                listed = listed.Count > 0 ? listed : page.Rows;
+                            }
+                        }
                     }
                 }
 

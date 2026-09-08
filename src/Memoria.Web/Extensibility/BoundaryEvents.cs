@@ -184,21 +184,12 @@ public sealed record StoredEvent(
     string? Error)
 {
     /// <summary>Gets the name half of the key: what the type is written under.</summary>
-    public string Name => Split(Type).Name;
+    public string Name => DomainTypeDescriber.SplitKey(Type).Name;
 
     /// <summary>
     /// Gets the version half of the key, or null when the key carries none — a row is listed
     /// whatever its type string turns out to be, and one without a version is a name with nothing
     /// to say beside it rather than a row that cannot be drawn.
     /// </summary>
-    public string? Version => Split(Type).Version;
-
-    /// <summary>
-    /// Splits a key at its last separator. A key is written as <c>name:version</c> with nothing
-    /// escaped, so a name carrying a colon of its own still leaves the version after the last one.
-    /// </summary>
-    private static (string Name, string? Version) Split(string key) =>
-        key.LastIndexOf(':') is var separator && separator < 0
-            ? (key, null)
-            : (key[..separator], key[(separator + 1)..]);
+    public string? Version => DomainTypeDescriber.SplitKey(Type).Version;
 }

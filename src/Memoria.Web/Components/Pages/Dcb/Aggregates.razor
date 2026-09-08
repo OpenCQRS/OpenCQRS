@@ -359,10 +359,7 @@ else
     /// need and not the reader's. Here they are a name and its version, said the way a version is
     /// said. The key itself is on the info tab, in the two halves it is made of.
     /// </remarks>
-    private static string BoundAs(Type aggregate) =>
-        DomainTypeDescriber.BindingOf(aggregate) is { } binding
-            ? $"{binding.Name} v{binding.Version}"
-            : aggregate.Name;
+    private static string BoundAs(Type aggregate) => DomainTypeDescriber.LabelOf(aggregate);
 
     /// <summary>
     /// The tags an identifier's boundary is built from, by name. The values are left out: they are

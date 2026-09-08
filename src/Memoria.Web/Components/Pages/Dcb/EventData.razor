@@ -326,10 +326,7 @@ else
     /// attribute — the same name the events page lists it under, so one row means one thing across
     /// the two pages.
     /// </summary>
-    private static string BoundAs(Type @event) =>
-        DomainTypeDescriber.BindingOf(@event) is { } binding
-            ? $"{binding.Name} v{binding.Version}"
-            : @event.Name;
+    private static string BoundAs(Type @event) => DomainTypeDescriber.LabelOf(@event);
 
     private string Summary => (Events.Total, Choice.IsAll) switch
     {

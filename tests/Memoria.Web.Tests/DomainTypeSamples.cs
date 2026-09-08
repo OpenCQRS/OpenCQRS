@@ -178,3 +178,15 @@ public class SampleCarryingDcbAggregate : DcbAggregateRoot
 /// not it is bound.
 /// </summary>
 public record SampleUnboundEvent(string Id) : IEvent;
+
+/// <summary>
+/// A DCB write model carrying no <see cref="AggregateType"/>, so the store has no key to write its
+/// snapshots under and could never hold one. Listed all the same, because a type the assemblies
+/// declare is worth seeing whether or not it is bound.
+/// </summary>
+public class SampleUnboundDcbAggregate : DcbAggregateRoot
+{
+    public override Type[]? EventTypeFilter => [typeof(SampleHappenedEvent)];
+
+    protected override bool Apply<T>(T @event) => false;
+}

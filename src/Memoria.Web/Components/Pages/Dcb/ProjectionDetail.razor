@@ -7,7 +7,7 @@
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@(Projection?.Name ?? "Projection") @Title</PageTitle>
+<PageTitle>@(Projection is null ? "Projection" : DomainTypeDescriber.LabelOf(Projection)) @Title</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -36,14 +36,19 @@
 }
 else
 {
-    <h1>@Projection.Name</h1>
+    @* Named as every list here names a type: what it is bound as, and the version of that
+       binding. Two versions of one name are two projections, and the heading has to say which. *@
+    <h1>@DomainTypeDescriber.LabelOf(Projection)</h1>
     <p class="lede">The snapshot stored under <code>@Identifier.Name</code> carries.</p>
 
     @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
        what it selects — the snapshot folded from it, the events inside it, the refresh that folds
        the rest in — so it belongs where it stays put as they change, rather than on one of them. *@
     <p class="boundary">
-        <span class="boundary-label">Boundary</span>
+        @* Called by what it is made of, the same word the data pages head the column with. The
+           class it is styled by still says boundary, because that is what the line is: a boundary
+           written as the tags it selects on. *@
+        <span class="boundary-label">Tags</span>
 
         @if (Boundary is not null)
         {
@@ -108,7 +113,10 @@ else
                 @if (Stored is not null)
                 {
                     <dt>Model type</dt>
-                    <dd><code>@Stored.ModelType</code></dd>
+                    @* The key the row was written under, said the way a version is said rather
+                       than as the store joins it. Read off the row rather than off the type: this
+                       block is the store's account of the write. *@
+                    <dd><code>@DomainTypeDescriber.LabelOfKey(Stored.ModelType)</code></dd>
 
                     <dt>Version</dt>
                     <dd>@Stored.Version</dd>

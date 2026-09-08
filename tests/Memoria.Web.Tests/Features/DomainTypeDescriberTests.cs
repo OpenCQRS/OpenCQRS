@@ -59,6 +59,72 @@ public class DomainTypeDescriberTests
             .Should().Be("SampleDcbProjection:1");
     }
 
+    /// <summary>
+    /// How a type is named wherever a page lists one: what it is bound as, and the version of that
+    /// binding after it — which is what tells two versions of one name apart.
+    /// </summary>
+    /// <remarks>
+    /// Written as a name and a version rather than as the store's own key: the key joins the two
+    /// with a colon because something has to read them back apart, which is the store's need and
+    /// not the reader's.
+    /// </remarks>
+    [Fact]
+    public void Names_a_type_by_what_it_is_bound_as_and_the_version_of_that()
+    {
+        DomainTypeDescriber.LabelOf(typeof(SampleDcbAggregate)).Should().Be("SampleDcbAggregate v1");
+    }
+
+    /// <summary>
+    /// The name it is bound as, which is not always the class it is written as — that is the whole
+    /// point of binding one to the other, and a rename of the class leaves the binding where it is.
+    /// </summary>
+    [Fact]
+    public void Names_a_type_by_its_binding_rather_than_by_its_class()
+    {
+        DomainTypeDescriber.LabelOf(typeof(SampleHappenedEvent)).Should().Be("SampleHappened v1");
+    }
+
+    /// <summary>
+    /// A type carrying no attribute is bound by nothing and versioned by nothing, so the class is
+    /// all there is to name it by. Still worth listing; what is beside it says it is unbound.
+    /// </summary>
+    [Fact]
+    public void Names_an_unbound_type_by_its_class()
+    {
+        DomainTypeDescriber.LabelOf(typeof(SampleUnboundDcbAggregate))
+            .Should().Be("SampleUnboundDcbAggregate");
+    }
+
+    /// <summary>
+    /// The same name, worked out from the key a stored row carries rather than from a type — which
+    /// is what a page saying what the store holds has to hand, and what it should still read like.
+    /// </summary>
+    [Fact]
+    public void Names_a_stored_key_the_way_it_names_a_type()
+    {
+        DomainTypeDescriber.LabelOfKey("SampleDcbAggregate:1").Should().Be("SampleDcbAggregate v1");
+    }
+
+    /// <summary>
+    /// Nothing is escaped when the two halves are joined, so a name carrying a colon of its own
+    /// still leaves the version after the last one — which is where the key comes apart.
+    /// </summary>
+    [Fact]
+    public void Reads_a_key_whose_name_carries_a_colon_of_its_own()
+    {
+        DomainTypeDescriber.LabelOfKey("Some:Name:2").Should().Be("Some:Name v2");
+    }
+
+    /// <summary>
+    /// A key carrying no version is a name with nothing to say beside it, rather than one that
+    /// cannot be drawn — a row is shown whatever its stored key turns out to be.
+    /// </summary>
+    [Fact]
+    public void Names_a_key_that_carries_no_version()
+    {
+        DomainTypeDescriber.LabelOfKey("Unversioned").Should().Be("Unversioned");
+    }
+
     [Fact]
     public void Reports_the_assembly_the_type_came_from()
     {

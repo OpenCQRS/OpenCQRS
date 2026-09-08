@@ -143,7 +143,5 @@ public sealed record EventChoice(Type? Event, bool Unknown)
     public string Name =>
         Event is null
             ? Unknown ? "Events" : "All events"
-            : DomainTypeDescriber.BindingOf(Event) is { } binding
-                ? $"{binding.Name} v{binding.Version}"
-                : Event.Name;
+            : DomainTypeDescriber.LabelOf(Event);
 }
