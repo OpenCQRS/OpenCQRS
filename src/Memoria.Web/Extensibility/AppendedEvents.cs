@@ -27,7 +27,9 @@ public static class AppendedEvents
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
-    /// <param name="payload">Text the stored payload has to carry, or null for any payload.</param>
+    /// <param name="text">
+    /// Text the row has to carry, in its position or in its payload, or null for any row.
+    /// </param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -42,11 +44,17 @@ public static class AppendedEvents
     /// it: the log is read here to find out what was appended, and a reader who knows only that an
     /// order carried a certain reference should not have to know which property holds it.
     /// </para>
+    /// <para>
+    /// The position answers the same box, which is how a reader reaches one row they have the number
+    /// of. It is a number rather than a name, so it is matched whole where the payload is matched by
+    /// part: <c>14</c> means the fourteenth event, not every row whose payload happens to contain
+    /// those two characters. Text that is not a number asks nothing of it.
+    /// </para>
     /// </remarks>
     public static async Task<StoredEvents> Page(
         IDcbDbContext context,
         string? eventType,
-        string? payload,
+        string? text,
         bool descending,
         int page,
         int size,
@@ -61,7 +69,7 @@ public static class AppendedEvents
                 stored = stored.Where(appended => appended.EventType == eventType);
             }
 
-            if (!string.IsNullOrWhiteSpace(payload))
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 // Lowered on both sides rather than with a provider's case-insensitive operator, so
                 // this reads the same against SQL Server as it does against Postgres. Contains
@@ -69,9 +77,16 @@ public static class AppendedEvents
                 // payload, where % and _ are ordinary characters someone may well be looking for,
                 // and Contains leaves the provider to escape them rather than reading them as
                 // wildcards.
-                var wanted = payload.Trim().ToLower();
+                var trimmed = text.Trim();
+                var wanted = trimmed.ToLower();
 
-                stored = stored.Where(appended => appended.Data.ToLower().Contains(wanted));
+                // A number is also a position to look for, so a reader who has one reaches that row
+                // by typing it. Anything else asks nothing of the position: a value that cannot be
+                // one is not a row's number badly written, it is not a number at all.
+                var position = long.TryParse(trimmed, out var numbered) ? numbered : (long?)null;
+
+                stored = stored.Where(appended =>
+                    appended.Data.ToLower().Contains(wanted) || appended.Position == position);
             }
 
             var total = await stored.CountAsync(cancellationToken);

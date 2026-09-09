@@ -253,9 +253,12 @@ else
                                 <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
                             </a>
                         </th>
-                        @* The key the row was stored under, as the two facts it is made of. *@
+                        @* What the log wrote the row under, as one name: the version is part of what
+                           a type is called rather than a fact beside it, and it is said only from
+                           the second version on — a first is what a name means until a second
+                           exists, and a column whose every row ended in v1 would teach its reader
+                           to skip it. *@
                         <th scope="col" class="col-type">Type</th>
-                        <th scope="col" class="col-version">Version</th>
                         <th scope="col" class="col-payload">Payload</th>
                     </tr>
                     </thead>
@@ -265,17 +268,11 @@ else
                         <tr>
                             <td>@stored.Position</td>
                             <td>@stored.Written.ToLocalTime().ToString("g")</td>
-                            <td><code>@stored.Name</code></td>
-                            <td>
-                                @if (stored.Version is { } version)
-                                {
-                                    <code>@version</code>
-                                }
-                                else
-                                {
-                                    <span class="missing">—</span>
-                                }
-                            </td>
+                            @* Name and version as one, the way every list here names a type, so a
+                               type met in a history and the same type met on its own page read
+                               alike. A key the store wrote that cannot be taken apart is left whole
+                               rather than half-read. *@
+                            <td><code>@DomainTypeDescriber.LabelOfKey(stored.Type)</code></td>
                             <td>
                                 @if (stored.Error is not null)
                                 {

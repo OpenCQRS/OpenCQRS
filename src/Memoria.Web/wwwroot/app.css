@@ -808,9 +808,9 @@ h2:focus {
    down would move out from under them. Declared, a payload opens downwards and nothing else moves.
 
    In parts of the width rather than in ems, so the columns keep their proportions at any width and
-   the sum cannot overflow the page. The four to the left are as wide as what they hold: a position,
-   a date, a bound name, a version. What is left over is the payload's, because it is the column
-   with something to open. */
+   the sum cannot overflow the page. The three to the left are as wide as what they hold: a
+   position, a date, and a bound name carrying its own version. What is left over is the payload's,
+   because it is the column with something to open. */
 .grid.events {
     table-layout: fixed;
 }
@@ -824,15 +824,11 @@ h2:focus {
     }
 
     .grid.events .col-type {
-        width: 21%;
-    }
-
-    .grid.events .col-version {
-        width: 9%;
+        width: 24%;
     }
 
     .grid.events .col-payload {
-        width: 43%;
+        width: 49%;
     }
 
 /* The same table with the stream and the store's own key in front of it, so the columns above keep
