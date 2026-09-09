@@ -164,7 +164,7 @@ public sealed record StoredStreamEvent(string StreamId, StoredEvent Event);
 /// <param name="Stream">The type chosen, or null when none was or the name reached nothing.</param>
 /// <param name="Unknown">Whether a name was asked for that is not among the registered types.</param>
 /// <remarks>
-/// The same shape as <see cref="EventChoice"/> and for the same reason: asking for nothing and
+/// The same shape as <see cref="TypeChoice"/> and for the same reason: asking for nothing and
 /// asking for something that is not there are two different questions with two different answers,
 /// and both leave <see cref="Stream"/> null — so which was asked is kept beside it rather than
 /// inferred from it. Answering an unknown name with the whole log would look like the filter had
@@ -205,7 +205,7 @@ public sealed record StreamChoice(Type? Stream, bool Unknown)
 
     /// <summary>
     /// Gets whether the chosen type is one whose ids cannot be recognised, so there is no way to ask
-    /// the log for them. The counterpart of <see cref="EventChoice.Unbound"/>: registered, listed,
+    /// the log for them. The counterpart of <see cref="TypeChoice.Unbound"/>: registered, listed,
     /// and impossible to narrow by.
     /// </summary>
     public bool Unshaped => Stream is not null && Pattern is null;

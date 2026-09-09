@@ -5,12 +5,17 @@ using Xunit;
 namespace Memoria.Web.Tests.Features;
 
 /// <summary>
-/// Which of the log's events the data page was asked for: all of them, one type, or neither because
-/// the name in the address reaches nothing that could have been written. Reading the rows
-/// themselves is the database's work — see <see cref="AppendedEvents.Page"/> — and is covered
-/// against a real store rather than here.
+/// Which registered type a data page was narrowed to: all of them, one of them, or neither because
+/// the name in the address reaches nothing that could have been written. Reading the rows themselves
+/// is the database's work — see <see cref="AppendedEvents.Page"/> and its streamed counterparts —
+/// and is covered against a real store rather than here.
 /// </summary>
-public class EventChoiceTests
+/// <remarks>
+/// Exercised through events, which is one of the three kinds of type it serves. What it reads is the
+/// binding key, off whichever attribute the type carries, so an aggregate and a projection go the
+/// same way through it.
+/// </remarks>
+public class TypeChoiceTests
 {
     /// <summary>
     /// What the events page lists, which is what a name arriving in the address is matched against.
@@ -24,10 +29,10 @@ public class EventChoiceTests
     [Fact]
     public void Shows_every_type_when_none_was_asked_for()
     {
-        var choice = EventChoice.Of(Events, asked: null);
+        var choice = TypeChoice.Of(Events, asked: null);
 
         choice.IsAll.Should().BeTrue();
-        choice.Event.Should().BeNull();
+        choice.Chosen.Should().BeNull();
         choice.Key.Should().BeNull();
     }
 
@@ -37,15 +42,15 @@ public class EventChoiceTests
     [Fact]
     public void Shows_every_type_when_the_name_asked_for_is_empty()
     {
-        EventChoice.Of(Events, asked: "").IsAll.Should().BeTrue();
+        TypeChoice.Of(Events, asked: "").IsAll.Should().BeTrue();
     }
 
     [Fact]
     public void Narrows_to_the_type_asked_for()
     {
-        var choice = EventChoice.Of(Events, typeof(SampleCarriedEvent).FullName);
+        var choice = TypeChoice.Of(Events, typeof(SampleCarriedEvent).FullName);
 
-        choice.Event.Should().Be(typeof(SampleCarriedEvent));
+        choice.Chosen.Should().Be(typeof(SampleCarriedEvent));
         choice.IsAll.Should().BeFalse();
         choice.ShowsNothing.Should().BeFalse();
     }
@@ -57,7 +62,7 @@ public class EventChoiceTests
     [Fact]
     public void Narrows_by_the_key_the_log_writes_the_type_under()
     {
-        EventChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Key.Should().Be("SampleHappened:1");
+        TypeChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Key.Should().Be("SampleHappened:1");
     }
 
     /// <summary>
@@ -68,11 +73,11 @@ public class EventChoiceTests
     [Fact]
     public void Tells_a_name_it_does_not_know_apart_from_asking_for_none()
     {
-        var choice = EventChoice.Of(Events, "Never.Uploaded.Event");
+        var choice = TypeChoice.Of(Events, "Never.Uploaded.Event");
 
         choice.Unknown.Should().BeTrue();
         choice.IsAll.Should().BeFalse();
-        choice.Event.Should().BeNull();
+        choice.Chosen.Should().BeNull();
         choice.ShowsNothing.Should().BeTrue();
     }
 
@@ -83,9 +88,9 @@ public class EventChoiceTests
     [Fact]
     public void Says_a_type_the_log_could_never_have_written()
     {
-        var choice = EventChoice.Of(Events, typeof(SampleUnboundEvent).FullName);
+        var choice = TypeChoice.Of(Events, typeof(SampleUnboundEvent).FullName);
 
-        choice.Event.Should().Be(typeof(SampleUnboundEvent));
+        choice.Chosen.Should().Be(typeof(SampleUnboundEvent));
         choice.Unbound.Should().BeTrue();
         choice.Key.Should().BeNull();
         choice.ShowsNothing.Should().BeTrue();
@@ -94,28 +99,28 @@ public class EventChoiceTests
     [Fact]
     public void A_type_the_log_writes_is_not_one_it_could_never_have_written()
     {
-        EventChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Unbound.Should().BeFalse();
+        TypeChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Unbound.Should().BeFalse();
     }
 
     /// <summary>
-    /// The heading and the breadcrumb name what is being read. A chosen type is named as the log
-    /// names it, and what is being read when nothing was chosen is the whole log.
+    /// The line counting what a page holds names what was narrowed to. A chosen type is named as the
+    /// store names it, and what is being read when nothing was chosen is everything.
     /// </summary>
     [Fact]
     public void Names_what_is_being_read()
     {
-        EventChoice.Of(Events, asked: null).Name.Should().Be("All events");
-        EventChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Name.Should().Be("SampleHappened");
-        EventChoice.Of(Events, typeof(SampleUnboundEvent).FullName).Name.Should().Be("SampleUnboundEvent");
+        TypeChoice.Of(Events, asked: null).Name.Should().Be("All types");
+        TypeChoice.Of(Events, typeof(SampleHappenedEvent).FullName).Name.Should().Be("SampleHappened");
+        TypeChoice.Of(Events, typeof(SampleUnboundEvent).FullName).Name.Should().Be("SampleUnboundEvent");
     }
 
     /// <summary>
-    /// A name reaching nothing names nothing, so the heading falls back to what the page is about
-    /// rather than claiming the whole log is being shown under it.
+    /// A name reaching nothing names nothing, so it falls back to the plainest thing there is to say
+    /// rather than claiming everything stored is being shown under it.
     /// </summary>
     [Fact]
     public void Names_nothing_in_particular_when_the_name_reaches_nothing()
     {
-        EventChoice.Of(Events, "Never.Uploaded.Event").Name.Should().Be("Events");
+        TypeChoice.Of(Events, "Never.Uploaded.Event").Name.Should().Be("Types");
     }
 }

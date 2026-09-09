@@ -69,7 +69,7 @@ else
             <option value="" selected="@Choice.IsAll">All</option>
             @foreach (var aggregate in AggregateTypes)
             {
-                <option value="@aggregate.FullName" selected="@(aggregate == Choice.Event)">
+                <option value="@aggregate.FullName" selected="@(aggregate == Choice.Chosen)">
                     @BoundAs(aggregate)
                 </option>
             }
@@ -324,13 +324,7 @@ else
     /// Which aggregates are being looked at: all of them, one type, or neither because the name in
     /// the address reaches nothing that could have been written.
     /// </summary>
-    /// <remarks>
-    /// <see cref="EventChoice"/> is named for the page it was written for, but what it does is read
-    /// a type's binding key off whichever of the three attributes it carries — so it answers for an
-    /// aggregate exactly as it does for an event, and the key it hands over is the one the store
-    /// wrote the snapshot under.
-    /// </remarks>
-    private EventChoice Choice { get; set; } = new(Event: null, Unknown: false);
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
 
     /// <summary>
     /// Which kind of stream they were folded out of, or all of them.
@@ -496,7 +490,7 @@ else
             link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
         }
 
-        if (!clearType && Choice.Event is { } chosen)
+        if (!clearType && Choice.Chosen is { } chosen)
         {
             link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
         }
@@ -515,7 +509,7 @@ else
         {
             <input type="hidden" name="stream" value="@stream.FullName"/>
         }
-        @if (Choice.Event is { } chosen)
+        @if (Choice.Chosen is { } chosen)
         {
             <input type="hidden" name="type" value="@chosen.FullName"/>
         }
@@ -537,7 +531,7 @@ else
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
         Stream = StreamChoice.Of(StreamTypes, Value("stream"));
-        Choice = EventChoice.Of(AggregateTypes, Value("type"));
+        Choice = TypeChoice.Of(AggregateTypes, Value("type"));
         Text = Value("text");
         Sort = InstanceQuery.SortOf(Value("sort"));
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);

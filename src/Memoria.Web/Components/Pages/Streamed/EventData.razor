@@ -69,7 +69,7 @@ else
             <option value="" selected="@Choice.IsAll">All</option>
             @foreach (var @event in EventTypes)
             {
-                <option value="@(@event.FullName)" selected="@(@event == Choice.Event)">
+                <option value="@(@event.FullName)" selected="@(@event == Choice.Chosen)">
                     @BoundAs(@event)
                 </option>
             }
@@ -284,7 +284,7 @@ else
                         }
                         @if (!Choice.IsAll)
                         {
-                            <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
+                            <input type="hidden" name="type" value="@Choice.Chosen?.FullName"/>
                         }
                         @if (IsFiltered)
                         {
@@ -332,7 +332,7 @@ else
                 }
                 @if (!Choice.IsAll)
                 {
-                    <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
+                    <input type="hidden" name="type" value="@Choice.Chosen?.FullName"/>
                 }
                 @if (IsFiltered)
                 {
@@ -357,7 +357,7 @@ else
     /// Which of the log's events are being looked at: all of them, one type, or neither because the
     /// name in the address reaches nothing that could have been written.
     /// </summary>
-    private EventChoice Choice { get; set; } = new(Event: null, Unknown: false);
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
 
     /// <summary>
     /// Which kind of stream they are being read out of, or all of them.
@@ -516,7 +516,7 @@ else
             link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
         }
 
-        if (!clearType && Choice.Event is { } chosen)
+        if (!clearType && Choice.Chosen is { } chosen)
         {
             link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
         }
@@ -534,7 +534,7 @@ else
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
         Stream = StreamChoice.Of(StreamTypes, Value("stream"));
-        Choice = EventChoice.Of(EventTypes, Value("type"));
+        Choice = TypeChoice.Of(EventTypes, Value("type"));
         Text = Value("text");
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
