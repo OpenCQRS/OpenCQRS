@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@inject Memoria.Web.Data.StoreCapabilities Store
 
 <header>
     <a class="brand" href="">Memoria</a>
@@ -47,6 +48,12 @@
             </div>
         </details>
 
+@* Only where there is a store holding one. A Cosmos store has no dynamic consistency boundary at
+   all, so these would be nine links to pages with nothing to read — the menu is left out rather than
+   shown leading nowhere. The pages themselves are not found under such a store either; see
+   Routes.razor, which is what makes a bookmarked address agree with this menu. *@
+@if (Store.HasDcb)
+{
         <details class="menu">
             <summary class="@(InSection("dcb") ? "active" : null)">DCB</summary>
             <div class="submenu">
@@ -74,6 +81,7 @@
                 </div>
             </div>
         </details>
+}
 
         <NavLink href="settings">Settings</NavLink>
     </nav>

@@ -29,6 +29,10 @@ public static class StoreRegistration
     public static IServiceCollection AddStore(
         this IServiceCollection services, DatabaseConnection database, IConfiguration configuration)
     {
+        // What the pages may offer, decided once here rather than by each of them asking which
+        // engine it is.
+        services.AddSingleton(StoreCapabilities.Of(database.Provider));
+
         if (database.Provider is DatabaseProvider.Cosmos)
         {
             var store = CosmosStore.Of(database, configuration);

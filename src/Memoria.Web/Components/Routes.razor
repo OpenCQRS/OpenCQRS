@@ -1,6 +1,37 @@
-﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+@inject Memoria.Web.Data.StoreCapabilities Store
+@inject NavigationManager Navigation
+
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)"/>
-        <FocusOnNavigate RouteData="routeData" Selector="h1"/>
+        @* A page the store cannot answer is not found, rather than found and empty. The menu already
+           leaves those out; this is what makes a typed or bookmarked address say the same thing,
+           and it is one check here rather than a guard at the top of each of the nine pages.
+
+           Read off the page's namespace rather than the address: every page under
+           Components/Pages/Dcb reads the dynamic consistency boundary and no page outside it does,
+           so the routed type answers the question directly and a change of route does not quietly
+           move a page out of the rule. *@
+        @if (Store.HasDcb || !ReadsTheBoundary(routeData))
+        {
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)"/>
+            <FocusOnNavigate RouteData="routeData" Selector="h1"/>
+        }
+        else
+        {
+            @* Asked for rather than drawn here: this is the framework's own not-found path, so the
+               address gets the same page and the same 404 as one that matches no route at all.
+               Rendering the page directly instead would answer 200 and say it was found. *@
+            Navigation.NotFound();
+        }
     </Found>
 </Router>
+
+@code {
+
+    /// <summary>The namespace every page reading the dynamic consistency boundary sits in.</summary>
+    private const string Boundary = "Memoria.Web.Components.Pages.Dcb";
+
+    private static bool ReadsTheBoundary(RouteData routeData) =>
+        routeData.PageType.Namespace == Boundary;
+
+}

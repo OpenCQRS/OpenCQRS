@@ -76,6 +76,29 @@ public class StoreRegistrationTests
     }
 
     /// <summary>
+    /// What the tool can offer depends on the store it was pointed at. Only the dynamic consistency
+    /// boundary differs today: there is no DCB store for Cosmos, so those pages have nothing to read
+    /// and are not offered rather than offered and broken.
+    /// </summary>
+    [Theory]
+    [InlineData("Host=localhost;Database=memoria;Username=postgres;Password=x", true)]
+    [InlineData("Server=.;Database=memoria;Trusted_Connection=True", true)]
+    [InlineData("Data Source=memoria.db", true)]
+    [InlineData("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5", false)]
+    public void Offers_the_dynamic_consistency_boundary_only_where_there_is_a_store_for_it(
+        string connectionString, bool expected)
+    {
+        var services = Registered(connectionString);
+
+        var capabilities = services
+            .Single(service => service.ServiceType == typeof(StoreCapabilities))
+            .ImplementationInstance
+            .Should().BeOfType<StoreCapabilities>().Subject;
+
+        capabilities.HasDcb.Should().Be(expected);
+    }
+
+    /// <summary>
     /// A Cosmos connection string names an account, not a database or a container, so those two are
     /// configuration. They default to what the store's own options default to, so a store installed
     /// with those defaults needs no settings at all.
