@@ -201,7 +201,7 @@ else
             </tr>
             </thead>
             <tbody>
-            @foreach (var stored in Aggregates.Aggregates)
+            @foreach (var stored in Aggregates.Snapshots)
             {
                 <tr>
                     <td><code>@stored.StreamId</code></td>
@@ -343,10 +343,16 @@ else
     /// </summary>
     private IReadOnlyList<Type> StreamTypes => Types.Current.StreamedStreamIds;
 
-    /// <summary>The aggregates they declare, which is what the second offers.</summary>
-    private IReadOnlyList<Type> AggregateTypes => Types.Current.StreamedAggregates;
+    /// <summary>
+    /// Which of the two streamed models this page lists, which is what tells the reader shared with
+    /// the projections page which of the store's two snapshot tables holds this page's rows.
+    /// </summary>
+    private const StreamedModelKind Kind = StreamedModelKind.Aggregate;
 
-    private StoredAggregates Aggregates { get; set; } =
+    /// <summary>The aggregates they declare, which is what the second offers.</summary>
+    private IReadOnlyList<Type> AggregateTypes => Types.Current.Streamed(Kind);
+
+    private StoredStreamSnapshots Aggregates { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
     private InstanceSort Sort { get; set; } = InstanceSort.Updated;
@@ -551,13 +557,14 @@ else
         // of one stream, with the whole store.
         if (Choice.ShowsNothing || Stream.ShowsNothing)
         {
-            Aggregates = new StoredAggregates([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+            Aggregates = new StoredStreamSnapshots([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
             return;
         }
 
-        Aggregates = await StreamedAggregates.Page(
+        Aggregates = await StreamedSnapshots.Page(
             StoreContext,
+            Kind,
             Stream.Pattern,
             Choice.Key,
             Text,
