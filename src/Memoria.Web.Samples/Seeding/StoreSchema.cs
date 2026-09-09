@@ -16,9 +16,11 @@ namespace Memoria.Web.Samples.Seeding;
 /// that are missing are created.
 /// </para>
 /// <para>
-/// The check is a PostgreSQL one, which is as portable as this project needs to be — it is wired to
-/// Npgsql and nothing else. The published alternative is to run the install scripts under
-/// <c>scripts/install</c> by hand; see <c>docs/guides/install-the-store-schema.md</c>.
+/// Whether the database exists and how its tables are created is the provider's own business, so
+/// those follow whichever engine the connection string named without anything here saying which.
+/// Asking whether one table exists is the only step with no provider-neutral form, and
+/// <see cref="HasTable"/> is where that is handled. The published alternative is to run the install
+/// scripts under <c>scripts/install</c> by hand; see <c>docs/guides/install-the-store-schema.md</c>.
 /// </para>
 /// </remarks>
 public static class StoreSchema
@@ -54,12 +56,38 @@ public static class StoreSchema
         return true;
     }
 
+    /// <summary>
+    /// Whether the database holds a table of this name.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Two questions rather than three. PostgreSQL and SQL Server both answer from the standard's
+    /// <c>INFORMATION_SCHEMA</c>, so they share one; SQLite has no such thing and keeps its schema in
+    /// a table of its own. Neither is composed by hand from the provider's name — the name is asked
+    /// for what it can answer, which leaves any fourth provider on the branch most likely to work.
+    /// </para>
+    /// <para>
+    /// Counted rather than asked as a yes or no, because only PostgreSQL has a boolean to answer
+    /// with, and the count is cast because <c>COUNT</c> is not the same width on all three. Matched
+    /// on the name alone: the schema it sits in is not asked about, which would need the name each
+    /// provider gives its default one, and this is a database the sample seeder created and nothing
+    /// else writes to.
+    /// </para>
+    /// </remarks>
     private static async Task<bool> HasTable(DbContext context, string table)
     {
-        var qualified = $"public.\"{table}\"";
+        var found = context.Database.IsSqlite()
+            ? context.Database.SqlQuery<int>(
+                $"""
+                 SELECT CAST(COUNT(*) AS int) AS "Value" FROM sqlite_master
+                 WHERE type = 'table' AND name = {table}
+                 """)
+            : context.Database.SqlQuery<int>(
+                $"""
+                 SELECT CAST(COUNT(*) AS int) AS "Value" FROM INFORMATION_SCHEMA.TABLES
+                 WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = {table}
+                 """);
 
-        return await context.Database
-            .SqlQuery<bool>($"SELECT to_regclass({qualified}) IS NOT NULL AS \"Value\"")
-            .SingleAsync();
+        return await found.SingleAsync() > 0;
     }
 }
