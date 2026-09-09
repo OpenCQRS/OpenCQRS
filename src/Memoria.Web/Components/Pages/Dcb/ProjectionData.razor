@@ -75,9 +75,12 @@ else
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
         <button type="submit" class="quiet">Filter</button>
-        @if (IsFiltered)
+        @if (!Choice.IsAllModels || !Choice.IsAllIdentifiers || IsFiltered)
         {
-            <a href="@Link(Sort, Descending, 1, clearTag: true)">Clear</a>
+            @* One way back to everything stored, because that is the one thing a reader wants from
+               here: dropping the projection but keeping the identifier or the text would be a second
+               narrowing to undo. *@
+            <a href="@Link(Sort, Descending, 1, clearTag: true, clearModel: true)">Clear</a>
         }
     </form>
 
@@ -431,8 +434,11 @@ else
     /// <param name="page">The page to land on, from one.</param>
     /// <param name="clearTag">Whether to drop the text the boundary had to contain.</param>
     /// <param name="clearIdentifier">Whether to widen back to every identifier.</param>
+    /// <param name="clearModel">Whether to widen back to every projection, which takes the
+    /// identifier with it: one addresses the projection it belongs to, so an identifier left behind
+    /// would name nothing.</param>
     /// <remarks>
-    /// The two narrowings are named only when they are made. All is what the page opens as, so a
+    /// The three narrowings are named only when they are made. All is what the page opens as, so a
     /// link to an unnarrowed list is a link with nothing to say about them.
     /// </remarks>
     private string Link(
@@ -440,19 +446,20 @@ else
         bool descending,
         int page,
         bool clearTag = false,
-        bool clearIdentifier = false)
+        bool clearIdentifier = false,
+        bool clearModel = false)
     {
         var link = $"dcb/projections/data?sort={sort.ToString().ToLowerInvariant()}" +
                    $"&dir={(descending ? "desc" : "asc")}" +
                    $"&size={PageSize}" +
                    $"&page={page}";
 
-        if (Choice.Model is { } model)
+        if (!clearModel && Choice.Model is { } model)
         {
             link += $"&type={Uri.EscapeDataString(model.FullName ?? model.Name)}";
         }
 
-        if (!clearIdentifier && Choice.Identifier is { } identifier)
+        if (!clearModel && !clearIdentifier && Choice.Identifier is { } identifier)
         {
             link += $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}";
         }
