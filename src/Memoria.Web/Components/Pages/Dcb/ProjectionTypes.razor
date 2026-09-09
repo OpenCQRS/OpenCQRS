@@ -1,4 +1,4 @@
-@page "/dcb/projections"
+@page "/dcb/projections/types"
 @using Memoria.Web.Extensibility
 @inject DomainTypeRegistry Types
 
@@ -14,7 +14,7 @@
 
 <h1>Projections</h1>
 
-@if (ProjectionTypes.Count == 0)
+@if (Projections.Count == 0)
 {
     <p class="lede">
         No DCB projections are registered. Upload a zip of assemblies on the
@@ -26,7 +26,7 @@ else
     <div class="panels">
         <nav class="panel panel-index" aria-label="Projections">
             <ul>
-                @foreach (var projection in ProjectionTypes)
+                @foreach (var projection in Projections)
                 {
                     @* The whole group is marked as the current one, not just its first row, so an
                        open row and the identifiers under it read as one selected block. *@
@@ -339,7 +339,7 @@ else
         _ => InfoTab,
     };
 
-    private IReadOnlyList<Type> ProjectionTypes => Types.Current.DcbProjections;
+    private IReadOnlyList<Type> Projections => Types.Current.DcbProjections;
 
     /// <summary>
     /// The projection being shown: the one asked for, or the first in the list. Arriving with
@@ -347,7 +347,7 @@ else
     /// decide before something can be read.
     /// </summary>
     private DomainTypeDescription? Selected =>
-        (DomainTypeDescriber.Select(ProjectionTypes, SelectedName) ?? ProjectionTypes.FirstOrDefault()) is { } type
+        (DomainTypeDescriber.Select(Projections, SelectedName) ?? Projections.FirstOrDefault()) is { } type
             ? DomainTypeDescriber.Describe(type, Types.Current.DcbProjectionIds)
             : null;
 
@@ -404,14 +404,14 @@ else
     /// A tab of the projection already chosen.
     /// </summary>
     private string TabLink(string tab) =>
-        $"dcb/projections?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}&tab={tab}";
+        $"dcb/projections/types?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}&tab={tab}";
 
     /// <summary>
     /// Another projection, read the same way as the one being left: the tab travels with the
     /// choice, so a facet compared across two types is one click each rather than two.
     /// </summary>
     private string Link(Type projection) =>
-        $"dcb/projections?type={Uri.EscapeDataString(projection.FullName ?? projection.Name)}&tab={Tab}";
+        $"dcb/projections/types?type={Uri.EscapeDataString(projection.FullName ?? projection.Name)}&tab={Tab}";
 
     private bool IsCurrent(Type projection) => projection == Selected?.Type;
 

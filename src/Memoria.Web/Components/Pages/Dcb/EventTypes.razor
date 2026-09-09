@@ -1,4 +1,4 @@
-@page "/dcb/events"
+@page "/dcb/events/types"
 @using Memoria.Web.Extensibility
 @inject DomainTypeRegistry Types
 
@@ -14,7 +14,7 @@
 
 <h1>Events</h1>
 
-@if (EventTypes.Count == 0)
+@if (Events.Count == 0)
 {
     <p class="lede">
         No DCB model applies any event. Upload a zip of assemblies on the
@@ -26,7 +26,7 @@ else
     <div class="panels">
         <nav class="panel panel-index" aria-label="Events">
             <ul>
-                @foreach (var @event in EventTypes)
+                @foreach (var @event in Events)
                 {
                     @* The whole group is marked as the current one, not just its first row, so an
                        open row and what is folded under it read as one selected block. *@
@@ -184,7 +184,7 @@ else
     /// nothing here folds would be a row leading nowhere. Which model applies which is read off
     /// their filters once, when the assemblies are.
     /// </remarks>
-    private IReadOnlyList<Type> EventTypes => Types.Current.DcbEvents;
+    private IReadOnlyList<Type> Events => Types.Current.DcbEvents;
 
     /// <summary>
     /// The event being shown: the one asked for, or the first in the list. Arriving with nothing
@@ -192,7 +192,7 @@ else
     /// something can be read.
     /// </summary>
     private Type? Selected =>
-        DomainTypeDescriber.Select(EventTypes, SelectedName) ?? EventTypes.FirstOrDefault();
+        DomainTypeDescriber.Select(Events, SelectedName) ?? Events.FirstOrDefault();
 
     /// <summary>
     /// What the selected event is bound as, read straight off the type.
@@ -219,7 +219,7 @@ else
     /// a facet compared across two types is one click each rather than two.
     /// </summary>
     private string Link(Type @event) =>
-        $"dcb/events?type={Uri.EscapeDataString(@event.FullName ?? @event.Name)}&tab={Tab}";
+        $"dcb/events/types?type={Uri.EscapeDataString(@event.FullName ?? @event.Name)}&tab={Tab}";
 
     /// <summary>
     /// Through to what has been stored of one event type. The type is passed in rather than taken
@@ -232,7 +232,7 @@ else
     /// A tab of the event already chosen.
     /// </summary>
     private string TabLink(string tab) =>
-        $"dcb/events?type={Uri.EscapeDataString(Selected?.FullName ?? string.Empty)}&tab={tab}";
+        $"dcb/events/types?type={Uri.EscapeDataString(Selected?.FullName ?? string.Empty)}&tab={tab}";
 
     private bool IsCurrent(Type @event) => @event == Selected;
 

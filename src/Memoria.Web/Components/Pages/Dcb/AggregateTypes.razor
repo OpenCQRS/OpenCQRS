@@ -1,4 +1,4 @@
-@page "/dcb/aggregates"
+@page "/dcb/aggregates/types"
 @using Memoria.Web.Extensibility
 @inject DomainTypeRegistry Types
 
@@ -14,7 +14,7 @@
 
 <h1>Aggregates</h1>
 
-@if (AggregateTypes.Count == 0)
+@if (Aggregates.Count == 0)
 {
     <p class="lede">
         No DCB aggregates are registered. Upload a zip of assemblies on the
@@ -26,7 +26,7 @@ else
     <div class="panels">
         <nav class="panel panel-index" aria-label="Aggregates">
             <ul>
-                @foreach (var aggregate in AggregateTypes)
+                @foreach (var aggregate in Aggregates)
                 {
                     @* The whole group is marked as the current one, not just its first row, so an
                        open row and the identifiers under it read as one selected block. *@
@@ -337,7 +337,7 @@ else
         _ => InfoTab,
     };
 
-    private IReadOnlyList<Type> AggregateTypes => Types.Current.DcbAggregates;
+    private IReadOnlyList<Type> Aggregates => Types.Current.DcbAggregates;
 
     /// <summary>
     /// The aggregate being shown: the one asked for, or the first in the list. Arriving with nothing
@@ -345,7 +345,7 @@ else
     /// something can be read.
     /// </summary>
     private DomainTypeDescription? Selected =>
-        (DomainTypeDescriber.Select(AggregateTypes, SelectedName) ?? AggregateTypes.FirstOrDefault()) is { } type
+        (DomainTypeDescriber.Select(Aggregates, SelectedName) ?? Aggregates.FirstOrDefault()) is { } type
             ? DomainTypeDescriber.Describe(type, Types.Current.DcbAggregateIds)
             : null;
 
@@ -402,14 +402,14 @@ else
     /// A tab of the aggregate already chosen.
     /// </summary>
     private string TabLink(string tab) =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}&tab={tab}";
+        $"dcb/aggregates/types?type={Uri.EscapeDataString(Selected?.Type.FullName ?? string.Empty)}&tab={tab}";
 
     /// <summary>
     /// Another aggregate, read the same way as the one being left: the tab travels with the choice,
     /// so a facet compared across two types is one click each rather than two.
     /// </summary>
     private string Link(Type aggregate) =>
-        $"dcb/aggregates?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}&tab={Tab}";
+        $"dcb/aggregates/types?type={Uri.EscapeDataString(aggregate.FullName ?? aggregate.Name)}&tab={Tab}";
 
     private bool IsCurrent(Type aggregate) => aggregate == Selected?.Type;
 
