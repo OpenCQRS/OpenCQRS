@@ -11,7 +11,7 @@ public static class DomainTypeScanner
 {
     /// <summary>
     /// Scans the supplied assemblies for both models' aggregates, projections, their identifiers,
-    /// and events.
+    /// the streams the streamed model is folded from, and events.
     /// </summary>
     /// <param name="assemblies">The assemblies to read.</param>
     /// <returns>What was found, plus a line for every assembly that could not be read.</returns>
@@ -53,6 +53,7 @@ public static class DomainTypeScanner
 
         return new DomainTypeCatalogue
         {
+            StreamedStreamIds = Implementing<IStreamId>(concrete),
             StreamedAggregates = streamedAggregates,
             StreamedAggregateIds = Implementing<IAggregateId>(concrete),
             StreamedProjections = streamedProjections,

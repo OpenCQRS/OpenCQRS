@@ -59,6 +59,15 @@ public record SampleCarriedEvent(
     SampleState State,
     DateTimeOffset OccurredOn) : IEvent;
 
+/// <summary>
+/// A stream the streamed models are folded from. It carries no attribute and implements nothing
+/// the aggregate and projection identifiers implement, so finding it is the scanner's own work.
+/// </summary>
+public class SampleStreamId(string id) : IStreamId
+{
+    public string Id { get; } = id;
+}
+
 [AggregateType("SampleAggregate", 1)]
 public class SampleAggregate : AggregateRoot
 {

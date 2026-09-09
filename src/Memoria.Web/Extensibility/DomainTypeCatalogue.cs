@@ -13,6 +13,16 @@ public sealed record DomainTypeCatalogue
     /// <summary>An empty catalogue, for before anything has been uploaded.</summary>
     public static readonly DomainTypeCatalogue Empty = new();
 
+    /// <summary>
+    /// The streams the streamed models are folded from.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from <see cref="StreamedAggregateIds"/> because a stream is not an aggregate's
+    /// identifier: several aggregates may share one stream, so the two are separate contracts and
+    /// a type declaring one of them says nothing about the other.
+    /// </remarks>
+    public IReadOnlyList<Type> StreamedStreamIds { get; init; } = [];
+
     public IReadOnlyList<Type> StreamedAggregates { get; init; } = [];
 
     public IReadOnlyList<Type> StreamedAggregateIds { get; init; } = [];
@@ -65,6 +75,7 @@ public sealed record DomainTypeCatalogue
     /// event two or three times.
     /// </remarks>
     public int Count =>
+        StreamedStreamIds.Count +
         StreamedAggregates.Count + StreamedAggregateIds.Count +
         StreamedProjections.Count + StreamedProjectionIds.Count +
         DcbAggregates.Count + DcbAggregateIds.Count +

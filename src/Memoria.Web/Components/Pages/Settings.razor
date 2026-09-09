@@ -277,7 +277,12 @@ else
        set: one set is bound and either model may append from it, but what a column is read for is
        what its own models fold. An event both apply is counted in both, and the two columns
        therefore need not add up to the events found. *@
+    @* Streams come first because everything under them is read out of one: the streamed model
+       addresses its events by stream, and the aggregates and projections below are folded from
+       what a stream holds. DCB has no counterpart — a boundary is a query over tags, not a place —
+       so the two columns start on different rows and are read down rather than across. *@
     private IReadOnlyList<(string Label, int Count)> StreamedCounts => [
+        ("Streams", Catalogue.StreamedStreamIds.Count),
         ("Events", Catalogue.StreamedEvents.Count),
         ("Aggregates", Catalogue.StreamedAggregates.Count),
         ("Aggregate ids", Catalogue.StreamedAggregateIds.Count),

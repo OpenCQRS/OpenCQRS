@@ -23,6 +23,22 @@ public class DomainTypeScannerTests
     }
 
     [Fact]
+    public void Finds_streamed_streams()
+    {
+        Scan().StreamedStreamIds.Should().Contain(typeof(SampleStreamId));
+    }
+
+    /// <summary>
+    /// A stream is not an aggregate's identifier: several aggregates may be folded from one stream,
+    /// so the two are separate contracts and the page that counts them counts them apart.
+    /// </summary>
+    [Fact]
+    public void Does_not_report_an_aggregate_id_as_a_stream()
+    {
+        Scan().StreamedStreamIds.Should().NotContain(typeof(SampleAggregateId));
+    }
+
+    [Fact]
     public void Finds_streamed_projections()
     {
         Scan().StreamedProjections.Should().Contain(typeof(SampleProjection));
