@@ -19,11 +19,6 @@
             <div class="submenu">
                 <NavLink href="streamed" Match="NavLinkMatch.All">Overview</NavLink>
 
-                @* One link rather than a group: a stream is declared and nothing else, so there is
-                   no pair of pages to choose between. It sits above the three because the events
-                   they fold are addressed by it. *@
-                <NavLink href="streamed/streams" Match="NavLinkMatch.All">Streams</NavLink>
-
                 <div class="submenu-group">
                     <span class="submenu-label">Events</span>
                     <NavLink href="streamed/events" Match="NavLinkMatch.All">Overview</NavLink>
@@ -44,6 +39,11 @@
                     <NavLink href="streamed/projections/types" Match="NavLinkMatch.All">Types</NavLink>
                     <NavLink href="streamed/projections/data" Match="NavLinkMatch.All">Data</NavLink>
                 </div>
+
+                @* One link rather than a group: a stream is declared and nothing else, so there is
+                   no pair of pages to choose between. It follows the three because it is the one
+                   thing here the DCB menu beside it has no answer to. *@
+                <NavLink href="streamed/streams" Match="NavLinkMatch.All">Streams</NavLink>
             </div>
         </details>
 

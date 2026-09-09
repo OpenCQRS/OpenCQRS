@@ -18,15 +18,6 @@
                     <span class="detail">What is registered under the streamed model.</span>
                 </a>
             </li>
-            @* One link, not two: a stream is declared and nothing else is stored of it, so there is
-               nothing for a data page to hold. It comes before the three because they are all read
-               out of one. *@
-            <li>
-                <a href="streamed/streams">
-                    <span class="name">Streams</span>
-                    <span class="detail">The streams the events are held in.</span>
-                </a>
-            </li>
             @* Each concern is two pages, not one: the types the model declares, and what has been
                stored of them. Named here rather than left to be found, because which of the two you
                want is the first thing you know and the last thing a single link would ask. *@
@@ -59,6 +50,15 @@
                         <a href="streamed/projections/data">Data</a>
                     </span>
                 </div>
+            </li>
+            @* One link, not two: a stream is declared and nothing else is stored of it, so there is
+               nothing for a data page to hold. It comes after the three because the column beside
+               it has nothing to set against it — a DCB boundary is a query over tags, not a place. *@
+            <li>
+                <a href="streamed/streams">
+                    <span class="name">Streams</span>
+                    <span class="detail">The streams the events are held in.</span>
+                </a>
             </li>
         </ul>
     </section>
