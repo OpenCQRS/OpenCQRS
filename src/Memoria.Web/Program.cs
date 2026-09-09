@@ -46,6 +46,11 @@ builder.Services.AddScoped(serviceProvider =>
 builder.Services.AddDbContext<StreamedStoreDbContext>(options => database.Apply(options));
 builder.Services.AddDbContext<DcbStoreDbContext>(options => database.Apply(options));
 
+// The streamed pages read through this rather than through a context of their own, so that a store
+// which is not relational can answer the same two questions. Every provider registered above is,
+// so every provider registered above is served by the Entity Framework Core reader.
+builder.Services.AddScoped<IStreamedReads, EfStreamedReads>();
+
 builder.Services.AddMemoria(typeof(Program));
 
 // The two event sourcing models side by side. Each store call replaces the default no-op service

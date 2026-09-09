@@ -3,7 +3,7 @@
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
-@inject StreamedStoreDbContext StoreContext
+@inject IStreamedReads Store
 @inject NavigationManager Navigation
 
 <PageTitle>Streamed Events @Heading</PageTitle>
@@ -483,14 +483,13 @@ else
             return;
         }
 
-        Events = await StreamedEvents.Page(
-            StoreContext,
+        Events = await Store.Events(new StreamedEventFilter(
             Stream.Pattern,
             Choice.Key,
             Text,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
-            PageSize);
+            PageSize));
     }
 
     /// <summary>

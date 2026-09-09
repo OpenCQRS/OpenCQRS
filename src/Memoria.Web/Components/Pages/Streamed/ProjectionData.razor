@@ -3,7 +3,7 @@
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
-@inject StreamedStoreDbContext StoreContext
+@inject IStreamedReads Store
 @inject NavigationManager Navigation
 
 <PageTitle>Streamed Projections @Heading</PageTitle>
@@ -557,8 +557,7 @@ else
             return;
         }
 
-        Projections = await StreamedSnapshots.Page(
-            StoreContext,
+        Projections = await Store.Snapshots(new StreamedSnapshotFilter(
             Kind,
             Stream.Pattern,
             Choice.Key,
@@ -567,7 +566,7 @@ else
             Sort,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
-            PageSize);
+            PageSize));
     }
 
 }
