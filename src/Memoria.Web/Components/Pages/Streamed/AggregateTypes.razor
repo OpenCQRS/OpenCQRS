@@ -1,6 +1,6 @@
 @page "/streamed/aggregates/types"
 
-<PageTitle>Streamed Aggregates Types</PageTitle>
+<PageTitle>Streamed Aggregates @Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -12,4 +12,17 @@
     <span aria-current="page">Types</span>
 </nav>
 
+<h1>@Heading</h1>
+
 <p><em>TBD</em></p>
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section and the group in front of it, because a tab is read away
+    /// from the breadcrumb that says which of them this page sits under.
+    /// </summary>
+    private const string Heading = "Types";
+
+}

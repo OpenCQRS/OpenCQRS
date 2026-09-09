@@ -1,6 +1,6 @@
 @page "/streamed/events"
 
-<PageTitle>Streamed Events</PageTitle>
+<PageTitle>Streamed @Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -10,7 +10,10 @@
     <span aria-current="page">Events</span>
 </nav>
 
-<h1>Events</h1>
+<h1>@Heading</h1>
+<p class="lede">
+    The events the streamed model can apply, and what has been stored of them.
+</p>
 
 <ul class="sections">
     <li>
@@ -26,3 +29,14 @@
         </a>
     </li>
 </ul>
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Events";
+
+}

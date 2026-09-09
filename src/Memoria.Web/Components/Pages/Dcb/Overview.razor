@@ -2,7 +2,7 @@
 @using Memoria.Web.Extensibility
 @inject DomainTypeRegistry Types
 
-<PageTitle>DCB Overview</PageTitle>
+<PageTitle>DCB @Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -10,10 +10,10 @@
     <span aria-current="page">DCB</span>
 </nav>
 
-<h1>Dynamic consistency boundaries</h1>
+<h1>@Heading</h1>
 <p class="lede">
-    The types uploaded through <a href="settings">settings</a> that belong to the DCB model, and
-    what they are addressed by.
+    The types uploaded through <a href="settings">settings</a> that belong to the dynamic
+    consistency boundary model, and what they are addressed by.
 </p>
 
 @* The counts belong to the types the model declares, and stay on the group rather than on either
@@ -66,6 +66,14 @@
 }
 
 @code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is. What DCB stands for is spelled out in the line
+    /// under the heading rather than in the heading itself.
+    /// </summary>
+    private const string Heading = "Overview";
 
     private DomainTypeCatalogue Catalogue => Types.Current;
 

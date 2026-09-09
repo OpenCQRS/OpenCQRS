@@ -7,7 +7,7 @@
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@(Aggregate is null ? "Aggregate" : DomainTypeDescriber.LabelOf(Aggregate)) @Title</PageTitle>
+<PageTitle>@Heading @Title</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -30,7 +30,7 @@
 
 @if (Aggregate is null || Identifier is null)
 {
-    <h1>Aggregate</h1>
+    <h1>@Heading</h1>
     <p class="alert" role="alert">
         That aggregate and identifier are not among the registered types. They may have been
         replaced by a later upload — start again from <a href="dcb/aggregates/types">aggregates</a>.
@@ -40,7 +40,7 @@ else
 {
     @* Named as every list here names a type: what it is bound as, and the version of that
        binding. Two versions of one name are two aggregates, and the heading has to say which. *@
-    <h1>@DomainTypeDescriber.LabelOf(Aggregate)</h1>
+    <h1>@Heading</h1>
     @* Not "the boundary ProductId" any more: the boundary is on the line below, and an identifier
        is what resolves to one rather than being one. *@
     <p class="lede">The snapshot stored under <code>@Identifier.Name</code> carries.</p>
@@ -641,6 +641,14 @@ else
     /// </summary>
     private string FoldLink =>
         DetailLink(EventsTab, Descending, Events.Page, toTable: true, open: !PayloadsOpen);
+
+    /// <summary>
+    /// What the page is, for the heading and the title. Unlike the pages that list, this one is
+    /// about one stored model, so the heading is the name of that model rather than the name of a
+    /// section — and the bare word when the address names nothing that is registered.
+    /// </summary>
+    private string Heading =>
+        Aggregate is null ? "Aggregate" : DomainTypeDescriber.LabelOf(Aggregate);
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))

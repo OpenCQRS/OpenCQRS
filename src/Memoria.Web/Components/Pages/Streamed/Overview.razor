@@ -1,6 +1,6 @@
 @page "/streamed"
 
-<PageTitle>Streamed Overview</PageTitle>
+<PageTitle>Streamed @Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -8,4 +8,17 @@
     <span aria-current="page">Streamed</span>
 </nav>
 
+<h1>@Heading</h1>
+
 <p><em>TBD</em></p>
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Overview";
+
+}

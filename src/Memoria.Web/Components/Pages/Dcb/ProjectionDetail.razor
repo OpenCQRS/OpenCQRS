@@ -7,7 +7,7 @@
 @inject IDcbDbContext StoreContext
 @inject NavigationManager Navigation
 
-<PageTitle>@(Projection is null ? "Projection" : DomainTypeDescriber.LabelOf(Projection)) @Title</PageTitle>
+<PageTitle>@Heading @Title</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -30,7 +30,7 @@
 
 @if (Projection is null || Identifier is null)
 {
-    <h1>Projection</h1>
+    <h1>@Heading</h1>
     <p class="alert" role="alert">
         That projection and identifier are not among the registered types. They may have been
         replaced by a later upload — start again from <a href="dcb/projections/types">projections</a>.
@@ -40,7 +40,7 @@ else
 {
     @* Named as every list here names a type: what it is bound as, and the version of that
        binding. Two versions of one name are two projections, and the heading has to say which. *@
-    <h1>@DomainTypeDescriber.LabelOf(Projection)</h1>
+    <h1>@Heading</h1>
     <p class="lede">The snapshot stored under <code>@Identifier.Name</code> carries.</p>
 
     @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
@@ -640,6 +640,14 @@ else
     /// </summary>
     private string FoldLink =>
         DetailLink(EventsTab, Descending, Events.Page, toTable: true, open: !PayloadsOpen);
+
+    /// <summary>
+    /// What the page is, for the heading and the title. Unlike the pages that list, this one is
+    /// about one stored model, so the heading is the name of that model rather than the name of a
+    /// section — and the bare word when the address names nothing that is registered.
+    /// </summary>
+    private string Heading =>
+        Projection is null ? "Projection" : DomainTypeDescriber.LabelOf(Projection);
 
     private string Title => string.Join(" · ",
         Parameters.Select(parameter => Values.GetValueOrDefault(parameter.Name))

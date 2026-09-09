@@ -2,7 +2,7 @@
 @using Memoria.Web.Extensibility
 @inject DomainTypeRegistry Types
 
-<PageTitle>Streams</PageTitle>
+<PageTitle>Streamed @Heading</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="">Home</a>
@@ -12,7 +12,7 @@
     <span aria-current="page">Streams</span>
 </nav>
 
-<h1>Streams</h1>
+<h1>@Heading</h1>
 
 @if (StreamTypes.Count == 0)
 {
@@ -166,6 +166,13 @@ else
 }
 
 @code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Streams";
 
     [SupplyParameterFromQuery(Name = "type")]
     private string? SelectedName { get; set; }
