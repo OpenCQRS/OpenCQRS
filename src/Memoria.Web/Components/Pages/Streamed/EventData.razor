@@ -75,12 +75,15 @@ else
             }
         </select>
 
-        @* Beside the two rather than under them, because all three narrow the same list: a stream is
-           where the log put a row, a type is what it wrote the row under, and this is what the row
-           itself carries. *@
-        <label class="visually-hidden" for="payload">Filter by payload</label>
-        <input id="payload" type="search" name="payload" value="@Payload"
-               placeholder="Filter by payload" autocomplete="off"/>
+        @* Beside the two rather than under them, because all three narrow the same list: a stream
+           type is the kind of stream the log put a row in, an event type is what it wrote the row
+           under, and this is what the row itself says — its stream id and its payload, either of
+           which matching is enough. One box for the two because they are one question: a reader
+           typing an order reference means the payload and one typing an id from the first column
+           means the stream, and nothing is served by making them say which. *@
+        <label class="visually-hidden" for="text">Filter by stream or payload</label>
+        <input id="text" type="search" name="text" value="@Text"
+               placeholder="Filter by stream or payload" autocomplete="off"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
         @if (PayloadsAsked is not null)
@@ -93,7 +96,7 @@ else
             @* One way back to the whole log, because that is the one thing a reader wants from
                here: dropping one narrowing and keeping the other two would leave them still to
                undo. *@
-            <a href="@Link(Descending, 1, clearStream: true, clearType: true, clearPayload: true)">Clear</a>
+            <a href="@Link(Descending, 1, clearStream: true, clearType: true, clearText: true)">Clear</a>
         }
     </form>
 
@@ -129,7 +132,7 @@ else
                of them has none carrying this, or none of them in this stream. *@
             @if (IsFiltered)
             {
-                <text>No events carry a payload matching &ldquo;@Payload&rdquo;.</text>
+                <text>No stream id or payload matches &ldquo;@Text&rdquo;.</text>
             }
             else if (Choice.IsAll && Stream.IsAll)
             {
@@ -285,7 +288,7 @@ else
                         }
                         @if (IsFiltered)
                         {
-                            <input type="hidden" name="payload" value="@Payload"/>
+                            <input type="hidden" name="text" value="@Text"/>
                         }
                         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                         <input type="hidden" name="size" value="@PageSize"/>
@@ -333,7 +336,7 @@ else
                 }
                 @if (IsFiltered)
                 {
-                    <input type="hidden" name="payload" value="@Payload"/>
+                    <input type="hidden" name="text" value="@Text"/>
                 }
                 <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                 @if (PayloadsAsked is not null)
@@ -380,11 +383,12 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
-    /// The text a row's payload has to carry, or null when the log is read whole.
+    /// The text a row has to carry, in its stream id or in its payload, or null when the log is
+    /// read whole.
     /// </summary>
-    private string? Payload { get; set; }
+    private string? Text { get; set; }
 
-    private bool IsFiltered => !string.IsNullOrWhiteSpace(Payload);
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
 
     /// <summary>
     /// What the address says about the payloads, when it says anything, and null when it does not.
@@ -402,10 +406,11 @@ else
     /// link and every form here: paging or narrowing with the payloads out should not quietly shut
     /// them.
     /// <para>
-    /// Filtering turns the default over, because the text a row matched on is inside the fold: a
-    /// filtered page that opened closed would be a search whose results are all hidden. Saying so
-    /// in the address still wins either way, so Collapse all works on a filtered page as it does
-    /// anywhere else.
+    /// Filtering turns the default over, because the text a row matched on may be inside the fold:
+    /// a filtered page that opened closed would be a search whose results are hidden. A row that
+    /// matched on its stream id shows that in the first column either way, and opening it costs
+    /// nothing. Saying so in the address still wins, so Collapse all works on a filtered page as it
+    /// does anywhere else.
     /// </para>
     /// </remarks>
     private bool PayloadsOpen => PayloadsAsked ?? IsFiltered;
@@ -481,7 +486,7 @@ else
     /// <param name="page">The page to land on, from one.</param>
     /// <param name="clearStream">Whether to widen back to every stream.</param>
     /// <param name="clearType">Whether to widen back to every type.</param>
-    /// <param name="clearPayload">Whether to drop the text a payload had to carry.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
     /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
     /// <remarks>
     /// The three narrowings are named only when they are made, and the payloads only when the
@@ -494,7 +499,7 @@ else
         int page,
         bool clearStream = false,
         bool clearType = false,
-        bool clearPayload = false,
+        bool clearText = false,
         bool? open = null)
     {
         var link = $"streamed/events/data?dir={(descending ? "desc" : "asc")}" +
@@ -516,9 +521,9 @@ else
             link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
         }
 
-        return clearPayload || !IsFiltered
+        return clearText || !IsFiltered
             ? link
-            : $"{link}&payload={Uri.EscapeDataString(Payload!)}";
+            : $"{link}&text={Uri.EscapeDataString(Text!)}";
     }
 
     protected override async Task OnParametersSetAsync()
@@ -530,7 +535,7 @@ else
 
         Stream = StreamChoice.Of(StreamTypes, Value("stream"));
         Choice = EventChoice.Of(EventTypes, Value("type"));
-        Payload = Value("payload");
+        Text = Value("text");
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
 
@@ -557,7 +562,7 @@ else
             StoreContext,
             Stream.Pattern,
             Choice.Key,
-            Payload,
+            Text,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
             PageSize);

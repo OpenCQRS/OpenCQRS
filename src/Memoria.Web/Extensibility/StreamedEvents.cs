@@ -26,7 +26,9 @@ public static class StreamedEvents
     /// that produced it — so narrowing to a type is matching the shape of what it writes.
     /// </param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
-    /// <param name="payload">Text the stored payload has to carry, or null for any payload.</param>
+    /// <param name="text">
+    /// Text the row has to carry, in its stream id or in its payload, or null for any row.
+    /// </param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -44,12 +46,20 @@ public static class StreamedEvents
     /// it: the log is read here to find out what was appended, and a reader who knows only that an
     /// order carried a certain reference should not have to know which property holds it.
     /// </para>
+    /// <para>
+    /// The stream id is matched by the same text, which is why one box does for both. The stream
+    /// type narrows to a kind of stream — every customer — and what a reader wants next is one of
+    /// them, whose id they have in front of them in the first column; a second control to type it
+    /// into would be a second way of asking the one question this box already asks. Either side
+    /// matching is enough, because a reader typing an order reference means the payload and one
+    /// typing <c>c-8d89</c> means the stream, and nothing is served by making them say which.
+    /// </para>
     /// </remarks>
     public static async Task<StoredStreamEvents> Page(
         StreamedStoreDbContext context,
         string? streamPattern,
         string? eventType,
-        string? payload,
+        string? text,
         bool descending,
         int page,
         int size,
@@ -72,16 +82,19 @@ public static class StreamedEvents
                 stored = stored.Where(appended => appended.EventType == eventType);
             }
 
-            if (!string.IsNullOrWhiteSpace(payload))
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 // Lowered on both sides rather than with a provider's case-insensitive operator, so
                 // this reads the same against SQL Server as it does against Postgres. Contains
-                // rather than Like: this text is typed against a payload, where % and _ are
-                // ordinary characters someone may well be looking for, and Contains leaves the
-                // provider to escape them rather than reading them as wildcards.
-                var wanted = payload.Trim().ToLower();
+                // rather than the Like the stream pattern is matched by: this text was typed by
+                // someone, and % and _ are ordinary characters they may well be looking for, so
+                // Contains leaves the provider to escape them rather than reading them as
+                // wildcards.
+                var wanted = text.Trim().ToLower();
 
-                stored = stored.Where(appended => appended.Data.ToLower().Contains(wanted));
+                stored = stored.Where(appended =>
+                    appended.StreamId.ToLower().Contains(wanted) ||
+                    appended.Data.ToLower().Contains(wanted));
             }
 
             var total = await stored.CountAsync(cancellationToken);
