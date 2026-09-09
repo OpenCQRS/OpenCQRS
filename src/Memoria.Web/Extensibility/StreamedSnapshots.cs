@@ -1,4 +1,3 @@
-using Memoria.EventSourcing;
 using Memoria.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +9,9 @@ namespace Memoria.Web.Extensibility;
 /// </summary>
 /// <remarks>
 /// The companion to <see cref="StreamedEvents"/> and the same shape as it — narrowing, counting,
-/// ordering and paging are all the database's, and only the reading of the stored state is done
-/// here. What differs is what a row is: an event is one thing that happened and has one date, while
-/// a snapshot is what a model had folded to when it was last written, so it carries two dates, the
-/// version it reached and the sequence it had read up to.
+/// ordering and paging are all the database's. What differs is what a row is: an event is one thing
+/// that happened and has one date, while a snapshot is what a model had folded to when it was last
+/// written, so it carries two dates, the version it reached and the sequence it had read up to.
 /// <para>
 /// Aggregates and projections are read by one method because the store keeps them in two tables of
 /// the same columns: a snapshot of either is a model folded from a stream and written down, and the
@@ -21,8 +19,9 @@ namespace Memoria.Web.Extensibility;
 /// type. Both are answered by <see cref="StreamedModelKind"/>.
 /// </para>
 /// <para>
-/// Nothing is folded to draw a row. The state shown is the snapshot as it was stored, which is the
-/// only thing the store can answer without replaying the stream.
+/// Nothing is folded to draw a row, and the payload is not read at all: what the pages list is what
+/// the store says about a snapshot — where it came from, what addressed it, what it was folded into,
+/// how far it got and when — rather than what the snapshot holds.
 /// </para>
 /// </remarks>
 public static class StreamedSnapshots
@@ -44,13 +43,7 @@ public static class StreamedSnapshots
     /// addressed by and not the identifier that produced it.
     /// </param>
     /// <param name="text">
-    /// Text the row has to carry, in its stream id, its own id or — when
-    /// <paramref name="withState"/> says so — its stored state. Null for any row.
-    /// </param>
-    /// <param name="withState">
-    /// Whether the text is looked for in the stored state as well as in the two ids. A page that
-    /// does not show the state should not say it matched: the row would come back with nothing on it
-    /// carrying what was typed.
+    /// Text the row has to carry, in its stream id or its own id, or null for any row.
     /// </param>
     /// <param name="sort">Which of the two dates to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
@@ -70,7 +63,6 @@ public static class StreamedSnapshots
         string? modelType,
         string? identifierPattern,
         string? text,
-        bool withState,
         InstanceSort sort,
         bool descending,
         int page,
@@ -111,16 +103,12 @@ public static class StreamedSnapshots
 
                 // The id as well as the stream, which is the one thing a snapshot has that an event
                 // does not: it is addressed by an id of its own, and that is the column a reader is
-                // most likely to be reading off when they type. The state joins them only where a
-                // page shows it.
-                stored = withState
-                    ? stored.Where(snapshot =>
-                        snapshot.StreamId.ToLower().Contains(wanted) ||
-                        snapshot.StoreId.ToLower().Contains(wanted) ||
-                        snapshot.Data.ToLower().Contains(wanted))
-                    : stored.Where(snapshot =>
-                        snapshot.StreamId.ToLower().Contains(wanted) ||
-                        snapshot.StoreId.ToLower().Contains(wanted));
+                // most likely to be reading off when they type. The stored state is not looked in,
+                // because neither page shows it: a row matching on something invisible would come
+                // back with nothing on it carrying what was typed.
+                stored = stored.Where(snapshot =>
+                    snapshot.StreamId.ToLower().Contains(wanted) ||
+                    snapshot.StoreId.ToLower().Contains(wanted));
             }
 
             var total = await stored.CountAsync(cancellationToken);
@@ -140,7 +128,7 @@ public static class StreamedSnapshots
 
             var rows = await ordered.Skip(placed.Skip).Take(size).ToListAsync(cancellationToken);
 
-            var read = rows.Select(row => Read(kind, row)).ToList();
+            var read = rows.Select(Read).ToList();
 
             return new StoredStreamSnapshots(read, total, placed.Page, placed.TotalPages, Error: null);
         }
@@ -169,7 +157,6 @@ public static class StreamedSnapshots
                 Type = projection.ProjectionType,
                 Version = projection.Version,
                 Sequence = projection.LatestEventSequence,
-                Data = projection.Data,
                 Created = projection.CreatedDate,
                 Updated = projection.UpdatedDate
             })
@@ -180,7 +167,6 @@ public static class StreamedSnapshots
                 Type = aggregate.AggregateType,
                 Version = aggregate.Version,
                 Sequence = aggregate.LatestEventSequence,
-                Data = aggregate.Data,
                 Created = aggregate.CreatedDate,
                 Updated = aggregate.UpdatedDate
             });
@@ -198,45 +184,19 @@ public static class StreamedSnapshots
 
         public int Sequence { get; init; }
 
-        public string Data { get; init; } = string.Empty;
-
         public DateTimeOffset Created { get; init; }
 
         public DateTimeOffset Updated { get; init; }
     }
 
     /// <summary>
-    /// Reads one stored snapshot back into the state it holds.
+    /// One row as the pages read it. Nothing is deserialized: both list what the store says about a
+    /// snapshot — the stream it came from, the id it was addressed by, the type, the version and the
+    /// dates — and none of that needs the payload opened. A row whose type the uploaded assemblies
+    /// no longer describe is listed like any other, under the key the store wrote it as.
     /// </summary>
-    /// <remarks>
-    /// The same way <see cref="BoundaryEvents.Read"/> reads a payload, and for the same reason: a
-    /// row whose type the uploaded assemblies no longer describe is listed with what could not be
-    /// done to it, rather than dropped. The store's own facts about it — the stream, the id, the
-    /// version, the dates — hold whatever the types turn out to say.
-    /// </remarks>
-    private static StoredStreamSnapshot Read(StreamedModelKind kind, SnapshotRow row)
-    {
-        var stored = new StoredStreamSnapshot(row.StreamId, row.StoreId, row.Type, row.Version,
-            row.Sequence, row.Created, row.Updated, [], null);
-
-        if (!kind.Bindings().TryGetValue(row.Type, out var clrType))
-        {
-            return stored with { Error = $"No uploaded type is registered as {row.Type}." };
-        }
-
-        try
-        {
-            var model = DomainSerializer.Current.Deserialize(row.Data, clrType);
-
-            return model is null
-                ? stored with { Error = "The stored snapshot is empty." }
-                : stored with { State = DomainTypeDescriber.ReadState(model) };
-        }
-        catch (Exception exception)
-        {
-            return stored with { Error = exception.Message };
-        }
-    }
+    private static StoredStreamSnapshot Read(SnapshotRow row) =>
+        new(row.StreamId, row.StoreId, row.Type, row.Version, row.Sequence, row.Created, row.Updated);
 }
 
 /// <summary>One page of the streamed store's snapshots.</summary>
@@ -256,8 +216,6 @@ public sealed record StoredStreamSnapshots(
 /// <param name="Sequence">The sequence in its stream it had read up to.</param>
 /// <param name="Created">When it was first written.</param>
 /// <param name="Updated">When it was last written.</param>
-/// <param name="State">What the snapshot holds, or empty when that could not be read.</param>
-/// <param name="Error">Why it could not be read, or null when it was.</param>
 public sealed record StoredStreamSnapshot(
     string StreamId,
     string StoreId,
@@ -265,9 +223,7 @@ public sealed record StoredStreamSnapshot(
     int Version,
     int Sequence,
     DateTimeOffset Created,
-    DateTimeOffset Updated,
-    IReadOnlyList<DomainPropertyValue> State,
-    string? Error)
+    DateTimeOffset Updated)
 {
     /// <summary>
     /// Gets the id it is addressed by, without the type version the store keeps beside it.

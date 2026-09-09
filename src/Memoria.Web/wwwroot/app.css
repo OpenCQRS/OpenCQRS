@@ -863,55 +863,26 @@ h2:focus {
     width: 34%;
 }
 
-/* The snapshots table, declared the same way and for the same reason: a state that opens downwards
-   must not step the columns sideways as it does. Eight of them rather than six, because a snapshot
-   says more about itself than an event does — two counts and two dates where an event has one
-   number and one date — so each is narrower and the state keeps what is left. */
+/* The snapshots table, declared the same way the log's is and for a different reason: nothing here
+   opens, so the columns are declared to keep the two pages that use it — aggregates and projections
+   — reading identically however wide or narrow the ids in them happen to be. What a snapshot says
+   about itself is seven roughly equal facts, so the width is divided roughly equally. */
 .grid.snapshots {
     table-layout: fixed;
 }
 
-    .grid.snapshots .col-stream {
-        width: 13%;
+    .grid.snapshots .col-stream,
+    .grid.snapshots .col-id,
+    .grid.snapshots .col-type,
+    .grid.snapshots .col-identifier {
+        width: 17%;
     }
 
-    .grid.snapshots .col-id {
-        width: 11%;
-    }
-
-    .grid.snapshots .col-type {
-        width: 13%;
-    }
-
-    .grid.snapshots .col-version,
-    .grid.snapshots .col-sequence {
+    .grid.snapshots .col-version {
         width: 8%;
     }
 
     .grid.snapshots .col-date {
-        width: 12%;
-    }
-
-    .grid.snapshots .col-state {
-        width: 23%;
-    }
-
-/* The snapshots of a model that is addressed by an identifier: a column more, and no state to open.
-   Every column is as wide as what it holds, because none of them grows — which is the difference a
-   folded state makes, and why this variant divides the width evenly rather than saving a third of
-   it for one column. */
-    .grid.snapshots.identified .col-stream,
-    .grid.snapshots.identified .col-id,
-    .grid.snapshots.identified .col-type,
-    .grid.snapshots.identified .col-identifier {
-        width: 17%;
-    }
-
-    .grid.snapshots.identified .col-version {
-        width: 8%;
-    }
-
-    .grid.snapshots.identified .col-date {
         width: 12%;
     }
 

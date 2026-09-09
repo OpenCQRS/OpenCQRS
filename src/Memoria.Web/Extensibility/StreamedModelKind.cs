@@ -33,6 +33,15 @@ public static class StreamedModels
             _ => catalogue.StreamedAggregates
         };
 
+    /// <summary>The identifiers that could address a model of one kind.</summary>
+    public static IReadOnlyList<Type> Identifiers(
+        this DomainTypeCatalogue catalogue, StreamedModelKind kind) =>
+        kind switch
+        {
+            StreamedModelKind.Projection => catalogue.StreamedProjectionIds,
+            _ => catalogue.StreamedAggregateIds
+        };
+
     /// <summary>
     /// The framework's map from a stored key to the type that was written under it, for the kind of
     /// model being read.

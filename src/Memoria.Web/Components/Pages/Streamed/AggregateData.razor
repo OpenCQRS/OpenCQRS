@@ -188,7 +188,7 @@ else
            after the type it names, because which identifiers there are to name is the type's answer.
            Last, what the store says about the fold: the version it reached and when it was
            written. *@
-        <table class="grid snapshots identified">
+        <table class="grid snapshots">
             <thead>
             <tr>
                 <th scope="col" class="col-stream">Stream</th>
@@ -358,7 +358,7 @@ else
     /// </summary>
     private IReadOnlyList<Type> Identifiers =>
         Choice.Chosen is { } aggregate
-            ? DomainTypeDescriber.IdentifiersOf(aggregate, Types.Current.StreamedAggregateIds)
+            ? DomainTypeDescriber.IdentifiersOf(aggregate, Types.Current.Identifiers(Kind))
             : [];
 
     /// <summary>
@@ -405,7 +405,7 @@ else
 
         var found = model is null
             ? []
-            : DomainTypeDescriber.IdentifiersOf(model, Types.Current.StreamedAggregateIds);
+            : DomainTypeDescriber.IdentifiersOf(model, Types.Current.Identifiers(Kind));
 
         _addressing[modelType] = found;
 
@@ -605,9 +605,6 @@ else
             Choice.Key,
             Identifier.Pattern,
             Text,
-            // The state is not searched because it is not shown: a row matching on something
-            // invisible would be a result with nothing on it carrying what was typed.
-            withState: false,
             Sort,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,

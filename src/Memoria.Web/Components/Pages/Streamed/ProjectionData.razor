@@ -75,26 +75,43 @@ else
             }
         </select>
 
-        @* Beside the two rather than under them, because all three narrow the same list: a stream
+        @* An identifier addresses one projection, so there is nothing to offer until one is chosen —
+           and the control stays where it is, disabled, rather than appearing and disappearing as the
+           projection changes. A disabled control submits nothing, which is the same as choosing All.
+
+           Changing the projection submits whichever identifier was chosen for the one before it. That
+           is the ordinary way to arrive with a mismatched pair, so it widens to every identifier of
+           the new projection rather than being treated as a bad address. *@
+        <label for="id">Identifier</label>
+        <select id="id" name="id" onchange="this.form.submit()" disabled="@Choice.IsAll">
+            <option value="" selected="@Identifier.IsAll">All</option>
+            @foreach (var identifier in Identifiers)
+            {
+                <option value="@identifier.FullName" selected="@(identifier == Identifier.Chosen)">
+                    @identifier.Name
+                </option>
+            }
+        </select>
+
+        @* Beside the three rather than under them, because all four narrow the same list: a stream
            type is the kind of stream a row was folded out of, a projection type is what it was
-           folded into, and this is what the row itself says — its stream, its id and its state, any
-           of which matching is enough. *@
-        <label class="visually-hidden" for="text">Filter by stream, id or state</label>
+           folded into, an identifier is what addressed it, and this is what the row itself says —
+           its stream and its id, either of which matching is enough. The state is not among them
+           because this page does not show it: a row matching on something invisible would be a
+           result with nothing on it carrying what was typed. *@
+        <label class="visually-hidden" for="text">Filter by stream or id</label>
         <input id="text" type="search" name="text" value="@Text"
-               placeholder="Filter by stream, id or state" autocomplete="off"/>
+               placeholder="Filter by stream or id" autocomplete="off"/>
         <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
-        @if (StatesAsked is not null)
-        {
-            <input type="hidden" name="states" value="@Token(StatesOpen)"/>
-        }
         <button type="submit" class="quiet">Filter</button>
-        @if (!Choice.IsAll || !Stream.IsAll || IsFiltered)
+        @if (!Choice.IsAll || !Stream.IsAll || !Identifier.IsAll || IsFiltered)
         {
             @* One way back to everything stored, because that is the one thing a reader wants from
-               here: dropping one narrowing and keeping the other two would leave them still to
-               undo. *@
+               here: dropping one narrowing and keeping the others would leave them still to undo.
+               The projection takes the identifier with it, because one addresses the projection it
+               belongs to and an identifier left behind would name nothing. *@
             <a href="@Link(Sort, Descending, 1, clearStream: true, clearType: true, clearText: true)">Clear</a>
         }
     </form>
@@ -118,6 +135,16 @@ else
             value nothing can stand in for.
         </p>
     }
+    else if (Identifier.Unshaped)
+    {
+        @* The same again for the identifier, which is found the same way: by the shape of the ids it
+           writes. Said separately because it is a different choice to change. *@
+        <p class="missing">
+            Its ids cannot be recognised, so the store cannot be narrowed to it: it is named from a
+            value nothing can stand in for. Choose another identifier, or
+            <a href="@Link(Sort, Descending, 1, clearIdentifier: true)">all of them</a>.
+        </p>
+    }
     else if (Projections.Error is not null)
     {
         <p class="alert" role="alert">@Projections.Error</p>
@@ -130,7 +157,7 @@ else
                plenty of them has none carrying this, or none of them in this stream. *@
             @if (IsFiltered)
             {
-                <text>No stream, id or state matches &ldquo;@Text&rdquo;.</text>
+                <text>No stream or id matches &ldquo;@Text&rdquo;.</text>
             }
             else if (Choice.IsAll && Stream.IsAll)
             {
@@ -152,39 +179,23 @@ else
     }
     else
     {
-        @* The lede and the fold, at the two ends of the line above the table, in the same shape as
-           the pager and the rows-per-page picker at the two ends of the line below it. *@
-        <div class="table-header">
-            @* The whole count, not this page's worth: the pager says which page, and what a reader
-               wants beside it is how much there is to page through. *@
-            <p class="lede">@Summary</p>
-
-            @* Opens or closes every state on the page at once. A link rather than a control with
-               script behind it, like the order and the page beside it: the state lives in the
-               address, so a page opened out can be linked to and gone back to, and the rows stay
-               foldable one at a time either way. *@
-            <a class="fold-all" href="@Link(Sort, Descending, Projections.Page, open: !StatesOpen)">
-                @(StatesOpen ? "Collapse all" : "Expand all")
-                <span class="arrow @(StatesOpen ? "up" : "down")" aria-hidden="true"></span>
-            </a>
-        </div>
+        @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+           beside it is how much there is to page through. *@
+        <p class="lede">@Summary</p>
 
         @* The stream first, as on the events page, because it is where the row came from. Then what
-           the row is — its id and its type — then what the store says about the fold: the version it
-           reached, the sequence it had read up to, and when it was written. The state it holds is
-           last, because it is the column with something to open.
-
-           The version and the sequence are two different counts and both are the store's own. The
-           version is how many events this model had folded; the sequence is how far along its stream
-           that took it. They differ whenever the stream holds events this model does not apply. *@
+           the row is — the id it was addressed by and what it was folded into — with the identifier
+           after the type it names, because which identifiers there are to name is the type's answer.
+           Last, what the store says about the fold: the version it reached and when it was
+           written. *@
         <table class="grid snapshots">
             <thead>
             <tr>
                 <th scope="col" class="col-stream">Stream</th>
                 <th scope="col" class="col-id">Id</th>
                 <th scope="col" class="col-type">Type</th>
+                <th scope="col" class="col-identifier">Identifier</th>
                 <th scope="col" class="col-version">Version</th>
-                <th scope="col" class="col-sequence">Sequence</th>
                 @foreach (var column in Columns)
                 {
                     <th scope="col" class="col-date" aria-sort="@AriaSort(column.Sort)">
@@ -197,7 +208,6 @@ else
                         </a>
                     </th>
                 }
-                <th scope="col" class="col-state">State</th>
             </tr>
             </thead>
             <tbody>
@@ -207,39 +217,24 @@ else
                     <td><code>@stored.StreamId</code></td>
                     <td><code>@stored.Id</code></td>
                     <td><code>@stored.Name</code></td>
-                    <td class="numeric">@stored.Version</td>
-                    <td class="numeric">@stored.Sequence</td>
-                    <td>@stored.Created.ToLocalTime().ToString("g")</td>
-                    <td>@stored.Updated.ToLocalTime().ToString("g")</td>
                     <td>
-                        @if (stored.Error is not null)
+                        @* What addressed the row, worked out rather than read: the store keeps the
+                           id a model was written under and not the identifier that made it, so the
+                           answer is whichever identifier of this projection makes ids of this shape.
+                           Two that both could leaves it unanswered — naming one would be a guess,
+                           and the row is the store's own either way. *@
+                        @if (IdentifierOf(stored) is { } named)
                         {
-                            <span class="missing">@stored.Error</span>
-                        }
-                        else if (stored.State.Count == 0)
-                        {
-                            <span class="missing">It holds nothing of its own.</span>
+                            <code>@named</code>
                         }
                         else
                         {
-                            @* Folded away, and closed to begin with: the state is the only cell tall
-                               enough to push the row about the projection off its own line, and a
-                               page of snapshots is read by running down the ids and the types
-                               first. A <details> rather than script, like the rows on the events
-                               page, because these pages render statically. *@
-                            <details class="payload" open="@StatesOpen">
-                                @* How much is under it, so a closed row still says whether opening
-                                   it is worth it. What it holds is the pairs' to say. *@
-                                <summary>@Held(stored.State.Count)</summary>
-
-                                @* A list, because that is what it is: one name and value per item.
-                                   The name is set apart from the value it names, so a cell of
-                                   several pairs is scanned rather than read through — and a value
-                                   with a shape inside it is opened under its own name. *@
-                                @Pairs(stored.State)
-                            </details>
+                            <span class="missing">—</span>
                         }
                     </td>
+                    <td class="numeric">@stored.Version</td>
+                    <td>@stored.Created.ToLocalTime().ToString("g")</td>
+                    <td>@stored.Updated.ToLocalTime().ToString("g")</td>
                 </tr>
             }
             </tbody>
@@ -346,6 +341,79 @@ else
     /// <summary>The projections they declare, which is what the second offers.</summary>
     private IReadOnlyList<Type> ProjectionTypes => Types.Current.Streamed(Kind);
 
+    /// <summary>
+    /// Which identifier addressed the rows being looked at, or all of them.
+    /// </summary>
+    /// <remarks>
+    /// Read the same way a stream is, because it is the same question: the store keeps the id a
+    /// model was written under and not the identifier that produced it, so an identifier is found by
+    /// the shape of the ids it makes.
+    /// </remarks>
+    private IdChoice Identifier { get; set; } = IdChoice.All;
+
+    /// <summary>
+    /// The identifiers that address the chosen projection, which is what the third dropdown offers.
+    /// Empty while no projection is chosen, because an identifier addresses one projection and there
+    /// is nothing yet for it to belong to.
+    /// </summary>
+    private IReadOnlyList<Type> Identifiers =>
+        Choice.Chosen is { } projection
+            ? DomainTypeDescriber.IdentifiersOf(projection, Types.Current.Identifiers(Kind))
+            : [];
+
+    /// <summary>
+    /// What addressed one stored row, or null when that cannot be said.
+    /// </summary>
+    /// <remarks>
+    /// Worked out rather than read: the store keeps the id and not the identifier that made it, so
+    /// the answer is whichever identifier of this row's projection makes ids of this shape. Exactly
+    /// one is an answer; two that both could is not, and naming one of them would be a guess. The
+    /// row is worth listing either way — its stream, its id and its counts are the store's own.
+    /// <para>
+    /// The choice answers for every row when it names one identifier, and only a list spanning
+    /// several has to hold each row's id against the shapes.
+    /// </para>
+    /// </remarks>
+    private string? IdentifierOf(StoredStreamSnapshot row)
+    {
+        if (Identifier.Chosen is { } chosen)
+        {
+            return chosen.Name;
+        }
+
+        var addressing = Addressing(row.Type)
+            .Where(identifier => IdShape.Of(identifier)?.Matches(row.Id) == true)
+            .ToList();
+
+        return addressing.Count == 1 ? addressing[0].Name : null;
+    }
+
+    /// <summary>
+    /// The identifiers that could have addressed a row stored under one key, kept for the length of
+    /// the page: the rows on it name the same few types over and over, and answering means reading
+    /// the attributes of every projection registered.
+    /// </summary>
+    private IReadOnlyList<Type> Addressing(string modelType)
+    {
+        if (_addressing.TryGetValue(modelType, out var known))
+        {
+            return known;
+        }
+
+        var model = ProjectionTypes.FirstOrDefault(projection =>
+            DomainTypeDescriber.BindingOf(projection)?.Key == modelType);
+
+        var found = model is null
+            ? []
+            : DomainTypeDescriber.IdentifiersOf(model, Types.Current.Identifiers(Kind));
+
+        _addressing[modelType] = found;
+
+        return found;
+    }
+
+    private readonly Dictionary<string, IReadOnlyList<Type>> _addressing = new(StringComparer.Ordinal);
+
     private StoredStreamSnapshots Projections { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
@@ -385,38 +453,6 @@ else
     /// </summary>
     private string SortLink(InstanceSort column) =>
         Link(column, Sort != column || !Descending, 1);
-
-    /// <summary>
-    /// What the address says about the states, when it says anything, and null when it does not.
-    /// </summary>
-    private bool? StatesAsked { get; set; }
-
-    /// <summary>
-    /// Whether every state on the page starts open. Closed unless the address says otherwise: a page
-    /// of snapshots is read by running down the ids and the types, and the states are what is opened
-    /// once something on a row is worth following.
-    /// </summary>
-    /// <remarks>
-    /// Filtering turns the default over, because the text a row matched on may be inside the fold: a
-    /// filtered page that opened closed would be a search whose results are hidden. A row that
-    /// matched on its stream or its id shows that in its own column either way, and opening it costs
-    /// nothing.
-    /// </remarks>
-    private bool StatesOpen => StatesAsked ?? IsFiltered;
-
-    /// <summary>What the address says when the states are out, and when they are folded away.</summary>
-    private const string Open = "open";
-
-    private const string Closed = "closed";
-
-    private static string Token(bool open) => open ? Open : Closed;
-
-    /// <summary>
-    /// How much a folded state has under it, so a closed row still says whether opening it is worth
-    /// it. The properties it declares, not the ones nested inside them: the count belongs to what
-    /// the fold hides at its first line.
-    /// </summary>
-    private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
 
     /// <summary>
     /// What the page is, for the heading.
@@ -465,7 +501,7 @@ else
     /// <param name="clearStream">Whether to widen back to every stream.</param>
     /// <param name="clearType">Whether to widen back to every projection.</param>
     /// <param name="clearText">Whether to drop the text a row had to carry.</param>
-    /// <param name="open">Whether the states are out, or null to carry on as they are.</param>
+    /// <param name="clearIdentifier">Whether to widen back to every identifier.</param>
     private string Link(
         InstanceSort sort,
         bool descending,
@@ -473,17 +509,12 @@ else
         bool clearStream = false,
         bool clearType = false,
         bool clearText = false,
-        bool? open = null)
+        bool clearIdentifier = false)
     {
         var link = $"streamed/projections/data?sort={sort.ToString().ToLowerInvariant()}" +
                    $"&dir={(descending ? "desc" : "asc")}" +
                    $"&size={PageSize}" +
                    $"&page={page}";
-
-        if ((open ?? StatesAsked) is { } folded)
-        {
-            link += $"&states={Token(folded)}";
-        }
 
         if (!clearStream && Stream.Chosen is { } stream)
         {
@@ -493,6 +524,13 @@ else
         if (!clearType && Choice.Chosen is { } chosen)
         {
             link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
+        }
+
+        // Dropped with the projection as well as on its own: one addresses the projection it belongs
+        // to, so an identifier left behind would name nothing.
+        if (!clearType && !clearIdentifier && Identifier.Chosen is { } addressed)
+        {
+            link += $"&id={Uri.EscapeDataString(addressed.FullName ?? addressed.Name)}";
         }
 
         return clearText || !IsFiltered
@@ -513,13 +551,13 @@ else
         {
             <input type="hidden" name="type" value="@chosen.FullName"/>
         }
+        @if (Identifier.Chosen is { } addressed)
+        {
+            <input type="hidden" name="id" value="@addressed.FullName"/>
+        }
         @if (IsFiltered)
         {
             <input type="hidden" name="text" value="@Text"/>
-        }
-        @if (StatesAsked is not null)
-        {
-            <input type="hidden" name="states" value="@Token(StatesOpen)"/>
         }
     </text>;
 
@@ -532,24 +570,28 @@ else
 
         Stream = IdChoice.Of(StreamTypes, Value("stream"));
         Choice = TypeChoice.Of(ProjectionTypes, Value("type"));
+
+        // Read against the identifiers of the projection that was chosen, so an identifier can only
+        // ever be one that addresses it. An identifier held over from the projection before is not a
+        // bad address but the ordinary way to arrive with a mismatched pair, and widening to every
+        // identifier of the new projection is what a reader meant by changing the projection.
+        Identifier = Choice.Chosen is null
+            ? IdChoice.All
+            : IdChoice.Of(Identifiers, Value("id")) switch
+            {
+                { Unknown: true } => IdChoice.All,
+                var addressed => addressed
+            };
+
         Text = Value("text");
         Sort = InstanceQuery.SortOf(Value("sort"));
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
 
-        // Anything else it might say is not an answer, and null is the one state that lets the
-        // filter decide — which is what an address that says nothing usable should fall back to.
-        StatesAsked = Value("states") switch
-        {
-            { } said when string.Equals(said, Open, StringComparison.OrdinalIgnoreCase) => true,
-            { } said when string.Equals(said, Closed, StringComparison.OrdinalIgnoreCase) => false,
-            _ => null
-        };
-
         // A choice with nothing to look for is not asked about. A null key and a null pattern narrow
         // to everything rather than to nothing, so asking would answer the name of one projection, or
         // of one stream, with the whole store.
-        if (Choice.ShowsNothing || Stream.ShowsNothing)
+        if (Choice.ShowsNothing || Stream.ShowsNothing || Identifier.ShowsNothing)
         {
             Projections = new StoredStreamSnapshots([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
@@ -561,51 +603,12 @@ else
             Kind,
             Stream.Pattern,
             Choice.Key,
-            // No identifier narrowing here: this page offers no such choice, and null narrows to
-            // every one of them.
-            identifierPattern: null,
+            Identifier.Pattern,
             Text,
-            // The state is searched because it is shown, folded into the last column of every row.
-            withState: true,
             Sort,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
             PageSize);
     }
-
-    /// <summary>
-    /// The properties of one snapshot, a name and a value each, with the properties of any value one
-    /// holds nested under it.
-    /// </summary>
-    /// <remarks>
-    /// Draws itself, because a snapshot nests as deep as the describer read it. Inside a cell rather
-    /// than as rows: the whole state is one column of a row about the projection, so there are no
-    /// columns of its own to keep anything lined up with.
-    /// </remarks>
-    private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
-        @<ul class="pairs">
-            @foreach (var property in properties)
-            {
-                <li>
-                    <span class="pair-name">@property.Name</span>
-
-                    @if (property.Children.Count == 0)
-                    {
-                        <span class="pair-value">@(property.Value ?? "—")</span>
-                    }
-                    else
-                    {
-                        @* How many there are, when it is a list. A single shape says nothing here
-                           that the pairs under it do not say better. *@
-                        @if (property.Value is not null)
-                        {
-                            <span class="pair-value">@property.Value</span>
-                        }
-
-                        @Pairs(property.Children)
-                    }
-                </li>
-            }
-        </ul>;
 
 }
