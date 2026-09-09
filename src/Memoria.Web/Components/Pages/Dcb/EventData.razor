@@ -59,9 +59,9 @@ else
                placeholder="Filter by payload" autocomplete="off"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
-        @if (PayloadsAsked is not null)
+        @if (PayloadsOpen)
         {
-            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+            <input type="hidden" name="payloads" value="@Open"/>
         }
         <button type="submit" class="quiet">Filter</button>
         @if (!Choice.IsAll || IsFiltered)
@@ -236,9 +236,9 @@ else
                         }
                         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
                         <input type="hidden" name="size" value="@PageSize"/>
-                        @if (PayloadsAsked is not null)
+                        @if (PayloadsOpen)
                         {
-                            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+                            <input type="hidden" name="payloads" value="@Open"/>
                         }
                         <noscript>
                             <button type="submit">Go</button>
@@ -279,9 +279,9 @@ else
                     <input type="hidden" name="payload" value="@Payload"/>
                 }
                 <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                @if (PayloadsAsked is not null)
+                @if (PayloadsOpen)
                 {
-                    <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+                    <input type="hidden" name="payloads" value="@Open"/>
                 }
                 <noscript>
                     <button type="submit">Apply</button>
@@ -313,12 +313,7 @@ else
     private bool IsFiltered => !string.IsNullOrWhiteSpace(Payload);
 
     /// <summary>
-    /// What the address says about the payloads, when it says anything, and null when it does not.
-    /// </summary>
-    private bool? PayloadsAsked { get; set; }
-
-    /// <summary>
-    /// Whether every payload on the page starts open. Closed unless the address says otherwise: a
+    /// Whether every payload on the page starts open. Folded unless the address says otherwise: a
     /// page of the log is read by running down the positions and the types, and the payloads are
     /// what is opened once something on a row is worth following.
     /// </summary>
@@ -328,24 +323,15 @@ else
     /// link and every form here: paging or narrowing with the payloads out should not quietly shut
     /// them.
     /// <para>
-    /// Filtering turns the default over, because the text a row matched on is inside the fold: a
-    /// filtered page that opened closed would be a search whose results are all hidden. Saying so
-    /// in the address still wins either way, so Collapse all works on a filtered page as it does
-    /// anywhere else.
+    /// Filtering does not open them. What was typed is often in a payload, but a reader who narrows
+    /// the log has narrowed it to read the rows, and answering with a wall of pairs takes the page
+    /// they asked for away from them. The fold above the table is one click when they want it.
     /// </para>
     /// </remarks>
-    private bool PayloadsOpen => PayloadsAsked ?? IsFiltered;
+    private bool PayloadsOpen { get; set; }
 
-    /// <summary>What the address says when the payloads are out, and when they are folded away.</summary>
-    /// <remarks>
-    /// Folded needs a word of its own now that it is not simply what silence means. An address
-    /// written before it did carries <c>open</c> and still reads the same.
-    /// </remarks>
+    /// <summary>What the address says when the payloads are out. Silence is what folds them.</summary>
     private const string Open = "open";
-
-    private const string Closed = "closed";
-
-    private static string Token(bool open) => open ? Open : Closed;
 
     /// <summary>
     /// How much a folded payload has under it, so a closed row still says whether opening it is
@@ -410,9 +396,8 @@ else
     /// <param name="clearPayload">Whether to drop the text a payload had to carry.</param>
     /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
     /// <remarks>
-    /// The two narrowings are named only when they are made, and the payloads only when the address
-    /// this link was built from had something to say about them — the fold link is what says it, and
-    /// it says it either way, because on a filtered page folded is no longer what silence means.
+    /// The two narrowings and the fold are named only when they are made. Folded is what a page
+    /// opens as, so a link to a folded one is a link with nothing to say about it.
     /// </remarks>
     private string Link(
         bool descending,
@@ -425,9 +410,9 @@ else
                    $"&size={PageSize}" +
                    $"&page={page}";
 
-        if ((open ?? PayloadsAsked) is { } folded)
+        if (open ?? PayloadsOpen)
         {
-            link += $"&payloads={Token(folded)}";
+            link += $"&payloads={Open}";
         }
 
         if (!clearType && Choice.Chosen is { } chosen)
@@ -452,14 +437,9 @@ else
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
 
-        // Anything else it might say is not an answer, and null is the one state that lets the
-        // filter decide — which is what an address that says nothing usable should fall back to.
-        PayloadsAsked = Value("payloads") switch
-        {
-            { } said when string.Equals(said, Open, StringComparison.OrdinalIgnoreCase) => true,
-            { } said when string.Equals(said, Closed, StringComparison.OrdinalIgnoreCase) => false,
-            _ => null
-        };
+        // Only one word opens them, so anything else the address might say — including the word an
+        // older link used for folded — leaves the page as it opens, which is folded.
+        PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
 
         // A choice with nothing to look for is not asked about. Its key is null, and null narrows
         // to everything rather than to nothing — so asking would answer the name of one type with
