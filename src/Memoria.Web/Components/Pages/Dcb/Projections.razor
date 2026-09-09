@@ -1,0 +1,55 @@
+@page "/dcb/projections"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>DCB projections</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Projections</span>
+</nav>
+
+<h1>Projections</h1>
+<p class="lede">
+    The DCB read models, and what has been stored of them.
+</p>
+
+@* The two ways into the section, one row each rather than a pair of links on one: this page is
+   the parent of both, so each gets the same room to say what is there. *@
+<ul class="sections">
+    <li>
+        <a href="dcb/projections/types">
+            <span class="name">Types</span>
+            <span class="detail">
+                @Count(Catalogue.DcbProjections.Count, "projection") the model declares, addressed by
+                @Count(Catalogue.DcbProjectionIds.Count, "identifier").
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="dcb/projections/data">
+            <span class="name">Data</span>
+            <span class="detail">The projections that have been stored, read one identifier at a time.</span>
+        </a>
+    </li>
+</ul>
+
+@if (Catalogue.DcbProjections.Count == 0)
+{
+    <p class="lede">
+        No DCB projections are registered. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+
+@code {
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+}

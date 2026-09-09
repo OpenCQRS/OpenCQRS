@@ -1,0 +1,55 @@
+@page "/dcb/events"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>DCB events</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Events</span>
+</nav>
+
+<h1>Events</h1>
+<p class="lede">
+    The events the DCB model can apply, and what has been stored of them.
+</p>
+
+@* The two ways into the section, one row each rather than a pair of links on one: this page is
+   the parent of both, so each gets the same room to say what is there. *@
+<ul class="sections">
+    <li>
+        <a href="dcb/events/types">
+            <span class="name">Types</span>
+            <span class="detail">
+                @Count(Catalogue.DcbEvents.Count, "event") the model declares, and the state each
+                one carries.
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="dcb/events/data">
+            <span class="name">Data</span>
+            <span class="detail">The events that have been appended, read one type at a time.</span>
+        </a>
+    </li>
+</ul>
+
+@if (Catalogue.DcbEvents.Count == 0)
+{
+    <p class="lede">
+        No DCB model applies any event. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+
+@code {
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+}

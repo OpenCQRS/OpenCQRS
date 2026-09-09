@@ -91,16 +91,17 @@ header {
         z-index: 10;
     }
 
-    /* One concern and the two pages under it, spaced away from the group above so the pair reads
-       as belonging to its heading rather than floating between the two. */
+    /* One concern and the three pages under it, spaced away from the group above so they read as
+       belonging to their heading rather than floating between the two. */
     .menu .submenu-group {
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
     }
 
-    /* Names the group without offering to go anywhere: smaller and set back, and the links under
-       it indented, so a heading is not mistaken for a fourth link. */
+    /* Names the group without offering to go anywhere — the group's own overview is the link that
+       does. Smaller and set back, and the links under it indented, so a heading is not mistaken
+       for one of them. */
     .menu .submenu-label {
         color: var(--ink-soft);
         font-size: 0.75rem;
