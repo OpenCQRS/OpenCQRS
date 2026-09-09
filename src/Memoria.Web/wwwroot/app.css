@@ -835,12 +835,16 @@ h2:focus {
         width: 43%;
     }
 
-/* The same table with a stream in front of it, so the five above keep the proportions the DCB log
-   is read in and this one is not made to share them. A sixth column has to come out of the other
-   five, and it comes mostly out of the payload: that is the column with room to spare, being the
-   one that opens downwards. */
+/* The same table with the stream and the store's own key in front of it, so the columns above keep
+   the proportions the DCB log is read in and this one is not made to share them. What the extra
+   columns need comes mostly out of the payload: that is the column with room to spare, being the
+   one that opens downwards. The version is not among them — it is said inside the type's name. */
 .grid.events.streamed .col-stream {
-    width: 16%;
+    width: 15%;
+}
+
+.grid.events.streamed .col-id {
+    width: 17%;
 }
 
 .grid.events.streamed .col-sequence {
@@ -848,19 +852,15 @@ h2:focus {
 }
 
 .grid.events.streamed .col-appended {
-    width: 15%;
+    width: 14%;
 }
 
 .grid.events.streamed .col-type {
-    width: 18%;
-}
-
-.grid.events.streamed .col-version {
-    width: 8%;
+    width: 14%;
 }
 
 .grid.events.streamed .col-payload {
-    width: 34%;
+    width: 31%;
 }
 
 /* The snapshots table, declared the same way the log's is and for a different reason: nothing here

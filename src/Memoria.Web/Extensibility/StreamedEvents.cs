@@ -27,7 +27,7 @@ public static class StreamedEvents
     /// </param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
     /// <param name="text">
-    /// Text the row has to carry, in its stream id or in its payload, or null for any row.
+    /// Text the row has to carry, in its stream, its own id or its payload, or null for any row.
     /// </param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
@@ -47,12 +47,13 @@ public static class StreamedEvents
     /// order carried a certain reference should not have to know which property holds it.
     /// </para>
     /// <para>
-    /// The stream id is matched by the same text, which is why one box does for both. The stream
-    /// type narrows to a kind of stream — every customer — and what a reader wants next is one of
-    /// them, whose id they have in front of them in the first column; a second control to type it
-    /// into would be a second way of asking the one question this box already asks. Either side
-    /// matching is enough, because a reader typing an order reference means the payload and one
-    /// typing <c>c-8d89</c> means the stream, and nothing is served by making them say which.
+    /// The two ids the row carries are matched by the same text, which is why one box does for all
+    /// three. The stream type narrows to a kind of stream — every customer — and what a reader wants
+    /// next is one of them, or one row of one, both of which they have in front of them in the first
+    /// two columns; a control apiece to type them into would be three ways of asking the one
+    /// question this box already asks. Any of them matching is enough, because a reader typing an
+    /// order reference means the payload, one typing <c>c-8d89</c> means the stream and one typing
+    /// <c>:14</c> means the row, and nothing is served by making them say which.
     /// </para>
     /// </remarks>
     public static async Task<StoredStreamEvents> Page(
@@ -92,8 +93,13 @@ public static class StreamedEvents
                 // wildcards.
                 var wanted = text.Trim().ToLower();
 
+                // The row's own key as well as the stream it names and the payload it carries. The
+                // stream is looked in separately even though the key is built out of it: how the
+                // store puts a key together is its business, and a filter that leaned on that would
+                // quietly stop finding streams if it ever changed.
                 stored = stored.Where(appended =>
                     appended.StreamId.ToLower().Contains(wanted) ||
+                    appended.Id.ToLower().Contains(wanted) ||
                     appended.Data.ToLower().Contains(wanted));
             }
 
@@ -113,8 +119,8 @@ public static class StreamedEvents
                 .Take(size)
                 .Select(appended => new
                 {
-                    appended.StreamId, appended.Sequence, appended.EventType, appended.Data,
-                    appended.CreatedDate
+                    appended.Id, appended.StreamId, appended.Sequence, appended.EventType,
+                    appended.Data, appended.CreatedDate
                 })
                 .ToListAsync(cancellationToken);
 
@@ -126,6 +132,7 @@ public static class StreamedEvents
             var read = rows
                 .Select(row => new StoredStreamEvent(
                     row.StreamId,
+                    row.Id,
                     BoundaryEvents.Read(row.Sequence, row.EventType, row.Data, row.CreatedDate)))
                 .ToList();
 
@@ -151,9 +158,13 @@ public sealed record StoredStreamEvents(
 /// One appended event, and the stream it was appended to.
 /// </summary>
 /// <param name="StreamId">The stream it was written into.</param>
+/// <param name="Id">
+/// The key the store wrote the row under. The stream and the sequence joined, which is what makes
+/// one event unique: a sequence counts within a stream, so neither half identifies a row on its own.
+/// </param>
 /// <param name="Event">
 /// The event itself, read exactly as the DCB log reads one — so a payload, a type it cannot resolve
 /// and a version are all shown the same way on both pages.
 /// </param>
-public sealed record StoredStreamEvent(string StreamId, StoredEvent Event);
+public sealed record StoredStreamEvent(string StreamId, string Id, StoredEvent Event);
 

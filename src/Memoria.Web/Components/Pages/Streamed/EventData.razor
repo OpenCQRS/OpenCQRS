@@ -77,13 +77,14 @@ else
 
         @* Beside the two rather than under them, because all three narrow the same list: a stream
            type is the kind of stream the log put a row in, an event type is what it wrote the row
-           under, and this is what the row itself says — its stream id and its payload, either of
-           which matching is enough. One box for the two because they are one question: a reader
-           typing an order reference means the payload and one typing an id from the first column
-           means the stream, and nothing is served by making them say which. *@
-        <label class="visually-hidden" for="text">Filter by stream or payload</label>
+           under, and this is what the row itself says — its stream, its own id and its payload, any
+           of which matching is enough. One box for the three because they are one question: a
+           reader typing an order reference means the payload, one typing an id from the first
+           column means the stream, one typing an id from the second means that row, and nothing is
+           served by making them say which. *@
+        <label class="visually-hidden" for="text">Filter by stream, id or payload</label>
         <input id="text" type="search" name="text" value="@Text"
-               placeholder="Filter by stream or payload" autocomplete="off"/>
+               placeholder="Filter by stream, id or payload" autocomplete="off"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
         @if (PayloadsAsked is not null)
@@ -132,7 +133,7 @@ else
                of them has none carrying this, or none of them in this stream. *@
             @if (IsFiltered)
             {
-                <text>No stream id or payload matches &ldquo;@Text&rdquo;.</text>
+                <text>No stream, id or payload matches &ldquo;@Text&rdquo;.</text>
             }
             else if (Choice.IsAll && Stream.IsAll)
             {
@@ -172,15 +173,20 @@ else
             </a>
         </div>
 
-        @* The DCB log's five columns with the stream in front of them. A streamed event is appended
-           to a named stream and carries that name, so where it went is the first thing about it —
-           and the number beside it is a sequence rather than a position because it counts within
-           that stream: every stream has a first event, and two rows numbered 1 are two streams
-           rather than one row twice. *@
+        @* Where the row went, then what the store filed it as, then what it is. A streamed event is
+           appended to a named stream and carries that name, so where it went is the first thing
+           about it — and the number after the id is a sequence rather than a position because it
+           counts within that stream: every stream has a first event, and two rows numbered 1 are
+           two streams rather than one row twice.
+
+           The id is the two of them joined, which is what makes a row unique and what the store
+           wrote it under. It says nothing the stream and the sequence beside it do not, and it is
+           here because it is the key: this is a page about what the store holds. *@
         <table class="grid events streamed">
             <thead>
             <tr>
                 <th scope="col" class="col-stream">Stream</th>
+                <th scope="col" class="col-id">Id</th>
                 <th scope="col" class="col-sequence">Sequence</th>
                 <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
                     @* The only date these have, so the only thing there is to order them by. *@
@@ -189,11 +195,11 @@ else
                         <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
                     </a>
                 </th>
-                @* The key the row was stored under, as the two facts it is made of. Both stay when
-                   the table is narrowed to one type: a row says what it is whatever else is on the
-                   page, and the version tells two rows of one name apart. *@
+                @* What the log wrote the row under, as one name: the version is part of what a type
+                   is called rather than a fact beside it, and it is said only from the second
+                   version on — a first is what a name means until a second exists, and a column
+                   whose every row ended in v1 would teach its reader to skip it. *@
                 <th scope="col" class="col-type">Type</th>
-                <th scope="col" class="col-version">Version</th>
                 <th scope="col" class="col-payload">Payload</th>
             </tr>
             </thead>
@@ -202,19 +208,13 @@ else
             {
                 <tr>
                     <td><code>@stored.StreamId</code></td>
+                    <td><code>@stored.Id</code></td>
                     <td>@stored.Event.Position</td>
                     <td>@stored.Event.Written.ToLocalTime().ToString("g")</td>
-                    <td><code>@stored.Event.Name</code></td>
-                    <td>
-                        @if (stored.Event.Version is { } version)
-                        {
-                            <code>@version</code>
-                        }
-                        else
-                        {
-                            <span class="missing">—</span>
-                        }
-                    </td>
+                    @* Name and version as one, the way every list here names a type, so a type met
+                       in the log and the same type met on its own page read alike. A key the store
+                       wrote that cannot be taken apart is left whole rather than half-read. *@
+                    <td><code>@DomainTypeDescriber.LabelOfKey(stored.Event.Type)</code></td>
                     <td>
                         @if (stored.Event.Error is not null)
                         {
@@ -383,8 +383,8 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
-    /// The text a row has to carry, in its stream id or in its payload, or null when the log is
-    /// read whole.
+    /// The text a row has to carry, in its stream, its own id or its payload, or null when the log
+    /// is read whole.
     /// </summary>
     private string? Text { get; set; }
 
@@ -408,9 +408,9 @@ else
     /// <para>
     /// Filtering turns the default over, because the text a row matched on may be inside the fold:
     /// a filtered page that opened closed would be a search whose results are hidden. A row that
-    /// matched on its stream id shows that in the first column either way, and opening it costs
-    /// nothing. Saying so in the address still wins, so Collapse all works on a filtered page as it
-    /// does anywhere else.
+    /// matched on its stream or its own id shows that in the first two columns either way, and
+    /// opening it costs nothing. Saying so in the address still wins, so Collapse all works on a
+    /// filtered page as it does anywhere else.
     /// </para>
     /// </remarks>
     private bool PayloadsOpen => PayloadsAsked ?? IsFiltered;
