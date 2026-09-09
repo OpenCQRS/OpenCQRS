@@ -863,6 +863,39 @@ h2:focus {
     width: 34%;
 }
 
+/* The snapshots table, declared the same way and for the same reason: a state that opens downwards
+   must not step the columns sideways as it does. Eight of them rather than six, because a snapshot
+   says more about itself than an event does — two counts and two dates where an event has one
+   number and one date — so each is narrower and the state keeps what is left. */
+.grid.snapshots {
+    table-layout: fixed;
+}
+
+    .grid.snapshots .col-stream {
+        width: 13%;
+    }
+
+    .grid.snapshots .col-id {
+        width: 11%;
+    }
+
+    .grid.snapshots .col-type {
+        width: 13%;
+    }
+
+    .grid.snapshots .col-version,
+    .grid.snapshots .col-sequence {
+        width: 8%;
+    }
+
+    .grid.snapshots .col-date {
+        width: 12%;
+    }
+
+    .grid.snapshots .col-state {
+        width: 23%;
+    }
+
 /* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
    pairs. Closed unless the address says otherwise, and opened one row at a time or all at once from
    the control above the table. */
