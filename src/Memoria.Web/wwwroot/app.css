@@ -896,6 +896,25 @@ h2:focus {
         width: 23%;
     }
 
+/* The snapshots of a model that is addressed by an identifier: a column more, and no state to open.
+   Every column is as wide as what it holds, because none of them grows — which is the difference a
+   folded state makes, and why this variant divides the width evenly rather than saving a third of
+   it for one column. */
+    .grid.snapshots.identified .col-stream,
+    .grid.snapshots.identified .col-id,
+    .grid.snapshots.identified .col-type,
+    .grid.snapshots.identified .col-identifier {
+        width: 17%;
+    }
+
+    .grid.snapshots.identified .col-version {
+        width: 8%;
+    }
+
+    .grid.snapshots.identified .col-date {
+        width: 12%;
+    }
+
 /* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
    pairs. Closed unless the address says otherwise, and opened one row at a time or all at once from
    the control above the table. */

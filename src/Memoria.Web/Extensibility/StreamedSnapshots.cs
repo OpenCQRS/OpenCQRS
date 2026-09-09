@@ -34,13 +34,23 @@ public static class StreamedSnapshots
     /// <param name="kind">Which of the two models to read.</param>
     /// <param name="streamPattern">
     /// The pattern the ids of one stream type match, or null for every stream. Worked out by
-    /// <see cref="StreamShape"/>, because the store holds the id a stream produced and not the type
+    /// <see cref="IdShape"/>, because the store holds the id a stream produced and not the type
     /// that produced it.
     /// </param>
     /// <param name="modelType">The binding key to narrow to, or null for every type.</param>
+    /// <param name="identifierPattern">
+    /// The pattern the ids of one identifier match, or null for every identifier. Worked out by
+    /// <see cref="IdShape"/>, for the same reason the stream is: the store keeps the id a model was
+    /// addressed by and not the identifier that produced it.
+    /// </param>
     /// <param name="text">
-    /// Text the row has to carry, in its stream id, its own id or its stored state, or null for any
-    /// row.
+    /// Text the row has to carry, in its stream id, its own id or — when
+    /// <paramref name="withState"/> says so — its stored state. Null for any row.
+    /// </param>
+    /// <param name="withState">
+    /// Whether the text is looked for in the stored state as well as in the two ids. A page that
+    /// does not show the state should not say it matched: the row would come back with nothing on it
+    /// carrying what was typed.
     /// </param>
     /// <param name="sort">Which of the two dates to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
@@ -58,7 +68,9 @@ public static class StreamedSnapshots
         StreamedModelKind kind,
         string? streamPattern,
         string? modelType,
+        string? identifierPattern,
         string? text,
+        bool withState,
         InstanceSort sort,
         bool descending,
         int page,
@@ -79,6 +91,16 @@ public static class StreamedSnapshots
                 stored = stored.Where(snapshot => snapshot.Type == modelType);
             }
 
+            if (!string.IsNullOrWhiteSpace(identifierPattern))
+            {
+                // The store writes the id and the type's version joined by a colon, so the pattern
+                // is held against that whole key rather than against the id alone: an identifier
+                // whose id ends in something fixed would otherwise match nothing at all.
+                var wanted = $"{identifierPattern}:%";
+
+                stored = stored.Where(snapshot => EF.Functions.Like(snapshot.StoreId, wanted));
+            }
+
             if (!string.IsNullOrWhiteSpace(text))
             {
                 // Lowered on both sides rather than with a provider's case-insensitive operator, so
@@ -87,13 +109,18 @@ public static class StreamedSnapshots
                 // someone, and % and _ are ordinary characters they may well be looking for.
                 var wanted = text.Trim().ToLower();
 
-                // The id as well as the stream and the state, which is the one thing this page has
-                // that the events page does not: a snapshot is addressed by its own id, and it is
-                // the column a reader is most likely to be reading off when they type.
-                stored = stored.Where(snapshot =>
-                    snapshot.StreamId.ToLower().Contains(wanted) ||
-                    snapshot.StoreId.ToLower().Contains(wanted) ||
-                    snapshot.Data.ToLower().Contains(wanted));
+                // The id as well as the stream, which is the one thing a snapshot has that an event
+                // does not: it is addressed by an id of its own, and that is the column a reader is
+                // most likely to be reading off when they type. The state joins them only where a
+                // page shows it.
+                stored = withState
+                    ? stored.Where(snapshot =>
+                        snapshot.StreamId.ToLower().Contains(wanted) ||
+                        snapshot.StoreId.ToLower().Contains(wanted) ||
+                        snapshot.Data.ToLower().Contains(wanted))
+                    : stored.Where(snapshot =>
+                        snapshot.StreamId.ToLower().Contains(wanted) ||
+                        snapshot.StoreId.ToLower().Contains(wanted));
             }
 
             var total = await stored.CountAsync(cancellationToken);

@@ -10,7 +10,7 @@ namespace Memoria.Web.Tests.Features;
 /// Reading the rows themselves is the database's work — see <see cref="StreamedEvents.Page"/> — and
 /// is covered against a real store rather than here.
 /// </summary>
-public class StreamChoiceTests
+public class IdChoiceTests
 {
     /// <summary>
     /// The stream types the uploaded assemblies declare, which is what a name arriving in the
@@ -27,10 +27,10 @@ public class StreamChoiceTests
     [Fact]
     public void Shows_every_stream_when_none_was_asked_for()
     {
-        var choice = StreamChoice.Of(Streams, asked: null);
+        var choice = IdChoice.Of(Streams, asked: null);
 
         choice.IsAll.Should().BeTrue();
-        choice.Stream.Should().BeNull();
+        choice.Chosen.Should().BeNull();
         choice.Pattern.Should().BeNull();
     }
 
@@ -40,15 +40,15 @@ public class StreamChoiceTests
     [Fact]
     public void Shows_every_stream_when_the_name_asked_for_is_empty()
     {
-        StreamChoice.Of(Streams, asked: "").IsAll.Should().BeTrue();
+        IdChoice.Of(Streams, asked: "").IsAll.Should().BeTrue();
     }
 
     [Fact]
     public void Narrows_to_the_stream_type_asked_for()
     {
-        var choice = StreamChoice.Of(Streams, typeof(SamplePrefixedStreamId).FullName);
+        var choice = IdChoice.Of(Streams, typeof(SamplePrefixedStreamId).FullName);
 
-        choice.Stream.Should().Be(typeof(SamplePrefixedStreamId));
+        choice.Chosen.Should().Be(typeof(SamplePrefixedStreamId));
         choice.IsAll.Should().BeFalse();
         choice.ShowsNothing.Should().BeFalse();
     }
@@ -60,7 +60,7 @@ public class StreamChoiceTests
     [Fact]
     public void Narrows_by_the_pattern_the_ids_of_that_type_match()
     {
-        StreamChoice.Of(Streams, typeof(SamplePrefixedStreamId).FullName)
+        IdChoice.Of(Streams, typeof(SamplePrefixedStreamId).FullName)
             .Pattern.Should().Be("sample:%");
     }
 
@@ -72,11 +72,11 @@ public class StreamChoiceTests
     [Fact]
     public void Reports_a_type_that_is_not_registered_as_unknown()
     {
-        var choice = StreamChoice.Of(Streams, "Nothing.Uploaded.Declares.This");
+        var choice = IdChoice.Of(Streams, "Nothing.Uploaded.Declares.This");
 
         choice.Unknown.Should().BeTrue();
         choice.IsAll.Should().BeFalse();
-        choice.Stream.Should().BeNull();
+        choice.Chosen.Should().BeNull();
         choice.ShowsNothing.Should().BeTrue();
     }
 
@@ -89,7 +89,7 @@ public class StreamChoiceTests
     [Fact]
     public void Reports_a_stream_whose_pattern_cannot_be_worked_out()
     {
-        var choice = StreamChoice.Of(Streams, typeof(SampleUnprobedStreamId).FullName);
+        var choice = IdChoice.Of(Streams, typeof(SampleUnprobedStreamId).FullName);
 
         choice.Unshaped.Should().BeTrue();
         choice.Unknown.Should().BeFalse();
@@ -104,13 +104,17 @@ public class StreamChoiceTests
     [Fact]
     public void Is_named_by_the_stream_type_when_one_was_chosen()
     {
-        StreamChoice.Of(Streams, typeof(SampleOnlyStreamId).FullName)
+        IdChoice.Of(Streams, typeof(SampleOnlyStreamId).FullName)
             .Name.Should().Be("SampleOnlyStreamId");
     }
 
+    /// <summary>
+    /// Deliberately plain, and never rendered: every page says what its rows are in its own words
+    /// and only asks for this once a type has been chosen.
+    /// </summary>
     [Fact]
-    public void Is_named_as_every_stream_when_none_was()
+    public void Is_named_as_everything_when_none_was()
     {
-        StreamChoice.Of(Streams, asked: null).Name.Should().Be("All streams");
+        IdChoice.Of(Streams, asked: null).Name.Should().Be("All types");
     }
 }

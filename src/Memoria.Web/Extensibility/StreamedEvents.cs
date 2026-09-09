@@ -22,7 +22,7 @@ public static class StreamedEvents
     /// <param name="context">The streamed store.</param>
     /// <param name="streamPattern">
     /// The pattern the ids of one stream type match, or null for every stream. Worked out by
-    /// <see cref="StreamShape"/>, because the log stores the id a stream produced and not the type
+    /// <see cref="IdShape"/>, because the log stores the id a stream produced and not the type
     /// that produced it — so narrowing to a type is matching the shape of what it writes.
     /// </param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
@@ -157,73 +157,3 @@ public sealed record StoredStreamEvents(
 /// </param>
 public sealed record StoredStreamEvent(string StreamId, StoredEvent Event);
 
-/// <summary>
-/// Which of the log's streams a page was asked for: all of them, the ones of a single stream type,
-/// or neither.
-/// </summary>
-/// <param name="Stream">The type chosen, or null when none was or the name reached nothing.</param>
-/// <param name="Unknown">Whether a name was asked for that is not among the registered types.</param>
-/// <remarks>
-/// The same shape as <see cref="TypeChoice"/> and for the same reason: asking for nothing and
-/// asking for something that is not there are two different questions with two different answers,
-/// and both leave <see cref="Stream"/> null — so which was asked is kept beside it rather than
-/// inferred from it. Answering an unknown name with the whole log would look like the filter had
-/// been applied, and read as that stream holding events appended somewhere else.
-/// <para>
-/// Chosen by type rather than by the ids in the log, which is the difference from the event beside
-/// it in the other direction: an event type is one key the log wrote, while a stream type is as
-/// many ids as it has been given values — a customer apiece — so the ids are a list as long as the
-/// log is wide and the type is the thing there are few enough of to choose from.
-/// </para>
-/// </remarks>
-public sealed record StreamChoice(Type? Stream, bool Unknown)
-{
-    /// <summary>
-    /// Reads the choice out of the name in the address.
-    /// </summary>
-    /// <param name="streams">
-    /// The stream types the streams page lists, which is what the name is matched against — so a
-    /// name arriving in a query string can only ever reach a type this application already knows
-    /// about.
-    /// </param>
-    /// <param name="asked">The full name asked for, or null when the whole log was.</param>
-    public static StreamChoice Of(IReadOnlyList<Type> streams, string? asked) =>
-        string.IsNullOrWhiteSpace(asked)
-            ? new StreamChoice(Stream: null, Unknown: false)
-            : DomainTypeDescriber.Select(streams, asked) is { } found
-                ? new StreamChoice(found, Unknown: false)
-                : new StreamChoice(Stream: null, Unknown: true);
-
-    /// <summary>Gets whether every stream is being read.</summary>
-    public bool IsAll => Stream is null && !Unknown;
-
-    /// <summary>
-    /// Gets the pattern the ids of the chosen type match, or null when there is no single type to
-    /// narrow to or its pattern cannot be worked out.
-    /// </summary>
-    public string? Pattern => Stream is null ? null : StreamShape.Of(Stream)?.Pattern;
-
-    /// <summary>
-    /// Gets whether the chosen type is one whose ids cannot be recognised, so there is no way to ask
-    /// the log for them. The counterpart of <see cref="TypeChoice.Unbound"/>: registered, listed,
-    /// and impossible to narrow by.
-    /// </summary>
-    public bool Unshaped => Stream is not null && Pattern is null;
-
-    /// <summary>
-    /// Gets whether there are no rows to look for. Null narrows to every stream rather than to
-    /// none, so a page asks this before it asks the store — the alternative is showing the whole log
-    /// under the name of one stream type.
-    /// </summary>
-    public bool ShowsNothing => Unknown || Unshaped;
-
-    /// <summary>
-    /// Gets what is being read, for the line that counts what the table holds. The type as the
-    /// streams page names it, rather than the pattern it happens to match by: the pattern is how the
-    /// question is asked, not what was asked for.
-    /// </summary>
-    public string Name =>
-        Stream is null
-            ? Unknown ? "Streams" : "All streams"
-            : DomainTypeDescriber.LabelOf(Stream);
-}

@@ -122,6 +122,17 @@ public class SampleAggregateId(string id) : IAggregateId<SampleAggregate>
     public IDictionary<string, string>? EventPropertyFilter => null;
 }
 
+/// <summary>
+/// An identifier naming what it addresses before the value it was given, so the ids it makes are
+/// recognisable in a store that keeps only the id. The shape a pattern is worth having for.
+/// </summary>
+public class SamplePrefixedAggregateId(string orderId) : IAggregateId<SampleAggregate>
+{
+    public string Id => $"order-{orderId}";
+
+    public IDictionary<string, string>? EventPropertyFilter => null;
+}
+
 [ProjectionType("SampleProjection", 1)]
 public class SampleProjection : Projection
 {
@@ -133,6 +144,14 @@ public class SampleProjection : Projection
 public class SampleProjectionId(string id) : IProjectionId<SampleProjection>
 {
     public string Id { get; } = id;
+
+    public IDictionary<string, string>? EventPropertyFilter => null;
+}
+
+/// <summary>The read model's counterpart of <see cref="SamplePrefixedAggregateId"/>.</summary>
+public class SamplePrefixedProjectionId(string summaryId) : IProjectionId<SampleProjection>
+{
+    public string Id => $"summary-{summaryId}";
 
     public IDictionary<string, string>? EventPropertyFilter => null;
 }

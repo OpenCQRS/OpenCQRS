@@ -58,7 +58,7 @@ else
                 @* Named by the type, not by the pattern it matches: a reader picks the kind of
                    stream they mean, and customer:% is how the store is asked rather than a thing to
                    choose. *@
-                <option value="@streamId.FullName" selected="@(streamId == Stream.Stream)">
+                <option value="@streamId.FullName" selected="@(streamId == Stream.Chosen)">
                     @BoundAs(streamId)
                 </option>
             }
@@ -329,7 +329,7 @@ else
     /// <summary>
     /// Which kind of stream they were folded out of, or all of them.
     /// </summary>
-    private StreamChoice Stream { get; set; } = new(Stream: null, Unknown: false);
+    private IdChoice Stream { get; set; } = IdChoice.All;
 
     /// <summary>
     /// The stream types the uploaded assemblies declare, which is what the first dropdown offers and
@@ -485,7 +485,7 @@ else
             link += $"&states={Token(folded)}";
         }
 
-        if (!clearStream && Stream.Stream is { } stream)
+        if (!clearStream && Stream.Chosen is { } stream)
         {
             link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
         }
@@ -505,7 +505,7 @@ else
     /// query, so what is being looked at travels with it or paging would quietly widen the table.
     /// </summary>
     private RenderFragment Narrowing => @<text>
-        @if (Stream.Stream is { } stream)
+        @if (Stream.Chosen is { } stream)
         {
             <input type="hidden" name="stream" value="@stream.FullName"/>
         }
@@ -530,7 +530,7 @@ else
         string? Value(string name) =>
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
-        Stream = StreamChoice.Of(StreamTypes, Value("stream"));
+        Stream = IdChoice.Of(StreamTypes, Value("stream"));
         Choice = TypeChoice.Of(ProjectionTypes, Value("type"));
         Text = Value("text");
         Sort = InstanceQuery.SortOf(Value("sort"));
@@ -561,7 +561,12 @@ else
             Kind,
             Stream.Pattern,
             Choice.Key,
+            // No identifier narrowing here: this page offers no such choice, and null narrows to
+            // every one of them.
+            identifierPattern: null,
             Text,
+            // The state is searched because it is shown, folded into the last column of every row.
+            withState: true,
             Sort,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,

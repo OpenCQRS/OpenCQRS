@@ -6,7 +6,7 @@ namespace Memoria.Web.Extensibility;
 /// <remarks>
 /// Shared by the two things that work out a shape by building one and reading what came back:
 /// <see cref="IdentifierShape"/>, which reads the boundary a DCB identifier resolves to, and
-/// <see cref="StreamShape"/>, which reads the id a stream produces. One rule for which values can
+/// <see cref="IdShape"/>, which reads the id a stream produces. One rule for which values can
 /// be stood in for, so the two never disagree about which types can be probed at all.
 /// </remarks>
 internal static class ProbeValues

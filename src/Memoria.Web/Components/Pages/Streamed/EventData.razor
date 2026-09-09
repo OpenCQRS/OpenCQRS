@@ -58,7 +58,7 @@ else
                 @* Named by the type, not by the pattern it matches: a reader picks the kind of
                    stream they mean, and customer:% is how the log is asked rather than a thing to
                    choose. *@
-                <option value="@streamId.FullName" selected="@(streamId == Stream.Stream)">
+                <option value="@streamId.FullName" selected="@(streamId == Stream.Chosen)">
                     @BoundAs(streamId)
                 </option>
             }
@@ -280,7 +280,7 @@ else
                            travel with it or paging would quietly widen the table back to the log. *@
                         @if (!Stream.IsAll)
                         {
-                            <input type="hidden" name="stream" value="@Stream.Stream?.FullName"/>
+                            <input type="hidden" name="stream" value="@Stream.Chosen?.FullName"/>
                         }
                         @if (!Choice.IsAll)
                         {
@@ -328,7 +328,7 @@ else
                 </select>
                 @if (!Stream.IsAll)
                 {
-                    <input type="hidden" name="stream" value="@Stream.Stream?.FullName"/>
+                    <input type="hidden" name="stream" value="@Stream.Chosen?.FullName"/>
                 }
                 @if (!Choice.IsAll)
                 {
@@ -362,7 +362,7 @@ else
     /// <summary>
     /// Which kind of stream they are being read out of, or all of them.
     /// </summary>
-    private StreamChoice Stream { get; set; } = new(Stream: null, Unknown: false);
+    private IdChoice Stream { get; set; } = IdChoice.All;
 
     /// <summary>
     /// The stream types the uploaded assemblies declare, which is what the dropdown offers and what
@@ -511,7 +511,7 @@ else
             link += $"&payloads={Token(folded)}";
         }
 
-        if (!clearStream && Stream.Stream is { } stream)
+        if (!clearStream && Stream.Chosen is { } stream)
         {
             link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
         }
@@ -533,7 +533,7 @@ else
         string? Value(string name) =>
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
-        Stream = StreamChoice.Of(StreamTypes, Value("stream"));
+        Stream = IdChoice.Of(StreamTypes, Value("stream"));
         Choice = TypeChoice.Of(EventTypes, Value("type"));
         Text = Value("text");
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
