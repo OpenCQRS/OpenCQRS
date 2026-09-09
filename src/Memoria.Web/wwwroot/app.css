@@ -1101,6 +1101,10 @@ h2:focus {
         outline-offset: 2px;
     }
 
+/* How many rows a table is read at: a label and a select, wherever the choice is offered. Under a
+   table it is a small GET form putting the size in the address; on the settings page it is the
+   stored preference itself, with no form around it. The same choice either way, so it is drawn the
+   same way either way and written here once. */
 .page-size {
     align-items: center;
     color: var(--ink-soft);

@@ -132,6 +132,18 @@ table {
     margin-top: 0;
 }
 
+/* The line at the foot of both type-changing panels, saying who else a change there reaches. Set
+   smaller and in italic to read as a footnote to the panel rather than another thing in it — the
+   panel is done by the time this is reached, and it is a condition on what was just done rather
+   than a step in doing it. Given the room above that the notice it follows does not need. */
+.shared {
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+    font-style: italic;
+    margin: 1.5rem 0 0;
+    max-width: 44rem;
+}
+
 /* The upload form, brought up over the page rather than sitting on it. */
 .dialog {
     border: 1px solid var(--rule);

@@ -12,23 +12,20 @@
 </nav>
 
 <h1>Settings</h1>
-@* What is true of both tabs stays above them; what each one is gets said inside it. The warning
-   belongs here because either tab can set it off: uploading, removing and refreshing all change
-   what everyone resolves. *@
-<p class="lede">
-    Everyone using this server shares one set of domain types, so a change here changes what they
-    see too; their open pages catch up when the browser is reloaded.
-</p>
-
-@* Two views of one setting: the archives that were uploaded and the types they turned out to hold.
-   Switched by the address rather than by script, the same way the aggregate pages switch theirs, so
-   a view can be linked to and the back button steps between them. Marked with aria-current because
-   these are places to go, not scripted tabs. *@
+@* Two views of one setting — the archives that were uploaded and the types they turned out to hold
+   — and, after them, the settings that are this browser's rather than the server's. Switched by the
+   address rather than by script, the same way the aggregate pages switch theirs, so a view can be
+   linked to and the back button steps between them. Marked with aria-current because these are
+   places to go, not scripted tabs. *@
 <nav class="tabs" aria-label="Settings views">
     <a id="tab-@InstalledTab" href="settings?tab=@InstalledTab"
        aria-current="@(Tab == InstalledTab ? "page" : null)">Installed</a>
     <a id="tab-@TypesTab" href="settings?tab=@TypesTab"
        aria-current="@(Tab == TypesTab ? "page" : null)">Types</a>
+    @* Last of the three, and the only one that is nobody else's business: the two before it are the
+       server's state, read by everyone; this one is how this browser draws it. *@
+    <a id="tab-@PreferencesTab" href="settings?tab=@PreferencesTab"
+       aria-current="@(Tab == PreferencesTab ? "page" : null)">Preferences</a>
 </nav>
 
 @* Each panel is named by the tab that reaches it, so the label is written once. *@
@@ -36,7 +33,7 @@
 {
     <section class="tab-panel" aria-labelledby="tab-@InstalledTab">
         <p class="lede">
-            The zips of assemblies you have uploaded, each holding domain types. They are read as
+            The zips of assemblies uploaded, each holding domain types. They are read as
             soon as they arrive — the application does not restart.
         </p>
 
@@ -115,6 +112,8 @@
         @* What the last upload or removal did, read where the button that did it was pressed. *@
         @Notice
 
+        @Shared
+
         <dialog id="upload" class="dialog" open="@ShowUpload">
             <form method="post" enctype="multipart/form-data" action="settings/upload" class="upload">
                 <AntiforgeryToken/>
@@ -134,7 +133,7 @@
         </dialog>
     </section>
 }
-else
+else if (Tab == TypesTab)
 {
     <section class="tab-panel" aria-labelledby="tab-@TypesTab">
         @* What the tab is, then when it was last true — one paragraph, because the second sentence
@@ -191,6 +190,30 @@ else
 
         @* What the last refresh did, read where the button that did it was pressed. *@
         @Notice
+
+        @Shared
+    </section>
+}
+else
+{
+    <section class="tab-panel" aria-labelledby="tab-@PreferencesTab">
+        @* The control and nothing around it. The same picker as the one under a table, carrying the
+           same class, because it is the same choice: what is picked here is what that picker opens
+           at, and what is picked there is what stands here afterwards. There is no form and nothing
+           to submit — the select is the setting, and it is written down as it changes.
+
+           Rendered at the default and corrected to what was stored once the page is running. The
+           server has no way to read this browser's storage, so the alternative is a select that says
+           nothing until it is opened. *@
+        <div class="page-size">
+            <label for="rows-per-page">Rows per page</label>
+            <select id="rows-per-page" data-preference="rows-per-page">
+                @foreach (var option in InstanceQuery.PageSizes)
+                {
+                    <option value="@option" selected="@(option == InstanceQuery.DefaultPageSize)">@option</option>
+                }
+            </select>
+        </div>
     </section>
 }
 
@@ -203,13 +226,20 @@ else
     private string? Error { get; set; }
 
     /// <summary>
-    /// The two views the page offers, named as they appear in the address. Which one is showing is
+    /// The three views the page offers, named as they appear in the address. Which one is showing is
     /// the address's to say, so a view can be linked to, bookmarked, and gone back to — and so the
     /// redirect after an upload or a refresh comes back to the tab the button was pressed on.
     /// </summary>
     private const string InstalledTab = "installed";
 
     private const string TypesTab = "types";
+
+    /// <summary>
+    /// This browser's own settings, which the server neither keeps nor is told about: the tab is
+    /// only the page they are set on. Named in the address like the other two, so it is somewhere
+    /// to be sent rather than a panel that has to be found.
+    /// </summary>
+    private const string PreferencesTab = "preferences";
 
     /// <summary>
     /// Which view the address asks for. Taken as text and matched against the two the page has, so
@@ -221,8 +251,26 @@ else
     private string Tab => (TabAsked ?? string.Empty).ToLowerInvariant() switch
     {
         TypesTab => TypesTab,
+        PreferencesTab => PreferencesTab,
         _ => InstalledTab,
     };
+
+    /// <summary>
+    /// Who a change to the domain types reaches, said at the foot of each panel that can make one.
+    /// </summary>
+    /// <remarks>
+    /// Uploading, removing and refreshing all change what everyone on this server resolves, so the
+    /// warning belongs under both tabs that do them — and nowhere near Preferences, where it would
+    /// be a contradiction rather than a caution. Set smaller and in italic because it is the
+    /// condition the tab is read under rather than part of it: a footnote to the panel, not the
+    /// sentence it opens with. Written once and rendered by whichever panel is showing, the same
+    /// way the notice above it is.
+    /// </remarks>
+    private RenderFragment Shared =>
+        @<p class="shared">
+            Everyone using this server shares one set of domain types, so a change here changes what
+            they see too; their open pages catch up when the browser is reloaded.
+        </p>;
 
     /// <summary>
     /// What the last press did, rendered under the button that did it rather than at the top of the

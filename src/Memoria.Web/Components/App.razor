@@ -16,6 +16,9 @@
 <Routes/>
 <ReconnectModal/>
 <script src="@Assets["_framework/blazor.web.js"]"></script>
+@* After Blazor rather than before it: the preference has to be put back after an enhanced
+   navigation as well as after a load, and that is something only Blazor can say has happened. *@
+<script src="@Assets["preferences.js"]"></script>
 </body>
 
 </html>
