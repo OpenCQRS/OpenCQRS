@@ -20,24 +20,31 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var connectionString = builder.Configuration.GetConnectionString("Memoria")
-                       ?? throw new InvalidOperationException(
-                           "Connection string 'Memoria' is not configured in appsettings.json.");
+// Which engine the store is in is read off the connection string, or taken from Database:Provider
+// where the string could be more than one. The tool is pointed at a store somebody else created,
+// so it is told rather than assuming Postgres.
+var database = DatabaseConnection.Of(
+    builder.Configuration.GetConnectionString(DatabaseConnection.Name),
+    builder.Configuration[DatabaseConnection.Setting]);
 
 // Both contexts take their options as the base type's DbContextOptions rather than their own
 // closed type, so each is registered against that.
-builder.Services.AddScoped(serviceProvider => new DbContextOptionsBuilder<DomainDbContext>()
-    .UseNpgsql(connectionString)
-    .UseApplicationServiceProvider(serviceProvider)
-    .Options);
+builder.Services.AddScoped(serviceProvider =>
+{
+    var options = new DbContextOptionsBuilder<DomainDbContext>();
+    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
+    return options.Options;
+});
 
-builder.Services.AddScoped(serviceProvider => new DbContextOptionsBuilder<DcbDbContext>()
-    .UseNpgsql(connectionString)
-    .UseApplicationServiceProvider(serviceProvider)
-    .Options);
+builder.Services.AddScoped(serviceProvider =>
+{
+    var options = new DbContextOptionsBuilder<DcbDbContext>();
+    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
+    return options.Options;
+});
 
-builder.Services.AddDbContext<StreamedStoreDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddDbContext<DcbStoreDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<StreamedStoreDbContext>(options => database.Apply(options));
+builder.Services.AddDbContext<DcbStoreDbContext>(options => database.Apply(options));
 
 builder.Services.AddMemoria(typeof(Program));
 
@@ -58,6 +65,10 @@ builder.Services.AddDomainExtensions(
     typeof(Program).Assembly);
 
 var app = builder.Build();
+
+// Logged because the provider is now read rather than fixed: a store that answers nothing is the
+// first thing anyone will suspect the connection string of, and this says how it was read.
+app.Logger.LogInformation("Store opened with {Provider}.", database.Provider);
 
 var registry = app.Services.GetRequiredService<DomainTypeRegistry>();
 registry.Reload();

@@ -9,6 +9,7 @@ using Memoria.EventSourcing.Extensions;
 using Memoria.EventSourcing.Store.EntityFrameworkCore;
 using Memoria.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using Memoria.Extensions;
+using Memoria.Web.Data;
 using Memoria.Web.Samples.Data;
 using Memoria.Web.Samples.Seeding;
 using Microsoft.EntityFrameworkCore;
@@ -27,24 +28,30 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     ContentRootPath = AppContext.BaseDirectory
 });
 
-var connectionString = builder.Configuration.GetConnectionString("Memoria")
-                       ?? throw new InvalidOperationException(
-                           "Connection string 'Memoria' is not configured in appsettings.json.");
+// The provider is read off the connection string the same way the tool reads its own, so seeding
+// reaches whichever store the tool was pointed at rather than assuming Postgres.
+var database = DatabaseConnection.Of(
+    builder.Configuration.GetConnectionString(DatabaseConnection.Name),
+    builder.Configuration[DatabaseConnection.Setting]);
 
 // Both contexts take their options as the base type's DbContextOptions rather than their own
 // closed type, so each is registered against that.
-builder.Services.AddScoped(serviceProvider => new DbContextOptionsBuilder<DomainDbContext>()
-    .UseNpgsql(connectionString)
-    .UseApplicationServiceProvider(serviceProvider)
-    .Options);
+builder.Services.AddScoped(serviceProvider =>
+{
+    var options = new DbContextOptionsBuilder<DomainDbContext>();
+    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
+    return options.Options;
+});
 
-builder.Services.AddScoped(serviceProvider => new DbContextOptionsBuilder<DcbDbContext>()
-    .UseNpgsql(connectionString)
-    .UseApplicationServiceProvider(serviceProvider)
-    .Options);
+builder.Services.AddScoped(serviceProvider =>
+{
+    var options = new DbContextOptionsBuilder<DcbDbContext>();
+    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
+    return options.Options;
+});
 
-builder.Services.AddDbContext<StreamedStoreDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddDbContext<DcbStoreDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<StreamedStoreDbContext>(options => database.Apply(options));
+builder.Services.AddDbContext<DcbStoreDbContext>(options => database.Apply(options));
 
 builder.Services.AddMemoria(typeof(Program));
 

@@ -19,7 +19,20 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+        <!-- Pinned ahead of the provider's transitive version, which carries GHSA-2m69-gcr7-jv3q. -->
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- The tool's own provider resolution, so the seeder writes to whichever store the tool
+             reads rather than assuming Postgres. Linked rather than referenced: this assembly is
+             uploaded to the tool as an extension, and a project reference would carry the whole
+             web application in with it. -->
+        <Compile Include="..\Memoria.Web\Data\DatabaseProvider.cs" Link="Data\DatabaseProvider.cs" />
+        <Compile Include="..\Memoria.Web\Data\DatabaseConnection.cs" Link="Data\DatabaseConnection.cs" />
     </ItemGroup>
 
     <ItemGroup>
