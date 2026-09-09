@@ -835,6 +835,34 @@ h2:focus {
         width: 43%;
     }
 
+/* The same table with a stream in front of it, so the five above keep the proportions the DCB log
+   is read in and this one is not made to share them. A sixth column has to come out of the other
+   five, and it comes mostly out of the payload: that is the column with room to spare, being the
+   one that opens downwards. */
+.grid.events.streamed .col-stream {
+    width: 16%;
+}
+
+.grid.events.streamed .col-sequence {
+    width: 9%;
+}
+
+.grid.events.streamed .col-appended {
+    width: 15%;
+}
+
+.grid.events.streamed .col-type {
+    width: 18%;
+}
+
+.grid.events.streamed .col-version {
+    width: 8%;
+}
+
+.grid.events.streamed .col-payload {
+    width: 34%;
+}
+
 /* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
    pairs. Closed unless the address says otherwise, and opened one row at a time or all at once from
    the control above the table. */

@@ -1,4 +1,10 @@
 @page "/streamed/events/data"
+@using Memoria.Web.Data
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject StreamedStoreDbContext StoreContext
+@inject NavigationManager Navigation
 
 <PageTitle>Streamed event data</PageTitle>
 
@@ -12,4 +18,584 @@
     <span aria-current="page">Data</span>
 </nav>
 
-<p><em>TBD</em></p>
+<h1>@Heading</h1>
+
+@if (Choice.Unknown)
+{
+    <p class="alert" role="alert">
+        That event is not among the registered types. It may have been replaced by a later upload —
+        start again from <a href="streamed/events/types">events</a>.
+    </p>
+}
+else if (Stream.Unknown)
+{
+    <p class="alert" role="alert">
+        That stream is not among the registered types. It may have been replaced by a later upload —
+        start again from <a href="streamed/streams">streams</a>.
+    </p>
+}
+else
+{
+    @* Above the table, because it says what the table holds. Its own GET form, like the pickers
+       under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
+       where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
+       narrowing does not silently reorder; the page deliberately does not, because page four of one
+       stream is not page four of another.
+
+       The dropdowns submit on change and the box is typed into, so the button is not only the
+       fallback when scripting is off — it submits all three at once, which is what one form buys. *@
+    <form class="search" method="get" action="streamed/events/data">
+        @* The stream comes first, as it does in the table: it is where an event was put, and the
+           type is what was put there. *@
+        <label for="stream">Stream</label>
+        <select id="stream" name="stream" onchange="this.form.submit()">
+            @* First and default, so a reader who has chosen nothing is looking at the whole log
+               rather than at whichever stream happened to be listed first. An empty value, which is
+               what the address carries when nothing is narrowed to. *@
+            <option value="" selected="@Stream.IsAll">All</option>
+            @foreach (var streamId in StreamTypes)
+            {
+                @* Named by the type, not by the pattern it matches: a reader picks the kind of
+                   stream they mean, and customer:% is how the log is asked rather than a thing to
+                   choose. *@
+                <option value="@streamId.FullName" selected="@(streamId == Stream.Stream)">
+                    @BoundAs(streamId)
+                </option>
+            }
+        </select>
+
+        <label for="type">Event type</label>
+        <select id="type" name="type" onchange="this.form.submit()">
+            <option value="" selected="@Choice.IsAll">All</option>
+            @foreach (var @event in EventTypes)
+            {
+                <option value="@(@event.FullName)" selected="@(@event == Choice.Event)">
+                    @BoundAs(@event)
+                </option>
+            }
+        </select>
+
+        @* Beside the two rather than under them, because all three narrow the same list: a stream is
+           where the log put a row, a type is what it wrote the row under, and this is what the row
+           itself carries. *@
+        <label class="visually-hidden" for="payload">Filter by payload</label>
+        <input id="payload" type="search" name="payload" value="@Payload"
+               placeholder="Filter by payload" autocomplete="off"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+        <input type="hidden" name="size" value="@PageSize"/>
+        @if (PayloadsAsked is not null)
+        {
+            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+        }
+        <button type="submit" class="quiet">Filter</button>
+        @if (!Choice.IsAll || !Stream.IsAll || IsFiltered)
+        {
+            @* One way back to the whole log, because that is the one thing a reader wants from
+               here: dropping one narrowing and keeping the other two would leave them still to
+               undo. *@
+            <a href="@Link(Descending, 1, clearStream: true, clearType: true, clearPayload: true)">Clear</a>
+        }
+    </form>
+
+    @if (Choice.Unbound)
+    {
+        @* Registered, listed, and impossible to have stored: without an [EventType] there is no key
+           to write it under. An empty table would say the log holds none of these, which is true
+           but not the reason. *@
+        <p class="missing">
+            It carries no <code>[EventType]</code>, so the log has never written one of these.
+        </p>
+    }
+    else if (Stream.Unshaped)
+    {
+        @* Registered, listed, and impossible to narrow by. A stream is found in the log by the shape
+           of the ids it writes, and that shape is worked out by building one from values that can be
+           recognised again — which this stream takes none of. An empty table would say the log holds
+           nothing of this stream, which is not what was found out. *@
+        <p class="missing">
+            Its ids cannot be recognised, so the log cannot be narrowed to it: it is named from a
+            value nothing can stand in for.
+        </p>
+    }
+    else if (Events.Error is not null)
+    {
+        <p class="alert" role="alert">@Events.Error</p>
+    }
+    else if (Events.Total == 0)
+    {
+        <p class="empty">
+            @* Nothing found and nothing there are two different answers, and what was asked for is
+               the difference: an empty log has none of these to match, and a log that holds plenty
+               of them has none carrying this, or none of them in this stream. *@
+            @if (IsFiltered)
+            {
+                <text>No events carry a payload matching &ldquo;@Payload&rdquo;.</text>
+            }
+            else if (Choice.IsAll && Stream.IsAll)
+            {
+                <text>Nothing has been appended yet.</text>
+            }
+            else if (Choice.IsAll)
+            {
+                <text>Nothing has been appended to this stream yet.</text>
+            }
+            else if (Stream.IsAll)
+            {
+                <text>Nothing of this type has been appended yet.</text>
+            }
+            else
+            {
+                <text>Nothing of this type has been appended to this stream yet.</text>
+            }
+        </p>
+    }
+    else
+    {
+        @* The lede and the fold, at the two ends of the line above the table, in the same shape as
+           the pager and the rows-per-page picker at the two ends of the line below it. *@
+        <div class="table-header">
+            @* The whole count, not this page's worth: the pager says which page, and what a reader
+               wants beside it is how much there is to page through. *@
+            <p class="lede">@Summary</p>
+
+            @* Opens or closes every payload on the page at once. A link rather than a control with
+               script behind it, like the order and the page beside it: the state lives in the
+               address, so a page opened out can be linked to and gone back to, and the rows stay
+               foldable one at a time either way. It stays on this page — this is a way of looking
+               at the rows, not a way of moving between them. *@
+            <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
+                @(PayloadsOpen ? "Collapse all" : "Expand all")
+                <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+            </a>
+        </div>
+
+        @* The DCB log's five columns with the stream in front of them. A streamed event is appended
+           to a named stream and carries that name, so where it went is the first thing about it —
+           and the number beside it is a sequence rather than a position because it counts within
+           that stream: every stream has a first event, and two rows numbered 1 are two streams
+           rather than one row twice. *@
+        <table class="grid events streamed">
+            <thead>
+            <tr>
+                <th scope="col" class="col-stream">Stream</th>
+                <th scope="col" class="col-sequence">Sequence</th>
+                <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
+                    @* The only date these have, so the only thing there is to order them by. *@
+                    <a href="@Link(!Descending, 1)">
+                        Appended
+                        <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                    </a>
+                </th>
+                @* The key the row was stored under, as the two facts it is made of. Both stay when
+                   the table is narrowed to one type: a row says what it is whatever else is on the
+                   page, and the version tells two rows of one name apart. *@
+                <th scope="col" class="col-type">Type</th>
+                <th scope="col" class="col-version">Version</th>
+                <th scope="col" class="col-payload">Payload</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var stored in Events.Events)
+            {
+                <tr>
+                    <td><code>@stored.StreamId</code></td>
+                    <td>@stored.Event.Position</td>
+                    <td>@stored.Event.Written.ToLocalTime().ToString("g")</td>
+                    <td><code>@stored.Event.Name</code></td>
+                    <td>
+                        @if (stored.Event.Version is { } version)
+                        {
+                            <code>@version</code>
+                        }
+                        else
+                        {
+                            <span class="missing">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (stored.Event.Error is not null)
+                        {
+                            <span class="missing">@stored.Event.Error</span>
+                        }
+                        else if (stored.Event.State.Count == 0)
+                        {
+                            <span class="missing">It carries nothing of its own.</span>
+                        }
+                        else
+                        {
+                            @* Folded away, and closed to begin with: a payload is the only cell tall
+                               enough to push the row about the event off its own line, and a page of
+                               the log is read by running down the streams and the types first.
+                               A <details> rather than script, like the rows on the events page,
+                               because these pages render statically. *@
+                            <details class="payload" open="@PayloadsOpen">
+                                @* How much is under it, so a closed row still says whether opening
+                                   it is worth it. What it holds is the pairs' to say. *@
+                                <summary>@Held(stored.Event.State.Count)</summary>
+
+                                @* A list, because that is what it is: one name and value per item.
+                                   The name is set apart from the value it names, so a cell of
+                                   several pairs is scanned rather than read through — and a value
+                                   with a shape inside it is opened under its own name. *@
+                                @Pairs(stored.Event.State)
+                            </details>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            <div class="pagination">
+                @if (Events.TotalPages > 1)
+                {
+                    @if (Events.Page > 1)
+                    {
+                        <a href="@Link(Descending, 1)">First</a>
+                        <a href="@Link(Descending, Events.Page - 1)">Previous</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">First</span>
+                        <span class="disabled">Previous</span>
+                    }
+
+                    @* The page number is a control rather than a label, so a long table can be
+                       crossed without stepping through it. Its own GET form, like the order and the
+                       rows per page, so the page it lands on is in the address bar. *@
+                    <form class="page-jump" method="get" action="streamed/events/data">
+                        <label for="page">Page</label>
+                        <select id="page" name="page" onchange="this.form.submit()">
+                            @for (var number = 1; number <= Events.TotalPages; number++)
+                            {
+                                <option value="@number" selected="@(number == Events.Page)">@number</option>
+                            }
+                        </select>
+                        <span>of @Events.TotalPages</span>
+                        @* The form replaces the whole query, so what is being looked at has to
+                           travel with it or paging would quietly widen the table back to the log. *@
+                        @if (!Stream.IsAll)
+                        {
+                            <input type="hidden" name="stream" value="@Stream.Stream?.FullName"/>
+                        }
+                        @if (!Choice.IsAll)
+                        {
+                            <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
+                        }
+                        @if (IsFiltered)
+                        {
+                            <input type="hidden" name="payload" value="@Payload"/>
+                        }
+                        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                        <input type="hidden" name="size" value="@PageSize"/>
+                        @if (PayloadsAsked is not null)
+                        {
+                            <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+                        }
+                        <noscript>
+                            <button type="submit">Go</button>
+                        </noscript>
+                    </form>
+
+                    @if (Events.Page < Events.TotalPages)
+                    {
+                        <a href="@Link(Descending, Events.Page + 1)">Next</a>
+                        <a href="@Link(Descending, Events.TotalPages)">Last</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">Next</span>
+                        <span class="disabled">Last</span>
+                    }
+                }
+            </div>
+
+            @* Its own GET form, so the choice lands in the address bar like the order and the type.
+               Submitting on change saves a click; the button is the fallback when scripting is off.
+               No page travels with it: a page number from a narrower page size would land somewhere
+               a reader did not ask for, and the first page is what they can see they are getting. *@
+            <form class="page-size" method="get" action="streamed/events/data">
+                <label for="size">Rows per page</label>
+                <select id="size" name="size" onchange="this.form.submit()">
+                    @foreach (var option in InstanceQuery.PageSizes)
+                    {
+                        <option value="@option" selected="@(option == PageSize)">@option</option>
+                    }
+                </select>
+                @if (!Stream.IsAll)
+                {
+                    <input type="hidden" name="stream" value="@Stream.Stream?.FullName"/>
+                }
+                @if (!Choice.IsAll)
+                {
+                    <input type="hidden" name="type" value="@Choice.Event?.FullName"/>
+                }
+                @if (IsFiltered)
+                {
+                    <input type="hidden" name="payload" value="@Payload"/>
+                }
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                @if (PayloadsAsked is not null)
+                {
+                    <input type="hidden" name="payloads" value="@Token(PayloadsOpen)"/>
+                }
+                <noscript>
+                    <button type="submit">Apply</button>
+                </noscript>
+            </form>
+        </div>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Which of the log's events are being looked at: all of them, one type, or neither because the
+    /// name in the address reaches nothing that could have been written.
+    /// </summary>
+    private EventChoice Choice { get; set; } = new(Event: null, Unknown: false);
+
+    /// <summary>
+    /// Which kind of stream they are being read out of, or all of them.
+    /// </summary>
+    private StreamChoice Stream { get; set; } = new(Stream: null, Unknown: false);
+
+    /// <summary>
+    /// The stream types the uploaded assemblies declare, which is what the dropdown offers and what
+    /// a name in the address is matched against.
+    /// </summary>
+    /// <remarks>
+    /// The same list the streams page lists. The ids in the log are not the choice on offer: one
+    /// type names a stream per value it is given — a customer apiece — so a dropdown of them would
+    /// be as long as the log is wide, while the types are few enough to read.
+    /// </remarks>
+    private IReadOnlyList<Type> StreamTypes => Types.Current.StreamedStreamIds;
+
+    private StoredStreamEvents Events { get; set; } =
+        new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+    private bool Descending { get; set; } = true;
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// The text a row's payload has to carry, or null when the log is read whole.
+    /// </summary>
+    private string? Payload { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Payload);
+
+    /// <summary>
+    /// What the address says about the payloads, when it says anything, and null when it does not.
+    /// </summary>
+    private bool? PayloadsAsked { get; set; }
+
+    /// <summary>
+    /// Whether every payload on the page starts open. Closed unless the address says otherwise: a
+    /// page of the log is read by running down the streams and the types, and the payloads are what
+    /// is opened once something on a row is worth following.
+    /// </summary>
+    /// <remarks>
+    /// The state of the page rather than of any row. A reader still folds one row at a time, and
+    /// this only says what they are all folded to on arrival — which is why it travels with every
+    /// link and every form here: paging or narrowing with the payloads out should not quietly shut
+    /// them.
+    /// <para>
+    /// Filtering turns the default over, because the text a row matched on is inside the fold: a
+    /// filtered page that opened closed would be a search whose results are all hidden. Saying so
+    /// in the address still wins either way, so Collapse all works on a filtered page as it does
+    /// anywhere else.
+    /// </para>
+    /// </remarks>
+    private bool PayloadsOpen => PayloadsAsked ?? IsFiltered;
+
+    /// <summary>What the address says when the payloads are out, and when they are folded away.</summary>
+    private const string Open = "open";
+
+    private const string Closed = "closed";
+
+    private static string Token(bool open) => open ? Open : Closed;
+
+    /// <summary>
+    /// How much a folded payload has under it, so a closed row still says whether opening it is
+    /// worth it. The properties it declares, not the ones nested inside them: the count belongs to
+    /// what the fold hides at its first line.
+    /// </summary>
+    private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
+
+    /// <summary>
+    /// What the page is, for the heading.
+    /// </summary>
+    /// <remarks>
+    /// The page rather than the choices, and the same however far the log is narrowed. The
+    /// dropdowns above the table say what is being looked at and the line under them says how much
+    /// of it there is; a heading that changed with them would be a third voice saying the same
+    /// thing, and one that moved as the page was narrowed.
+    /// </remarks>
+    private const string Heading = "Events Data";
+
+    /// <summary>
+    /// The events some streamed aggregate or projection applies, which is what the dropdown offers
+    /// and what a name in the address is matched against.
+    /// </summary>
+    /// <remarks>
+    /// The same list the streamed events page lists, for the same reason: an event nothing here
+    /// folds would be a choice narrowing to rows no streamed model is made of.
+    /// </remarks>
+    private IReadOnlyList<Type> EventTypes => Types.Current.StreamedEvents;
+
+    /// <summary>
+    /// What an event is written into the log as, falling back to the class when it carries no
+    /// attribute — the same name the events page lists it under, so one row means one thing across
+    /// the two pages.
+    /// </summary>
+    private static string BoundAs(Type @event) => DomainTypeDescriber.LabelOf(@event);
+
+    /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $", of {Choice.Name}";
+
+    /// <summary>And to one stream, said after it: what was written, then where it went.</summary>
+    private string In => Stream.IsAll ? string.Empty : $", in {Stream.Name}";
+
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// Appended is the whole log's word for it; a filtered table counts what matched, which is not
+    /// the same claim about what was written. Said the way the DCB log says it, so a count means
+    /// one thing across the two.
+    /// </remarks>
+    private string Summary => (Events.Total, IsFiltered) switch
+    {
+        (1, false) => $"One event appended{Of}{In}.",
+        (_, false) => $"{Events.Total} events appended{Of}{In}.",
+        (1, true) => $"One matching event{Of}{In}.",
+        (_, true) => $"{Events.Total} matching events{Of}{In}."
+    };
+
+    /// <summary>
+    /// One address for the whole table state, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="descending">Whether the newest come first.</param>
+    /// <param name="page">The page to land on, from one.</param>
+    /// <param name="clearStream">Whether to widen back to every stream.</param>
+    /// <param name="clearType">Whether to widen back to every type.</param>
+    /// <param name="clearPayload">Whether to drop the text a payload had to carry.</param>
+    /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
+    /// <remarks>
+    /// The three narrowings are named only when they are made, and the payloads only when the
+    /// address this link was built from had something to say about them — the fold link is what says
+    /// it, and it says it either way, because on a filtered page folded is no longer what silence
+    /// means.
+    /// </remarks>
+    private string Link(
+        bool descending,
+        int page,
+        bool clearStream = false,
+        bool clearType = false,
+        bool clearPayload = false,
+        bool? open = null)
+    {
+        var link = $"streamed/events/data?dir={(descending ? "desc" : "asc")}" +
+                   $"&size={PageSize}" +
+                   $"&page={page}";
+
+        if ((open ?? PayloadsAsked) is { } folded)
+        {
+            link += $"&payloads={Token(folded)}";
+        }
+
+        if (!clearStream && Stream.Stream is { } stream)
+        {
+            link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
+        }
+
+        if (!clearType && Choice.Event is { } chosen)
+        {
+            link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
+        }
+
+        return clearPayload || !IsFiltered
+            ? link
+            : $"{link}&payload={Uri.EscapeDataString(Payload!)}";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        Stream = StreamChoice.Of(StreamTypes, Value("stream"));
+        Choice = EventChoice.Of(EventTypes, Value("type"));
+        Payload = Value("payload");
+        Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+
+        // Anything else it might say is not an answer, and null is the one state that lets the
+        // filter decide — which is what an address that says nothing usable should fall back to.
+        PayloadsAsked = Value("payloads") switch
+        {
+            { } said when string.Equals(said, Open, StringComparison.OrdinalIgnoreCase) => true,
+            { } said when string.Equals(said, Closed, StringComparison.OrdinalIgnoreCase) => false,
+            _ => null
+        };
+
+        // A choice with nothing to look for is not asked about. Its key is null, and null narrows
+        // to everything rather than to nothing — so asking would answer the name of one type, or of
+        // one stream, with the whole log.
+        if (Choice.ShowsNothing || Stream.ShowsNothing)
+        {
+            Events = new StoredStreamEvents([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+            return;
+        }
+
+        Events = await StreamedEvents.Page(
+            StoreContext,
+            Stream.Pattern,
+            Choice.Key,
+            Payload,
+            Descending,
+            int.TryParse(Value("page"), out var asked) ? asked : 1,
+            PageSize);
+    }
+
+    /// <summary>
+    /// The properties of one payload, a name and a value each, with the properties of any value one
+    /// holds nested under it.
+    /// </summary>
+    /// <remarks>
+    /// Draws itself, because a payload nests as deep as the describer read it. Inside a cell rather
+    /// than as rows: the whole payload is one column of a row about the event, so there are no
+    /// columns of its own to keep anything lined up with.
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
+        @<ul class="pairs">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <span class="pair-name">@property.Name</span>
+
+                    @if (property.Children.Count == 0)
+                    {
+                        <span class="pair-value">@(property.Value ?? "—")</span>
+                    }
+                    else
+                    {
+                        @* How many there are, when it is a list. A single shape says nothing here
+                           that the pairs under it do not say better. *@
+                        @if (property.Value is not null)
+                        {
+                            <span class="pair-value">@property.Value</span>
+                        }
+
+                        @Pairs(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
+
+}

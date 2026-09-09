@@ -93,7 +93,7 @@ public sealed class IdentifierShape
         }
 
         var probes = parameters
-            .Select((parameter, index) => (parameter.Name, Probe: Probes.For(parameter.TypeName, index)))
+            .Select((parameter, index) => (parameter.Name, Probe: ProbeValues.For(parameter.TypeName, index)))
             .ToList();
 
         if (probes.Any(probe => probe.Probe is null))
@@ -196,19 +196,6 @@ public sealed class IdentifierShape
     public IReadOnlyDictionary<string, string>? ValuesFromBoundary(string boundary) =>
         ValuesFrom(StoredBoundary.Read(boundary).Tags);
 
-    /// <summary>
-    /// Values distinctive enough to be spotted again in the tags they end up in.
-    /// </summary>
-    private static class Probes
-    {
-        public static string? For(string typeName, int index) => typeName switch
-        {
-            "string" => $"probe-{index}",
-            "Guid" => Guid.NewGuid().ToString(),
-            "int" or "long" or "short" => (900_000_000 + index).ToString(),
-            _ => null
-        };
-    }
 }
 
 /// <summary>

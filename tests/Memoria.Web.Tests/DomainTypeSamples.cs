@@ -63,9 +63,48 @@ public record SampleCarriedEvent(
 /// A stream the streamed models are folded from. It carries no attribute and implements nothing
 /// the aggregate and projection identifiers implement, so finding it is the scanner's own work.
 /// </summary>
+/// <remarks>
+/// Its id is the value it was given and nothing else, so the pattern it matches by is a wildcard
+/// on its own — a stream type that claims every id in the log.
+/// </remarks>
 public class SampleStreamId(string id) : IStreamId
 {
     public string Id { get; } = id;
+}
+
+/// <summary>
+/// A stream naming what it is before the value it was given, as a stream per customer or per
+/// warehouse does. The usual shape, and the one a pattern is worth having for.
+/// </summary>
+public class SamplePrefixedStreamId(string sampleId) : IStreamId
+{
+    public string Id => $"sample:{sampleId}";
+}
+
+/// <summary>
+/// A stream built from two values, so a pattern has more than one hole to leave in it.
+/// </summary>
+public class SampleTwoPartStreamId(string sampleId, int year) : IStreamId
+{
+    public string Id => $"sample:{sampleId}:{year}";
+}
+
+/// <summary>
+/// One stream for everything, taking nothing to name it. Its id is fixed, so the pattern is that
+/// id exactly rather than anything with a hole in it.
+/// </summary>
+public class SampleOnlyStreamId : IStreamId
+{
+    public string Id => "samples";
+}
+
+/// <summary>
+/// A stream named from a value nothing can stand in for, so its pattern cannot be worked out: with
+/// no recognisable value to put in, there is no way to tell which part of the id came from it.
+/// </summary>
+public class SampleUnprobedStreamId(SampleMeasurement size) : IStreamId
+{
+    public string Id => $"sample:{size.Width}";
 }
 
 [AggregateType("SampleAggregate", 1)]
