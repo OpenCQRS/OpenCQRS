@@ -13,6 +13,9 @@
         <ProjectReference Include="..\Memoria.EventSourcing.Store.EntityFrameworkCore\Memoria.EventSourcing.Store.EntityFrameworkCore.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing.Dcb\Memoria.EventSourcing.Dcb.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.csproj" />
+        <!-- For the document types and container contract the Cosmos store writes. The tool reads
+             those documents with the same SDK rather than describing them a second time. -->
+        <ProjectReference Include="..\Memoria.EventSourcing.Store.Cosmos\Memoria.EventSourcing.Store.Cosmos.csproj" />
     </ItemGroup>
 
     <ItemGroup>

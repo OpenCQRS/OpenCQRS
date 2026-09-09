@@ -214,6 +214,22 @@ else
                 }
             </select>
         </div>
+
+        @* The same setting as the "Don't show this again" under the note itself, reachable without
+           having to meet the note again to change one's mind — which is the whole difficulty with a
+           dismissal: once hidden, the thing that offered to hide it is gone. Unchecked as rendered
+           and corrected once the page is running, like the picker above. *@
+        <div class="preference">
+            <label for="hide-ordering-notice">
+                <input type="checkbox" id="hide-ordering-notice"
+                       data-preference="hide-ordering-notice" />
+                Hide the note about approximate ordering
+            </label>
+            <p class="hint">
+                Some stores cannot order a page fully and fall back to ordering by date alone. The
+                events are all there; rows written at the same moment can move between pages.
+            </p>
+        </div>
     </section>
 }
 

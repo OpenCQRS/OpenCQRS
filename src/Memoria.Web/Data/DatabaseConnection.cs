@@ -39,7 +39,10 @@ public sealed record DatabaseConnection(DatabaseProvider Provider, string Connec
         ["postgresql"] = DatabaseProvider.Npgsql,
         ["sqlserver"] = DatabaseProvider.SqlServer,
         ["mssql"] = DatabaseProvider.SqlServer,
-        ["sqlite"] = DatabaseProvider.Sqlite
+        ["sqlite"] = DatabaseProvider.Sqlite,
+        ["cosmos"] = DatabaseProvider.Cosmos,
+        ["cosmosdb"] = DatabaseProvider.Cosmos,
+        ["azurecosmosdb"] = DatabaseProvider.Cosmos
     };
 
     /// <summary>Keywords Npgsql takes and the other two do not.</summary>
@@ -67,6 +70,14 @@ public sealed record DatabaseConnection(DatabaseProvider Provider, string Connec
     /// <summary>Keywords SQLite takes and the other two do not.</summary>
     private static readonly string[] SqliteKeywords =
         ["mode", "cache", "foreignkeys", "recursivetriggers"];
+
+    /// <summary>Keywords Cosmos takes and no relational provider does.</summary>
+    /// <remarks>
+    /// Cosmos names an account rather than a server, which is why none of these is shared: the
+    /// other three have nothing to say about an account endpoint or an account key.
+    /// </remarks>
+    private static readonly string[] CosmosKeywords =
+        ["accountendpoint", "accountkey", "authkeyorresourcetoken"];
 
     /// <summary>What a SQLite database is usually called, for a string that names only a file.</summary>
     private static readonly string[] SqliteExtensions =
@@ -130,6 +141,12 @@ public sealed record DatabaseConnection(DatabaseProvider Provider, string Connec
         DatabaseProvider.Npgsql => builder.UseNpgsql(ConnectionString),
         DatabaseProvider.SqlServer => builder.UseSqlServer(ConnectionString),
         DatabaseProvider.Sqlite => builder.UseSqlite(ConnectionString),
+        // Said here rather than left to fail further in. A Cosmos store is read through its own
+        // SDK, so there is no context to open and nothing calls this — an unhandled enum would
+        // reach whoever added the arm, and this reaches whoever wired the store.
+        DatabaseProvider.Cosmos => throw new InvalidOperationException(
+            "A Cosmos store is not opened through a DbContext. Its documents are read through the " +
+            "Cosmos SDK, so nothing here has a provider to apply."),
         _ => throw new ArgumentOutOfRangeException(nameof(Provider), Provider,
             "There is no provider for this engine.")
     };
@@ -142,7 +159,7 @@ public sealed record DatabaseConnection(DatabaseProvider Provider, string Connec
             ? provider
             : throw new InvalidOperationException(
                 $"'{configured}' is not a database provider this tool has. Set {Setting} to " +
-                "Npgsql, SqlServer or Sqlite, or leave it out to read the provider off the " +
+                "Npgsql, SqlServer, Sqlite or Cosmos, or leave it out to read the provider off the " +
                 "connection string.");
 
     /// <summary>
@@ -182,15 +199,42 @@ public sealed record DatabaseConnection(DatabaseProvider Provider, string Connec
             candidates.Add(DatabaseProvider.Sqlite);
         }
 
+        if (Carries(values, CosmosKeywords))
+        {
+            candidates.Add(DatabaseProvider.Cosmos);
+        }
+
         return candidates.Count == 1
             ? candidates[0]
             : throw new InvalidOperationException(
                 $"The provider for connection string '{Name}' could not be read off it: " +
-                (candidates.Count == 0
-                    ? "every keyword in it is one that more than one provider takes."
-                    : "it carries keywords for more than one provider.") +
-                $" Set {Setting} to Npgsql, SqlServer or Sqlite.");
+                Why(values, candidates.Count) +
+                $" Set {Setting} to Npgsql, SqlServer, Sqlite or Cosmos.");
     }
+
+    /// <summary>
+    /// Why a connection string named no single provider.
+    /// </summary>
+    /// <remarks>
+    /// Three ways to fail and only two of them are the same problem. A string carrying signals for
+    /// two providers and a string carrying only keywords they share are both cases where choosing
+    /// would be choosing arbitrarily. A string carrying keywords none of them takes is not that: it
+    /// is a string for something else entirely, and telling its reader that several providers take
+    /// its keywords would send them looking for an ambiguity that is not there.
+    /// </remarks>
+    private static string Why(IReadOnlyDictionary<string, string> values, int candidates) =>
+        candidates > 1
+            ? "it carries keywords for more than one provider."
+            : values.Keys.Any(Known.Contains)
+                ? "every keyword in it is one that more than one provider takes."
+                : "nothing in it is a keyword any provider this tool has would take.";
+
+    /// <summary>Every keyword this tool recognises, whoever takes it.</summary>
+    private static readonly HashSet<string> Known =
+    [
+        .. NpgsqlKeywords, .. SqlServerKeywords, .. SqliteKeywords, .. CosmosKeywords,
+        .. SourceKeywords, "database", "userid", "password", "uid", "pwd"
+    ];
 
     /// <summary>
     /// Whether the source names a database file, which is the one thing a SQLite connection string

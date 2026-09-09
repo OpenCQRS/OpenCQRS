@@ -15,6 +15,10 @@
 // that could disagree.
 const key = "memoria.rows-per-page";
 
+// Whether the note about approximate ordering has been waved away for good. Its own key rather than
+// a field beside the size, so one preference cannot be lost by writing the other.
+const orderingKey = "memoria.hide-ordering-notice";
+
 // Storage can be missing or refused outright: a private window, a browser set to block site data,
 // an embedded view. A reader who cannot be remembered still gets a working table at the size the
 // address asks for, so both ways in swallow the refusal rather than letting it reach the page.
@@ -33,6 +37,54 @@ function remember(size) {
     }
 }
 
+// The ordering note is hidden only when it was asked to be. Storage that cannot be read answers
+// "no", so a reader who cannot be remembered sees the note rather than silently losing it.
+function noticeHidden() {
+    try {
+        return window.localStorage.getItem(orderingKey) === "true";
+    } catch {
+        return false;
+    }
+}
+
+function rememberNotice(hidden) {
+    try {
+        if (hidden) {
+            window.localStorage.setItem(orderingKey, "true");
+        } else {
+            window.localStorage.removeItem(orderingKey);
+        }
+    } catch {
+    }
+}
+
+function hideNotices() {
+    for (const notice of document.querySelectorAll('[data-notice="ordering"]')) {
+        notice.hidden = true;
+    }
+}
+
+// Closing and hiding are different answers to the same note. Close takes away the one on this page
+// and nothing more — the note is true, and it comes back on the next page that has to say it. Hide
+// is the standing answer, and is written down.
+document.addEventListener("click", event => {
+    const control = event.target;
+
+    if (!(control instanceof HTMLElement)) {
+        return;
+    }
+
+    if (control.closest("[data-notice-close]")) {
+        control.closest('[data-notice="ordering"]').hidden = true;
+        return;
+    }
+
+    if (control.closest("[data-notice-hide]")) {
+        rememberNotice(true);
+        hideNotices();
+    }
+});
+
 // The pick, wherever it was made. The picker under a table submits its form and the size lands in
 // the address; the one on the settings page has no form to submit and this is all that happens. One
 // listener on the document rather than one per select: the selects come and go as pages are swapped
@@ -49,7 +101,34 @@ document.addEventListener("change", event => {
     }
 });
 
+// The settings page's own switch for the ordering note, which is the way back once the note has
+// been hidden: the note is what offers to hide it, so hiding it takes the offer away with it.
+document.addEventListener("change", event => {
+    const box = event.target;
+
+    if (box instanceof HTMLInputElement && box.dataset.preference === "hide-ordering-notice") {
+        rememberNotice(box.checked);
+
+        if (box.checked) {
+            hideNotices();
+        }
+    }
+});
+
 function apply() {
+    // Both settings are put back on every page, and this one first: the note is rendered for
+    // everyone, so a reader who hid it should not watch it go. Before the early return below,
+    // because a reader who never picked a size may still have hidden the note.
+    const hidden = noticeHidden();
+
+    if (hidden) {
+        hideNotices();
+    }
+
+    for (const box of document.querySelectorAll('input[data-preference="hide-ordering-notice"]')) {
+        box.checked = hidden;
+    }
+
     const size = stored();
 
     if (!size) {

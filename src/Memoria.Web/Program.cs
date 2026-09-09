@@ -27,30 +27,6 @@ var database = DatabaseConnection.Of(
     builder.Configuration.GetConnectionString(DatabaseConnection.Name),
     builder.Configuration[DatabaseConnection.Setting]);
 
-// Both contexts take their options as the base type's DbContextOptions rather than their own
-// closed type, so each is registered against that.
-builder.Services.AddScoped(serviceProvider =>
-{
-    var options = new DbContextOptionsBuilder<DomainDbContext>();
-    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
-    return options.Options;
-});
-
-builder.Services.AddScoped(serviceProvider =>
-{
-    var options = new DbContextOptionsBuilder<DcbDbContext>();
-    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
-    return options.Options;
-});
-
-builder.Services.AddDbContext<StreamedStoreDbContext>(options => database.Apply(options));
-builder.Services.AddDbContext<DcbStoreDbContext>(options => database.Apply(options));
-
-// The streamed pages read through this rather than through a context of their own, so that a store
-// which is not relational can answer the same two questions. Every provider registered above is,
-// so every provider registered above is served by the Entity Framework Core reader.
-builder.Services.AddScoped<IStreamedReads, EfStreamedReads>();
-
 builder.Services.AddMemoria(typeof(Program));
 
 // The two event sourcing models side by side. Each store call replaces the default no-op service
@@ -58,8 +34,9 @@ builder.Services.AddMemoria(typeof(Program));
 builder.Services.AddMemoriaEventSourcing(typeof(Program));
 builder.Services.AddMemoriaDcb(typeof(Program));
 
-builder.Services.AddMemoriaEntityFrameworkCore<StreamedStoreDbContext>();
-builder.Services.AddMemoriaDcbEntityFrameworkCore<DcbStoreDbContext>();
+// Whichever store the connection string named, and the reader the streamed pages ask through. A
+// relational store brings four contexts with it; a Cosmos store brings a client and no context.
+builder.Services.AddStore(database, builder.Configuration);
 
 // The domain types uploaded through the settings page. Only registered here — the assemblies are
 // read below, and again whenever someone uploads or asks for a refresh.
@@ -84,7 +61,13 @@ LogCatalogue(app.Logger, registry.Current);
 // page that reads anything would otherwise pay. Warmed here instead, in the background so the
 // application starts serving straight away, and quietly, because a store that cannot be reached is
 // the page's problem to report rather than a reason not to start.
-_ = Task.Run(() => WarmStore(app));
+// Only the relational stores are warmed. The warming query reads the dynamic consistency boundary
+// tables, which a Cosmos store does not have — there would be nothing to compile and no context to
+// ask.
+if (database.Provider is not DatabaseProvider.Cosmos)
+{
+    _ = Task.Run(() => WarmStore(app));
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

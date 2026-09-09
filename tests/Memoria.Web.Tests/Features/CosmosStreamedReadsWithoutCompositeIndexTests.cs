@@ -1,0 +1,145 @@
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Memoria.EventSourcing.Store.Cosmos;
+using Memoria.EventSourcing.Store.Cosmos.Documents;
+using Memoria.Web.Extensibility;
+using Microsoft.Azure.Cosmos;
+using Xunit;
+
+namespace Memoria.Web.Tests.Features;
+
+/// <summary>
+/// The same page, read from a container carrying the indexing policy the Cosmos store actually
+/// ships — the one that defines no composite indexes.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The store leaves them out on purpose and says why: three were drafted and cost about 7% on every
+/// write while returning nothing to the store's own reads. So the container this tool is pointed at
+/// will usually not have them, and asking Cosmos for the three-key order there is not a slow query
+/// but a refused one — <c>BadRequest</c>, no rows at all.
+/// </para>
+/// <para>
+/// Rather than require every operator to change the indexing policy of a store the tool only reads,
+/// the read falls back to ordering on the date alone, which the store's own policy already indexes.
+/// The page then says so, because the coarser order is a real difference: events sharing a
+/// timestamp can move between pages.
+/// </para>
+/// </remarks>
+[Trait("Category", "Emulator")]
+[Collection(CosmosCollection.Name)]
+public class CosmosStreamedReadsWithoutCompositeIndexTests : IAsyncLifetime
+{
+    private const string Endpoint = "https://localhost:8081";
+
+    private const string Key =
+        "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+
+    private readonly string _databaseName = $"memoria_web_tests_{Guid.NewGuid():N}";
+
+    private const string ContainerName = "Domain";
+    private const int EventCount = 30;
+
+    private CosmosClient _client = null!;
+    private CosmosStreamedReads _reads = null!;
+    private DateTimeOffset _start;
+
+    public async Task InitializeAsync()
+    {
+        _client = new CosmosClient(Endpoint, Key, new CosmosClientOptions
+        {
+            HttpClientFactory = () => new HttpClient(new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+            }),
+            ConnectionMode = ConnectionMode.Gateway
+        });
+
+        var database = await _client.CreateDatabaseIfNotExistsAsync(_databaseName);
+
+        // The store's own policy, unedited. Whatever it indexes is what this tool has to work with.
+        await database.Database.CreateContainerIfNotExistsAsync(
+            new ContainerProperties(ContainerName, "/streamId")
+            {
+                IndexingPolicy = CosmosIndexingPolicy.CreateRecommended()
+            });
+
+        _start = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        var container = database.Database.GetContainer(ContainerName);
+
+        for (var index = 0; index < EventCount; index++)
+        {
+            var streamId = $"c-{index % 5:0000}";
+
+            await container.UpsertItemAsync(new EventDocument
+            {
+                Id = $"{streamId}:{index / 5}",
+                StreamId = streamId,
+                EventType = "OrderPlacedEvent:1",
+                Sequence = index / 5,
+                Data = "{}",
+                CreatedDate = _start.AddHours(index)
+            }, new PartitionKey(streamId));
+        }
+
+        _reads = new CosmosStreamedReads(_client, _databaseName, ContainerName);
+    }
+
+    public async Task DisposeAsync()
+    {
+        try
+        {
+            await _client.GetDatabase(_databaseName).DeleteAsync();
+        }
+        catch (CosmosException)
+        {
+            // A run that never created it has nothing to clean up.
+        }
+
+        _client.Dispose();
+    }
+
+    private static StreamedEventFilter Filter(bool descending = true) =>
+        new(StreamPattern: null, EventType: null, Text: null, descending, Page: 1, Size: 10);
+
+    [Fact]
+    public async Task GivenNoCompositeIndex_WhenAPageIsRead_ThenItStillReadsTheNewestFirst()
+    {
+        var page = await _reads.Events(Filter());
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull("a container without the index is not a broken container");
+        page.Total.Should().Be(EventCount);
+        page.Events.Should().HaveCount(10);
+
+        page.Events[0].Event.Written.Should().Be(_start.AddHours(EventCount - 1));
+        page.Events.Select(appended => appended.Event.Written).Should().BeInDescendingOrder();
+    }
+
+    [Fact]
+    public async Task GivenNoCompositeIndex_WhenAPageIsRead_ThenItSaysTheOrderIsCoarser()
+    {
+        var page = await _reads.Events(Filter());
+
+        page.OrderingNotice.Should().NotBeNullOrWhiteSpace(
+            "a reader paging through events deserves to know rows can shift between pages");
+    }
+
+    [Fact]
+    public async Task GivenNoCompositeIndex_WhenAscendingIsAsked_ThenTheOldestStillComeFirst()
+    {
+        var page = await _reads.Events(Filter(descending: false));
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Events[0].Event.Written.Should().Be(_start);
+        page.Events.Select(appended => appended.Event.Written).Should().BeInAscendingOrder();
+    }
+}

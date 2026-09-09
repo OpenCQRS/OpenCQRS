@@ -101,6 +101,22 @@ else
         }
     </form>
 
+    @* Beside the rows rather than instead of them: the page worked, and this says how well it could
+       be ordered. Its own block ahead of the chain below, because every one of those is a reason
+       there is no table and this is not — the rows are there and one property of them is weaker.
+       Rendered for everyone and taken away afterwards by the browser that was told to: the server
+       cannot know what this reader has already read. See wwwroot/preferences.js. *@
+    @if (Events.OrderingNotice is not null)
+    {
+        <div class="caution" role="status" data-notice="ordering">
+            <p>@Events.OrderingNotice</p>
+            <p class="caution-actions">
+                <button type="button" data-notice-close>Close</button>
+                <button type="button" data-notice-hide>Don't show this again</button>
+            </p>
+        </div>
+    }
+
     @if (Choice.Unbound)
     {
         @* Registered, listed, and impossible to have stored: without an [EventType] there is no key

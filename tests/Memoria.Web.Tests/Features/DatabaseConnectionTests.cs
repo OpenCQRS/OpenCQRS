@@ -49,10 +49,25 @@ public class DatabaseConnectionTests
     }
 
     /// <summary>
+    /// Cosmos names its account rather than a server, and no other provider takes either keyword.
+    /// </summary>
+    [Theory]
+    [InlineData("AccountEndpoint=https://memoria.documents.azure.com:443/;AccountKey=a2V5")]
+    [InlineData("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5;")]
+    public void Reads_cosmos_off_the_keywords_only_it_takes(string connectionString)
+    {
+        DatabaseConnection.Of(connectionString, configured: null).Provider
+            .Should().Be(DatabaseProvider.Cosmos);
+    }
+
+    /// <summary>
     /// The setting is the way out of a string this cannot read, so it answers even when the string
     /// reads as something else — being told is not a guess to be second-guessed.
     /// </summary>
     [Theory]
+    [InlineData("Cosmos", DatabaseProvider.Cosmos)]
+    [InlineData("cosmos db", DatabaseProvider.Cosmos)]
+    [InlineData("CosmosDb", DatabaseProvider.Cosmos)]
     [InlineData("Npgsql", DatabaseProvider.Npgsql)]
     [InlineData("postgres", DatabaseProvider.Npgsql)]
     [InlineData("PostgreSQL", DatabaseProvider.Npgsql)]
@@ -144,6 +159,41 @@ public class DatabaseConnectionTests
             Substitute.For<IHttpContextAccessor>());
 
         context.Database.ProviderName.Should().Be(expected);
+    }
+
+    /// <summary>
+    /// Two different problems, and telling a reader the wrong one sends them the wrong way. A string
+    /// of shared keywords needs the setting to choose between providers that could all open it; a
+    /// string of keywords none of them takes is not a string this tool can open at all, and saying
+    /// "more than one provider takes them" would be untrue.
+    /// </summary>
+    [Fact]
+    public void Separates_a_string_naming_no_engine_from_one_naming_several()
+    {
+        var naming_none = () => DatabaseConnection.Of("Foo=bar;Baz=qux", configured: null);
+        var naming_several = () => DatabaseConnection.Of(
+            "Server=localhost;Database=memoria;User Id=sa;Password=password", configured: null);
+
+        naming_none.Should().Throw<InvalidOperationException>()
+            .Which.Message.Should().NotContain("more than one provider takes");
+
+        naming_several.Should().Throw<InvalidOperationException>()
+            .Which.Message.Should().Contain("more than one provider takes");
+    }
+
+    /// <summary>
+    /// Cosmos is not reached through a context, so there is no provider to put on one. Said where it
+    /// is asked for, rather than left to fail as an unhandled enum somewhere further in.
+    /// </summary>
+    [Fact]
+    public void Refuses_to_open_a_context_on_cosmos()
+    {
+        var connection = DatabaseConnection.Of(
+            "AccountEndpoint=https://localhost:8081/;AccountKey=a2V5", configured: null);
+
+        var applying = () => connection.Apply(new DbContextOptionsBuilder<DcbDbContext>());
+
+        applying.Should().Throw<InvalidOperationException>().WithMessage("*Cosmos*");
     }
 
     [Fact]

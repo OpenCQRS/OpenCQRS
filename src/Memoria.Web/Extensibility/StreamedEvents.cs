@@ -152,7 +152,19 @@ public static class StreamedEvents
 /// <param name="TotalPages">How many pages there are, never fewer than one.</param>
 /// <param name="Error">Why the log could not be read, or null when it was.</param>
 public sealed record StoredStreamEvents(
-    IReadOnlyList<StoredStreamEvent> Events, int Total, int Page, int TotalPages, string? Error);
+    IReadOnlyList<StoredStreamEvent> Events, int Total, int Page, int TotalPages, string? Error)
+{
+    /// <summary>
+    /// Why this page is ordered more coarsely than it asked for, or null when it is not.
+    /// </summary>
+    /// <remarks>
+    /// Not an error: the rows are real and the page is drawn. It says the tie-breakers were dropped,
+    /// which a reader paging through a log should know, because two events sharing a timestamp can
+    /// then move between pages. Only a store that cannot serve the full order sets it, which today
+    /// means a Cosmos container without the composite index that order needs.
+    /// </remarks>
+    public string? OrderingNotice { get; init; }
+}
 
 /// <summary>
 /// One appended event, and the stream it was appended to.
