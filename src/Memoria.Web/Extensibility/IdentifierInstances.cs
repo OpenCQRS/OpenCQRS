@@ -27,7 +27,10 @@ public static class IdentifierInstances
     /// model of the kind.</param>
     /// <param name="shape">Which tags the identifier's values live in, or null for every boundary
     /// whatever its shape.</param>
-    /// <param name="tag">Text the boundary must contain, or null to keep them all.</param>
+    /// <param name="text">
+    /// Text the row must carry, in the id it was stored under or in its boundary, or null to keep
+    /// them all.
+    /// </param>
     /// <param name="sort">Which date to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
@@ -50,7 +53,7 @@ public static class IdentifierInstances
         DcbModelKind kind,
         string? modelType,
         IdentifierShape? shape,
-        string? tag,
+        string? text,
         InstanceSort sort,
         bool descending,
         int page,
@@ -80,13 +83,18 @@ public static class IdentifierInstances
                                               !EF.Functions.Like(snapshot.TagQuery, longer));
         }
 
-        if (!string.IsNullOrWhiteSpace(tag))
+        if (!string.IsNullOrWhiteSpace(text))
         {
             // Lowered on both sides rather than with a provider's case-insensitive operator, so
             // this reads the same against SQL Server as it does against Postgres.
-            var wanted = $"%{tag.Trim().ToLower()}%";
+            var wanted = $"%{text.Trim().ToLower()}%";
 
-            stored = stored.Where(snapshot => EF.Functions.Like(snapshot.TagQuery.ToLower(), wanted));
+            // The id the model was stored under as well as the boundary it was folded from. They
+            // are two different things a reader may have in hand — the name the store filed it as,
+            // and the tags that selected its events — and either matching is enough.
+            stored = stored.Where(snapshot =>
+                EF.Functions.Like(snapshot.StoreId.ToLower(), wanted) ||
+                EF.Functions.Like(snapshot.TagQuery.ToLower(), wanted));
         }
 
         var total = await stored.CountAsync(cancellationToken);
@@ -105,6 +113,7 @@ public static class IdentifierInstances
             .Take(size)
             .Select(snapshot => new
             {
+                snapshot.StoreId,
                 snapshot.ModelType,
                 snapshot.TagQuery,
                 snapshot.Version,
@@ -116,6 +125,7 @@ public static class IdentifierInstances
         var instances = rows
             .Select(row => new Instance(
                 shape?.ValuesFromBoundary(row.TagQuery) ?? new Dictionary<string, string>(),
+                row.StoreId,
                 row.ModelType,
                 row.TagQuery,
                 row.Version,
@@ -131,6 +141,7 @@ public static class IdentifierInstances
 /// <param name="Values">The identifier's values, by the constructor parameter each belongs to.
 /// Empty when the list was not narrowed to one identifier, because there is then no one shape to
 /// unfold a boundary with.</param>
+/// <param name="StoreId">The key the model itself was stored under, as <c>id:version</c>.</param>
 /// <param name="ModelType">The binding key it was stored under, as <c>name:version</c>.</param>
 /// <param name="Boundary">The boundary it was folded under, in canonical form.</param>
 /// <param name="Version">The version its snapshot was stored at.</param>
@@ -143,6 +154,7 @@ public static class IdentifierInstances
 /// </remarks>
 public sealed record Instance(
     IReadOnlyDictionary<string, string> Values,
+    string StoreId,
     string ModelType,
     string Boundary,
     int Version,

@@ -215,7 +215,7 @@ else
             {
                 <tr>
                     <td><code>@stored.StreamId</code></td>
-                    <td><code>@stored.Id</code></td>
+                    <td><code>@stored.StoreId</code></td>
                     <td><code>@stored.Name</code></td>
                     <td>
                         @* What addressed the row, worked out rather than read: the store keeps the
@@ -382,7 +382,7 @@ else
         }
 
         var addressing = Addressing(row.Type)
-            .Where(identifier => IdShape.Of(identifier)?.Matches(row.Id) == true)
+            .Where(identifier => IdShape.Of(identifier)?.Matches(row.AddressedId) == true)
             .ToList();
 
         return addressing.Count == 1 ? addressing[0].Name : null;

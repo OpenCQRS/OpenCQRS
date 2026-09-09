@@ -226,14 +226,15 @@ public sealed record StoredStreamSnapshot(
     DateTimeOffset Updated)
 {
     /// <summary>
-    /// Gets the id it is addressed by, without the type version the store keeps beside it.
+    /// Gets the id an identifier produced for it, which is the stored key without the type version
+    /// the store appends.
     /// </summary>
     /// <remarks>
-    /// The store joins the two because something has to read them back apart, which is its need and
-    /// not the reader's — and the version is already said in the type column, where it belongs to
-    /// the name it versions.
+    /// Not what a page shows — the pages show the key as the store wrote it. This is what an
+    /// identifier's pattern is held against, because a pattern describes the id the identifier
+    /// makes and knows nothing of the version the store joins to it.
     /// </remarks>
-    public string Id => DomainTypeDescriber.SplitKey(StoreId).Name;
+    public string AddressedId => DomainTypeDescriber.SplitKey(StoreId).Name;
 
     /// <summary>Gets its type as every page here names one: what it is bound as, and the version.</summary>
     public string Name => DomainTypeDescriber.LabelOfKey(Type);

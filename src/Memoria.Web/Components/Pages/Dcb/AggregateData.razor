@@ -69,8 +69,8 @@ else
             }
         </select>
 
-        <label class="visually-hidden" for="tag">Filter by tag</label>
-        <input id="tag" type="search" name="tag" value="@Tag" placeholder="@TagPlaceholder" autocomplete="off"/>
+        <label class="visually-hidden" for="text">@TextPlaceholder</label>
+        <input id="text" type="search" name="text" value="@Text" placeholder="@TextPlaceholder" autocomplete="off"/>
         <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
@@ -80,7 +80,7 @@ else
             @* One way back to everything stored, because that is the one thing a reader wants from
                here: dropping the aggregate but keeping the identifier or the text would be a second
                narrowing to undo. *@
-            <a href="@Link(Sort, Descending, 1, clearTag: true, clearModel: true)">Clear</a>
+            <a href="@Link(Sort, Descending, 1, clearText: true, clearModel: true)">Clear</a>
         }
     </form>
 
@@ -108,7 +108,7 @@ else
         <p class="empty">
             @if (IsFiltered)
             {
-                <text>No aggregates carry a tag matching &ldquo;@Tag&rdquo;.</text>
+                <text>No store id or tag matches &ldquo;@Text&rdquo;.</text>
             }
             else
             {
@@ -128,6 +128,7 @@ else
                    was stored under, whole — an identifier unfolds them into the values it was built
                    from, but only its own, and a column that came and went with the choice would be
                    a column a reader could not learn. *@
+                <th>Store Id</th>
                 <th>Type</th>
                 <th>Identifier</th>
                 <th>Tags</th>
@@ -160,7 +161,11 @@ else
                    row naming types this application no longer has is drawn without one — it is still
                    the store's own row, and worth seeing. *@
                 <tr class="@(link is null ? null : "clickable")">
-                    <td class="sku">@Cell((link, TypeOf(address, row), false))</td>
+                    @* The key the store filed the row under, whole. It carries the type version
+                       after the model's own id, and it is shown as it was written because this is
+                       the column the store has — a page saying what is held says it as it is held. *@
+                    <td class="sku">@Cell((link, row.StoreId, false))</td>
+                    <td>@Cell((link, TypeOf(address, row), true))</td>
                     <td class="muted">
                         @if (IdentifierOf(address) is { } named)
                         {
@@ -297,7 +302,7 @@ else
 
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
-    private string? Tag { get; set; }
+    private string? Text { get; set; }
 
     private InstanceSort Sort { get; set; } = InstanceSort.Updated;
 
@@ -324,7 +329,7 @@ else
 
     private sealed record Column(InstanceSort Sort, string Label);
 
-    private bool IsFiltered => !string.IsNullOrWhiteSpace(Tag);
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
 
     private string? AriaSort(InstanceSort column) =>
         Sort != column ? null : Descending ? "descending" : "ascending";
@@ -347,10 +352,14 @@ else
     /// </remarks>
     private const string Heading = "Aggregates Data";
 
-    private string TagPlaceholder =>
+    /// <summary>
+    /// What the box asks for. The tag keys of a chosen identifier are worth naming, because a
+    /// boundary is written in a shape a reader would otherwise have to learn from the rows.
+    /// </summary>
+    private string TextPlaceholder =>
         Shape?.TagKeys.FirstOrDefault() is { } key
-            ? $"Filter by tag, such as {key}:…"
-            : "Filter by tag";
+            ? $"Filter by store id or tag, such as {key}:…"
+            : "Filter by store id or tag";
 
     /// <summary>
     /// What one stored row says it is, named the way every list here names a type: what it is bound
@@ -432,7 +441,7 @@ else
     /// <param name="sort">Which date to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page to land on, from one.</param>
-    /// <param name="clearTag">Whether to drop the text the boundary had to contain.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
     /// <param name="clearIdentifier">Whether to widen back to every identifier.</param>
     /// <param name="clearModel">Whether to widen back to every aggregate, which takes the
     /// identifier with it: one addresses the aggregate it belongs to, so an identifier left behind
@@ -445,7 +454,7 @@ else
         InstanceSort sort,
         bool descending,
         int page,
-        bool clearTag = false,
+        bool clearText = false,
         bool clearIdentifier = false,
         bool clearModel = false)
     {
@@ -464,7 +473,7 @@ else
             link += $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}";
         }
 
-        return clearTag || !IsFiltered ? link : $"{link}&tag={Uri.EscapeDataString(Tag!)}";
+        return clearText || !IsFiltered ? link : $"{link}&text={Uri.EscapeDataString(Text!)}";
     }
 
     /// <summary>
@@ -509,7 +518,7 @@ else
         }
         @if (IsFiltered)
         {
-            <input type="hidden" name="tag" value="@Tag"/>
+            <input type="hidden" name="text" value="@Text"/>
         }
     </text>;
 
@@ -569,7 +578,7 @@ else
         Choice = ModelChoice.Of(Models, Types.Current.Identifiers(Kind), Value("type"), Value("id"));
         Stored = new StoredModels(Models, Types.Current.Identifiers(Kind));
 
-        Tag = Value("tag");
+        Text = Value("text");
         Sort = InstanceQuery.SortOf(Value("sort"));
         Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
@@ -592,7 +601,7 @@ else
             Kind,
             Choice.Key,
             Shape,
-            Tag,
+            Text,
             Sort,
             Descending,
             int.TryParse(Value("page"), out var asked) ? asked : 1,
