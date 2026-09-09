@@ -975,13 +975,16 @@ h2:focus {
     border-top: 0.28rem solid currentColor;
 }
 
+/* The line under the table, at the end the reader leaves from. No margin of its own: it sits inside
+   the footer, which already holds itself off the table, and a second one would both double that gap
+   and drop the pager below the picker it shares the line with. */
 .pagination {
     align-items: center;
     color: var(--ink-soft);
     display: flex;
+    flex-wrap: wrap;
     font-size: 0.875rem;
     gap: 1rem;
-    margin-top: 1.25rem;
 }
 
     .pagination a {
@@ -991,6 +994,62 @@ h2:focus {
     .pagination .disabled {
         color: #b9c0c8;
     }
+
+/* The numbers between the ends. A list, marked up as the sequence it is and stripped of the marker
+   and indent a list carries by default; the gap between the numbers is smaller than the one between
+   the words either side of them, so the strip reads as one thing rather than as ten. */
+.pages {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    /* Every number the same width whatever it is, so the strip does not breathe in and out as a
+       reader crosses from single digits into double and the page under it stays where it was. */
+    .pages a,
+    .pages .current {
+        border: 1px solid transparent;
+        border-radius: 4px;
+        display: block;
+        line-height: 1;
+        min-width: 1.75rem;
+        padding: 0.35rem 0.4rem;
+        text-align: center;
+    }
+
+    .pages a:hover {
+        background: #fff;
+        border-color: #c6ccd4;
+    }
+
+    .pages a:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        outline: none;
+    }
+
+    /* Where the reader is. Filled rather than merely bolder: it is the one thing in the strip that
+       is not somewhere to go, and it has to be findable at a glance from across the row. */
+    .pages .current {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* The way out of this group of ten. Quieter than the numbers beside it — it is not a page, it
+       is the rest of them — and set in the soft ink the ends of the pager are written in. */
+    .pages .group {
+        color: var(--ink-soft);
+        letter-spacing: 0.05em;
+    }
+
+/* How far through the table this is. One phrase, so a narrow footer wraps the pager around it
+   rather than breaking it after the word "of". */
+.page-count {
+    white-space: nowrap;
+}
 
 .table-footer {
     align-items: center;
@@ -1050,16 +1109,14 @@ h2:focus {
     gap: 0.5rem;
 }
 
-/* The page number, as a control rather than a label. Cut from the same cloth as the rows-per-page
-   picker beside it, since they do the same kind of job. */
-.page-jump {
-    align-items: center;
-    display: flex;
-    gap: 0.5rem;
-}
+    /* Held to its own end of the line whether or not there is a pager at the other one. A table of
+       one page draws no pager, and space-between alone would slide the picker across to where the
+       reader has learnt to look for the pager instead. */
+    .table-footer .page-size {
+        margin-left: auto;
+    }
 
-    .page-size select,
-    .page-jump select {
+    .page-size select {
         background: #fff;
         border: 1px solid #c6ccd4;
         border-radius: 4px;
@@ -1068,17 +1125,15 @@ h2:focus {
         padding: 0.3rem 0.4rem;
     }
 
-    .page-size select:focus-visible,
-    .page-jump select:focus-visible {
+    .page-size select:focus-visible {
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
         outline: none;
     }
 
-    /* The submit button either picker falls back to without scripting. Sized to the select it
+    /* The submit button the picker falls back to without scripting. Sized to the select it
        stands next to rather than to the page's buttons, so the row keeps one height. */
-    .page-size button,
-    .page-jump button {
+    .page-size button {
         background: #fff;
         border: 1px solid #c6ccd4;
         border-radius: 4px;
@@ -1089,13 +1144,11 @@ h2:focus {
         padding: 0.3rem 0.6rem;
     }
 
-    .page-size button:hover,
-    .page-jump button:hover {
+    .page-size button:hover {
         border-color: var(--ink-soft);
     }
 
-    .page-size button:focus-visible,
-    .page-jump button:focus-visible {
+    .page-size button:focus-visible {
         box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
         outline: none;
     }

@@ -241,53 +241,12 @@ else
         </table>
 
         <div class="table-footer">
-            <div class="pagination">
-                @if (Projections.TotalPages > 1)
-                {
-                    @if (Projections.Page > 1)
-                    {
-                        <a href="@Link(Sort, Descending, 1)">First</a>
-                        <a href="@Link(Sort, Descending, Projections.Page - 1)">Previous</a>
-                    }
-                    else
-                    {
-                        <span class="disabled">First</span>
-                        <span class="disabled">Previous</span>
-                    }
-
-                    @* The page number is a control rather than a label, so a long table can be
-                       crossed without stepping through it. Its own GET form, like the order and the
-                       rows per page, so the page it lands on is in the address bar. *@
-                    <form class="page-jump" method="get" action="streamed/projections/data">
-                        <label for="page">Page</label>
-                        <select id="page" name="page" onchange="this.form.submit()">
-                            @for (var number = 1; number <= Projections.TotalPages; number++)
-                            {
-                                <option value="@number" selected="@(number == Projections.Page)">@number</option>
-                            }
-                        </select>
-                        <span>of @Projections.TotalPages</span>
-                        @Narrowing
-                        <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
-                        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                        <input type="hidden" name="size" value="@PageSize"/>
-                        <noscript>
-                            <button type="submit">Go</button>
-                        </noscript>
-                    </form>
-
-                    @if (Projections.Page < Projections.TotalPages)
-                    {
-                        <a href="@Link(Sort, Descending, Projections.Page + 1)">Next</a>
-                        <a href="@Link(Sort, Descending, Projections.TotalPages)">Last</a>
-                    }
-                    else
-                    {
-                        <span class="disabled">Next</span>
-                        <span class="disabled">Last</span>
-                    }
-                }
-            </div>
+            @* The pages as links, ten at a time. Links rather than a control, like the order above
+               the table: a page is somewhere to go, and the address it is at is the one this page
+               is already read through — so the narrowing and the order travel with it without a
+               form having to carry a copy of each. *@
+            <Pager Page="Projections.Page" TotalPages="Projections.TotalPages"
+                   Href="@(page => Link(Sort, Descending, page))"/>
 
             @* Its own GET form, so the choice lands in the address bar like the order and the
                filter. Submitting on change saves a click; the button is the fallback when scripting

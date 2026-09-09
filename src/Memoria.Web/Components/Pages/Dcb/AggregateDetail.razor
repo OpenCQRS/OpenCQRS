@@ -324,68 +324,12 @@ else
                 </table>
 
                 <div class="table-footer">
-                    <div class="pagination">
-                        @if (Events.TotalPages > 1)
-                        {
-                            @if (Events.Page > 1)
-                            {
-                                <a href="@EventsLink(Descending, 1)">First</a>
-                                <a href="@EventsLink(Descending, Events.Page - 1)">Previous</a>
-                            }
-                            else
-                            {
-                                <span class="disabled">First</span>
-                                <span class="disabled">Previous</span>
-                            }
-
-                            @* Its own GET form, like the one on the list: the page landed on belongs
-                               in the address bar, so it can be linked to and gone back to. *@
-                            @* The fragment survives the submission — a GET form replaces the
-                               action's query with the fields and leaves the rest of it alone — so
-                               this lands at the table like the pager links do. *@
-                            <form class="page-jump" method="get" action="dcb/aggregates/detail#@EventsAnchor">
-                                <label for="page">Page</label>
-                                <select id="page" name="page" onchange="this.form.submit()">
-                                    @for (var number = 1; number <= Events.TotalPages; number++)
-                                    {
-                                        <option value="@number" selected="@(number == Events.Page)">@number</option>
-                                    }
-                                </select>
-                                <span>of @Events.TotalPages</span>
-                                <input type="hidden" name="type" value="@Aggregate.FullName"/>
-                                <input type="hidden" name="id" value="@Identifier.FullName"/>
-                                @foreach (var parameter in Parameters)
-                                {
-                                    <input type="hidden" name="@parameter.Name"
-                                           value="@Values.GetValueOrDefault(parameter.Name)"/>
-                                }
-                                @* The form replaces the whole query, so the tab it was submitted
-                                   from has to travel with it or the page comes back on the info
-                                   tab with the table it was paging out of sight. *@
-                                <input type="hidden" name="tab" value="@EventsTab"/>
-                                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                                <input type="hidden" name="size" value="@PageSize"/>
-                                @if (PayloadsOpen)
-                                {
-                                    <input type="hidden" name="payloads" value="@Open"/>
-                                }
-                                <noscript>
-                                    <button type="submit">Go</button>
-                                </noscript>
-                            </form>
-
-                            @if (Events.Page < Events.TotalPages)
-                            {
-                                <a href="@EventsLink(Descending, Events.Page + 1)">Next</a>
-                                <a href="@EventsLink(Descending, Events.TotalPages)">Last</a>
-                            }
-                            else
-                            {
-                                <span class="disabled">Next</span>
-                                <span class="disabled">Last</span>
-                            }
-                        }
-                    </div>
+                    @* The pages as links, ten at a time. Links rather than a control, like the one
+                       on the list: what the page is being read through — the identifier, the tab,
+                       the order and the fold — is already in the address, so a link to another page
+                       carries all of it without a form having to hold a copy of each. *@
+                    <Pager Page="Events.Page" TotalPages="Events.TotalPages"
+                           Href="@(page => EventsLink(Descending, page))"/>
 
                     <form class="page-size" method="get" action="dcb/aggregates/detail#@EventsAnchor">
                         <label for="size">Rows per page</label>
