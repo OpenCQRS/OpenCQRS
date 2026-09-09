@@ -114,6 +114,18 @@ else
                    fold stopped. *@
                 @if (Stored is not null)
                 {
+                    @* What the row is filed under, whole: its kind, the store id, and the digest of
+                       the boundary above the tabs. Shown as the store wrote it rather than taken
+                       apart, because this is the value that finds the row again in the table. *@
+                    <dt>Id</dt>
+                    <dd><code>@Stored.Id</code></dd>
+
+                    @* The model's own id inside that key, carrying the type version after it — the
+                       column the list this page was opened from leads with, so a reader arriving
+                       here can match the row they clicked. *@
+                    <dt>Store id</dt>
+                    <dd><code>@Stored.StoreId</code></dd>
+
                     <dt>Model type</dt>
                     @* The key the row was written under, said the way a version is said rather
                        than as the store joins it. Read off the row rather than off the type: this

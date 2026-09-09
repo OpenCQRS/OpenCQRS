@@ -84,6 +84,8 @@ public static class ModelReader
     public static LoadedModel Read(Type model, DcbSnapshotEntity snapshot)
     {
         var stored = new StoredSnapshot(
+            snapshot.Id,
+            snapshot.StoreId,
             snapshot.ModelType,
             snapshot.Version,
             snapshot.LatestPosition,
@@ -116,6 +118,13 @@ public static class ModelReader
 public sealed record LoadedModel(object? Model, StoredSnapshot? Snapshot, string? Error);
 
 /// <summary>The store's account of one write, as opposed to the state that was written.</summary>
+/// <param name="Id">
+/// The key the row is held by, whole, as <c>kind:store id:boundary digest</c>.
+/// </param>
+/// <param name="StoreId">
+/// The model's own id inside that key, as <c>id:type version</c> — the same value the list this
+/// page is reached from heads its first column with.
+/// </param>
 /// <param name="ModelType">The binding key the payload was stored under, as <c>name:version</c>.</param>
 /// <param name="Version">The version the row was stored at.</param>
 /// <param name="LatestPosition">The global position in the log the fold reached.</param>
@@ -124,6 +133,8 @@ public sealed record LoadedModel(object? Model, StoredSnapshot? Snapshot, string
 /// <param name="Updated">When it was last stored.</param>
 /// <param name="UpdatedBy">Who last stored it, or null when the store attributes nothing.</param>
 public sealed record StoredSnapshot(
+    string Id,
+    string StoreId,
     string ModelType,
     int Version,
     long LatestPosition,

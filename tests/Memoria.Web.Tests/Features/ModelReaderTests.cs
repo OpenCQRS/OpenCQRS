@@ -88,6 +88,21 @@ public class ModelReaderTests
     }
 
     /// <summary>
+    /// What the row was filed under, both halves of it: the key the store holds the row by, and the
+    /// store id inside that key which names the model itself. Neither is in the payload, so a page
+    /// saying what the store holds has nothing but the row to read them off.
+    /// </summary>
+    [Fact]
+    public void Reports_the_identity_the_row_was_filed_under()
+    {
+        var read = ModelReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""));
+
+        read.Snapshot.Should().NotBeNull();
+        read.Snapshot!.Id.Should().Be("Aggregate:sample-1:1:digest");
+        read.Snapshot.StoreId.Should().Be("sample-1:1");
+    }
+
+    /// <summary>
     /// Audit is a store concern the application may leave switched off, so an unattributed row is
     /// an ordinary row rather than a broken one.
     /// </summary>
