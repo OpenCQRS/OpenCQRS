@@ -10,6 +10,12 @@
      stroke-linecap="round" stroke-linejoin="round">
     @switch (Kind)
     {
+        @* A compass: the page a reader takes their bearings from before choosing a direction. *@
+        case SectionKind.Overview:
+            <circle cx="10" cy="10" r="7.1"/>
+            <path d="M12.9 7.1 8.8 8.8 7.1 12.9l4.1-1.7z"/>
+            break;
+
         @* Braces: the shape a declaration is written in. *@
         case SectionKind.Types:
             <path d="M9 3.2c-2.2 0-1.8 2.9-1.8 4.3S6.3 10 4.9 10c1.4 0 2.3 1.1 2.3 2.5s-.4 4.3 1.8 4.3"/>

@@ -4,13 +4,16 @@ namespace Memoria.Web.Components.Shared;
 /// What a tile leads to, as the mark drawn in front of its name.
 /// </summary>
 /// <remarks>
-/// Named rather than left to each page to draw: the same six things are reached from the home page,
-/// both overviews and every section page, and a mark that meant one thing on one of them and
-/// another elsewhere would be worse than no mark at all. <see cref="SectionMark"/> is where each
-/// one is drawn.
+/// Named rather than left to each page to draw: the same few things are reached from the home
+/// page, both overviews and every section page, and a mark that meant one thing on one of them
+/// and another elsewhere would be worse than no mark at all. <see cref="SectionMark"/> is where
+/// each one is drawn.
 /// </remarks>
 public enum SectionKind
 {
+    /// <summary>What is registered under a model, as the page that says so.</summary>
+    Overview,
+
     /// <summary>The types a model declares.</summary>
     Types,
 

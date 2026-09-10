@@ -11,53 +11,57 @@
 <div class="models">
     <section class="model">
         <h2><a href="streamed">Streamed</a></h2>
-        <ul class="sections">
+        @* The same tiles the rest of the site is entered by, one under the other because a column
+           here is half the page rather than the whole of it. Each names a section and goes to it;
+           what is under a section — the types the model declares and what has been stored of them —
+           is on the page the tile leads to, which is where a reader is asked to choose between
+           them rather than twice. *@
+        <ul class="tiles">
             <li>
                 <a href="streamed">
-                    <span class="name">Overview</span>
-                    <span class="detail">What is registered under the streamed model.</span>
+                    <SectionMark Kind="SectionKind.Overview"/>
+                    <span class="body">
+                        <span class="name">Overview</span>
+                        <span class="detail">What is registered under the streamed model.</span>
+                    </span>
                 </a>
             </li>
-            @* Each concern is two pages, not one: the types the model declares, and what has been
-               stored of them. Named here rather than left to be found, because which of the two you
-               want is the first thing you know and the last thing a single link would ask. *@
             <li>
-                <div class="group">
-                    <span class="name">Events</span>
-                    <span class="detail">The events the model can apply.</span>
-                    <span class="links">
-                        <a href="streamed/events/types">Types</a>
-                        <a href="streamed/events/data">Data</a>
+                <a href="streamed/events">
+                    <SectionMark Kind="SectionKind.Events"/>
+                    <span class="body">
+                        <span class="name">Events</span>
+                        <span class="detail">The events the model can apply.</span>
                     </span>
-                </div>
+                </a>
             </li>
             <li>
-                <div class="group">
-                    <span class="name">Aggregates</span>
-                    <span class="detail">The write models, and the streams they are held in.</span>
-                    <span class="links">
-                        <a href="streamed/aggregates/types">Types</a>
-                        <a href="streamed/aggregates/data">Data</a>
+                <a href="streamed/aggregates">
+                    <SectionMark Kind="SectionKind.Aggregates"/>
+                    <span class="body">
+                        <span class="name">Aggregates</span>
+                        <span class="detail">The write models they are held in.</span>
                     </span>
-                </div>
+                </a>
             </li>
             <li>
-                <div class="group">
-                    <span class="name">Projections</span>
-                    <span class="detail">The read models built from those events.</span>
-                    <span class="links">
-                        <a href="streamed/projections/types">Types</a>
-                        <a href="streamed/projections/data">Data</a>
+                <a href="streamed/projections">
+                    <SectionMark Kind="SectionKind.Projections"/>
+                    <span class="body">
+                        <span class="name">Projections</span>
+                        <span class="detail">The read models built from those events.</span>
                     </span>
-                </div>
+                </a>
             </li>
-            @* One link, not two: a stream is declared and nothing else is stored of it, so there is
-               nothing for a data page to hold. It comes after the three because the column beside
-               it has nothing to set against it — a DCB boundary is a query over tags, not a place. *@
+            @* Last of the column, and the one the DCB side has nothing to set against it: a
+               boundary there is a query over tags rather than a place events are kept. *@
             <li>
                 <a href="streamed/streams">
-                    <span class="name">Streams</span>
-                    <span class="detail">The streams the events are held in.</span>
+                    <SectionMark Kind="SectionKind.Streams"/>
+                    <span class="body">
+                        <span class="name">Streams</span>
+                        <span class="detail">The streams the events are held in.</span>
+                    </span>
                 </a>
             </li>
         </ul>
@@ -65,42 +69,42 @@
 
     <section class="model">
         <h2><a href="dcb">DCB</a></h2>
-        <ul class="sections">
+        <ul class="tiles">
             <li>
                 <a href="dcb">
-                    <span class="name">Overview</span>
-                    <span class="detail">What is registered under the DCB model.</span>
+                    <SectionMark Kind="SectionKind.Overview"/>
+                    <span class="body">
+                        <span class="name">Overview</span>
+                        <span class="detail">What is registered under the DCB model.</span>
+                    </span>
                 </a>
             </li>
             <li>
-                <div class="group">
-                    <span class="name">Events</span>
-                    <span class="detail">The events the model can apply.</span>
-                    <span class="links">
-                        <a href="dcb/events/types">Types</a>
-                        <a href="dcb/events/data">Data</a>
+                <a href="dcb/events">
+                    <SectionMark Kind="SectionKind.Events"/>
+                    <span class="body">
+                        <span class="name">Events</span>
+                        <span class="detail">The events the model can apply.</span>
                     </span>
-                </div>
+                </a>
             </li>
             <li>
-                <div class="group">
-                    <span class="name">Aggregates</span>
-                    <span class="detail">The write models, and the identifiers they are addressed by.</span>
-                    <span class="links">
-                        <a href="dcb/aggregates/types">Types</a>
-                        <a href="dcb/aggregates/data">Data</a>
+                <a href="dcb/aggregates">
+                    <SectionMark Kind="SectionKind.Aggregates"/>
+                    <span class="body">
+                        <span class="name">Aggregates</span>
+                        <span class="detail">The write models they are addressed by.</span>
                     </span>
-                </div>
+                </a>
             </li>
             <li>
-                <div class="group">
-                    <span class="name">Projections</span>
-                    <span class="detail">The read models, and the identifiers they are addressed by.</span>
-                    <span class="links">
-                        <a href="dcb/projections/types">Types</a>
-                        <a href="dcb/projections/data">Data</a>
+                <a href="dcb/projections">
+                    <SectionMark Kind="SectionKind.Projections"/>
+                    <span class="body">
+                        <span class="name">Projections</span>
+                        <span class="detail">The read models they are addressed by.</span>
                     </span>
-                </div>
+                </a>
             </li>
         </ul>
     </section>
