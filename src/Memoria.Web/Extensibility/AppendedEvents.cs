@@ -1,4 +1,4 @@
-using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
+﻿using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Memoria.Web.Extensibility;
@@ -27,9 +27,7 @@ public static class AppendedEvents
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
-    /// <param name="text">
-    /// Text the row has to carry, in its position or in its payload, or null for any row.
-    /// </param>
+    /// <param name="text">Text the row's payload has to carry, or null for any row.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -45,10 +43,11 @@ public static class AppendedEvents
     /// order carried a certain reference should not have to know which property holds it.
     /// </para>
     /// <para>
-    /// The position answers the same box, which is how a reader reaches one row they have the number
-    /// of. It is a number rather than a name, so it is matched whole where the payload is matched by
-    /// part: <c>14</c> means the fourteenth event, not every row whose payload happens to contain
-    /// those two characters. Text that is not a number asks nothing of it.
+    /// The payload and nothing else: a number is text like any other here, and narrows to the
+    /// payloads carrying it rather than also to the row that happens to sit at that position. A box
+    /// that answered both had no way of saying which it had done, so a reader looking for a
+    /// reference beginning <c>14</c> was handed the fourteenth row alongside the rows they asked
+    /// for and could not tell the difference.
     /// </para>
     /// </remarks>
     public static async Task<StoredEvents> Page(
@@ -77,16 +76,9 @@ public static class AppendedEvents
                 // payload, where % and _ are ordinary characters someone may well be looking for,
                 // and Contains leaves the provider to escape them rather than reading them as
                 // wildcards.
-                var trimmed = text.Trim();
-                var wanted = trimmed.ToLower();
+                var wanted = text.Trim().ToLower();
 
-                // A number is also a position to look for, so a reader who has one reaches that row
-                // by typing it. Anything else asks nothing of the position: a value that cannot be
-                // one is not a row's number badly written, it is not a number at all.
-                var position = long.TryParse(trimmed, out var numbered) ? numbered : (long?)null;
-
-                stored = stored.Where(appended =>
-                    appended.Data.ToLower().Contains(wanted) || appended.Position == position);
+                stored = stored.Where(appended => appended.Data.ToLower().Contains(wanted));
             }
 
             var total = await stored.CountAsync(cancellationToken);
