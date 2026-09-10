@@ -87,6 +87,31 @@ public class CosmosStreamedReadsWithoutCompositeIndexTests : IAsyncLifetime
             }, new PartitionKey(streamId));
         }
 
+        // A couple of stored models too, because the snapshot pages ask for a three-key order of
+        // their own and meet the same refusal.
+        //
+        // Their ids are prefixed rather than named after the stream: an event is written under
+        // "{streamId}:{sequence}" and an aggregate under "{aggregateId}:{typeVersion}", so an
+        // aggregate named after its own stream lands on the id of one of that stream's events and
+        // replaces it. That is the store's own collision, covered by DocumentIdCollisionTests; it is
+        // avoided here rather than reproduced, so these tests measure what they mean to.
+        for (var index = 0; index < 2; index++)
+        {
+            var stream = $"c-000{index}";
+
+            await container.UpsertItemAsync(new AggregateDocument
+            {
+                Id = $"account-c-000{index}:1",
+                StreamId = stream,
+                AggregateType = "CustomerAccount:1",
+                Version = index + 1,
+                LatestEventSequence = index,
+                Data = "{}",
+                CreatedDate = _start.AddHours(index),
+                UpdatedDate = _start.AddHours(index + 1)
+            }, new PartitionKey(stream));
+        }
+
         _reads = new CosmosStreamedReads(_client, _databaseName, ContainerName);
     }
 
@@ -129,6 +154,25 @@ public class CosmosStreamedReadsWithoutCompositeIndexTests : IAsyncLifetime
 
         page.OrderingNotice.Should().NotBeNullOrWhiteSpace(
             "a reader paging through events deserves to know rows can shift between pages");
+    }
+
+    /// <summary>
+    /// The stored models fall back the same way the log does, and say so the same way.
+    /// </summary>
+    [Fact]
+    public async Task GivenNoCompositeIndex_WhenTheStoredModelsAreRead_ThenTheyListAndSaySo()
+    {
+        var page = await _reads.Snapshots(new StreamedSnapshotFilter(
+            StreamedModelKind.Aggregate, StreamPattern: null, ModelType: null,
+            IdentifierPattern: null, Text: null, InstanceSort.Updated, Descending: true,
+            Page: 1, Size: 10));
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull("a container without the index is not a broken container");
+        page.Total.Should().Be(2);
+        page.Snapshots.Should().HaveCount(2);
+        page.OrderingNotice.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

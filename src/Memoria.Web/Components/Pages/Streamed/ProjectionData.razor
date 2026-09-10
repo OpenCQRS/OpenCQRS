@@ -116,6 +116,20 @@ else
         }
     </form>
 
+    @* Beside the rows rather than instead of them, and ahead of the chain below because every one
+       of those is a reason there is no table and this is not. See wwwroot/preferences.js for how a
+       reader takes it away. *@
+    @if (Projections.OrderingNotice is not null)
+    {
+        <div class="caution" role="status" data-notice="ordering">
+            <p>@Projections.OrderingNotice</p>
+            <p class="caution-actions">
+                <button type="button" data-notice-close>Close</button>
+                <button type="button" data-notice-hide>Don't show this again</button>
+            </p>
+        </div>
+    }
+
     @if (Choice.Unbound)
     {
         @* Registered, listed, and impossible to have been stored: without a [ProjectionType] there

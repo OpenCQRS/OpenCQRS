@@ -206,7 +206,18 @@ public static class StreamedSnapshots
 /// <param name="TotalPages">How many pages there are, never fewer than one.</param>
 /// <param name="Error">Why the store could not be read, or null when it was.</param>
 public sealed record StoredStreamSnapshots(
-    IReadOnlyList<StoredStreamSnapshot> Snapshots, int Total, int Page, int TotalPages, string? Error);
+    IReadOnlyList<StoredStreamSnapshot> Snapshots, int Total, int Page, int TotalPages, string? Error)
+{
+    /// <summary>
+    /// Why this page is ordered more coarsely than it asked for, or null when it is not.
+    /// </summary>
+    /// <remarks>
+    /// The same channel <see cref="StoredStreamEvents.OrderingNotice"/> carries, and for the same
+    /// reason: the rows are real and one property of them is weaker. Only a store that cannot serve
+    /// the full order sets it.
+    /// </remarks>
+    public string? OrderingNotice { get; init; }
+}
 
 /// <summary>One model, as the store holds it.</summary>
 /// <param name="StreamId">The stream its events were appended to.</param>
