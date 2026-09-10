@@ -471,11 +471,11 @@ h2:focus {
     max-width: 40rem;
 }
 
-/* Filled with the page's ground rather than the sheet's white. On the sheet these would be white
-   on white and read only by their outline; the tint is the same relationship the mockup had
-   between tile and page, kept by inverting which of the two is doing the lifting. */
+/* Filled with the sheet's white, lifted off the page's ground the way every other card here is.
+   The rule carries the edge, so the tile does not need a tint to be found. --surface rather than
+   a literal white: in the dark theme the same relationship is the dark sheet over the darker page. */
 .stat {
-    background: var(--ground);
+    background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 6px;
     padding: 0.7rem 0.85rem;
