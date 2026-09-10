@@ -36,10 +36,13 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
         {
             var container = client.GetContainer(databaseName, containerName);
 
-            var total = await Count(container, DocumentType.Event, cancellationToken);
+            var narrowing = Narrowing.For(filter);
+
+            var total = await Count(container, narrowing, cancellationToken);
             var placed = InstanceQuery.Place(filter.Page, total, filter.Size);
 
-            var (documents, notice) = await Ordered(container, filter, placed, cancellationToken);
+            var (documents, notice) =
+                await Ordered(container, narrowing, filter, placed, cancellationToken);
 
             // The same reading the relational log goes through, so a row says the same thing
             // wherever it is met — including one whose type the uploaded assemblies no longer
@@ -88,21 +91,21 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
     /// </para>
     /// </remarks>
     private static async Task<(List<EventDocument> Documents, string? Notice)> Ordered(
-        Container container, StreamedEventFilter filter, PlacedPage placed,
+        Container container, Narrowing narrowing, StreamedEventFilter filter, PlacedPage placed,
         CancellationToken cancellationToken)
     {
         var direction = filter.Descending ? "DESC" : "ASC";
 
         try
         {
-            return (await Page(container,
+            return (await Page(container, narrowing,
                     $"c.createdDate {direction}, c.streamId ASC, c.sequence {direction}",
                     filter, placed, cancellationToken),
                 null);
         }
         catch (CosmosException refused) when (NeedsACompositeIndex(refused))
         {
-            return (await Page(container, $"c.createdDate {direction}", filter, placed,
+            return (await Page(container, narrowing, $"c.createdDate {direction}", filter, placed,
                     cancellationToken),
                 "This container has no composite index for the full order, so these events are " +
                 "ordered by date alone. Events written at the same moment may move between pages.");
@@ -125,12 +128,12 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
     /// One page of event documents in the given order.
     /// </summary>
     private static Task<List<EventDocument>> Page(
-        Container container, string order, StreamedEventFilter filter, PlacedPage placed,
-        CancellationToken cancellationToken) =>
-        Read<EventDocument>(container, new QueryDefinition(
-                    $"SELECT * FROM c WHERE c.documentType = @documentType ORDER BY {order} " +
-                    "OFFSET @skip LIMIT @take")
-                .WithParameter("@documentType", DocumentType.Event)
+        Container container, Narrowing narrowing, string order, StreamedEventFilter filter,
+        PlacedPage placed, CancellationToken cancellationToken) =>
+        Read<EventDocument>(container, narrowing
+                .Apply(new QueryDefinition(
+                    $"SELECT * FROM c WHERE {narrowing.Where} ORDER BY {order} " +
+                    "OFFSET @skip LIMIT @take"))
                 .WithParameter("@skip", placed.Skip)
                 .WithParameter("@take", filter.Size),
             cancellationToken);
@@ -147,18 +150,87 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
                    "folded from are."));
 
     /// <summary>
-    /// How many documents of one kind the container holds.
+    /// How many documents the narrowing leaves, across every page of them.
     /// </summary>
     private static async Task<int> Count(
-        Container container, string documentType, CancellationToken cancellationToken)
+        Container container, Narrowing narrowing, CancellationToken cancellationToken)
     {
-        var query = new QueryDefinition(
-                "SELECT VALUE COUNT(1) FROM c WHERE c.documentType = @documentType")
-            .WithParameter("@documentType", documentType);
+        var query = narrowing.Apply(
+            new QueryDefinition($"SELECT VALUE COUNT(1) FROM c WHERE {narrowing.Where}"));
 
         var counted = await Read<int>(container, query, cancellationToken);
 
         return counted.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// What a page of the log has been narrowed to, as a condition and the values it holds.
+    /// </summary>
+    /// <param name="Where">The condition, with a parameter wherever a value goes.</param>
+    /// <param name="Values">Those values, by parameter name.</param>
+    /// <remarks>
+    /// One narrowing serves both the count and the page, which is what makes the total the total of
+    /// what was asked for rather than of the whole log. Every value is a parameter: a stream pattern
+    /// and a line of typed text both arrive from the address bar, and neither is going anywhere near
+    /// the text of a query.
+    /// </remarks>
+    private sealed record Narrowing(string Where, IReadOnlyList<(string Name, object Value)> Values)
+    {
+        /// <summary>
+        /// The narrowing one page of the log was asked for.
+        /// </summary>
+        /// <remarks>
+        /// The same three the relational read applies, in the same meaning.
+        /// <para>
+        /// The stream is matched with <c>LIKE</c> because its pattern is one:
+        /// <see cref="IdShape"/> writes the stream's own id with a wildcard where each value it was
+        /// built from stood, and the values are not always at the end of it.
+        /// </para>
+        /// <para>
+        /// The typed text is matched with <c>CONTAINS</c> rather than <c>LIKE</c>, and that is the
+        /// difference between the two: this text was typed by someone looking for it, so <c>%</c>
+        /// and <c>_</c> are characters they may well be looking for rather than wildcards. Its third
+        /// argument asks Cosmos to ignore case, which is what the relational read lowers both sides
+        /// to achieve.
+        /// </para>
+        /// </remarks>
+        public static Narrowing For(StreamedEventFilter filter)
+        {
+            var conditions = new List<string> { "c.documentType = @documentType" };
+            var values = new List<(string, object)> { ("@documentType", DocumentType.Event) };
+
+            if (!string.IsNullOrWhiteSpace(filter.EventType))
+            {
+                conditions.Add("c.eventType = @eventType");
+                values.Add(("@eventType", filter.EventType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.StreamPattern))
+            {
+                conditions.Add("c.streamId LIKE @streamPattern");
+                values.Add(("@streamPattern", filter.StreamPattern));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Text))
+            {
+                // The row's own key as well as the stream it names and the payload it carries — the
+                // same three the relational read looks in, and for the reason written there: how the
+                // store builds a key is its business, so the stream is looked in separately.
+                conditions.Add(
+                    "(CONTAINS(c.streamId, @text, true) OR CONTAINS(c.id, @text, true) " +
+                    "OR CONTAINS(c.data, @text, true))");
+
+                values.Add(("@text", filter.Text.Trim()));
+            }
+
+            return new Narrowing(string.Join(" AND ", conditions), values);
+        }
+
+        /// <summary>
+        /// Puts this narrowing's values on a query written against its condition.
+        /// </summary>
+        public QueryDefinition Apply(QueryDefinition query) =>
+            Values.Aggregate(query, (carried, value) => carried.WithParameter(value.Name, value.Value));
     }
 
     /// <summary>
