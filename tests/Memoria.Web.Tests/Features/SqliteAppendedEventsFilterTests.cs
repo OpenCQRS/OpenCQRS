@@ -18,10 +18,12 @@ namespace Memoria.Web.Tests.Features;
 /// What the text box on the DCB event data page reaches.
 /// </summary>
 /// <remarks>
-/// One box over one column: the payload, as it was written. Worth pinning because the alternative
-/// is silent — a box that also matched the position answered a search for a reference beginning
-/// <c>14</c> with the fourteenth row as well, and a reader has no way to tell the extra row from a
-/// real match.
+/// One box over the two things a row is written with: its payload, as it was serialised, and the
+/// tags it was appended under. Both, because a DCB event belongs to no stream — a tag is the only
+/// way a boundary reaches it, so a reader who knows the tag and not the payload would otherwise
+/// have no way in. Not the position: a box that also matched it answered a search for a reference
+/// beginning <c>14</c> with the fourteenth row as well, and a reader has no way to tell the extra
+/// row from a real match.
 /// <para>
 /// A SQLite file rather than an in-memory provider, because the narrowing is the database's: a
 /// predicate that reads one way in LINQ-to-Objects and another in SQL is exactly what this is for.
@@ -46,15 +48,20 @@ public class SqliteAppendedEventsFilterTests : IAsyncLifetime
 
         await seed.Database.EnsureCreatedAsync();
 
-        // Positions are the database's, so these take one, two and three in order. No payload
-        // carries a digit, which is what leaves a numeric search with nothing but the position to
-        // match on.
-        foreach (var reference in new[] { "alpha", "beta", "gamma" })
+        // Positions are the database's, so these take one, two and three in order. Neither a
+        // payload nor a tag carries a digit, which is what leaves a numeric search with nothing but
+        // the position to match on. The tag is a word no payload holds, so a row matched through it
+        // was matched through it and not through the text beside it.
+        foreach (var (reference, region) in new[]
+                 {
+                     ("alpha", "west"), ("beta", "east"), ("gamma", "west")
+                 })
         {
             seed.DcbEvents.Add(new DcbEventEntity
             {
                 EventType = "OrderPlacedEvent:1",
-                Data = $"{{\"reference\":\"{reference}\"}}"
+                Data = $"{{\"reference\":\"{reference}\"}}",
+                Tags = [new DcbEventTagEntity { Tag = $"region:{region}" }]
             });
 
             await seed.SaveChangesAsync();
@@ -103,6 +110,81 @@ public class SqliteAppendedEventsFilterTests : IAsyncLifetime
         using var scope = new AssertionScope();
 
         page.Error.Should().BeNull();
-        page.Total.Should().Be(0, "the box narrows by payload, and no payload carries a 2");
+        page.Total.Should().Be(0, "the box narrows by payload and tag, and neither carries a 2");
+    }
+
+    /// <summary>
+    /// A tag is how a DCB event is reached, so the box that narrows the log reaches it too.
+    /// </summary>
+    [Fact]
+    public async Task GivenTextInATag_WhenTheLogIsFiltered_ThenTheRowsAppendedUnderItComeBack()
+    {
+        var page = await Filtered("region:west");
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(2, "two rows were appended under that tag, and no payload holds it");
+    }
+
+    /// <summary>
+    /// Part of a tag, matched the way part of a payload is: a reader narrowing the log knows a value
+    /// far more often than the key it was written under.
+    /// </summary>
+    [Fact]
+    public async Task GivenPartOfATag_WhenTheLogIsFiltered_ThenTheRowAppendedUnderItComesBack()
+    {
+        var page = await Filtered("east");
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(1);
+    }
+
+    /// <summary>
+    /// One box over two things is one answer: the rows carrying the text in either, counted once
+    /// each rather than once per tag that matched.
+    /// </summary>
+    [Fact]
+    public async Task GivenTextInBothAPayloadAndATag_WhenTheLogIsFiltered_ThenEachMatchingRowIsCountedOnce()
+    {
+        await using (var seed = Store())
+        {
+            seed.DcbEvents.Add(new DcbEventEntity
+            {
+                EventType = "OrderPlacedEvent:1",
+                Data = "{\"reference\":\"delta\"}",
+                Tags =
+                [
+                    new DcbEventTagEntity { Tag = "region:delta" },
+                    new DcbEventTagEntity { Tag = "channel:delta" }
+                ]
+            });
+
+            await seed.SaveChangesAsync();
+        }
+
+        var page = await Filtered("delta");
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(1);
+        page.Events.Should().HaveCount(1);
+    }
+
+    /// <summary>
+    /// Case is not part of what was asked for, in a tag as in a payload.
+    /// </summary>
+    [Fact]
+    public async Task GivenATagInAnotherCase_WhenTheLogIsFiltered_ThenTheRowStillComesBack()
+    {
+        var page = await Filtered("REGION:East");
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(1);
     }
 }

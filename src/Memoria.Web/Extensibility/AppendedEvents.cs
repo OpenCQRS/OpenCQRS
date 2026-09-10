@@ -27,7 +27,7 @@ public static class AppendedEvents
     /// </summary>
     /// <param name="context">The DCB store.</param>
     /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
-    /// <param name="text">Text the row's payload has to carry, or null for any row.</param>
+    /// <param name="text">Text the row's payload or one of its tags has to carry, or null for any row.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -43,11 +43,17 @@ public static class AppendedEvents
     /// order carried a certain reference should not have to know which property holds it.
     /// </para>
     /// <para>
-    /// The payload and nothing else: a number is text like any other here, and narrows to the
-    /// payloads carrying it rather than also to the row that happens to sit at that position. A box
-    /// that answered both had no way of saying which it had done, so a reader looking for a
-    /// reference beginning <c>14</c> was handed the fourteenth row alongside the rows they asked
-    /// for and could not tell the difference.
+    /// The tags are matched beside it, for the same reason and one more: a DCB event belongs to no
+    /// stream, so a tag is the only handle a boundary has on it, and the thing a reader most often
+    /// arrives here knowing. Either side is enough — a row is wanted if it carries the text in its
+    /// payload or under one of its tags — and a row several of whose tags match is still one row.
+    /// </para>
+    /// <para>
+    /// Those two and nothing else: a number is text like any other here, and narrows to the rows
+    /// carrying it rather than also to the row that happens to sit at that position. A box that
+    /// answered both had no way of saying which it had done, so a reader looking for a reference
+    /// beginning <c>14</c> was handed the fourteenth row alongside the rows they asked for and could
+    /// not tell the difference.
     /// </para>
     /// </remarks>
     public static async Task<StoredEvents> Page(
@@ -72,13 +78,19 @@ public static class AppendedEvents
             {
                 // Lowered on both sides rather than with a provider's case-insensitive operator, so
                 // this reads the same against SQL Server as it does against Postgres. Contains
-                // rather than the Like the tag filter is built on: this text is typed against a
-                // payload, where % and _ are ordinary characters someone may well be looking for,
+                // rather than the Like the instances filter is built on: this text is typed against
+                // a payload, where % and _ are ordinary characters someone may well be looking for,
                 // and Contains leaves the provider to escape them rather than reading them as
-                // wildcards.
+                // wildcards. The tags are matched the same way, so one box means one thing across
+                // the two columns it reaches.
                 var wanted = text.Trim().ToLower();
 
-                stored = stored.Where(appended => appended.Data.ToLower().Contains(wanted));
+                // Any rather than a join, so a row whose tags match twice is still one row: the
+                // count under the title and the page beneath it both come off this query, and a row
+                // shown twice would be a row another page is missing.
+                stored = stored.Where(appended =>
+                    appended.Data.ToLower().Contains(wanted) ||
+                    appended.Tags.Any(tag => tag.Tag.ToLower().Contains(wanted)));
             }
 
             var total = await stored.CountAsync(cancellationToken);

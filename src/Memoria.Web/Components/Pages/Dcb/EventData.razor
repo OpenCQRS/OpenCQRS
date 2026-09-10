@@ -65,13 +65,15 @@ else
         </select>
 
         @* Beside the type rather than under it, because the two narrow the same list: a type is
-           what the log wrote a row under, and this is what the row itself carries. One column, the
-           payload, so what comes back is only ever the rows carrying what was typed — a number
-           included, which narrows to the payloads holding it rather than to the row that happens to
-           sit at that position. *@
-        <label class="visually-hidden" for="text">Filter by payload</label>
+           what the log wrote a row under, and this is what the row itself carries. Two columns, the
+           payload and the tags, because those are the two things a row is written with and a reader
+           arrives knowing either — a DCB event belongs to no stream, so a tag is the only handle a
+           boundary has on it. Either side is enough, so what comes back is the rows carrying what
+           was typed in one or the other — a number included, which narrows to the rows holding it
+           rather than to the row that happens to sit at that position. *@
+        <label class="visually-hidden" for="text">Filter by payload or tag</label>
         <input id="text" type="search" name="text" value="@Text"
-               placeholder="Filter by payload" autocomplete="off"/>
+               placeholder="Filter by payload or tag" autocomplete="off"/>
         <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
         <input type="hidden" name="size" value="@PageSize"/>
         @if (PayloadsOpen)
@@ -122,7 +124,7 @@ else
                of them has none carrying this. *@
             @if (IsFiltered)
             {
-                <text>No payload matches &ldquo;@Text&rdquo;.</text>
+                <text>No payload or tag matches &ldquo;@Text&rdquo;.</text>
             }
             else if (Choice.IsAll)
             {
@@ -283,7 +285,7 @@ else
     private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
 
     /// <summary>
-    /// The text a row's payload has to carry, or null when the log is read whole.
+    /// The text a row's payload or one of its tags has to carry, or null when the log is read whole.
     /// </summary>
     private string? Text { get; set; }
 
@@ -300,9 +302,10 @@ else
     /// link and every form here: paging or narrowing with the payloads out should not quietly shut
     /// them.
     /// <para>
-    /// Filtering does not open them. What was typed is often in a payload, but a reader who narrows
-    /// the log has narrowed it to read the rows, and answering with a wall of pairs takes the page
-    /// they asked for away from them. The fold above the table is one click when they want it.
+    /// Filtering does not open them. What was typed may well be in a payload — the tags are read
+    /// off the row without opening anything — but a reader who narrows the log has narrowed it to
+    /// read the rows, and answering with a wall of pairs takes the page they asked for away from
+    /// them. The fold above the table is one click when they want it.
     /// </para>
     /// </remarks>
     private bool PayloadsOpen { get; set; }
@@ -378,7 +381,7 @@ else
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page to land on, from one.</param>
     /// <param name="clearType">Whether to widen back to every type.</param>
-    /// <param name="clearText">Whether to drop the text a row's payload had to carry.</param>
+    /// <param name="clearText">Whether to drop the text a row's payload or tag had to carry.</param>
     /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
     /// <remarks>
     /// The two narrowings and the fold are named only when they are made. Folded is what a page
