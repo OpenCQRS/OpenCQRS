@@ -27,10 +27,7 @@ public static class IdentifierInstances
     /// model of the kind.</param>
     /// <param name="shape">Which tags the identifier's values live in, or null for every boundary
     /// whatever its shape.</param>
-    /// <param name="text">
-    /// Text the row must carry, in the id it was stored under or in its boundary, or null to keep
-    /// them all.
-    /// </param>
+    /// <param name="text">Text the row's boundary must carry, or null to keep them all.</param>
     /// <param name="sort">Which date to order by.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
@@ -89,12 +86,11 @@ public static class IdentifierInstances
             // this reads the same against SQL Server as it does against Postgres.
             var wanted = $"%{text.Trim().ToLower()}%";
 
-            // The id the model was stored under as well as the boundary it was folded from. They
-            // are two different things a reader may have in hand — the name the store filed it as,
-            // and the tags that selected its events — and either matching is enough.
-            stored = stored.Where(snapshot =>
-                EF.Functions.Like(snapshot.StoreId.ToLower(), wanted) ||
-                EF.Functions.Like(snapshot.TagQuery.ToLower(), wanted));
+            // The boundary it was folded from, and only that. The store id is the store's own key
+            // rather than anything a reader chose — the model's id and the version of its binding
+            // spliced together — so matching it too answered a search for one tag value with rows
+            // whose key merely spelled it, and nothing on the row told the two apart.
+            stored = stored.Where(snapshot => EF.Functions.Like(snapshot.TagQuery.ToLower(), wanted));
         }
 
         var total = await stored.CountAsync(cancellationToken);
@@ -113,7 +109,6 @@ public static class IdentifierInstances
             .Take(size)
             .Select(snapshot => new
             {
-                snapshot.StoreId,
                 snapshot.ModelType,
                 snapshot.TagQuery,
                 snapshot.Version,
@@ -125,7 +120,6 @@ public static class IdentifierInstances
         var instances = rows
             .Select(row => new Instance(
                 shape?.ValuesFromBoundary(row.TagQuery) ?? new Dictionary<string, string>(),
-                row.StoreId,
                 row.ModelType,
                 row.TagQuery,
                 row.Version,
@@ -141,20 +135,18 @@ public static class IdentifierInstances
 /// <param name="Values">The identifier's values, by the constructor parameter each belongs to.
 /// Empty when the list was not narrowed to one identifier, because there is then no one shape to
 /// unfold a boundary with.</param>
-/// <param name="StoreId">The key the model itself was stored under, as <c>id:version</c>.</param>
 /// <param name="ModelType">The binding key it was stored under, as <c>name:version</c>.</param>
 /// <param name="Boundary">The boundary it was folded under, in canonical form.</param>
 /// <param name="Version">The version its snapshot was stored at.</param>
 /// <param name="Created">When it was first stored.</param>
 /// <param name="Updated">When it was last stored.</param>
 /// <remarks>
-/// The key and the boundary are carried whether or not they are shown. They are what a list of
-/// several models names a row by and leads from — see <see cref="StoredModels"/> — and what a list
-/// of one identifier's rows has already used up in narrowing to them.
+/// The binding key and the boundary are carried whether or not they are shown. They are what a list
+/// of several models names a row by and leads from — see <see cref="StoredModels"/> — and what a
+/// list of one identifier's rows has already used up in narrowing to them.
 /// </remarks>
 public sealed record Instance(
     IReadOnlyDictionary<string, string> Values,
-    string StoreId,
     string ModelType,
     string Boundary,
     int Version,

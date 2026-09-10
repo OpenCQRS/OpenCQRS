@@ -113,7 +113,7 @@ else
         <p class="empty">
             @if (IsFiltered)
             {
-                <text>No store id or tag matches &ldquo;@Text&rdquo;.</text>
+                <text>No tag matches &ldquo;@Text&rdquo;.</text>
             }
             else
             {
@@ -133,7 +133,6 @@ else
                    was stored under, whole — an identifier unfolds them into the values it was built
                    from, but only its own, and a column that came and went with the choice would be
                    a column a reader could not learn. *@
-                <th>Store Id</th>
                 <th>Type</th>
                 <th>Identifier</th>
                 <th>Tags</th>
@@ -166,11 +165,7 @@ else
                    row naming types this application no longer has is drawn without one — it is still
                    the store's own row, and worth seeing. *@
                 <tr class="@(link is null ? null : "clickable")">
-                    @* The key the store filed the row under, whole. It carries the type version
-                       after the model's own id, and it is shown as it was written because this is
-                       the column the store has — a page saying what is held says it as it is held. *@
-                    <td>@Cell((link, row.StoreId, false))</td>
-                    <td>@Cell((link, TypeOf(address, row), true))</td>
+                    <td>@Cell((link, TypeOf(address, row), false))</td>
                     <td>
                         @if (IdentifierOf(address) is { } named)
                         {
@@ -322,8 +317,8 @@ else
     /// </summary>
     private string TextPlaceholder =>
         Shape?.TagKeys.FirstOrDefault() is { } key
-            ? $"Filter by store id or tag, such as {key}:…"
-            : "Filter by store id or tag";
+            ? $"Filter by tag, such as {key}:…"
+            : "Filter by tag";
 
     /// <summary>
     /// What one stored row says it is, named the way every list here names a type: what it is bound
