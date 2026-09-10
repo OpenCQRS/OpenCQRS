@@ -16,63 +16,46 @@
     consistency boundary model, and what they are addressed by.
 </p>
 
-@* What the model declares, counted. The same three figures the groups below say in prose, lifted
-   out so the shape of the model can be taken in without reading: a reader arriving here is usually
-   asking how much is registered, not which page to open next. No streams among them — a DCB
-   boundary is a query over tags rather than a place events are kept. *@
-<div class="stats">
-    <div class="stat">
-        <span class="figure">@Catalogue.DcbEvents.Count</span>
-        <span class="label">Events</span>
-    </div>
-    <div class="stat">
-        <span class="figure">@Catalogue.DcbAggregates.Count</span>
-        <span class="label">Aggregates</span>
-    </div>
-    <div class="stat">
-        <span class="figure">@Catalogue.DcbProjections.Count</span>
-        <span class="label">Projections</span>
-    </div>
-</div>
+@* One tile a section, each the way into it and each the same shape — which is the shape the pages
+   under it are entered by too, so a reader crossing from here to a section meets the same tile
+   twice rather than two arrangements of the same four words. What the section holds is counted on
+   it: the same fact whichever of the pages under it you go on to open.
 
-@* The counts belong to the types the model declares, and stay on the group rather than on either
-   link: they are what the section holds, which is the same fact whichever of the two you open. *@
-<ul class="sections">
+   Three tiles rather than the streamed model's four: a DCB boundary is a query over tags rather
+   than a place events are kept, so there are no streams here to hold them. *@
+<ul class="tiles">
     <li>
-        <div class="group">
-            <span class="name">Events</span>
-            <span class="detail">@Count(Catalogue.DcbEvents.Count, "event") the model can apply.</span>
-            <span class="links">
-                <a href="dcb/events/types">Types</a>
-                <a href="dcb/events/data">Data</a>
+        <a href="dcb/events">
+            <SectionMark Kind="SectionKind.Events"/>
+            <span class="body">
+                <span class="name">Events</span>
+                <span class="detail">@Count(Catalogue.DcbEvents.Count, "event") the model can apply.</span>
             </span>
-        </div>
+        </a>
     </li>
     <li>
-        <div class="group">
-            <span class="name">Aggregates</span>
-            <span class="detail">
-                @Count(Catalogue.DcbAggregates.Count, "aggregate"), addressed by
-                @Count(Catalogue.DcbAggregateIds.Count, "identifier").
+        <a href="dcb/aggregates">
+            <SectionMark Kind="SectionKind.Aggregates"/>
+            <span class="body">
+                <span class="name">Aggregates</span>
+                <span class="detail">
+                    @Count(Catalogue.DcbAggregates.Count, "aggregate"), addressed by
+                    @Count(Catalogue.DcbAggregateIds.Count, "identifier").
+                </span>
             </span>
-            <span class="links">
-                <a href="dcb/aggregates/types">Types</a>
-                <a href="dcb/aggregates/data">Data</a>
-            </span>
-        </div>
+        </a>
     </li>
     <li>
-        <div class="group">
-            <span class="name">Projections</span>
-            <span class="detail">
-                @Count(Catalogue.DcbProjections.Count, "projection"), addressed by
-                @Count(Catalogue.DcbProjectionIds.Count, "identifier").
+        <a href="dcb/projections">
+            <SectionMark Kind="SectionKind.Projections"/>
+            <span class="body">
+                <span class="name">Projections</span>
+                <span class="detail">
+                    @Count(Catalogue.DcbProjections.Count, "projection"), addressed by
+                    @Count(Catalogue.DcbProjectionIds.Count, "identifier").
+                </span>
             </span>
-            <span class="links">
-                <a href="dcb/projections/types">Types</a>
-                <a href="dcb/projections/data">Data</a>
-            </span>
-        </div>
+        </a>
     </li>
 </ul>
 

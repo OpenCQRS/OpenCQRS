@@ -456,52 +456,6 @@ h2:focus {
 }
 /* A list of places to go: name on top, one line saying what is there. Shared by any page
    that points at the ones below it. */
-/* What a model holds, counted, above the list of ways into it. Tiles rather than a sentence because
-   this is the one place in the application where the numbers are the point of the page: an overview
-   answers "what is registered here", and that answer is four figures.
-
-   Held to the same 40rem as the list below so the two share a right edge, and auto-fit so the
-   streamed model's four and the DCB model's three both divide the row evenly — DCB has no streams,
-   and a fourth tile standing empty would be a worse answer than three. */
-.stats {
-    display: grid;
-    gap: 0.75rem;
-    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-    margin: 0 0 1.75rem;
-    max-width: 40rem;
-}
-
-/* Filled with the sheet's white, lifted off the page's ground the way every other card here is.
-   The rule carries the edge, so the tile does not need a tint to be found. --surface rather than
-   a literal white: in the dark theme the same relationship is the dark sheet over the darker page. */
-.stat {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 0.7rem 0.85rem;
-}
-
-    /* The figure, and the only thing on these pages set larger than the prose. Tabular so a column
-       of them lines up its digits, and so a count changing from 9 to 10 does not shift the label
-       under it. */
-    .stat .figure {
-        display: block;
-        font-size: var(--text-2xl);
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
-    }
-
-    .stat .label {
-        color: var(--ink-soft);
-        display: block;
-        font-size: var(--text-xs);
-        letter-spacing: 0.06em;
-        margin-top: 0.15rem;
-        text-transform: uppercase;
-    }
-
 .sections {
     list-style: none;
     margin: 0;
@@ -557,12 +511,14 @@ h2:focus {
         margin-top: 0.5rem;
     }
 
-/* A small set of ways into a section, set side by side as cards rather than stacked as rows. Used
-   where the choice is between two equal readings of the same thing — the types a model declares and
-   the data stored of them — which a list running down the page states as an order it does not have.
+/* A small set of ways in, set side by side as cards rather than stacked as rows: the sections of a
+   model, or the two readings of one of them — the types it declares and the data stored of them —
+   none of which a list running down the page can hold without stating an order they do not have.
+   Every page from an overview down is entered through the same tile, so the way in looks the same
+   wherever a reader meets it.
 
-   Auto-fit against the same 40rem the lists and the stats keep, so a pair divides the row evenly and
-   drops to one column when the room for two is no longer there. */
+   Auto-fit against the same 40rem the lists keep, so a pair or a row of them divides the width
+   evenly and drops to one column when the room is no longer there. */
 .tiles {
     display: grid;
     gap: 0.75rem;
@@ -574,8 +530,8 @@ h2:focus {
 }
 
     /* The whole card is the link, so the target is the tile a reader is already pointing at rather
-       than the two words at the top of it. Drawn as the stats are — the sheet's white over the
-       page's ground, carried by its rule — because they are the same kind of object. */
+       than the two words at the top of it. The sheet's white over the page's ground and carried by
+       its rule, the way every other card here is drawn. */
     .tiles > li > a {
         align-items: flex-start;
         background: var(--surface);

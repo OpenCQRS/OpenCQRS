@@ -1,0 +1,65 @@
+@* One mark, drawn from what it stands for. Every tile on the site is entered through here, so a
+   mark changing changes everywhere it is drawn and cannot be left half done.
+
+   All six share a box, a stroke and a linecap, and differ only in the path — which is what keeps a
+   row of them looking like one set rather than six drawings that happen to sit beside each other.
+   Hidden from screen readers throughout: each one is drawn in front of a name that already says
+   what it is, and read out it would be the same word twice. *@
+<svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+     fill="none" stroke="currentColor" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round">
+    @switch (Kind)
+    {
+        @* Braces: the shape a declaration is written in. *@
+        case SectionKind.Types:
+            <path d="M9 3.2c-2.2 0-1.8 2.9-1.8 4.3S6.3 10 4.9 10c1.4 0 2.3 1.1 2.3 2.5s-.4 4.3 1.8 4.3"/>
+            <path d="M11 3.2c2.2 0 1.8 2.9 1.8 4.3s.9 2.5 2.3 2.5c-1.4 0-2.3 1.1-2.3 2.5s.4 4.3-1.8 4.3"/>
+            break;
+
+        @* A store, which is where what was declared ended up. *@
+        case SectionKind.Data:
+            <ellipse cx="10" cy="5.4" rx="5.6" ry="2.3"/>
+            <path d="M4.4 5.4v9.2c0 1.3 2.5 2.3 5.6 2.3s5.6-1 5.6-2.3V5.4"/>
+            <path d="M4.4 10c0 1.3 2.5 2.3 5.6 2.3s5.6-1 5.6-2.3"/>
+            break;
+
+        @* A bolt: something that happened, and the only thing here that is not a place. *@
+        case SectionKind.Events:
+            <path d="M11.4 2.6 5.2 11.2h4.2l-.8 6.2 6.2-8.6h-4.2z"/>
+            break;
+
+        @* A box, assembled from parts and closed: a write model is one thing made of its events. *@
+        case SectionKind.Aggregates:
+            <path d="M10 2.7 16.3 6.2v7.6L10 17.3 3.7 13.8V6.2z"/>
+            <path d="M3.7 6.2 10 9.7l6.3-3.5"/>
+            <path d="M10 9.7v7.6"/>
+            break;
+
+        @* A table: a read model is what the events were folded into to be read. *@
+        case SectionKind.Projections:
+            <rect x="3.2" y="4.3" width="13.6" height="11.4" rx="1.6"/>
+            <path d="M3.2 8.3h13.6"/>
+            <path d="M9 8.3v7.4"/>
+            break;
+
+        @* Water, running: a stream is the one thing here that is a course rather than a container. *@
+        case SectionKind.Streams:
+            <path d="M3 6.4c1.9-2 4.2-2 6.1 0s4.2 2 6.1 0"/>
+            <path d="M3 10c1.9-2 4.2-2 6.1 0s4.2 2 6.1 0"/>
+            <path d="M3 13.6c1.9-2 4.2-2 6.1 0s4.2 2 6.1 0"/>
+            break;
+    }
+</svg>
+
+@code {
+
+    // The marks the tiles are entered by. One component rather than a copy in each page that draws
+    // one: three of the six are drawn on the home page, both overviews and a section page, and the
+    // set only reads as a set for as long as every copy of it is the same drawing.
+
+    /// <summary>What the tile this is drawn on leads to.</summary>
+    [Parameter]
+    [EditorRequired]
+    public SectionKind Kind { get; set; }
+
+}

@@ -16,72 +16,54 @@
     and the streams they are held in.
 </p>
 
-@* What the model declares, counted. Four figures rather than the DCB model's three: a stream is a
-   place events are kept, and this is the model that has them. *@
-<div class="stats">
-    <div class="stat">
-        <span class="figure">@Catalogue.StreamedEvents.Count</span>
-        <span class="label">Events</span>
-    </div>
-    <div class="stat">
-        <span class="figure">@Catalogue.StreamedAggregates.Count</span>
-        <span class="label">Aggregates</span>
-    </div>
-    <div class="stat">
-        <span class="figure">@Catalogue.StreamedProjections.Count</span>
-        <span class="label">Projections</span>
-    </div>
-    <div class="stat">
-        <span class="figure">@Catalogue.StreamedStreamIds.Count</span>
-        <span class="label">Streams</span>
-    </div>
-</div>
-
-@* The counts belong to the types the model declares, and stay on the group rather than on either
-   link: they are what the section holds, which is the same fact whichever of the two you open. *@
-<ul class="sections">
+@* One tile a section, each the way into it and each the same shape — which is the shape the pages
+   under it are entered by too, so a reader crossing from here to a section meets the same tile
+   twice rather than two arrangements of the same four words. What the section holds is counted on
+   it: the same fact whichever of the pages under it you go on to open. *@
+<ul class="tiles">
     <li>
-        <div class="group">
-            <span class="name">Events</span>
-            <span class="detail">@Count(Catalogue.StreamedEvents.Count, "event") the model can apply.</span>
-            <span class="links">
-                <a href="streamed/events/types">Types</a>
-                <a href="streamed/events/data">Data</a>
+        <a href="streamed/events">
+            <SectionMark Kind="SectionKind.Events"/>
+            <span class="body">
+                <span class="name">Events</span>
+                <span class="detail">@Count(Catalogue.StreamedEvents.Count, "event") the model can apply.</span>
             </span>
-        </div>
+        </a>
     </li>
     <li>
-        <div class="group">
-            <span class="name">Aggregates</span>
-            <span class="detail">
-                @Count(Catalogue.StreamedAggregates.Count, "aggregate"), addressed by
-                @Count(Catalogue.StreamedAggregateIds.Count, "identifier").
+        <a href="streamed/aggregates">
+            <SectionMark Kind="SectionKind.Aggregates"/>
+            <span class="body">
+                <span class="name">Aggregates</span>
+                <span class="detail">
+                    @Count(Catalogue.StreamedAggregates.Count, "aggregate"), addressed by
+                    @Count(Catalogue.StreamedAggregateIds.Count, "identifier").
+                </span>
             </span>
-            <span class="links">
-                <a href="streamed/aggregates/types">Types</a>
-                <a href="streamed/aggregates/data">Data</a>
-            </span>
-        </div>
+        </a>
     </li>
     <li>
-        <div class="group">
-            <span class="name">Projections</span>
-            <span class="detail">
-                @Count(Catalogue.StreamedProjections.Count, "projection"), addressed by
-                @Count(Catalogue.StreamedProjectionIds.Count, "identifier").
+        <a href="streamed/projections">
+            <SectionMark Kind="SectionKind.Projections"/>
+            <span class="body">
+                <span class="name">Projections</span>
+                <span class="detail">
+                    @Count(Catalogue.StreamedProjections.Count, "projection"), addressed by
+                    @Count(Catalogue.StreamedProjectionIds.Count, "identifier").
+                </span>
             </span>
-            <span class="links">
-                <a href="streamed/projections/types">Types</a>
-                <a href="streamed/projections/data">Data</a>
-            </span>
-        </div>
+        </a>
     </li>
-    @* One link rather than a pair: a stream is declared and nothing else is stored of it, so there
-       is no data page for it to choose between. *@
+    @* Last of the four, and the one the DCB overview has no answer to: a boundary there is a query
+       over tags rather than a place events are kept. Nothing else is stored of a stream, so this
+       tile is the whole of the section and there are no pages under it. *@
     <li>
         <a href="streamed/streams">
-            <span class="name">Streams</span>
-            <span class="detail">@Count(Catalogue.StreamedStreamIds.Count, "stream") the events are held in.</span>
+            <SectionMark Kind="SectionKind.Streams"/>
+            <span class="body">
+                <span class="name">Streams</span>
+                <span class="detail">@Count(Catalogue.StreamedStreamIds.Count, "stream") the events are held in.</span>
+            </span>
         </a>
     </li>
 </ul>
