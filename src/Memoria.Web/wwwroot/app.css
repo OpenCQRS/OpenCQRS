@@ -1045,6 +1045,26 @@ h2:focus {
         border-bottom: 0;
     }
 
+    /* A header cell paints its own ground, and a background is a rectangle. Where a table is the
+       first piece of the run it has the card's rounded top corners, and the outermost heading
+       covered them: the border was still being drawn, with the tint sitting square over it. So the
+       outer heading cells carry the same corners. 7px rather than 8 because a cell reaches the
+       table's padding box, one border in from the outside. */
+    :is(.grid, .instances) thead tr:first-child > :first-child {
+        border-top-left-radius: 7px;
+    }
+
+    :is(.grid, .instances) thead tr:first-child > :last-child {
+        border-top-right-radius: 7px;
+    }
+
+    /* Not the first of the run, so the table's own top corners are already square and the cells
+       follow them back. */
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.grid, .instances) thead tr:first-child > * {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
 /* The pieces that are not tables carry their own padding; a table's belongs to its cells, below. */
 :is(.search, .table-header, .table-footer) {
     padding: 0.75rem 1rem;
