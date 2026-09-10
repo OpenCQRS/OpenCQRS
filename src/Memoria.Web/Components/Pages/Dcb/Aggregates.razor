@@ -17,25 +17,13 @@
     The DCB write models, and what has been stored of them.
 </p>
 
-@* The two ways into the section, one row each rather than a pair of links on one: this page is
-   the parent of both, so each gets the same room to say what is there. *@
-<ul class="sections">
-    <li>
-        <a href="dcb/aggregates/types">
-            <span class="name">Types</span>
-            <span class="detail">
-                @Count(Catalogue.DcbAggregates.Count, "aggregate") the model declares, addressed by
-                @Count(Catalogue.DcbAggregateIds.Count, "identifier").
-            </span>
-        </a>
-    </li>
-    <li>
-        <a href="dcb/aggregates/data">
-            <span class="name">Data</span>
-            <span class="detail">The aggregates that have been stored, read one identifier at a time.</span>
-        </a>
-    </li>
-</ul>
+<SectionTiles TypesHref="dcb/aggregates/types" DataHref="dcb/aggregates/data">
+    <TypesDetail>
+        @Count(Catalogue.DcbAggregates.Count, "aggregate") the model declares, addressed by
+        @Count(Catalogue.DcbAggregateIds.Count, "identifier").
+    </TypesDetail>
+    <DataDetail>The aggregates that have been stored, read one identifier at a time.</DataDetail>
+</SectionTiles>
 
 @if (Catalogue.DcbAggregates.Count == 0)
 {

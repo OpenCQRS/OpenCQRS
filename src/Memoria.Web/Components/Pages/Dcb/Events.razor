@@ -17,25 +17,13 @@
     The events the DCB model can apply, and what has been stored of them.
 </p>
 
-@* The two ways into the section, one row each rather than a pair of links on one: this page is
-   the parent of both, so each gets the same room to say what is there. *@
-<ul class="sections">
-    <li>
-        <a href="dcb/events/types">
-            <span class="name">Types</span>
-            <span class="detail">
-                @Count(Catalogue.DcbEvents.Count, "event") the model declares, and the state each
-                one carries.
-            </span>
-        </a>
-    </li>
-    <li>
-        <a href="dcb/events/data">
-            <span class="name">Data</span>
-            <span class="detail">The events that have been appended, read one type at a time.</span>
-        </a>
-    </li>
-</ul>
+<SectionTiles TypesHref="dcb/events/types" DataHref="dcb/events/data">
+    <TypesDetail>
+        @Count(Catalogue.DcbEvents.Count, "event") the model declares, and the state each one
+        carries.
+    </TypesDetail>
+    <DataDetail>The events that have been appended, read one type at a time.</DataDetail>
+</SectionTiles>
 
 @if (Catalogue.DcbEvents.Count == 0)
 {

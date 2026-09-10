@@ -1,0 +1,68 @@
+@* The two ways into a section, each on its own tile: they are not steps in a sequence but a choice
+   between what the model declares and what has been stored of it, and a tile says that where a
+   stacked list said one came before the other. The mark in front carries the same distinction
+   without the words — braces for what is declared, a store for what is kept. *@
+<ul class="tiles">
+    <li>
+        <a href="@TypesHref">
+            <svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+                 fill="none" stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 3.2c-2.2 0-1.8 2.9-1.8 4.3S6.3 10 4.9 10c1.4 0 2.3 1.1 2.3 2.5s-.4 4.3 1.8 4.3"/>
+                <path d="M11 3.2c2.2 0 1.8 2.9 1.8 4.3s.9 2.5 2.3 2.5c-1.4 0-2.3 1.1-2.3 2.5s.4 4.3-1.8 4.3"/>
+            </svg>
+            <span class="body">
+                <span class="name">Types</span>
+                <span class="detail">@TypesDetail</span>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="@DataHref">
+            <svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+                 fill="none" stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="10" cy="5.4" rx="5.6" ry="2.3"/>
+                <path d="M4.4 5.4v9.2c0 1.3 2.5 2.3 5.6 2.3s5.6-1 5.6-2.3V5.4"/>
+                <path d="M4.4 10c0 1.3 2.5 2.3 5.6 2.3s5.6-1 5.6-2.3"/>
+            </svg>
+            <span class="body">
+                <span class="name">Data</span>
+                <span class="detail">@DataDetail</span>
+            </span>
+        </a>
+    </li>
+</ul>
+
+@code {
+
+    // The pair of tiles every section page is entered through. One component rather than a copy on
+    // each of the six: the pages differ only in where the two links go and what they say is behind
+    // them, and the marks in front of them are the same two marks on all of them — so a mark
+    // changing is one edit, and cannot leave four sections drawn one way and two the other.
+
+    /// <summary>Where the types the model declares are read.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string TypesHref { get; set; } = string.Empty;
+
+    /// <summary>What is behind that link, in the words of the section it belongs to.</summary>
+    /// <remarks>
+    /// A fragment rather than a string: some of these sections count what they hold before saying
+    /// what it is, and a count is written where the sentence needs it.
+    /// </remarks>
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment? TypesDetail { get; set; }
+
+    /// <summary>Where what has been stored of them is read.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string DataHref { get; set; } = string.Empty;
+
+    /// <summary>What is behind that link, in the words of the section it belongs to.</summary>
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment? DataDetail { get; set; }
+
+}
