@@ -132,18 +132,30 @@ public static class BoundaryEvents
     /// <param name="eventType">The binding key it was stored under, as <c>name:version</c>.</param>
     /// <param name="data">The stored payload.</param>
     /// <param name="written">When it was appended.</param>
+    /// <param name="tags">
+    /// The tags it was appended under, or null when the read did not ask for them — a streamed event
+    /// has none, and a boundary's own read selects through them rather than loading them.
+    /// </param>
     /// <remarks>
     /// A row whose type is not registered, or whose payload will not read back, is still listed. The
     /// position, the type and the date are facts of the log itself and hold whatever the payload
     /// turns out to be — and an event the uploaded assemblies no longer describe is worth seeing
     /// rather than quietly dropping from a boundary it is genuinely inside.
+    /// <para>
+    /// The tags are among those facts, and are kept whatever the payload turns out to be for the
+    /// same reason: they are what the log wrote the row under, and a row nothing here can read back
+    /// is exactly the one a reader wants the tags of.
+    /// </para>
     /// </remarks>
-    public static StoredEvent Read(long position, string eventType, string data, DateTimeOffset written)
+    public static StoredEvent Read(long position, string eventType, string data, DateTimeOffset written,
+        IReadOnlyList<string>? tags = null)
     {
+        var under = tags ?? [];
+
         if (!TypeBindings.EventTypeBindings.TryGetValue(eventType, out var clrType))
         {
             return new StoredEvent(position, eventType, written, [],
-                $"No uploaded type is registered as {eventType}.");
+                $"No uploaded type is registered as {eventType}.", under);
         }
 
         try
@@ -151,12 +163,13 @@ public static class BoundaryEvents
             var @event = DomainSerializer.Current.Deserialize(data, clrType);
 
             return @event is null
-                ? new StoredEvent(position, eventType, written, [], "The stored payload is empty.")
-                : new StoredEvent(position, eventType, written, DomainTypeDescriber.ReadState(@event), null);
+                ? new StoredEvent(position, eventType, written, [], "The stored payload is empty.", under)
+                : new StoredEvent(position, eventType, written, DomainTypeDescriber.ReadState(@event), null,
+                    under);
         }
         catch (Exception exception)
         {
-            return new StoredEvent(position, eventType, written, [], exception.Message);
+            return new StoredEvent(position, eventType, written, [], exception.Message, under);
         }
     }
 }
@@ -176,12 +189,19 @@ public sealed record StoredEvents(
 /// <param name="Written">When it was appended.</param>
 /// <param name="State">What its payload holds, or empty when that could not be read.</param>
 /// <param name="Error">Why its payload could not be read, or null when it was.</param>
+/// <param name="Tags">
+/// The tags it was appended under, or empty when the read did not ask for them. Empty is not the
+/// claim that it carries none: a streamed event has no tags to carry, and a boundary's own read
+/// selects through the tag table rather than loading it, so only a read that asks — the log itself,
+/// where the tags are what a row would otherwise be reached by and never say — fills this.
+/// </param>
 public sealed record StoredEvent(
     long Position,
     string Type,
     DateTimeOffset Written,
     IReadOnlyList<DomainPropertyValue> State,
-    string? Error)
+    string? Error,
+    IReadOnlyList<string> Tags)
 {
     /// <summary>Gets the name half of the key: what the type is written under.</summary>
     public string Name => DomainTypeDescriber.SplitKey(Type).Name;

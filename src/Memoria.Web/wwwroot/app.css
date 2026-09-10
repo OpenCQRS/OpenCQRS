@@ -1259,6 +1259,32 @@ h2:focus {
         width: 49%;
     }
 
+/* The same table with the tags the log wrote each row under, which only the log's own page has: a
+   model's events tab is already inside one boundary, so a tag column there would repeat the heading
+   above it on every row. Its own modifier for that reason — the proportions above are the four
+   columns' and stay theirs, rather than being re-split for a column three of the four tables that
+   use them do not draw. What the tags need is taken from the type and the payload in roughly equal
+   measure: a bound name is the width of a name, and the payload is still the column with the room. */
+.grid.events.tagged .col-position {
+    width: 9%;
+}
+
+.grid.events.tagged .col-appended {
+    width: 15%;
+}
+
+.grid.events.tagged .col-type {
+    width: 20%;
+}
+
+.grid.events.tagged .col-tags {
+    width: 21%;
+}
+
+.grid.events.tagged .col-payload {
+    width: 35%;
+}
+
 /* The same table with the stream and the store's own key in front of it, so the columns above keep
    the proportions the DCB log is read in and this one is not made to share them. What the extra
    columns need comes mostly out of the payload: that is the column with room to spare, being the

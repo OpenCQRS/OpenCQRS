@@ -103,15 +103,26 @@ public static class AppendedEvents
                 .Take(size)
                 .Select(appended => new
                 {
-                    appended.Position, appended.EventType, appended.Data, appended.CreatedDate
+                    appended.Position,
+                    appended.EventType,
+                    appended.Data,
+                    appended.CreatedDate,
+
+                    // Projected with the row rather than included, so the tags of one page's worth
+                    // are read and no navigation is left to be walked after the page is materialised.
+                    // Ordered here because the (Tag, Position) key orders the join by tag anyway and
+                    // the column is read down: a tag should be in the same place on every row.
+                    Tags = appended.Tags.Select(tag => tag.Tag).OrderBy(tag => tag).ToList()
                 })
                 .ToListAsync(cancellationToken);
 
             // The same reading a boundary's events go through, so a row says the same thing
             // wherever it is met — including a row whose type the uploaded assemblies no longer
-            // describe, which is listed rather than dropped.
+            // describe, which is listed rather than dropped. The tags come with it: this is the one
+            // read where they are a fact of the row rather than the question that selected it.
             var read = rows
-                .Select(row => BoundaryEvents.Read(row.Position, row.EventType, row.Data, row.CreatedDate))
+                .Select(row => BoundaryEvents.Read(row.Position, row.EventType, row.Data, row.CreatedDate,
+                    row.Tags))
                 .ToList();
 
             return new StoredEvents(read, total, placed.Page, placed.TotalPages, Error: null);

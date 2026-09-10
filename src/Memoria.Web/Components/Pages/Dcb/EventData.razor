@@ -143,7 +143,7 @@ else
            met inside the model that folds it are read the same way. The position is where the row
            sits and what makes it unique — a DCB event is written into one log rather than into a
            stream of its own, so it has one number and no id beside it. *@
-        <table class="grid events">
+        <table class="grid events tagged">
             <thead>
             <tr>
                 <th scope="col" class="col-position">Position</th>
@@ -159,6 +159,13 @@ else
                    version on — a first is what a name means until a second exists, and a column
                    whose every row ended in v1 would teach its reader to skip it. *@
                 <th scope="col" class="col-type">Type</th>
+                @* What the row was appended under, and the only thing it can be reached by: a DCB
+                   event belongs to no stream, so its tags are what a boundary finds it through. Next
+                   to the type because the two together are what a row is — this kind of thing, about
+                   these — and before the payload, which is read only once a row is worth opening.
+                   Listed the same way the instances tables list a boundary's tags, so a tag met on a
+                   stored row and met on the model that folds it are read alike. *@
+                <th scope="col" class="col-tags">Tags</th>
                 <th scope="col" class="col-payload">Payload</th>
             </tr>
             </thead>
@@ -172,6 +179,20 @@ else
                        in the log and the same type met on its own page read alike. A key the store
                        wrote that cannot be taken apart is left whole rather than half-read. *@
                     <td><code>@DomainTypeDescriber.LabelOfKey(stored.Type)</code></td>
+                    <td>
+                        @* Every tag on the row, joined the way a boundary's are. A row with none is
+                           said to have none rather than left blank: the log allows it — an append
+                           carries whatever tags it was given — and a blank cell reads as a column
+                           that failed to fill rather than as an event nothing can reach. *@
+                        @if (stored.Tags.Count == 0)
+                        {
+                            <span class="missing">—</span>
+                        }
+                        else
+                        {
+                            <code>@string.Join(", ", stored.Tags)</code>
+                        }
+                    </td>
                     <td>
                         @if (stored.Error is not null)
                         {
