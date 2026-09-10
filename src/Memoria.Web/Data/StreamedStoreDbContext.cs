@@ -12,4 +12,13 @@ public sealed class StreamedStoreDbContext(
     DbContextOptions<DomainDbContext> options,
     TimeProvider timeProvider,
     IHttpContextAccessor httpContextAccessor)
-    : DomainDbContext(options, timeProvider, httpContextAccessor);
+    : DomainDbContext(options, timeProvider, httpContextAccessor)
+{
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        SqliteDates.Apply(this, modelBuilder);
+    }
+}

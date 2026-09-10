@@ -13,4 +13,13 @@ public sealed class DcbStoreDbContext(
     DbContextOptions<DcbDbContext> options,
     TimeProvider timeProvider,
     IHttpContextAccessor httpContextAccessor)
-    : DcbDbContext(options, timeProvider, httpContextAccessor);
+    : DcbDbContext(options, timeProvider, httpContextAccessor)
+{
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        SqliteDates.Apply(this, modelBuilder);
+    }
+}
