@@ -167,7 +167,7 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
             var container = client.GetContainer(databaseName, containerName);
             var kind = SnapshotKind.Of(filter.Kind);
 
-            var narrowing = Narrowing.ForSnapshots(kind);
+            var narrowing = Narrowing.ForSnapshots(kind, filter);
 
             var total = await Count(container, narrowing, cancellationToken);
             var placed = InstanceQuery.Place(filter.Page, total, filter.Size);
@@ -404,11 +404,52 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
         /// <remarks>
         /// The kind is the one narrowing always applied, and it is what keeps an aggregate off the
         /// projections page: one container holds both, and only the discriminator tells them apart.
-        /// The filters the two pages offer are added in the slice that implements them.
+        /// <para>
+        /// Two of the four differ from the log's. The model type is read from whichever property
+        /// this kind names it in, and the identifier pattern is held against the whole stored key —
+        /// the store joins the id and the type's version with a colon, so a pattern matched against
+        /// the id alone would find nothing whenever the id ends in something fixed.
+        /// </para>
+        /// <para>
+        /// The typed text looks in the stream and the stored key and deliberately not in the
+        /// payload, which is where it parts company with the log. Neither page shows a stored
+        /// model's state, so a row matching on it would come back with nothing on it carrying what
+        /// was typed.
+        /// </para>
         /// </remarks>
-        public static Narrowing ForSnapshots(SnapshotKind kind) =>
-            new("c.documentType = @documentType",
-                [("@documentType", kind.DocumentType)]);
+        public static Narrowing ForSnapshots(SnapshotKind kind, StreamedSnapshotFilter filter)
+        {
+            var conditions = new List<string> { "c.documentType = @documentType" };
+            var values = new List<(string, object)> { ("@documentType", kind.DocumentType) };
+
+            if (!string.IsNullOrWhiteSpace(filter.ModelType))
+            {
+                conditions.Add($"{kind.TypeProperty} = @modelType");
+                values.Add(("@modelType", filter.ModelType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.StreamPattern))
+            {
+                conditions.Add("c.streamId LIKE @streamPattern");
+                values.Add(("@streamPattern", filter.StreamPattern));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.IdentifierPattern))
+            {
+                conditions.Add("c.id LIKE @identifierPattern");
+                values.Add(("@identifierPattern", $"{filter.IdentifierPattern}:%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Text))
+            {
+                conditions.Add(
+                    "(CONTAINS(c.streamId, @text, true) OR CONTAINS(c.id, @text, true))");
+
+                values.Add(("@text", filter.Text.Trim()));
+            }
+
+            return new Narrowing(string.Join(" AND ", conditions), values);
+        }
 
         /// <summary>
         /// Puts this narrowing's values on a query written against its condition.
