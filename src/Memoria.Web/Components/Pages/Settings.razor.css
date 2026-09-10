@@ -1,107 +1,107 @@
-/* The installed archives, cut from the same cloth as the aggregate tables. Palette tokens and
-   shared page furniture live in wwwroot/app.css. */
-table {
-    border-collapse: collapse;
-    margin-bottom: 1.5rem;
-    max-width: 44rem;
-    width: 100%;
+/* The installed archives, read in the same table the stored data is read in: .grid and the card it
+   draws itself into are in wwwroot/app.css, and all that is left here is what this table holds that
+   the others do not. Declared fixed like the log's and the snapshots', so the columns keep their
+   proportions however long a file name is; the file takes the room, because it is the only column
+   whose width is not known in advance. */
+.grid.archives {
+    table-layout: fixed;
 }
 
-    table th {
-        border-bottom: 1px solid var(--rule);
-        color: var(--ink-soft);
-        font-size: var(--text-sm);
-        font-weight: 600;
-        padding: 0 0.75rem 0.5rem;
-        text-align: left;
+    .grid.archives .col-file {
+        width: 48%;
     }
 
-    table td {
-        border-bottom: 1px solid var(--rule);
-        padding: 0.625rem 0.75rem;
-        vertical-align: middle;
+    .grid.archives .col-size {
+        width: 12%;
     }
 
-    table tr > :first-child {
-        padding-left: 0;
+    .grid.archives .col-uploaded {
+        width: 32%;
     }
 
-    table tr > :last-child {
-        padding-right: 0;
+    .grid.archives .col-actions {
+        width: 8%;
     }
 
-    table .name {
+    /* A name somebody chose and uploaded, not something the store generated, so it keeps the page's
+       voice — the same exception the instance lists make for the names in them. */
+    .grid.archives .name {
+        font-family: var(--font);
         font-weight: 600;
     }
 
-    table .numeric {
-        font-variant-numeric: tabular-nums;
-        text-align: right;
-    }
-
-    table .muted {
-        color: var(--ink-soft);
-    }
-
-    table td.actions {
+    /* The row's one link, held at the end of the row it acts on. */
+    .grid.archives td.actions {
         text-align: right;
         white-space: nowrap;
-        width: 1%;
     }
 
-/* On the home page a model's name is a heading you go through; here it names a column of rows, the
-   same job the installed list's column headings do, so it is written the same way. Its rule is the
-   list's top edge — the list must not draw a second one under it. */
-.model h2 {
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink-soft);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    margin: 0;
-    padding: 0 0 0.5rem;
+/* The space under the pair, which the tables used to carry themselves. Moved up here because a
+   table's own bottom margin is measured below each of them — which is right when they are stacked
+   down a page and doubles the row gap when the grid drops to one column under 40rem. */
+.models {
+    margin-bottom: 1.5rem;
 }
 
-/* The section list points at pages, so it stacks a name over a line saying what is there. Here each
-   row is a name and a number instead, which reads better side by side: the counts line up down the
-   right-hand edge and can be compared without reading the labels again. */
-.counts li {
-    align-items: baseline;
-    display: flex;
-    gap: 1rem;
-    justify-content: space-between;
-    padding: 0.625rem 0;
+    .model .grid {
+        margin-bottom: 0;
+    }
+
+/* What each model registered, a table to a column. The widths are declared on the columns rather
+   than taken from the first row, because the first row is the model's name spanning both of them
+   and there is nothing there for a fixed layout to measure — and declared at all so the two tables
+   split their width identically and the rows can be read across from one to the other. */
+.grid.registered {
+    table-layout: fixed;
 }
 
-    .counts li:first-child {
-        border-top: none;
+    .grid.registered .col-kind {
+        width: 68%;
     }
 
-    .counts .name {
-        color: var(--ink);
+    .grid.registered .col-count {
+        width: 32%;
     }
 
-    .counts .detail {
-        font-variant-numeric: tabular-nums;
-        margin-top: 0;
+    /* What is counted, named as the site names it elsewhere rather than as a stored value: these
+       are the page's own words for the six kinds of thing, not something read out of a store. */
+    .grid.registered .name {
+        font-family: var(--font);
     }
 
-/* Quiet until you go near it: destructive, but not the point of the row. */
+        /* The mark for what the row counts, in front of the name and out of the way of it: the same
+           drawing as the tile that leads there, at the weight the tiles hold theirs at. Set on the
+           baseline by hand — a glyph this size sits low against a line of text left to itself.
+           Inline, because a cell that is laid out as a flex container stops being a table cell and
+           the row loses the padding and the rules that the rest of the table is drawn with.
+
+           Reached with ::deep because the mark is drawn by SectionMark and not by this page: a
+           scoped rule puts the page's attribute on the last element it names, and that element
+           belongs to the other component and never carries it. Without this the rule matches
+           nothing at all, and does so silently. */
+        .grid.registered ::deep .glyph {
+            color: var(--ink-faint);
+            height: 1.15rem;
+            margin-right: 0.5rem;
+            vertical-align: -0.28em;
+            width: 1.15rem;
+        }
+
+    /* The counts down the right-hand edge, so the two columns can be compared without reading the
+       labels again. */
+    .grid.registered .count {
+        text-align: right;
+    }
+
+/* Quiet until you go near it: destructive, but not the point of the row. The shape, the padding and
+   the target are .icon-link's, shared with the one link the data tables put in a row; what is left
+   here is the one thing that is not shared — that going near this one is going near a removal. */
 .delete {
-    align-items: center;
-    background: none;
     border: 1px solid transparent;
-    border-radius: 4px;
-    color: var(--ink-soft);
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    font-size: var(--text-md);
-    justify-content: center;
-    padding: 0.25rem 0.5rem;
 }
 
-    /* Sized in ems so the glyph follows the row's text rather than a fixed pixel; the padding above
-       keeps the target bigger than the mark inside it. */
+    /* Sized in ems so the glyph follows the row's text rather than a fixed pixel; .icon-link's
+       padding keeps the target bigger than the mark inside it. */
     .delete svg {
         height: 1em;
         width: 1em;
@@ -206,8 +206,13 @@ table {
     margin: 0 0 1rem;
 }
 
-/* The row's own dialog sits in a cell; it must not be laid out as one. */
-table td.actions .dialog {
+/* The row's own dialog sits in a cell; it must not be laid out as one. The width is measured against
+   the window rather than against whatever box the cell turns out to give it — the column is a
+   declared fraction of a fixed table now, and a percentage of that would be a dialog a few
+   characters wide on the no-script path, where the question is rendered open in the row. The 32rem
+   cap above still decides how wide it actually gets. */
+.grid.archives td.actions .dialog {
     text-align: left;
     white-space: normal;
+    width: calc(100vw - 2rem);
 }

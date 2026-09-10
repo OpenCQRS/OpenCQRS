@@ -43,13 +43,17 @@
         }
         else
         {
-            <table>
+            @* The same table the stored data is read in, because a list of what is installed is a
+               list of rows the server holds and there is no reason for it to be a second kind of
+               table. The columns are declared so the file keeps the room and the three facts beside
+               it stay where they are however long a name happens to be. *@
+            <table class="grid archives">
                 <thead>
                 <tr>
-                    <th scope="col">File</th>
-                    <th scope="col">Size</th>
-                    <th scope="col">Uploaded</th>
-                    <th><span class="visually-hidden">Actions</span></th>
+                    <th scope="col" class="col-file">File</th>
+                    <th scope="col" class="col-size">Size</th>
+                    <th scope="col" class="col-uploaded">Uploaded</th>
+                    <th class="col-actions"><span class="visually-hidden">Actions</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -60,8 +64,8 @@
 
                     <tr>
                         <td class="name">@archive.Name</td>
-                        <td class="numeric">@($"{archive.Length / 1024:n0} KB")</td>
-                        <td class="muted">@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
+                        <td>@($"{archive.Length / 1024:n0} KB")</td>
+                        <td>@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
                         <td class="actions">
                             @* Asked before it happens, because removing an archive takes the types it
                                brought away from everyone, not just from whoever pressed it. Opened the same
@@ -70,7 +74,7 @@
                             @* A bin rather than a word: the column is one link per row and the word repeats
                                down it. The name it is read out by carries the file, so a row is told apart
                                by more than its position — and the dialog it opens still asks in words. *@
-                            <a class="delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
+                            <a class="icon-link delete" href="settings?delete=@Uri.EscapeDataString(archive.Name)"
                                aria-label="Delete @archive.Name" title="Delete @archive.Name"
                                onclick="event.preventDefault(); document.getElementById('@dialog').showModal()">
                                 <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"
@@ -152,32 +156,61 @@ else if (Tab == TypesTab)
             @* Set beside each other the same way the home page sets the two models, so what one model
                registered is read against the other rather than down one list. The events are one
                bound set, but each column counts the ones its own models apply, so a column says what
-               that model can fold rather than what was uploaded. *@
+               that model can fold rather than what was uploaded.
+
+               A register each, in the table the rest of the site reads rows in. The model's name is
+               the table's own heading rather than a title above it, spanning both columns because it
+               names the pair and not either one of them — so a column is one object, the way the
+               installed list is.
+
+               Each still wrapped in a section of its own. Two tables put straight into the grid
+               would be adjacent siblings, and the card rules in app.css join a run of adjacent
+               tables into one shape — which is right down a page and wrong across two columns. *@
             <div class="models">
                 <section class="model">
-                    <h2>Streamed</h2>
-                    <ul class="sections counts">
-                        @foreach (var (label, count) in StreamedCounts)
+                    <table class="grid registered">
+                        <colgroup>
+                            <col class="col-kind"/>
+                            <col class="col-count"/>
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th scope="colgroup" colspan="2">Streamed</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var (mark, label, count) in StreamedCounts)
                         {
-                            <li>
-                                <span class="name">@label</span>
-                                <span class="detail">@count</span>
-                            </li>
+                            <tr>
+                                <td class="name"><SectionMark Kind="@mark"/>@label</td>
+                                <td class="count">@count</td>
+                            </tr>
                         }
-                    </ul>
+                        </tbody>
+                    </table>
                 </section>
 
                 <section class="model">
-                    <h2>DCB</h2>
-                    <ul class="sections counts">
-                        @foreach (var (label, count) in DcbCounts)
+                    <table class="grid registered">
+                        <colgroup>
+                            <col class="col-kind"/>
+                            <col class="col-count"/>
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th scope="colgroup" colspan="2">DCB</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var (mark, label, count) in DcbCounts)
                         {
-                            <li>
-                                <span class="name">@label</span>
-                                <span class="detail">@count</span>
-                            </li>
+                            <tr>
+                                <td class="name"><SectionMark Kind="@mark"/>@label</td>
+                                <td class="count">@count</td>
+                            </tr>
                         }
-                    </ul>
+                        </tbody>
+                    </table>
                 </section>
             </div>
         }
@@ -345,21 +378,26 @@ else
        boundary is a query over tags, not a place to put events. The five both models declare are
        listed first and in the same order, so the columns line up row for row and are read across;
        what only this model has is added under them rather than pushing that alignment down. *@
-    private IReadOnlyList<(string Label, int Count)> StreamedCounts => [
-        ("Events", Catalogue.StreamedEvents.Count),
-        ("Aggregates", Catalogue.StreamedAggregates.Count),
-        ("Aggregate ids", Catalogue.StreamedAggregateIds.Count),
-        ("Projections", Catalogue.StreamedProjections.Count),
-        ("Projection ids", Catalogue.StreamedProjectionIds.Count),
-        ("Streams", Catalogue.StreamedStreamIds.Count)
+    @* The mark each row is drawn with is the site's mark for the thing counted, so a row here and
+       the tile that leads to it are recognisably the same subject. An id takes the mark of what it
+       identifies rather than one of its own: there is no id among the marks, and inventing one
+       would put a drawing on this page that means nothing anywhere else on the site. The pair sits
+       adjacent and is told apart by the name beside it, which is the row that names them both. *@
+    private IReadOnlyList<(SectionKind Mark, string Label, int Count)> StreamedCounts => [
+        (SectionKind.Events, "Events", Catalogue.StreamedEvents.Count),
+        (SectionKind.Aggregates, "Aggregates", Catalogue.StreamedAggregates.Count),
+        (SectionKind.Aggregates, "Aggregate ids", Catalogue.StreamedAggregateIds.Count),
+        (SectionKind.Projections, "Projections", Catalogue.StreamedProjections.Count),
+        (SectionKind.Projections, "Projection ids", Catalogue.StreamedProjectionIds.Count),
+        (SectionKind.Streams, "Streams", Catalogue.StreamedStreamIds.Count)
     ];
 
-    private IReadOnlyList<(string Label, int Count)> DcbCounts => [
-        ("Events", Catalogue.DcbEvents.Count),
-        ("Aggregates", Catalogue.DcbAggregates.Count),
-        ("Aggregate ids", Catalogue.DcbAggregateIds.Count),
-        ("Projections", Catalogue.DcbProjections.Count),
-        ("Projection ids", Catalogue.DcbProjectionIds.Count)
+    private IReadOnlyList<(SectionKind Mark, string Label, int Count)> DcbCounts => [
+        (SectionKind.Events, "Events", Catalogue.DcbEvents.Count),
+        (SectionKind.Aggregates, "Aggregates", Catalogue.DcbAggregates.Count),
+        (SectionKind.Aggregates, "Aggregate ids", Catalogue.DcbAggregateIds.Count),
+        (SectionKind.Projections, "Projections", Catalogue.DcbProjections.Count),
+        (SectionKind.Projections, "Projection ids", Catalogue.DcbProjectionIds.Count)
     ];
 
     protected override void OnInitialized() => Archives = Store.InstalledArchives();
