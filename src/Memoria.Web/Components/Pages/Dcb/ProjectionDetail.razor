@@ -227,21 +227,89 @@ else
             {
                 <p class="alert" role="alert">@Events.Error</p>
             }
-            else if (Events.Total == 0)
+            else if (Events.Total == 0 && !IsNarrowed)
             {
+                @* Nothing found and nothing there are two different answers. This is the second:
+                   the history is empty, so there is nothing for a filter row to narrow and none is
+                   drawn. A narrowed table that matched nothing is answered below, where the row
+                   that narrowed it is still there to undo. *@
                 <p class="missing">This projection applies no events inside the boundary.</p>
             }
             else
             {
-                @* The lede and the fold, at the two ends of the line above the table, in the same
-                   shape as the pager and the rows-per-page picker at the two ends of the line
-                   below it. *@
-                <div class="table-header">
-                    @* The whole count, not this page's worth: the pager says which page, and what a
-                       reader wants beside it is how much there is to page through. *@
-                    <p class="lede">@EventSummary</p>
+                @* The whole count, not this page's worth: the pager says which page, and what a
+                   reader wants beside it is how much there is to page through.
 
-                    @* Opens or closes every payload on the page at once. A link rather than a
+                   Above the filter row and outside the card, because it is the panel saying what it
+                   found rather than part of the table it found it in — and because the filter row
+                   below has to sit against the table for the two to read as one object. *@
+                @if (Events.Total > 0)
+                {
+                    <p class="lede">@EventSummary</p>
+                }
+
+                @* Above the table, because it says what the table holds. Its own GET form, like the
+                   rows-per-page picker under the table: the narrowing is a link to a narrower
+                   history, so it belongs in the address bar where it can be bookmarked, shared and
+                   gone back to. Everything that addresses the projection travels in hidden fields,
+                   along with the order and the fold, so narrowing does not silently reorder the
+                   table or shut its payloads. The page deliberately does not travel: page four of
+                   one type is not page four of another.
+
+                   The dropdown submits on change and the box is typed into, so the button is not
+                   only the fallback when scripting is off — it submits both at once, which is what
+                   one form buys. *@
+                <form class="search" method="get" action="dcb/projections/detail#@EventsAnchor">
+                    <label for="event">Event type</label>
+                    <select id="event" name="event" onchange="this.form.submit()">
+                        @* First and default, so a reader who has chosen nothing is looking at the
+                           whole history rather than at whichever type happened to be listed
+                           first. An empty value, which is what the address carries when nothing is
+                           narrowed to. *@
+                        <option value="" selected="@Choice.IsAll">All</option>
+                        @foreach (var applied in EventTypes)
+                        {
+                            <option value="@(applied.FullName)" selected="@(applied == Choice.Chosen)">
+                                @DomainTypeDescriber.LabelOf(applied)
+                            </option>
+                        }
+                    </select>
+
+                    @* Beside the type rather than under it, because the two narrow the same list: a
+                       type is what the log wrote a row under, and this is what the row itself
+                       carries. The payload and nothing else — a history is short enough to run an
+                       eye down the positions of, so the box is left to the thing a reader only half
+                       remembers. *@
+                    <label class="visually-hidden" for="text">Filter by payload</label>
+                    <input id="text" type="search" name="text" value="@Text"
+                           placeholder="Filter by payload" autocomplete="off"/>
+
+                    <input type="hidden" name="type" value="@Projection.FullName"/>
+                    <input type="hidden" name="id" value="@Identifier.FullName"/>
+                    @foreach (var parameter in Parameters)
+                    {
+                        <input type="hidden" name="@parameter.Name"
+                               value="@Values.GetValueOrDefault(parameter.Name)"/>
+                    }
+                    <input type="hidden" name="tab" value="@EventsTab"/>
+                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                    <input type="hidden" name="size" value="@PageSize"/>
+                    @if (PayloadsOpen)
+                    {
+                        <input type="hidden" name="payloads" value="@Open"/>
+                    }
+                    <button type="submit" class="quiet">Filter</button>
+                    @if (IsNarrowed)
+                    {
+                        <a href="@ClearLink">Clear</a>
+                    }
+
+                    @* Held to the right-hand end of the filter row. It belongs with the controls
+                       that act on the whole table rather than in a strip of its own between the
+                       filter and the data, which is all that strip had left in it once the count
+                       moved up above the card.
+
+                       Opens or closes every payload on the page at once. A link rather than a
                        control with script behind it, like the order and the page beside it: the
                        state lives in the address, so a page opened out can be linked to and gone
                        back to, and the rows stay foldable one at a time either way. It stays on
@@ -251,111 +319,156 @@ else
                         @(PayloadsOpen ? "Collapse all" : "Expand all")
                         <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
                     </a>
-                </div>
+                </form>
 
-                <table class="grid events">
-                    <thead>
-                    <tr>
-                        <th scope="col" class="col-position">Position</th>
-                        <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
-                            @* The only date these have, so the only thing there is to order them by. *@
-                            <a href="@EventsLink(!Descending, 1)">
-                                Appended
-                                <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
-                            </a>
-                        </th>
-                        @* What the log wrote the row under, as one name: the version is part of what
-                           a type is called rather than a fact beside it, and it is said only from
-                           the second version on — a first is what a name means until a second
-                           exists, and a column whose every row ended in v1 would teach its reader
-                           to skip it. *@
-                        <th scope="col" class="col-type">Type</th>
-                        <th scope="col" class="col-payload">Payload</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var stored in Events.Events)
-                    {
+                @if (Events.Total == 0)
+                {
+                    <p class="empty">
+                        @* Nothing matched, and why is worth saying: a name in the address that
+                           reaches nothing, a type the log could never have written, text that is
+                           there to retype, or a type this history simply holds none of. The two
+                           about the type come first — with either of them the text was never asked
+                           about, so blaming it would send a reader to retype something that was
+                           not the problem. *@
+                        @if (Choice.Unknown)
+                        {
+                            <text>That event is not among the types this projection applies.</text>
+                        }
+                        else if (Choice.Unbound)
+                        {
+                            @* Applied, offered, and impossible to have stored: without an
+                               [EventType] there is no key to write it under. *@
+                            <text>
+                                It carries no <code>[EventType]</code>, so the log has never
+                                written one of these.
+                            </text>
+                        }
+                        else if (IsFiltered)
+                        {
+                            <text>No payload matches &ldquo;@Text&rdquo;.</text>
+                        }
+                        else
+                        {
+                            <text>This projection applies no events of this type inside the boundary.</text>
+                        }
+                    </p>
+                }
+                else
+                {
+                    <table class="grid events">
+                        <thead>
                         <tr>
-                            <td>@stored.Position</td>
-                            <td>@stored.Written.ToLocalTime().ToString("g")</td>
-                            @* Name and version as one, the way every list here names a type, so a
-                               type met in a history and the same type met on its own page read
-                               alike. A key the store wrote that cannot be taken apart is left whole
-                               rather than half-read. *@
-                            <td><code>@DomainTypeDescriber.LabelOfKey(stored.Type)</code></td>
-                            <td>
-                                @if (stored.Error is not null)
-                                {
-                                    <span class="missing">@stored.Error</span>
-                                }
-                                else if (stored.State.Count == 0)
-                                {
-                                    <span class="missing">It carries nothing of its own.</span>
-                                }
-                                else
-                                {
-                                    @* Folded away, and closed to begin with: a payload is the only
-                                       cell tall enough to push the row about the event off its own
-                                       line, and a history is read by running down the positions and
-                                       the types first. A <details> rather than script, like the
-                                       rows on the events page, because these pages render
-                                       statically. *@
-                                    <details class="payload" open="@PayloadsOpen">
-                                        @* How much is under it, so a closed row still says whether
-                                           opening it is worth it. What it holds is the pairs'
-                                           to say. *@
-                                        <summary>@Held(stored.State.Count)</summary>
-
-                                        @* A list, because that is what it is: one name and value
-                                           per item, in the same shape the projection's own state is
-                                           read in. The name is set apart from the value it names,
-                                           so a cell of several pairs is scanned rather than read
-                                           through — and a value with a shape inside it is opened
-                                           under its own name. *@
-                                        @Pairs(stored.State)
-                                    </details>
-                                }
-                            </td>
+                            <th scope="col" class="col-position">Position</th>
+                            <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
+                                @* The only date these have, so the only thing there is to order them by. *@
+                                <a href="@EventsLink(!Descending, 1)">
+                                    Appended
+                                    <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                                </a>
+                            </th>
+                            @* What the log wrote the row under, as one name: the version is part of what
+                               a type is called rather than a fact beside it, and it is said only from
+                               the second version on — a first is what a name means until a second
+                               exists, and a column whose every row ended in v1 would teach its reader
+                               to skip it. *@
+                            <th scope="col" class="col-type">Type</th>
+                            <th scope="col" class="col-payload">Payload</th>
                         </tr>
-                    }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach (var stored in Events.Events)
+                        {
+                            <tr>
+                                <td>@stored.Position</td>
+                                <td>@stored.Written.ToLocalTime().ToString("g")</td>
+                                @* Name and version as one, the way every list here names a type, so a
+                                   type met in a history and the same type met on its own page read
+                                   alike. A key the store wrote that cannot be taken apart is left whole
+                                   rather than half-read. *@
+                                <td><code>@DomainTypeDescriber.LabelOfKey(stored.Type)</code></td>
+                                <td>
+                                    @if (stored.Error is not null)
+                                    {
+                                        <span class="missing">@stored.Error</span>
+                                    }
+                                    else if (stored.State.Count == 0)
+                                    {
+                                        <span class="missing">It carries nothing of its own.</span>
+                                    }
+                                    else
+                                    {
+                                        @* Folded away, and closed to begin with: a payload is the only
+                                           cell tall enough to push the row about the event off its own
+                                           line, and a history is read by running down the positions and
+                                           the types first. A <details> rather than script, like the
+                                           rows on the events page, because these pages render
+                                           statically. *@
+                                        <details class="payload" open="@PayloadsOpen">
+                                            @* How much is under it, so a closed row still says whether
+                                               opening it is worth it. What it holds is the pairs'
+                                               to say. *@
+                                            <summary>@Held(stored.State.Count)</summary>
 
-                <div class="table-footer">
-                    @* The pages as links, ten at a time. Links rather than a control, like the one
-                       on the list: what the page is being read through — the identifier, the tab,
-                       the order and the fold — is already in the address, so a link to another page
-                       carries all of it without a form having to hold a copy of each. *@
-                    <Pager Page="Events.Page" TotalPages="Events.TotalPages"
-                           Href="@(page => EventsLink(Descending, page))"/>
+                                            @* A list, because that is what it is: one name and value
+                                               per item, in the same shape the projection's own state is
+                                               read in. The name is set apart from the value it names,
+                                               so a cell of several pairs is scanned rather than read
+                                               through — and a value with a shape inside it is opened
+                                               under its own name. *@
+                                            @Pairs(stored.State)
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
 
-                    <form class="page-size" method="get" action="dcb/projections/detail#@EventsAnchor">
-                        <label for="size">Rows per page</label>
-                        <select id="size" name="size" onchange="this.form.submit()">
-                            @foreach (var option in InstanceQuery.PageSizes)
+                    <div class="table-footer">
+                        @* The pages as links, ten at a time. Links rather than a control, like the one
+                           on the list: what the page is being read through — the identifier, the tab,
+                           the order and the fold — is already in the address, so a link to another page
+                           carries all of it without a form having to hold a copy of each. *@
+                        <Pager Page="Events.Page" TotalPages="Events.TotalPages"
+                               Href="@(page => EventsLink(Descending, page))"/>
+
+                        <form class="page-size" method="get" action="dcb/projections/detail#@EventsAnchor">
+                            <label for="size">Rows per page</label>
+                            <select id="size" name="size" onchange="this.form.submit()">
+                                @foreach (var option in InstanceQuery.PageSizes)
+                                {
+                                    <option value="@option" selected="@(option == PageSize)">@option</option>
+                                }
+                            </select>
+                            <input type="hidden" name="type" value="@Projection.FullName"/>
+                            <input type="hidden" name="id" value="@Identifier.FullName"/>
+                            @foreach (var parameter in Parameters)
                             {
-                                <option value="@option" selected="@(option == PageSize)">@option</option>
+                                <input type="hidden" name="@parameter.Name"
+                                       value="@Values.GetValueOrDefault(parameter.Name)"/>
                             }
-                        </select>
-                        <input type="hidden" name="type" value="@Projection.FullName"/>
-                        <input type="hidden" name="id" value="@Identifier.FullName"/>
-                        @foreach (var parameter in Parameters)
-                        {
-                            <input type="hidden" name="@parameter.Name"
-                                   value="@Values.GetValueOrDefault(parameter.Name)"/>
-                        }
-                        <input type="hidden" name="tab" value="@EventsTab"/>
-                        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                        @if (PayloadsOpen)
-                        {
-                            <input type="hidden" name="payloads" value="@Open"/>
-                        }
-                        <noscript>
-                            <button type="submit">Apply</button>
-                        </noscript>
-                    </form>
-                </div>
+                            <input type="hidden" name="tab" value="@EventsTab"/>
+                            <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                            @* The narrowing travels too: how many rows a table is read at is not a
+                               reason to widen it back to the whole history. *@
+                            @if (Choice.Chosen is { } chosen)
+                            {
+                                <input type="hidden" name="event" value="@chosen.FullName"/>
+                            }
+                            @if (IsFiltered)
+                            {
+                                <input type="hidden" name="text" value="@Text"/>
+                            }
+                            @if (PayloadsOpen)
+                            {
+                                <input type="hidden" name="payloads" value="@Open"/>
+                            }
+                            <noscript>
+                                <button type="submit">Apply</button>
+                            </noscript>
+                        </form>
+                    </div>
+                }
             }
         </section>
     }
@@ -459,6 +572,42 @@ else
     private StoredEvents Events { get; set; } = new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
     /// <summary>
+    /// The event types this projection applies, or null when it applies everything inside its
+    /// boundary. What the store selects the history on, and what the dropdown above the table offers.
+    /// </summary>
+    private Type[]? Applies { get; set; }
+
+    /// <summary>
+    /// The types the dropdown offers, which is what a name in the address is matched against.
+    /// </summary>
+    /// <remarks>
+    /// What the projection applies, because that is what its history is made of: offering a type it
+    /// folds none of would be a choice narrowing to an empty table every time. A projection that
+    /// applies everything has no such list of its own, so it offers every registered DCB event —
+    /// the same list the log's own page offers, and the widest thing its boundary could hold.
+    /// </remarks>
+    private IReadOnlyList<Type> EventTypes => Applies ?? Types.Current.DcbEvents;
+
+    /// <summary>
+    /// Which of the history's events are being looked at: all of them, one type, or neither because
+    /// the name in the address reaches nothing this projection applies.
+    /// </summary>
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
+
+    /// <summary>
+    /// The text a row's payload has to carry, or null when the history is read whole.
+    /// </summary>
+    private string? Text { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
+
+    /// <summary>
+    /// Whether the table is narrowed at all, either way. What tells an empty table apart from an
+    /// empty history — and what says whether there is anything for a Clear link to undo.
+    /// </summary>
+    private bool IsNarrowed => !Choice.IsAll || IsFiltered;
+
+    /// <summary>
     /// A boundary reads as a history, so it starts at the beginning until the column is clicked.
     /// The list of projections starts newest first instead, because a list is scanned rather than
     /// read through.
@@ -510,13 +659,29 @@ else
 
     private string Tab { get; set; } = InfoTab;
 
+    /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $" of {Choice.Name}";
+
     /// <summary>
-    /// How many events there are in all, and whose count it is — the projection's, because the list
-    /// is narrowed to what it applies rather than to everything the boundary holds.
+    /// How many events there are in all.
     /// </summary>
-    private string EventSummary => Events.Total == 1
-        ? $"One event, applied by {Projection?.Name}."
-        : $"{Events.Total} events, applied by {Projection?.Name}.";
+    /// <remarks>
+    /// Whose they are is not said. The heading, the tags and the tab above have already answered
+    /// that three times over, and the count is on this page rather than on the log's because of
+    /// them — so it is left to say the one thing that is its own to say.
+    /// <para>
+    /// A table narrowed by what a row carries counts what matched, which is not the same claim about
+    /// what the projection is folded from. Said the way the log's own page says it, so a count means
+    /// one thing across the two.
+    /// </para>
+    /// </remarks>
+    private string EventSummary => (Events.Total, IsFiltered) switch
+    {
+        (1, false) => $"One event{Of}.",
+        (_, false) => $"{Events.Total} events{Of}.",
+        (1, true) => $"One matching event{Of}.",
+        (_, true) => $"{Events.Total} matching events{Of}."
+    };
 
     /// <summary>
     /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
@@ -557,16 +722,35 @@ else
     /// version and the state and says so in a notice at the top — the navigations that want the top.
     /// </param>
     /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
+    /// <param name="clearEvent">Whether to widen back to every type the projection applies.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
     /// <remarks>
-    /// The payloads are named only when they are out. Folded is what the table opens as, so a link
-    /// to a folded table is a link with nothing to say about them.
+    /// The payloads and the two narrowings are named only when they are made. Folded and unnarrowed
+    /// are what the table opens as, so a link to one is a link with nothing to say about them.
+    /// <para>
+    /// The narrowings travel with every link here for the same reason the order and the fold do:
+    /// paging, re-ordering or leaving the tab and coming back should not quietly widen a table back
+    /// to a history the reader had narrowed away.
+    /// </para>
     /// </remarks>
-    private string DetailLink(string tab, bool descending, int page, bool toTable = false, bool? open = null) =>
+    private string DetailLink(
+        string tab,
+        bool descending,
+        int page,
+        bool toTable = false,
+        bool? open = null,
+        bool clearEvent = false,
+        bool clearText = false) =>
         $"{Address}&tab={tab}" +
         $"&dir={(descending ? "desc" : "asc")}" +
         $"&size={PageSize}" +
         $"&page={page}" +
         ((open ?? PayloadsOpen) ? $"&payloads={Open}" : string.Empty) +
+        (!clearEvent && Choice.Chosen is { } chosen
+            ? $"&event={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}"
+            : string.Empty) +
+        (!clearText && IsFiltered ? $"&text={Uri.EscapeDataString(Text!)}" : string.Empty) +
+        // Last, because everything after a fragment is part of it.
         (toTable ? $"#{EventsAnchor}" : string.Empty);
 
     /// <summary>
@@ -584,6 +768,14 @@ else
     /// </summary>
     private string FoldLink =>
         DetailLink(EventsTab, Descending, Events.Page, toTable: true, open: !PayloadsOpen);
+
+    /// <summary>
+    /// One way back to the whole history, because that is the one thing a reader wants from here:
+    /// dropping the type but keeping the text would be a second narrowing to undo. Back to the first
+    /// page too, since the page they were on was a page of the narrowed table.
+    /// </summary>
+    private string ClearLink =>
+        DetailLink(EventsTab, Descending, page: 1, toTable: true, clearEvent: true, clearText: true);
 
     /// <summary>
     /// What the page is, for the heading and the title. Unlike the pages that list, this one is
@@ -733,6 +925,10 @@ else
         Error = loaded.Error;
         State = Loaded is null ? [] : DomainTypeDescriber.ReadState(Loaded);
 
+        // Read once, because two things want it: the store, which selects the history on it, and the
+        // dropdown above the table, which offers those same types to narrow that history by.
+        Applies = BoundaryEvents.AppliedBy(Projection, Loaded);
+
         Descending = string.Equals(Values.GetValueOrDefault("dir"), "desc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Values.GetValueOrDefault("size"));
         Page = int.TryParse(Values.GetValueOrDefault("page"), out var asked) ? asked : 1;
@@ -744,13 +940,25 @@ else
         // state tabs a count and a page of rows each to render nothing from.
         if (Tab == EventsTab)
         {
-            Events = await BoundaryEvents.Load(
-                StoreContext,
-                projectionId.Boundary,
-                BoundaryEvents.AppliedBy(Projection, Loaded),
-                Descending,
-                Page,
-                PageSize);
+            // A name in the address is matched against what the projection applies, so it can only
+            // ever reach a type this history could hold.
+            Choice = TypeChoice.Of(EventTypes, Values.GetValueOrDefault("event"));
+            Text = Values.GetValueOrDefault("text");
+
+            // A choice with nothing to look for is not asked about. Its key is null, and null
+            // narrows to everything rather than to nothing — so asking would answer the name of one
+            // type with the whole history.
+            Events = Choice.ShowsNothing
+                ? new StoredEvents([], Total: 0, Page: 1, TotalPages: 1, Error: null)
+                : await BoundaryEvents.Load(
+                    StoreContext,
+                    projectionId.Boundary,
+                    Applies,
+                    Choice.Key,
+                    Text,
+                    Descending,
+                    Page,
+                    PageSize);
         }
     }
 

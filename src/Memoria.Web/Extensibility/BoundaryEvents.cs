@@ -30,6 +30,8 @@ public static class BoundaryEvents
     /// <param name="context">The DCB store.</param>
     /// <param name="boundary">The consistency boundary.</param>
     /// <param name="applies">The event types the model applies, or null for all of them.</param>
+    /// <param name="eventType">The binding key to narrow to, or null for every type it applies.</param>
+    /// <param name="text">Text the row's payload has to carry, or null for any row.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
@@ -39,11 +41,20 @@ public static class BoundaryEvents
     /// whole — that is what a fold needs, and it offers no first-<c>n</c> read to ask for instead.
     /// The size of one model's history is what makes that affordable, and it is what makes the
     /// total exact rather than an estimate.
+    /// <para>
+    /// A reader's narrowing goes the same way, and for the same reason: the rows are already in
+    /// hand, so asking the store a second, narrower question would cost a round trip to answer what
+    /// a <c>Where</c> over what it just returned answers. <paramref name="applies"/> stays the
+    /// store's, though — which events the model is made of is what the boundary read selects on,
+    /// and it is not a reader's to widen.
+    /// </para>
     /// </remarks>
     public static async Task<StoredEvents> Load(
         IDcbDbContext context,
         TagQuery boundary,
         Type[]? applies,
+        string? eventType,
+        string? text,
         bool descending,
         int page,
         int size,
@@ -52,7 +63,7 @@ public static class BoundaryEvents
         try
         {
             return Page(await context.GetEventEntities(boundary, applies, cancellationToken),
-                descending, page, size);
+                eventType, text, descending, page, size);
         }
         catch (Exception exception)
         {
@@ -97,24 +108,38 @@ public static class BoundaryEvents
     }
 
     /// <summary>
-    /// Orders stored rows by when they were appended and takes one page of them.
+    /// Narrows stored rows to what a reader asked for, orders them by when they were appended, and
+    /// takes one page of what is left.
     /// </summary>
     /// <param name="rows">The rows inside the boundary.</param>
+    /// <param name="eventType">The binding key to narrow to, or null for every type.</param>
+    /// <param name="text">Text the row's payload has to carry, or null for any row.</param>
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
     /// <remarks>
+    /// Narrowed before it is counted, so the count and the pager answer for what a reader asked for
+    /// rather than for what the boundary holds.
+    /// <para>
     /// Position breaks a tie on the date. Events appended in one transaction are stamped from one
     /// clock reading and so share a date exactly, and an unstable order under paging would show one
     /// row on two pages and another on none.
+    /// </para>
     /// </remarks>
-    public static StoredEvents Page(IReadOnlyList<DcbEventEntity> rows, bool descending, int page, int size)
+    public static StoredEvents Page(
+        IReadOnlyList<DcbEventEntity> rows,
+        string? eventType,
+        string? text,
+        bool descending,
+        int page,
+        int size)
     {
-        var placed = InstanceQuery.Place(page, rows.Count, size);
+        var matching = Matching(rows, eventType, text);
+        var placed = InstanceQuery.Place(page, matching.Count, size);
 
         var ordered = descending
-            ? rows.OrderByDescending(row => row.CreatedDate).ThenByDescending(row => row.Position)
-            : rows.OrderBy(row => row.CreatedDate).ThenBy(row => row.Position);
+            ? matching.OrderByDescending(row => row.CreatedDate).ThenByDescending(row => row.Position)
+            : matching.OrderBy(row => row.CreatedDate).ThenBy(row => row.Position);
 
         var read = ordered
             .Skip(placed.Skip)
@@ -122,7 +147,47 @@ public static class BoundaryEvents
             .Select(row => Read(row.Position, row.EventType, row.Data, row.CreatedDate))
             .ToList();
 
-        return new StoredEvents(read, rows.Count, placed.Page, placed.TotalPages, Error: null);
+        return new StoredEvents(read, matching.Count, placed.Page, placed.TotalPages, Error: null);
+    }
+
+    /// <summary>
+    /// The rows a reader's two narrowings leave: the type the log wrote them under, and the text
+    /// they carry.
+    /// </summary>
+    /// <remarks>
+    /// Both narrow the same list, so a row has to answer both. The type is matched on the key rather
+    /// than on a CLR type, because the key is what the row holds — and a row whose type the uploaded
+    /// assemblies no longer describe still has one.
+    /// <para>
+    /// The payload is matched as it was written, which is the serialized event whole, so the text
+    /// looked for reaches the property names as well as the values under them. That is the point of
+    /// it: a reader who knows only that an event carried a certain reference should not have to know
+    /// which property holds it.
+    /// </para>
+    /// <para>
+    /// The payload and nothing else. The position is not asked, unlike on the log's own page, and a
+    /// number typed here is text like any other: a history is short enough to run an eye down the
+    /// positions of, so a box that also matched them would answer a reference that happens to be
+    /// numeric with a row that merely sits at that number.
+    /// </para>
+    /// </remarks>
+    private static IReadOnlyList<DcbEventEntity> Matching(
+        IReadOnlyList<DcbEventEntity> rows, string? eventType, string? text)
+    {
+        var narrowed = string.IsNullOrWhiteSpace(eventType)
+            ? rows
+            : rows.Where(row => row.EventType == eventType).ToList();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return narrowed;
+        }
+
+        var wanted = text.Trim();
+
+        return narrowed
+            .Where(row => row.Data.Contains(wanted, StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
 
     /// <summary>

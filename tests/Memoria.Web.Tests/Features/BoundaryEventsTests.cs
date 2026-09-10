@@ -153,10 +153,11 @@ public class BoundaryEventsTests : IDisposable
             .Should().BeEquivalentTo([typeof(SampleHappenedEvent)]);
     }
 
-    private static DcbEventEntity At(long position, DateTimeOffset written) => new()
+    private static DcbEventEntity At(long position, DateTimeOffset written,
+        string eventType = "SampleHappened:1") => new()
     {
         Position = position,
-        EventType = "SampleHappened:1",
+        EventType = eventType,
         Data = $$"""{"Id":"event-{{position}}"}""",
         CreatedDate = written
     };
@@ -170,7 +171,7 @@ public class BoundaryEventsTests : IDisposable
     [Fact]
     public void Orders_a_page_oldest_first()
     {
-        var paged = BoundaryEvents.Page(Rows(1, 2, 3), descending: false, page: 1, size: 10);
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3), eventType: null, text: null, descending: false, page: 1, size: 10);
 
         paged.Events.Select(stored => stored.Position).Should().Equal(1, 2, 3);
         paged.Total.Should().Be(3);
@@ -180,7 +181,7 @@ public class BoundaryEventsTests : IDisposable
     [Fact]
     public void Turns_the_order_around_when_asked()
     {
-        var paged = BoundaryEvents.Page(Rows(1, 2, 3), descending: true, page: 1, size: 10);
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3), eventType: null, text: null, descending: true, page: 1, size: 10);
 
         paged.Events.Select(stored => stored.Position).Should().Equal(3, 2, 1);
     }
@@ -188,7 +189,7 @@ public class BoundaryEventsTests : IDisposable
     [Fact]
     public void Reads_only_the_page_asked_for()
     {
-        var paged = BoundaryEvents.Page(Rows(1, 2, 3, 4, 5), descending: false, page: 2, size: 2);
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3, 4, 5), eventType: null, text: null, descending: false, page: 2, size: 2);
 
         paged.Events.Select(stored => stored.Position).Should().Equal(3, 4);
         paged.Total.Should().Be(5);
@@ -203,7 +204,7 @@ public class BoundaryEventsTests : IDisposable
     [Fact]
     public void Brings_a_page_past_the_last_one_back_to_the_last()
     {
-        var paged = BoundaryEvents.Page(Rows(1, 2, 3, 4, 5), descending: false, page: 99, size: 2);
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3, 4, 5), eventType: null, text: null, descending: false, page: 99, size: 2);
 
         paged.Page.Should().Be(3);
         paged.Events.Select(stored => stored.Position).Should().Equal(5);
@@ -219,7 +220,7 @@ public class BoundaryEventsTests : IDisposable
         IReadOnlyList<DcbEventEntity> together =
             [At(7, Written), At(5, Written), At(6, Written)];
 
-        BoundaryEvents.Page(together, descending: false, page: 1, size: 10)
+        BoundaryEvents.Page(together, eventType: null, text: null, descending: false, page: 1, size: 10)
             .Events.Select(stored => stored.Position).Should().Equal(5, 6, 7);
     }
 
@@ -233,7 +234,115 @@ public class BoundaryEventsTests : IDisposable
         IReadOnlyList<DcbEventEntity> outOfStep =
             [At(1, Written.AddHours(2)), At(2, Written)];
 
-        BoundaryEvents.Page(outOfStep, descending: false, page: 1, size: 10)
+        BoundaryEvents.Page(outOfStep, eventType: null, text: null, descending: false, page: 1, size: 10)
             .Events.Select(stored => stored.Position).Should().Equal(2, 1);
+    }
+
+    /// <summary>
+    /// A history of one kind of event, which is how a boundary holding several is read for one of
+    /// them. The key is what the log wrote the row under, so that is what it is matched on.
+    /// </summary>
+    [Fact]
+    public void Narrows_a_page_to_one_event_type()
+    {
+        IReadOnlyList<DcbEventEntity> mixed =
+        [
+            At(1, Written, "SampleHappened:1"),
+            At(2, Written.AddMinutes(1), "OtherHappened:1"),
+            At(3, Written.AddMinutes(2), "SampleHappened:1")
+        ];
+
+        var paged = BoundaryEvents.Page(mixed, "SampleHappened:1", text: null,
+            descending: false, page: 1, size: 10);
+
+        paged.Events.Select(stored => stored.Position).Should().Equal(1, 3);
+        paged.Total.Should().Be(2);
+    }
+
+    /// <summary>
+    /// The payload is matched as it was written, so the text reaches the property names as well as
+    /// the values under them — a reader who knows only what a row carried should not have to know
+    /// which property holds it.
+    /// </summary>
+    [Fact]
+    public void Keeps_only_the_rows_whose_payload_carries_the_text()
+    {
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3), eventType: null, text: "event-2",
+            descending: false, page: 1, size: 10);
+
+        paged.Events.Select(stored => stored.Position).Should().Equal(2);
+        paged.Total.Should().Be(1);
+    }
+
+    /// <summary>
+    /// Typed rather than copied, so what was typed is matched however it was cased.
+    /// </summary>
+    [Fact]
+    public void Matches_a_payload_whatever_the_case_it_was_typed_in()
+    {
+        BoundaryEvents.Page(Rows(1, 2, 3), eventType: null, text: "EVENT-2",
+                descending: false, page: 1, size: 10)
+            .Events.Select(stored => stored.Position).Should().Equal(2);
+    }
+
+    /// <summary>
+    /// The payload is the only thing the box asks about, so a number is text like any other: it
+    /// reaches the rows carrying it rather than the row numbered by it.
+    /// </summary>
+    [Fact]
+    public void Asks_nothing_of_the_position_for_a_number_typed_into_the_box()
+    {
+        IReadOnlyList<DcbEventEntity> rows =
+        [
+            new() { Position = 1, EventType = "SampleHappened:1", Data = """{"Id":"12"}""",
+                CreatedDate = Written },
+            new() { Position = 12, EventType = "SampleHappened:1", Data = "{}",
+                CreatedDate = Written.AddMinutes(1) }
+        ];
+
+        BoundaryEvents.Page(rows, eventType: null, text: "12", descending: false, page: 1, size: 10)
+            .Events.Select(stored => stored.Position).Should().Equal(1);
+    }
+
+    /// <summary>
+    /// A row is reached by its payload alone, so text nothing carries reaches nothing.
+    /// </summary>
+    [Fact]
+    public void Keeps_no_row_whose_payload_does_not_carry_the_text()
+    {
+        BoundaryEvents.Page(Rows(1, 2, 3), eventType: null, text: "nothing-carries-this",
+                descending: false, page: 1, size: 10)
+            .Total.Should().Be(0);
+    }
+
+    /// <summary>
+    /// The two narrow the same list, so a row has to answer both: the type it was written under and
+    /// the text it carries.
+    /// </summary>
+    [Fact]
+    public void Narrows_by_the_type_and_the_text_together()
+    {
+        IReadOnlyList<DcbEventEntity> mixed =
+        [
+            At(1, Written, "SampleHappened:1"),
+            At(2, Written.AddMinutes(1), "OtherHappened:1")
+        ];
+
+        BoundaryEvents.Page(mixed, "SampleHappened:1", text: "event-2",
+            descending: false, page: 1, size: 10).Total.Should().Be(0);
+    }
+
+    /// <summary>
+    /// The pager counts what matched rather than what the boundary holds, so a narrowed table does
+    /// not promise pages of rows the filter has taken away.
+    /// </summary>
+    [Fact]
+    public void Pages_over_what_matched_rather_than_over_the_whole_boundary()
+    {
+        var paged = BoundaryEvents.Page(Rows(1, 2, 3, 4, 5), eventType: null, text: "event-1",
+            descending: false, page: 1, size: 2);
+
+        paged.Total.Should().Be(1);
+        paged.TotalPages.Should().Be(1);
     }
 }
