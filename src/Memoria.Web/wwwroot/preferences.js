@@ -19,6 +19,13 @@ const key = "memoria.rows-per-page";
 // a field beside the size, so one preference cannot be lost by writing the other.
 const orderingKey = "memoria.hide-ordering-notice";
 
+// Which theme was chosen, if one was. Absent means nothing was chosen and the operating system is
+// answering, which is a third state rather than a synonym for light — so it is stored as absent
+// rather than written down as a guess. The value is read a second time by the small script in the
+// head, which is what puts the theme on before the page paints; this key is the contract between
+// the two, and renaming it here means renaming it there.
+const themeKey = "memoria.theme";
+
 // Storage can be missing or refused outright: a private window, a browser set to block site data,
 // an embedded view. A reader who cannot be remembered still gets a working table at the size the
 // address asks for, so both ways in swallow the refusal rather than letting it reach the page.
@@ -115,7 +122,108 @@ document.addEventListener("change", event => {
     }
 });
 
+function storedTheme() {
+    try {
+        return window.localStorage.getItem(themeKey);
+    } catch {
+        return null;
+    }
+}
+
+function rememberTheme(theme) {
+    try {
+        window.localStorage.setItem(themeKey, theme);
+    } catch {
+    }
+}
+
+// What is actually on the screen, which is not the same question as what was chosen: with nothing
+// chosen the operating system decides, and the button still has to know which way it is pointing.
+function currentTheme() {
+    const stamped = document.documentElement.getAttribute("data-theme");
+
+    if (stamped === "dark" || stamped === "light") {
+        return stamped;
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+// The button is rendered hidden and shown here, so it never appears where nothing can drive it.
+// Which glyph shows is the stylesheet's business; what is set here is the label, and it names what
+// pressing the button will do rather than which theme is on — "dark theme" on a button that is
+// already dark reads as a statement rather than an offer.
+// Puts the chosen theme back on the root if it has gone missing. Enhanced navigation is why it
+// goes missing: Blazor swaps a page in by diffing the new document against this one, and the
+// document the server sends has no data-theme on it, because the choice is the browser's and the
+// server has never heard of it. So the attribute is stripped on the way through, and the page
+// arrives in whatever theme the operating system asks for.
+function stampTheme() {
+    const choice = storedTheme();
+
+    if (choice !== "dark" && choice !== "light") {
+        return;
+    }
+
+    if (document.documentElement.getAttribute("data-theme") !== choice) {
+        document.documentElement.setAttribute("data-theme", choice);
+    }
+}
+
+function applyTheme() {
+    stampTheme();
+
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    const label = `Switch to ${next} theme`;
+
+    for (const button of document.querySelectorAll("#theme-toggle")) {
+        button.hidden = false;
+        button.setAttribute("aria-label", label);
+        button.title = label;
+    }
+}
+
+// Watching the attribute rather than only putting it back on enhancedload, because the strip
+// happens after that event rather than before it — re-stamping there would be undone a moment
+// later. An observer catches the removal whenever it comes, and its callback runs before the
+// browser paints, so the theme does not flicker on the way between pages. The guard inside
+// stampTheme is what stops this from answering its own write.
+new MutationObserver(stampTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"]
+});
+
+document.addEventListener("click", event => {
+    const control = event.target;
+
+    // Element, not HTMLElement. What is pressed here is almost always the glyph, and an SVG node is
+    // an Element without being an HTMLElement — so the stricter test threw away every click that
+    // landed on the icon and kept only the few that found the padding around it. closest() is
+    // defined on Element, so it is the right floor to check against.
+    if (!(control instanceof Element) || !control.closest("#theme-toggle")) {
+        return;
+    }
+
+    const next = currentTheme() === "dark" ? "light" : "dark";
+
+    document.documentElement.setAttribute("data-theme", next);
+    rememberTheme(next);
+    applyTheme();
+});
+
+// The operating system can change under a reader who never chose, and then the label is pointing
+// the wrong way. Only the label: the stylesheet has already followed the change on its own.
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (!storedTheme()) {
+        applyTheme();
+    }
+});
+
 function apply() {
+    // First, and before the early return below: the button is on every page, and a reader who
+    // never picked a rows-per-page size still has a theme to switch.
+    applyTheme();
+
     // Both settings are put back on every page, and this one first: the note is rendered for
     // everyone, so a reader who hid it should not watch it go. Before the early return below,
     // because a reader who never picked a size may still have hidden the note.

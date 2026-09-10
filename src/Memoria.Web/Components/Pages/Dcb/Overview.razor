@@ -16,6 +16,25 @@
     consistency boundary model, and what they are addressed by.
 </p>
 
+@* What the model declares, counted. The same three figures the groups below say in prose, lifted
+   out so the shape of the model can be taken in without reading: a reader arriving here is usually
+   asking how much is registered, not which page to open next. No streams among them — a DCB
+   boundary is a query over tags rather than a place events are kept. *@
+<div class="stats">
+    <div class="stat">
+        <span class="figure">@Catalogue.DcbEvents.Count</span>
+        <span class="label">Events</span>
+    </div>
+    <div class="stat">
+        <span class="figure">@Catalogue.DcbAggregates.Count</span>
+        <span class="label">Aggregates</span>
+    </div>
+    <div class="stat">
+        <span class="figure">@Catalogue.DcbProjections.Count</span>
+        <span class="label">Projections</span>
+    </div>
+</div>
+
 @* The counts belong to the types the model declares, and stay on the group rather than on either
    link: they are what the section holds, which is the same fact whichever of the two you open. *@
 <ul class="sections">

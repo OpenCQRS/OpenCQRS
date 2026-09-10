@@ -5,9 +5,33 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="/"/>
+    @* An SVG icon rather than an .ico: one file, sharp at every size a browser asks for, and the
+       only format worth shipping to an audience running current browsers. Without it the tab
+       carried the blank page glyph and the browser asked for /favicon.ico on every load and got a
+       404 back. *@
+    <link rel="icon" href="@Assets["favicon.svg"]" type="image/svg+xml"/>
     <ResourcePreloader/>
     <link rel="stylesheet" href="@Assets["app.css"]"/>
     <link rel="stylesheet" href="@Assets["Memoria.Web.styles.css"]"/>
+    @* Inline and in the head, unlike every other preference this application keeps. The rows-per-page
+       choice can be put back after the page has drawn because nobody sees a table of ten become a
+       table of fifty. A theme cannot: read from a file at the end of the body, the page paints white
+       first and then turns dark, and that flash is on every single navigation. This is the one
+       script that has to run before the first paint, so it is written where it can.
+
+       Storage can be missing or refused outright — a private window, a browser set to block site
+       data — and a reader who cannot be remembered still gets the theme their system asks for. *@
+    <script>
+        (function () {
+            try {
+                var choice = window.localStorage.getItem("memoria.theme");
+                if (choice === "dark" || choice === "light") {
+                    document.documentElement.setAttribute("data-theme", choice);
+                }
+            } catch (e) {
+            }
+        })();
+    </script>
     <ImportMap/>
     <HeadOutlet/>
 </head>

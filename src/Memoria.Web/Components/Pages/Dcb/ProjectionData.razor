@@ -29,6 +29,14 @@
 }
 else
 {
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. *@
+    <p class="lede">@Summary</p>
+
     @* One GET form for all three, because narrowing is a link to a narrower list and the whole
        narrowing belongs in the address bar together, where it can be bookmarked, shared and gone
        back to. The order travels in a hidden field so narrowing does not silently reorder; the page
@@ -83,9 +91,6 @@ else
             <a href="@Link(Sort, Descending, 1, clearText: true, clearModel: true)">Clear</a>
         }
     </form>
-
-    <p class="lede">@Summary</p>
-    
     @if (Choice.Unbound)
     {
         @* Registered, listed, and impossible to have been stored: without a [ProjectionType] there

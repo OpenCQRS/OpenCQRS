@@ -8,17 +8,17 @@
     @* A landmark rather than a bare row of links: it is one of the few ways off the page, and a
        reader who moves by landmarks should be able to reach it without running the table first. *@
     <nav class="pagination" aria-label="Pages">
+        @* Arrows rather than words: two chevrons for the ends of the table and one for a step, which
+           is the shape a reader already knows from every other pager. The word each one replaces is
+           on the aria-label, because a chevron read out is "left-pointing double angle quotation
+           mark" — the label is what the glyph means, and it is the only thing a screen reader gets
+           of it. *@
+        @* Drawn only where there is somewhere to go. A greyed arrow is a control offering itself and
+           then refusing, and there is nothing behind the first page for it to lead to. *@
         @if (Current > 1)
         {
-            <a href="@Href(1)">First</a>
-            <a rel="prev" href="@Href(Current - 1)">Previous</a>
-        }
-        else
-        {
-            @* Kept in place rather than dropped, so the numbers beside them do not shuffle along
-               the line as the first and last pages are reached. *@
-            <span class="disabled">First</span>
-            <span class="disabled">Previous</span>
+            <a href="@Href(1)" aria-label="First page">&laquo;</a>
+            <a rel="prev" href="@Href(Current - 1)" aria-label="Previous page">&lsaquo;</a>
         }
 
         @* The numbers themselves, as links. An ordered list because that is what they are — a
@@ -59,13 +59,8 @@
 
         @if (Current < TotalPages)
         {
-            <a rel="next" href="@Href(Current + 1)">Next</a>
-            <a href="@Href(TotalPages)">Last</a>
-        }
-        else
-        {
-            <span class="disabled">Next</span>
-            <span class="disabled">Last</span>
+            <a rel="next" href="@Href(Current + 1)" aria-label="Next page">&rsaquo;</a>
+            <a href="@Href(TotalPages)" aria-label="Last page">&raquo;</a>
         }
 
         @* How much table there is, once the strip has stopped being all of it. Past ten pages it

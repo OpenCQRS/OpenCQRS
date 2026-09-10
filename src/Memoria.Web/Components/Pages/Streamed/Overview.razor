@@ -1,4 +1,6 @@
 @page "/streamed"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
 
 <PageTitle>Streamed @Heading</PageTitle>
 
@@ -9,8 +11,88 @@
 </nav>
 
 <h1>@Heading</h1>
+<p class="lede">
+    The types uploaded through <a href="settings">settings</a> that belong to the streamed model,
+    and the streams they are held in.
+</p>
 
-<p><em>TBD</em></p>
+@* What the model declares, counted. Four figures rather than the DCB model's three: a stream is a
+   place events are kept, and this is the model that has them. *@
+<div class="stats">
+    <div class="stat">
+        <span class="figure">@Catalogue.StreamedEvents.Count</span>
+        <span class="label">Events</span>
+    </div>
+    <div class="stat">
+        <span class="figure">@Catalogue.StreamedAggregates.Count</span>
+        <span class="label">Aggregates</span>
+    </div>
+    <div class="stat">
+        <span class="figure">@Catalogue.StreamedProjections.Count</span>
+        <span class="label">Projections</span>
+    </div>
+    <div class="stat">
+        <span class="figure">@Catalogue.StreamedStreamIds.Count</span>
+        <span class="label">Streams</span>
+    </div>
+</div>
+
+@* The counts belong to the types the model declares, and stay on the group rather than on either
+   link: they are what the section holds, which is the same fact whichever of the two you open. *@
+<ul class="sections">
+    <li>
+        <div class="group">
+            <span class="name">Events</span>
+            <span class="detail">@Count(Catalogue.StreamedEvents.Count, "event") the model can apply.</span>
+            <span class="links">
+                <a href="streamed/events/types">Types</a>
+                <a href="streamed/events/data">Data</a>
+            </span>
+        </div>
+    </li>
+    <li>
+        <div class="group">
+            <span class="name">Aggregates</span>
+            <span class="detail">
+                @Count(Catalogue.StreamedAggregates.Count, "aggregate"), addressed by
+                @Count(Catalogue.StreamedAggregateIds.Count, "identifier").
+            </span>
+            <span class="links">
+                <a href="streamed/aggregates/types">Types</a>
+                <a href="streamed/aggregates/data">Data</a>
+            </span>
+        </div>
+    </li>
+    <li>
+        <div class="group">
+            <span class="name">Projections</span>
+            <span class="detail">
+                @Count(Catalogue.StreamedProjections.Count, "projection"), addressed by
+                @Count(Catalogue.StreamedProjectionIds.Count, "identifier").
+            </span>
+            <span class="links">
+                <a href="streamed/projections/types">Types</a>
+                <a href="streamed/projections/data">Data</a>
+            </span>
+        </div>
+    </li>
+    @* One link rather than a pair: a stream is declared and nothing else is stored of it, so there
+       is no data page for it to choose between. *@
+    <li>
+        <a href="streamed/streams">
+            <span class="name">Streams</span>
+            <span class="detail">@Count(Catalogue.StreamedStreamIds.Count, "stream") the events are held in.</span>
+        </a>
+    </li>
+</ul>
+
+@if (Catalogue.Count == 0)
+{
+    <p class="lede">
+        Nothing is registered yet. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
 
 @code {
 
@@ -20,5 +102,10 @@
     /// breadcrumb that says which section this is.
     /// </summary>
     private const string Heading = "Overview";
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
 
 }

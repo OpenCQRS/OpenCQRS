@@ -36,6 +36,18 @@ else if (Stream.Unknown)
 }
 else
 {
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. HasRows repeats what the branches below already
+       decide; if a branch is added there, add it there too. *@
+    @if (HasRows)
+    {
+        <p class="lede">@Summary</p>
+    }
+
     @* Above the table, because it says what the table holds. Its own GET form, like the pickers
        under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
        where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
@@ -99,6 +111,21 @@ else
                undo. *@
             <a href="@Link(Descending, 1, clearStream: true, clearType: true, clearText: true)">Clear</a>
         }
+
+        @* Opens or closes every payload on the page at once. A link rather than a control with
+           script behind it, like the order and the page beside it: the state lives in the address,
+           so a page opened out can be linked to and gone back to, and the rows stay foldable one at
+           a time either way. It stays on this page — this is a way of looking at the rows, not a
+           way of moving between them.
+
+           Held to the right-hand end of the filter row, with the other controls that act on the
+           whole table. It used to have a strip of its own between the filter and the data; once
+           the count moved up under the title that strip held nothing else, and a band of empty
+           card between the controls and the rows is not worth a row. *@
+        <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
+            @(PayloadsOpen ? "Collapse all" : "Expand all")
+            <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+        </a>
     </form>
 
     @* Beside the rows rather than instead of them: the page worked, and this says how well it could
@@ -173,21 +200,6 @@ else
     {
         @* The lede and the fold, at the two ends of the line above the table, in the same shape as
            the pager and the rows-per-page picker at the two ends of the line below it. *@
-        <div class="table-header">
-            @* The whole count, not this page's worth: the pager says which page, and what a reader
-               wants beside it is how much there is to page through. *@
-            <p class="lede">@Summary</p>
-
-            @* Opens or closes every payload on the page at once. A link rather than a control with
-               script behind it, like the order and the page beside it: the state lives in the
-               address, so a page opened out can be linked to and gone back to, and the rows stay
-               foldable one at a time either way. It stays on this page — this is a way of looking
-               at the rows, not a way of moving between them. *@
-            <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
-                @(PayloadsOpen ? "Collapse all" : "Expand all")
-                <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
-            </a>
-        </div>
 
         @* Where the row went, then what the store filed it as, then what it is. A streamed event is
            appended to a named stream and carries that name, so where it went is the first thing
@@ -419,6 +431,14 @@ else
     /// the same claim about what was written. Said the way the DCB log says it, so a count means
     /// one thing across the two.
     /// </remarks>
+    /// <summary>
+    /// Whether the page is showing a table at all, and so whether there is a count to put under the
+    /// title. Mirrors the branches above the table: anything they answer instead — an unbound
+    /// choice, an unshaped stream, an error, or nothing stored — is a page with no rows on it.
+    /// </summary>
+    private bool HasRows =>
+        !Choice.Unbound && !Stream.Unshaped && Events.Error is null && Events.Total > 0;
+
     private string Summary => (Events.Total, IsFiltered) switch
     {
         (1, false) => $"One event appended{Of}{In}.",

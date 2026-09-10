@@ -36,6 +36,18 @@ else if (Stream.Unknown)
 }
 else
 {
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. HasRows repeats what the branches below already
+       decide; if a branch is added there, add it there too. *@
+    @if (HasRows)
+    {
+        <p class="lede">@Summary</p>
+    }
+
     @* Above the table, because it says what the table holds. Its own GET form, like the pickers
        under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
        where it can be bookmarked, shared and gone back to. The order travels in hidden fields so
@@ -193,9 +205,6 @@ else
     }
     else
     {
-        @* The whole count, not this page's worth: the pager says which page, and what a reader wants
-           beside it is how much there is to page through. *@
-        <p class="lede">@Summary</p>
 
         @* The stream first, as on the events page, because it is where the row came from. Then what
            the row is — the id it was addressed by and what it was folded into — with the identifier
@@ -457,6 +466,15 @@ else
     /// A filtered count counts what matched, which is not the same claim as how much is stored. Said
     /// the way the events page says it, so a count means one thing across the two.
     /// </remarks>
+    /// <summary>
+    /// Whether the page is showing a table at all, and so whether there is a count to put under
+    /// the title. Mirrors the branches above the table: anything they answer instead is a page
+    /// with no rows on it.
+    /// </summary>
+    private bool HasRows =>
+        !Choice.Unbound && !Stream.Unshaped && !Identifier.Unshaped
+        && Aggregates.Error is null && Aggregates.Total > 0;
+
     private string Summary => (Aggregates.Total, IsFiltered) switch
     {
         (1, false) => $"One aggregate stored{Of}{In}.",

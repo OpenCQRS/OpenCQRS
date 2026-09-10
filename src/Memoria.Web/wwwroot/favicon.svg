@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Memoria">
+    <!--
+        The tab icon. Drawn rather than set in type: a favicon is rendered at 16px with no
+        stylesheet and no webfont behind it, so a letter M set in Plex would fall back to whatever
+        the browser had and change shape between machines. As a stroked path it is the same mark
+        everywhere and stays crisp at every size.
+
+        The accent is written out here because a favicon is fetched on its own, outside the page,
+        and cannot read the application's tokens. It is the one place the accent colour is copied;
+        the mark in the header is inline SVG and does follow the token.
+
+        Note for editors: this is XML, so a comment may not contain two hyphens in a row. Naming a
+        CSS custom property in here the way you would in a stylesheet makes the file unparseable,
+        and the browser shows a broken image while curl still reports a healthy 200.
+    -->
+    <rect width="32" height="32" rx="7" fill="#5b4bd6"/>
+    <path d="M8 23V10l8 8 8-8v13"
+          fill="none"
+          stroke="#fff"
+          stroke-width="3.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+</svg>

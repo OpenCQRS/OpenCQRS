@@ -10,7 +10,7 @@ table {
     table th {
         border-bottom: 1px solid var(--rule);
         color: var(--ink-soft);
-        font-size: 0.8125rem;
+        font-size: var(--text-sm);
         font-weight: 600;
         padding: 0 0.75rem 0.5rem;
         text-align: left;
@@ -55,7 +55,7 @@ table {
 .model h2 {
     border-bottom: 1px solid var(--rule);
     color: var(--ink-soft);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     margin: 0;
     padding: 0 0 0.5rem;
@@ -95,7 +95,7 @@ table {
     cursor: pointer;
     display: inline-flex;
     font: inherit;
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     justify-content: center;
     padding: 0.25rem 0.5rem;
 }
@@ -108,14 +108,14 @@ table {
     }
 
     .delete:hover {
-        background: #fdf3f3;
-        border-color: #f0d5d5;
+        background: var(--danger-ground);
+        border-color: var(--danger-rule);
         color: var(--danger);
     }
 
     .delete:focus-visible {
         border-color: var(--danger);
-        box-shadow: 0 0 0 3px rgb(179 33 33 / 0.2);
+        box-shadow: 0 0 0 3px rgb(var(--danger-rgb) / 0.2);
         outline: none;
     }
 
@@ -138,7 +138,7 @@ table {
    than a step in doing it. Given the room above that the notice it follows does not need. */
 .shared {
     color: var(--ink-soft);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-style: italic;
     margin: 1.5rem 0 0;
     max-width: 44rem;
@@ -148,7 +148,7 @@ table {
 .dialog {
     border: 1px solid var(--rule);
     border-radius: 8px;
-    box-shadow: 0 10px 30px rgb(28 32 36 / 0.18);
+    box-shadow: 0 10px 30px rgb(var(--shadow-rgb) / 0.18);
     color: var(--ink);
     max-width: 32rem;
     padding: 1.25rem 1.5rem 1.5rem;
@@ -156,7 +156,7 @@ table {
 }
 
     .dialog::backdrop {
-        background: rgb(28 32 36 / 0.35);
+        background: rgb(var(--shadow-rgb) / 0.35);
     }
 
     .dialog h2 {
@@ -184,7 +184,7 @@ table {
     background: var(--danger);
     border: 1px solid var(--danger);
     border-radius: 4px;
-    color: #fff;
+    color: var(--on-fill);
     cursor: pointer;
     font: inherit;
     font-weight: 600;
@@ -192,12 +192,12 @@ table {
 }
 
     .danger:hover {
-        background: #8f1a1a;
-        border-color: #8f1a1a;
+        background: var(--danger-strong);
+        border-color: var(--danger-strong);
     }
 
     .danger:focus-visible {
-        box-shadow: 0 0 0 3px rgb(179 33 33 / 0.3);
+        box-shadow: 0 0 0 3px rgb(var(--danger-rgb) / 0.3);
         outline: none;
     }
 

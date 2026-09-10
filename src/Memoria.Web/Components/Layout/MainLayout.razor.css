@@ -1,21 +1,50 @@
+/* The bar spans the window while its contents line up with the sheet below, so the brand sits over
+   the page title rather than out at the window's edge. The padding grows to whatever half the
+   leftover space is, and never falls below the 1.5rem a narrow window needs — which is the same
+   calculation centring the sheet, expressed as padding because the bar itself has to reach the
+   edges to read as the application's own edge. */
 header {
     align-items: center;
+    background: var(--surface);
     border-bottom: 1px solid var(--rule);
     display: flex;
     gap: 1.5rem;
-    padding: 0.75rem 1.5rem;
+    padding-block: 0.75rem;
+    /* The 1.75rem is the column's own inner padding, added so the brand lands on the page title
+       rather than a hair to the left of it. There is no border to account for any more: the column
+       below is no longer a bordered sheet. */
+    padding-inline: max(1.5rem, calc((100% - var(--page-width)) / 2 + 1.75rem));
 }
 
     header .brand {
+        align-items: center;
         color: var(--ink);
-        font-size: 1.1rem;
+        display: flex;
+        font-size: var(--text-xl);
         font-weight: 600;
+        gap: 0.5rem;
         text-decoration: none;
     }
 
+        /* Sized in ems so the tile follows the wordmark beside it rather than a fixed pixel, and
+           kept from shrinking if the bar is ever squeezed. */
+        header .brand .mark {
+            flex: none;
+            height: 1.15em;
+            width: 1.15em;
+        }
+
+    /* At the size the pages under it are read at, not the browser's prose default. The bar names
+       where you are in a tool whose content is dense; set two pixels larger than the tables it
+       leads to, it read as the loudest thing on the page. */
+    /* Grows to fill the bar so the theme button can be held at the far end of it. Left to size
+       itself the nav stopped after the last link, the button stopped with it, and the right third
+       of the bar was empty. */
     header nav {
         align-items: center;
         display: flex;
+        flex: 1;
+        font-size: var(--text-md);
         gap: 1rem;
     }
 
@@ -32,6 +61,66 @@ header {
             color: var(--accent);
             font-weight: 600;
         }
+
+/* Quiet until you go near it: changing the theme is not what anyone came to this page to do. */
+.theme-toggle {
+    align-items: center;
+    /* Held at the far end of the bar, away from the links: it is the one control up here that
+       changes the page rather than leaves it. */
+    margin-left: auto;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    justify-content: center;
+    /* Sized in ems so the glyph follows the bar's text; the padding keeps the target bigger than
+       the mark inside it. */
+    padding: 0.3rem;
+}
+
+    .theme-toggle svg {
+        height: 1.15em;
+        width: 1.15em;
+    }
+
+    .theme-toggle:hover {
+        background: var(--ground);
+        color: var(--ink);
+    }
+
+    .theme-toggle:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
+        outline: none;
+    }
+
+/* One glyph at a time, chosen by the theme showing rather than by script, so the button is right
+   the moment it is unhidden and stays right when the operating system changes underneath it. The
+   sun shows in the dark theme, because pressing it is what returns you to the light one. */
+.theme-toggle .glyph-light {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .glyph-dark {
+        display: none;
+    }
+
+    :root:not([data-theme="light"]) .theme-toggle .glyph-light {
+        display: inline;
+    }
+}
+
+:root[data-theme="dark"] .theme-toggle .glyph-dark {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .glyph-light {
+    display: inline;
+}
 
 /* Admin and the pages under it. */
 .menu {
@@ -77,7 +166,7 @@ header {
     }
 
     .menu .submenu {
-        background: #fff;
+        background: var(--surface);
         border: 1px solid var(--rule);
         border-radius: 6px;
         display: flex;
@@ -104,7 +193,7 @@ header {
        for one of them. */
     .menu .submenu-label {
         color: var(--ink-soft);
-        font-size: 0.75rem;
+        font-size: var(--text-xs);
         letter-spacing: 0.04em;
         text-transform: uppercase;
     }
@@ -113,8 +202,32 @@ header {
         padding-left: 0.75rem;
     }
 
+/* A bounded column, not a sheet. What is written on the ground and what is written on a surface is
+   a distinction the page makes for itself: a breadcrumb, a title and the line under it are the page
+   saying where you are, and they belong on the ground the way a heading belongs above a document.
+   The stored data belongs on a surface, and takes one of its own further down.
+
+   Held to --page-width so a table stops growing once it has the room it needs, rather than
+   following the window out to whatever width the monitor happens to be. */
 main {
-    padding: 1.5rem;
+    /* So --page-width is the column's whole width, padding included. Otherwise the bar above,
+       which centres itself against that same number, would line up against a different edge. */
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: var(--page-width);
+    padding: 1.5rem 1.75rem 3rem;
+}
+
+@media (max-width: 60rem) {
+    main {
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    /* Kept level with the column's narrow padding, so the two do not step apart at the one width
+       where the misalignment would be most obvious. */
+    header {
+        padding-inline: 1rem;
+    }
 }
 
 #blazor-error-ui {

@@ -29,6 +29,18 @@
 }
 else
 {
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. HasRows repeats what the branches below already
+       decide; if a branch is added there, add it there too. *@
+    @if (HasRows)
+    {
+        <p class="lede">@Summary</p>
+    }
+
     @* Above the table, because it says what the table holds. Its own GET form, like the pickers
        under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
        where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
@@ -73,6 +85,20 @@ else
                here: dropping the type but keeping the text would be a second narrowing to undo. *@
             <a href="@Link(Descending, 1, clearType: true, clearText: true)">Clear</a>
         }
+
+        @* Held to the right-hand end of the filter row. It belongs with the controls that act on
+           the whole table rather than in a strip of its own between the filter and the data, which
+           is all that strip had left in it once the count moved up under the title. *@
+
+        @* Opens or closes every payload on the page at once. A link rather than a control with
+           script behind it, like the order and the page beside it: the state lives in the
+           address, so a page opened out can be linked to and gone back to, and the rows stay
+           foldable one at a time either way. It stays on this page — this is a way of looking
+           at the rows, not a way of moving between them. *@
+        <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
+            @(PayloadsOpen ? "Collapse all" : "Expand all")
+            <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+        </a>
     </form>
 
     @if (Choice.Unbound)
@@ -112,21 +138,6 @@ else
     {
         @* The lede and the fold, at the two ends of the line above the table, in the same shape as
            the pager and the rows-per-page picker at the two ends of the line below it. *@
-        <div class="table-header">
-            @* The whole count, not this page's worth: the pager says which page, and what a reader
-               wants beside it is how much there is to page through. *@
-            <p class="lede">@Summary</p>
-
-            @* Opens or closes every payload on the page at once. A link rather than a control with
-               script behind it, like the order and the page beside it: the state lives in the
-               address, so a page opened out can be linked to and gone back to, and the rows stay
-               foldable one at a time either way. It stays on this page — this is a way of looking
-               at the rows, not a way of moving between them. *@
-            <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
-                @(PayloadsOpen ? "Collapse all" : "Expand all")
-                <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
-            </a>
-        </div>
 
         @* The columns a boundary's events are read in, so an event met in the log and the same event
            met inside the model that folds it are read the same way. The position is where the row
@@ -325,6 +336,14 @@ else
     /// the same claim about what was written. Said the way the two model pages say it, so a count
     /// means one thing across the three of them.
     /// </remarks>
+    /// <summary>
+    /// Whether the page is showing a table at all, and so whether there is a count to put under
+    /// the title. Mirrors the branches above the table: anything they answer instead is a page
+    /// with no rows on it.
+    /// </summary>
+    private bool HasRows =>
+        !Choice.Unbound && Events.Error is null && Events.Total > 0;
+
     private string Summary => (Events.Total, IsFiltered) switch
     {
         (1, false) => $"One event appended{Of}.",

@@ -3,7 +3,22 @@
 @inject Memoria.Web.Data.StoreCapabilities Store
 
 <header>
-    <a class="brand" href="">Memoria</a>
+    @* Inline rather than an <img> to the favicon, so the tile follows --accent: choosing a new
+       accent is meant to be one line, and a referenced file would have held a second copy of the
+       old one. aria-hidden because the link already says Memoria beside it, and a screen reader
+       announcing the mark as well would say it twice. *@
+    <a class="brand" href="">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <rect width="32" height="32" rx="7" fill="var(--accent)"/>
+            <path d="M8 23V10l8 8 8-8v13"
+                  fill="none"
+                  stroke="var(--on-fill)"
+                  stroke-width="3.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+        </svg>
+        Memoria
+    </a>
     <nav>
         <NavLink href="" Match="NavLinkMatch.All">Home</NavLink>
 
@@ -84,6 +99,27 @@
 }
 
         <NavLink href="settings">Settings</NavLink>
+
+        @* Last in the bar and set apart from the links, because it goes nowhere: it changes how
+           this page looks rather than which page you are on. Hidden until the script that drives
+           it runs — without scripting it would be a button that does nothing, and the page still
+           follows the operating system's own choice, which is the right answer anyway.
+
+           Both glyphs are drawn and one is hidden, so pressing it swaps which is shown without a
+           round trip. The label says what pressing it will do, not which theme is on. *@
+        <button id="theme-toggle" class="theme-toggle" type="button" hidden
+                aria-label="Switch to dark theme" title="Switch to dark theme">
+            <svg class="glyph-dark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M16.5 12.4A7 7 0 0 1 7.6 3.5a7 7 0 1 0 8.9 8.9Z"
+                      fill="none" stroke="currentColor" stroke-width="1.6"
+                      stroke-linejoin="round"/>
+            </svg>
+            <svg class="glyph-light" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <circle cx="10" cy="10" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M10 1.6v2.2M10 16.2v2.2M18.4 10h-2.2M3.8 10H1.6M15.9 4.1l-1.6 1.6M5.7 14.3l-1.6 1.6M15.9 15.9l-1.6-1.6M5.7 5.7 4.1 4.1"
+                      stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+        </button>
     </nav>
 </header>
 

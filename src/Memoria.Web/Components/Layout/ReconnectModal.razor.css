@@ -21,7 +21,7 @@
 
 
 #components-reconnect-modal {
-    background-color: white;
+    background-color: var(--surface);
     width: 20rem;
     margin: 20vh auto;
     padding: 2rem;
@@ -88,20 +88,25 @@
     text-align: center;
 }
 
+/* font: inherit because a button does not take the page's face or size on its own — without it
+   this was the one control in the application still set in the browser's 13.333px default. */
 #components-reconnect-modal button {
     border: 0;
-    background-color: #6b9ed2;
-    color: white;
-    padding: 4px 24px;
+    background-color: var(--accent);
+    color: var(--on-fill);
+    font: inherit;
+    font-size: var(--text-md);
+    font-weight: 600;
+    padding: 0.35rem 1.5rem;
     border-radius: 4px;
 }
 
     #components-reconnect-modal button:hover {
-        background-color: #3b6ea2;
+        background-color: var(--accent-strong);
     }
 
     #components-reconnect-modal button:active {
-        background-color: #6b9ed2;
+        background-color: var(--accent);
     }
 
 .components-rejoining-animation {
@@ -112,7 +117,7 @@
 
     .components-rejoining-animation div {
         position: absolute;
-        border: 3px solid #0087ff;
+        border: 3px solid var(--accent);
         opacity: 1;
         border-radius: 50%;
         animation: components-rejoining-animation 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;

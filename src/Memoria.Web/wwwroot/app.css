@@ -1,29 +1,280 @@
+/* The application's two faces, carried in wwwroot/fonts rather than fetched from a font host.
+   This tool is regularly pointed at a store on a machine with no route out, and a stylesheet that
+   reaches for Google there leaves every page in the fallback face — so the files travel with the
+   application. IBM Plex, under the SIL Open Font Licence; the terms are in fonts/OFL.txt.
+
+   Sans is the variable cut: one file covers the whole 400–600 range this application asks for,
+   which is both smaller than the two static weights and the reason no 600 file sits beside it.
+   Each face is split latin / latin-ext by unicode-range, so a page holding nothing but ASCII ids
+   never pays for the accented block it does not draw. */
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    src: url("fonts/ibm-plex-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    src: url("fonts/ibm-plex-sans-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* One note on the settings page is set in italic, and a true italic is a different set of
+   letterforms rather than the upright leant over — which is what the browser draws if this is
+   missing. Claimed at 400 only, because 400 is the one weight it is ever asked for. */
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: italic;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-sans-italic-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: italic;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-sans-italic-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-mono-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* Site palette. Defined globally so scoped component styles can use them: a scoped
    selector only matches elements this component rendered, so tokens declared there
    never reach markup a child component (EditForm, InputText) emits. */
 :root {
-    --ink: #1c2024;
+    /* The three hues the application actually has, held as channels rather than as hex. Every
+       translucent tint of one — a focus ring, a dialog's backdrop, the shadow under it — is then
+       written against those channels at an alpha, and cannot drift from the solid colour it is a
+       tint of.
+       Written as hex, the eight focus rings each carried their own copy of the accent, and
+       changing the accent would have left every one of them the colour it used to be. */
+    --accent-rgb: 91 75 214;
+    --danger-rgb: 179 33 33;
+    --ink-rgb: 28 32 36;
+
+    /* What a shadow and a dialog's backdrop are made of. The same channels as the ink today, but
+       its own token because the two part company in the dark theme: ink turns light there and a
+       backdrop must not — a veil of light ink over a dark page is a white sheet drawn across it. */
+    --shadow-rgb: 28 32 36;
+
+    /* Text, from the page's own voice down to a placeholder nobody has typed over. */
+    --ink: rgb(var(--ink-rgb));
     --ink-soft: #5b6570;
+    --ink-faint: #9aa3ad;
+
+    --accent: rgb(var(--accent-rgb));
+
+    /* Where a filled control goes under the pointer. Each channel at 84% of the accent's, which is
+       the step the blue this replaced already used between its two tones — so the pair keeps the
+       relationship the pages were built against and only the hue moves. */
+    --accent-strong: #4c3fb4;
+
+    /* What stays legible on top of a filled control, whichever fill it is. Its own token rather
+       than --surface, though both are white today: a surface is a thing the page is written on
+       and follows the page, and this is written on a colour and follows that colour instead. */
+    --on-fill: #fff;
+
+    --danger: rgb(var(--danger-rgb));
+    --danger-strong: #8f1a1a;
+    --danger-ground: #fdf3f3;
+    --danger-rule: #f0d5d5;
+
+    /* The page worked, but not quite as asked. */
+    --caution-ground: #fdf8ef;
+    --caution-rule: #b8791a;
+    --caution-ink: #7a4f0c;
+
+    /* The page worked. */
+    --notice-ground: #f2f8f3;
+    --notice-rule: #2f7d40;
+    --notice-ink: #235f30;
+
+    /* The page itself, and the sheet the reading happens on. Two tones rather than one: without a
+       ground behind it a white sheet has no edge, and the application had been drawing every page
+       straight onto the browser's own white. Held slightly cooler than a neutral grey so it sits
+       under the accent rather than beside it. */
+    --ground: #f5f6f8;
+    --surface: #fff;
     --rule: #dfe3e8;
-    --accent: #1b6ec2;
-    --accent-strong: #175ca2;
-    --danger: #b32121;
-    --ground: #f7f8fa;
+
+    /* How wide the sheet is allowed to grow. A limit rather than a width: the pages are narrower
+       than this until a table needs the room. Without it the events log runs the full width of
+       whatever monitor it is opened on, and a reader crosses a metre of empty space between a
+       stream id at one edge and its payload at the other. */
+    --page-width: 80rem;
+
+    /* The edge of something you type into or pick from, which is darker than the rule between
+       rows: a control has to announce itself, a table's rules only have to separate. */
+    --field-rule: #c6ccd4;
+
+    /* The sizes the application is allowed to set, and the whole of them. This grew to ten ad-hoc
+       values — 0.875, 0.9 and 0.9375rem were three names for the same size, and 1.0625, 1.1 and
+       1.2rem three for another — which is why headings a reader met on different pages were never
+       quite the same heading. Seven steps, each far enough from the next to be a decision.
+
+       --text-md is the size stored data is read at. It is below the prose size on purpose: a table
+       is scanned down a column rather than read along a line, and the rows want to be closer
+       together than a paragraph's. */
+    /* Below the six because it is not prose at all: a column heading set in small capitals with
+       space between the letters reads larger than its nominal size, and at --text-xs it shouted
+       over the values under it. */
+    --text-2xs: 0.6875rem;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-md: 0.875rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.5rem;
 
     /* The page's own voice, as a token because a place that sets monospace sometimes has to set it
        back for the prose inside. */
-    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    /* Ids, tags, sequence numbers, payloads: the substance of every table here. One stack rather
+       than the two near-copies this grew, which named the same face on each platform by different
+       names and could have drifted apart at the next edit. */
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono", Menlo,
+            Consolas, monospace;
+
+    /* The theme the browser draws its own controls in. Stated here as the light default and
+       overridden by each dark block below. */
+    color-scheme: light;
 }
 
-/* The room for the scrollbar is kept whether or not there is one, so a page that grows past the
-   window does not narrow itself by the width of the bar as it appears. Opening a payload is what
-   made that visible — the rows below it grow downwards and the columns hold, and the page should
-   not step sideways underneath them all the same. */
+/* The dark theme, as token values and nothing else. Every rule in this stylesheet already draws
+   through the tokens above, so none of them is repeated here — which is what the tokenising was
+   for, and the reason the whole theme is one block rather than a second copy of the application.
+
+   Three states, not two. An explicit choice stamps data-theme on the root; the default is no stamp
+   at all, and there only prefers-color-scheme separates one theme from the other. So the values are
+   written twice: once behind the media query, guarded so an explicit light choice still beats a
+   dark operating system, and once behind the stamp so the toggle wins in the other direction.
+
+   Two tokens inverted rather than darkened, and both were given their own name in earlier work for
+   exactly this moment. --on-fill flips to the ground: a filled control is a light violet here, and
+   white text on it is unreadable at 2.8:1 where dark text is 6.5:1. --shadow-rgb stays black while
+   the ink turns light, because a backdrop is not made of text. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --accent-rgb: 155 140 255;
+        --danger-rgb: 239 107 107;
+        --ink-rgb: 228 231 235;
+        --shadow-rgb: 0 0 0;
+
+        --ink-soft: #98a1ac;
+        --ink-faint: #828b96;
+
+        --accent-strong: #b3a6ff;
+        --on-fill: #14171c;
+
+        --danger-strong: #f58b8b;
+        --danger-ground: #2a1719;
+        --danger-rule: #4a2327;
+
+        --caution-ground: #2a2114;
+        --caution-rule: #d9a441;
+        --caution-ink: #e8c98a;
+
+        --notice-ground: #14261a;
+        --notice-rule: #4fa96a;
+        --notice-ink: #9ad3ab;
+
+        --ground: #14171c;
+        --surface: #1a1e24;
+        --rule: #282e36;
+        --field-rule: #3a424d;
+
+        color-scheme: dark;
+    }
+}
+
+:root[data-theme="dark"] {
+    --accent-rgb: 155 140 255;
+    --danger-rgb: 239 107 107;
+    --ink-rgb: 228 231 235;
+    --shadow-rgb: 0 0 0;
+
+    --ink-soft: #98a1ac;
+    --ink-faint: #828b96;
+
+    --accent-strong: #b3a6ff;
+    --on-fill: #14171c;
+
+    --danger-strong: #f58b8b;
+    --danger-ground: #2a1719;
+    --danger-rule: #4a2327;
+
+    --caution-ground: #2a2114;
+    --caution-rule: #d9a441;
+    --caution-ink: #e8c98a;
+
+    --notice-ground: #14261a;
+    --notice-rule: #4fa96a;
+    --notice-ink: #9ad3ab;
+
+    --ground: #14171c;
+    --surface: #1a1e24;
+    --rule: #282e36;
+    --field-rule: #3a424d;
+
+    color-scheme: dark;
+}
+
+/* Named outright so a select, a search field and the scrollbar are drawn by the browser in the
+   theme the page is in. Without it the application goes dark around native controls that stay
+   white, which is worse than not having a dark theme at all. */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+/* No room reserved for the scrollbar, which is a reversal of what stood here before and worth
+   saying why.
+
+   This page used to carry scrollbar-gutter: stable, so that a page growing past the window did not
+   narrow itself by the width of the bar as it appeared. That reserves a strip at the right whether
+   or not anything is in it, and the strip is painted with the page's own ground. While the bar at
+   the top of the page had no colour of its own nobody could see it. Giving that bar a white
+   background turned the reserved strip into a grey notch bitten out of the top right corner, on
+   every page short enough not to scroll.
+
+   Filling the strip with a permanent scrollbar hid the notch and cost a scrollbar on every page,
+   which is worse. Reserving nothing costs neither: with no scrollbar the root fills the window and
+   the bar reaches the corner, and with one the scrollbar sits where the notch used to be, which is
+   where a reader expects a scrollbar. What it does cost is the shift the original rule bought off —
+   a page that grows past the window still steps sideways by the width of the bar. */
 html {
-    scrollbar-gutter: stable;
+    scrollbar-gutter: auto;
 }
 
 body {
+    background: var(--ground);
     margin: 0;
     font-family: var(--font);
     color: var(--ink);
@@ -43,9 +294,18 @@ body {
     color: var(--accent);
 }
 
+/* Every value the store wrote, wherever it is written. Left to itself a <code> takes the browser's
+   own monospace at the browser's own smaller size, so the ids in a table came out in Consolas a
+   size down from the cells beside them — two faces and two sizes in one row, and none of the Plex
+   Mono the application actually loads. */
+code {
+    font-family: var(--mono);
+    font-size: inherit;
+}
+
 h1 {
     color: var(--ink);
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 600;
     letter-spacing: -0.01em;
     margin: 0 0 1.25rem;
@@ -60,7 +320,7 @@ h1 {
 .breadcrumb {
     color: var(--ink-soft);
     display: flex;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     gap: 0.5rem;
     margin-bottom: 1.25rem;
 }
@@ -100,7 +360,7 @@ h1 {
        names. */
     .boundary .boundary-label {
         color: var(--ink-soft);
-        font-size: 0.8125rem;
+        font-size: var(--text-sm);
     }
 
     /* As long as its tags are, and broken mid-word rather than pushing the page wider. */
@@ -134,7 +394,7 @@ h1 {
 .button {
     background: var(--accent);
     border: 1px solid var(--accent);
-    color: #fff;
+    color: var(--on-fill);
 }
 
     .button:hover {
@@ -143,14 +403,14 @@ h1 {
     }
 
     .button:focus-visible {
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
         outline: none;
     }
 
 /* The same shape, stepping back: a way out of a dialog, or a control beside a field. */
 .quiet {
-    background: #fff;
-    border: 1px solid #c6ccd4;
+    background: var(--surface);
+    border: 1px solid var(--field-rule);
     color: var(--ink);
 }
 
@@ -159,7 +419,7 @@ h1 {
     }
 
     .quiet:focus-visible {
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
         outline: none;
     }
 
@@ -168,41 +428,6 @@ h1 {
 h1:focus,
 h2:focus {
     outline: none;
-}
-
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid #e50000;
-}
-
-.validation-message {
-    color: #e50000;
-}
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
-}
-
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
 }
 
 /* Present for screen readers, absent on screen. */
@@ -216,6 +441,52 @@ h2:focus {
 }
 /* A list of places to go: name on top, one line saying what is there. Shared by any page
    that points at the ones below it. */
+/* What a model holds, counted, above the list of ways into it. Tiles rather than a sentence because
+   this is the one place in the application where the numbers are the point of the page: an overview
+   answers "what is registered here", and that answer is four figures.
+
+   Held to the same 40rem as the list below so the two share a right edge, and auto-fit so the
+   streamed model's four and the DCB model's three both divide the row evenly — DCB has no streams,
+   and a fourth tile standing empty would be a worse answer than three. */
+.stats {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    margin: 0 0 1.75rem;
+    max-width: 40rem;
+}
+
+/* Filled with the page's ground rather than the sheet's white. On the sheet these would be white
+   on white and read only by their outline; the tint is the same relationship the mockup had
+   between tile and page, kept by inverting which of the two is doing the lifting. */
+.stat {
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.7rem 0.85rem;
+}
+
+    /* The figure, and the only thing on these pages set larger than the prose. Tabular so a column
+       of them lines up its digits, and so a count changing from 9 to 10 does not shift the label
+       under it. */
+    .stat .figure {
+        display: block;
+        font-size: var(--text-2xl);
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .stat .label {
+        color: var(--ink-soft);
+        display: block;
+        font-size: var(--text-xs);
+        letter-spacing: 0.06em;
+        margin-top: 0.15rem;
+        text-transform: uppercase;
+    }
+
 .sections {
     list-style: none;
     margin: 0;
@@ -258,7 +529,7 @@ h2:focus {
     .sections .detail {
         color: var(--ink-soft);
         display: block;
-        font-size: 0.875rem;
+        font-size: var(--text-md);
         margin-top: 0.15rem;
     }
 
@@ -266,7 +537,7 @@ h2:focus {
        declares, and what has been stored of them. */
     .sections .links {
         display: flex;
-        font-size: 0.875rem;
+        font-size: var(--text-md);
         gap: 1.25rem;
         margin-top: 0.5rem;
     }
@@ -288,14 +559,14 @@ h2:focus {
 }
 
 .model h2 {
-    font-size: 1.0625rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     margin: 0 0 0.5rem;
 }
 
 /* Something went wrong and the page is saying what. */
 .alert {
-    background: #fdf3f3;
+    background: var(--danger-ground);
     border-left: 3px solid var(--danger);
     border-radius: 2px;
     color: var(--danger);
@@ -328,7 +599,7 @@ h2:focus {
    started in: the refresh buttons carry one too, and they should read the same. */
 .hint {
     color: var(--ink-soft);
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     margin: 0;
 }
 
@@ -345,10 +616,10 @@ h2:focus {
    nothing succeeded — the rows are real and one property of them is weaker than usual, which is
    worth saying once and then getting out of the way. Hence the two buttons. */
 .caution {
-    background: #fdf8ef;
-    border-left: 3px solid #b8791a;
+    background: var(--caution-ground);
+    border-left: 3px solid var(--caution-rule);
     border-radius: 2px;
-    color: #7a4f0c;
+    color: var(--caution-ink);
     margin: 0 0 1.5rem;
     max-width: 42rem;
     padding: 0.6rem 0.75rem;
@@ -370,7 +641,7 @@ h2:focus {
 .caution-actions button {
     background: none;
     border: 0;
-    color: #7a4f0c;
+    color: var(--caution-ink);
     cursor: pointer;
     font: inherit;
     padding: 0;
@@ -383,10 +654,10 @@ h2:focus {
 
 /* Something went right and the page is saying so. */
 .notice {
-    background: #f2f8f3;
-    border-left: 3px solid #2f7d40;
+    background: var(--notice-ground);
+    border-left: 3px solid var(--notice-rule);
     border-radius: 2px;
-    color: #235f30;
+    color: var(--notice-ink);
     margin: 0 0 1.5rem;
     max-width: 34rem;
     padding: 0.6rem 0.75rem;
@@ -512,7 +783,7 @@ h2:focus {
             align-items: center;
             color: var(--ink-soft);
             display: flex;
-            font-size: 0.8125rem;
+            font-size: var(--text-sm);
             gap: 0.4rem;
             overflow-wrap: anywhere;
             padding: 0.3rem 0.25rem;
@@ -527,7 +798,7 @@ h2:focus {
         }
 
 .panel-detail h2 {
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
     margin: 0 0 1rem;
 }
 
@@ -550,7 +821,7 @@ h2:focus {
         border-bottom: 2px solid transparent;
         color: var(--ink-soft);
         display: block;
-        font-size: 0.875rem;
+        font-size: var(--text-md);
         font-weight: 600;
         margin-bottom: -1px;
         padding: 0.5rem 0.875rem;
@@ -620,7 +891,7 @@ h2:focus {
     /* A second section inside a panel. The tab names the first, so only what follows it needs a
        name of its own. */
     .tab-panel h3 {
-        font-size: 0.9rem;
+        font-size: var(--text-md);
         letter-spacing: 0.02em;
         margin: 2rem 0 0.5rem;
         text-transform: uppercase;
@@ -639,15 +910,15 @@ h2:focus {
 
     .facts dt {
         color: var(--ink-soft);
-        font-size: 0.8125rem;
+        font-size: var(--text-sm);
     }
 
     /* Every value read the same way, whatever it happens to be. A boundary, a date and a count are
        all things the store said, and setting only some of them in monospace made those look like a
        different kind of fact from the rest. */
     .facts dd {
-        font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
-        font-size: 0.8125rem;
+        font-family: var(--mono);
+        font-size: var(--text-sm);
         margin: 0.1rem 0 0.75rem;
         overflow-wrap: anywhere;
     }
@@ -663,7 +934,7 @@ h2:focus {
            something the store wrote. */
         .facts dd .missing {
             font-family: var(--font);
-            font-size: 1rem;
+            font-size: var(--text-lg);
         }
 
 .plain {
@@ -712,8 +983,81 @@ h2:focus {
 }
 
 /* Values read back out of the store, one row each. */
+/* The card the stored data is read on.
+   ----------------------------------------------------------------------------------------------
+   The filter row, the table and the pager are three pieces of one object, and on every page that
+   has them they are already what they need to be: adjacent children of <main>. So the card is
+   drawn from that run rather than by wrapping fourteen pages in a div — each piece paints the
+   surface and its own left and right edge, the first of the run adds the top and the last adds the
+   bottom, and whichever pieces a page happens to have close up into one shape.
+
+   Two of the shared edges are kept rather than dropped, because they are dividers a reader wants:
+   under the filter row, and above the pager. Controls and the data they act on are different
+   things sharing a card. They are kept by never taking those borders off in the first place — an
+   earlier attempt put them back afterwards and lost, because naming the filter row as form.search
+   inside these lists raised every rule here by a type selector and quietly outranked the rules
+   meant to override them. Hence .search rather than form.search below: every member is one class,
+   so the weights here stay flat and predictable.
+
+   No member of this run may need a :has() to identify it, either — a :has() inside a :has() is
+   invalid and fails by silently matching nothing. */
+:is(.search, .table-header, .grid, .instances, .table-footer) {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    margin: 0;
+}
+
+    /* Not the first of the run, so the corners go. The top border goes with them for every piece
+       except the pager, which keeps it as the line under the data. */
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.search, .table-header, .grid, .instances, .table-footer) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.search, .table-header, .grid, .instances) {
+        border-top: 0;
+    }
+
+    /* Not the last of the run, so those corners go. The bottom border goes with them for every
+       piece except the filter row, which keeps it as the line above the data. */
+    :is(.search, .table-header, .grid, .instances, .table-footer):has(+ :is(.search, .table-header, .grid, .instances, .table-footer)) {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    :is(.table-header, .grid, .instances, .table-footer):has(+ :is(.search, .table-header, .grid, .instances, .table-footer)) {
+        border-bottom: 0;
+    }
+
+/* The pieces that are not tables carry their own padding; a table's belongs to its cells, below. */
+:is(.search, .table-header, .table-footer) {
+    padding: 0.75rem 1rem;
+}
+
+/* The filter row is where the table is acted on rather than part of what it holds, so it is set
+   back onto the page's own ground. The tint does the separating a single rule cannot: a line says
+   "next section", a change of ground says "different kind of thing".
+
+   Declared here rather than beside the rest of .search below, because it has to come after the
+   card's own background: the run paints every piece --surface, and this is the one piece that is
+   not. Its margin was removed down there for the mirror-image reason — the run sets margin: 0 and
+   the later rule was quietly putting a 1.25rem gap back, prising the card in two. */
+.search {
+    background: var(--ground);
+}
+
+/* Space under the card, since the pieces themselves no longer carry margins. */
+:is(.search, .table-header, .grid, .instances, .table-footer):not(:has(+ :is(.search, .table-header, .grid, .instances, .table-footer))) {
+    margin-bottom: 1.5rem;
+}
+
 .grid {
-    border-collapse: collapse;
+    /* Separate rather than collapse so the card's corners can be rounded — a collapsed table draws
+       its cell borders straight through a radius. The cells set only a bottom border, so nothing
+       doubles up for having stopped collapsing. */
+    border-collapse: separate;
+    border-spacing: 0;
     width: 100%;
 }
 
@@ -725,13 +1069,39 @@ h2:focus {
         vertical-align: top;
     }
 
-    .grid th {
-        color: var(--ink-soft);
-        font-size: 0.8125rem;
-        font-weight: 600;
+    /* The card's own padding, carried by the outermost cells: a table fills its container edge to
+       edge, so without this the first column sat against the left border and the last against the
+       right. */
+    .grid tr > :first-child {
+        padding-left: 1rem;
     }
 
+    .grid tr > :last-child {
+        padding-right: 1rem;
+    }
+
+    /* The last row's rule and the card's bottom edge are the same line drawn twice. */
+    .grid tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    .grid th {
+        background: var(--ground);
+        color: var(--ink-soft);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    /* Stored data, at the size and in the face stored data is read at. Left unset, a cell
+       inherited the page's prose size and every table was built of 16px rows under 13px headings.
+       The face is set on the cell rather than on the few values wrapped in <code>, because a row
+       held an id in one face and the date beside it in another, and a reader scanning down a table
+       should not be told that a position and a timestamp are different kinds of thing. */
     .grid td {
+        font-family: var(--mono);
+        font-size: var(--text-md);
         overflow-wrap: anywhere;
     }
 
@@ -1023,16 +1393,50 @@ h2:focus {
     color: var(--ink-soft);
     display: flex;
     flex-wrap: wrap;
-    font-size: 0.875rem;
-    gap: 1rem;
+    font-size: var(--text-md);
+    /* Tight, so the whole strip reads as one control rather than as three groups of words with
+       room between them. The numbers inside carry the same gap. */
+    gap: 0.25rem;
 }
 
+    /* A pager is a row of controls, not a sentence with links in it, so the underline a link
+       carries by default comes off. The border and the fill are what say these are pressable. */
     .pagination a {
         color: var(--accent);
+        text-decoration: none;
     }
 
-    .pagination .disabled {
-        color: #b9c0c8;
+    /* The words at either end, given the same edge as the numbers between them. Left bare they
+       were a sentence with a row of buttons in the middle of it. Only the direct children, so the
+       numbers inside .pages are not caught twice. */
+    .pagination > a {
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        line-height: 1;
+        /* The same width the numbers are held to, so a chevron and a page number are the same box.
+           A chevron is narrower than a digit, and left to fit its glyph the ends of the strip came
+           out visibly smaller than everything between them. Flex items, so a min-width lands
+           without a display of their own. */
+        min-width: 1.75rem;
+        /* One value, so the space inside a control is the same on every side of it. */
+        padding: 0.4rem;
+        text-align: center;
+    }
+
+    .pagination > a:hover {
+        background: var(--ground);
+        border-color: var(--field-rule);
+    }
+
+    .pagination > a:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+    /* Not one of the controls, so it keeps the room the strip gave up. */
+    .pagination .page-count {
+        margin-left: 0.75rem;
     }
 
 /* The numbers between the ends. A list, marked up as the sequence it is and stripped of the marker
@@ -1050,23 +1454,25 @@ h2:focus {
        reader crosses from single digits into double and the page under it stays where it was. */
     .pages a,
     .pages .current {
-        border: 1px solid transparent;
+        border: 1px solid var(--rule);
         border-radius: 4px;
         display: block;
         line-height: 1;
+        /* The width the box is held to whatever digits are in it — a separate question from the
+           padding, which is one value so the space inside is even on all four sides. */
         min-width: 1.75rem;
-        padding: 0.35rem 0.4rem;
+        padding: 0.4rem;
         text-align: center;
     }
 
     .pages a:hover {
-        background: #fff;
-        border-color: #c6ccd4;
+        background: var(--ground);
+        border-color: var(--field-rule);
     }
 
     .pages a:focus-visible {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
         outline: none;
     }
 
@@ -1074,7 +1480,7 @@ h2:focus {
        is not somewhere to go, and it has to be findable at a glance from across the row. */
     .pages .current {
         background: var(--accent);
-        color: #fff;
+        color: var(--on-fill);
         font-weight: 600;
     }
 
@@ -1096,19 +1502,21 @@ h2:focus {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    justify-content: space-between;
-    margin-top: 1.25rem;
 }
 
 /* What is above a table, in the same shape as what is below it: something said about the whole
    table at one end, and a control over it at the other. Aligned on the first line rather than the
    middle, because the count beside it is a sentence and may wrap to two. */
+/* The strip above the table holding whatever acts on the whole of it — today just the fold
+   control. It was two things at opposite ends, the count on the left and the fold on the right,
+   and space-between put them there. The count has gone up under the page title, so the one thing
+   left is held to the end it was already at rather than sliding across to fill the gap. */
 .table-header {
     align-items: baseline;
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    justify-content: space-between;
+    justify-content: flex-end;
 }
 
     /* Whatever this line follows — a row of tabs, a filter form — has already set how far below it
@@ -1126,10 +1534,17 @@ h2:focus {
     color: var(--ink-soft);
     display: inline-flex;
     flex: none;
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     gap: 0.35rem;
     text-decoration: none;
 }
+
+    /* Pushed to the far end of the filter row. It is the one control there that does not narrow the
+       table — everything to its left says which rows, and this says how much of each to show — so
+       it sits apart from them rather than in the queue. */
+    .search .fold-all {
+        margin-left: auto;
+    }
 
     .fold-all:hover {
         color: var(--accent);
@@ -1149,7 +1564,7 @@ h2:focus {
     align-items: center;
     color: var(--ink-soft);
     display: flex;
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     gap: 0.5rem;
 }
 
@@ -1157,7 +1572,7 @@ h2:focus {
    is about. Set apart from the picker above it, which has no such sentence. */
 .preference {
     color: var(--ink-soft);
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     margin-top: 1.5rem;
 }
 
@@ -1172,16 +1587,24 @@ h2:focus {
         max-width: 42rem;
     }
 
-    /* Held to its own end of the line whether or not there is a pager at the other one. A table of
-       one page draws no pager, and space-between alone would slide the picker across to where the
-       reader has learnt to look for the pager instead. */
+    /* The two ends of the footer, and which is which. The picker leads and the pager is held to the
+       far end — reversed from the markup's own order, which puts the pager first because that is
+       what a reader tabs to first. Ordered here rather than reordered in the markup so the reading
+       order stays the useful one. Written as order and an auto margin rather than space-between: a
+       table of one page draws no pager at all, and space-between would slide the picker across to
+       where the reader has learnt to look for one. */
     .table-footer .page-size {
+        margin-left: 0;
+        order: -1;
+    }
+
+    .table-footer .pagination {
         margin-left: auto;
     }
 
     .page-size select {
-        background: #fff;
-        border: 1px solid #c6ccd4;
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
         border-radius: 4px;
         color: var(--ink);
         font: inherit;
@@ -1190,15 +1613,15 @@ h2:focus {
 
     .page-size select:focus-visible {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
         outline: none;
     }
 
     /* The submit button the picker falls back to without scripting. Sized to the select it
        stands next to rather than to the page's buttons, so the row keeps one height. */
     .page-size button {
-        background: #fff;
-        border: 1px solid #c6ccd4;
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
         border-radius: 4px;
         color: var(--ink);
         cursor: pointer;
@@ -1212,7 +1635,7 @@ h2:focus {
     }
 
     .page-size button:focus-visible {
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.3);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
         outline: none;
     }
 
@@ -1225,15 +1648,22 @@ h2:focus {
    The sort arrows, the pager and the rows-per-page picker are above, with the rest of the furniture
    the detail pages share. */
 .instances {
-    border-collapse: collapse;
+    /* Separate, for the same reason .grid is: the card around it has rounded corners. */
+    border-collapse: separate;
+    border-spacing: 0;
     width: 100%;
 }
 
     .instances th {
+        background: var(--ground);
         border-bottom: 1px solid var(--rule);
-        font-size: 0.8125rem;
+        font-size: var(--text-2xs);
         font-weight: 600;
-        padding: 0 0.75rem 0.5rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        /* Even top and bottom now the row is a filled band rather than a line of text over a rule;
+           with no padding above it the labels sat against the top of their own tint. */
+        padding: 0.5rem 0.75rem;
         text-align: left;
     }
 
@@ -1265,27 +1695,37 @@ h2:focus {
         flex-direction: row-reverse;
     }
 
+    /* The same size and face the other table reads at, so the two list pages match. */
     .instances td {
         border-bottom: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: var(--text-md);
         padding: 0.625rem 0.75rem;
     }
 
     .instances tr > :first-child {
-        padding-left: 0;
+        padding-left: 1rem;
     }
 
     .instances tr > :last-child {
-        padding-right: 0;
+        padding-right: 1rem;
     }
 
+    /* As in .grid: the last rule and the card's bottom edge would otherwise be drawn twice. */
+    .instances tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    /* A name a person wrote, not something the store generated, so it keeps the page's voice. */
     .instances .name {
+        font-family: var(--font);
         font-weight: 600;
     }
 
     /* An identifier, not prose: the monospace face makes a mistyped character visible. */
     .instances .sku {
-        font-family: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
-        font-size: 0.875rem;
+        font-family: var(--mono);
+        font-size: var(--text-md);
     }
 
     .instances .numeric {
@@ -1314,33 +1754,32 @@ h2:focus {
     align-items: center;
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1.25rem;
 }
 
     .search input[type="search"] {
-        background: #fff;
-        border: 1px solid #c6ccd4;
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
         border-radius: 4px;
         color: var(--ink);
         font: inherit;
-        font-size: 0.9375rem;
+        font-size: var(--text-md);
         padding: 0.5rem 0.625rem;
         width: 18rem;
     }
 
     .search input[type="search"]:focus-visible {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
         outline: none;
     }
 
     .search input[type="search"]::placeholder {
-        color: #9aa3ad;
+        color: var(--ink-faint);
     }
 
     .search a {
         color: var(--ink-soft);
-        font-size: 0.875rem;
+        font-size: var(--text-md);
     }
 
     /* Narrowing by choosing from a list rather than by typing. Cut to the same height as the field
@@ -1348,22 +1787,22 @@ h2:focus {
        the other put their tables at the same place. */
     .search label {
         color: var(--ink-soft);
-        font-size: 0.875rem;
+        font-size: var(--text-md);
     }
 
     .search select {
-        background: #fff;
-        border: 1px solid #c6ccd4;
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
         border-radius: 4px;
         color: var(--ink);
         font: inherit;
-        font-size: 0.9375rem;
+        font-size: var(--text-md);
         padding: 0.5rem 0.625rem;
     }
 
     .search select:focus-visible {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgb(27 110 194 / 0.18);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
         outline: none;
     }
 
