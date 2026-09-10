@@ -5,7 +5,9 @@
    edges to read as the application's own edge. */
 header {
     align-items: center;
-    background: var(--surface);
+    /* The chrome tone rather than the sheet's white: this bar frames the application rather than
+       holding any of it, which is the same job the filter row and a table's column headings do. */
+    background: var(--sunk);
     border-bottom: 1px solid var(--rule);
     display: flex;
     gap: 1.5rem;

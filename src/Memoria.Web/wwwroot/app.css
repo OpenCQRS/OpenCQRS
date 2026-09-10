@@ -123,6 +123,14 @@
     --surface: #fff;
     --rule: #dfe3e8;
 
+    /* The bars that frame content rather than hold it: the application's own top bar, the filter
+       row, and a table's column headings. A third step between the ground and the surface — set
+       just off the sheet's white so a bar reads as chrome, and just off the page's ground so it
+       does not sink into it. Held apart from --ground, which these used to borrow: sharing that
+       value made a filter row and the page behind it the same colour, and the card lost its top
+       edge into the page. */
+    --sunk: #fafbfc;
+
     /* How wide the sheet is allowed to grow. A limit rather than a width: the pages are narrower
        than this until a table needs the room. Without it the events log runs the full width of
        whatever monitor it is opened on, and a reader crosses a metre of empty space between a
@@ -208,6 +216,7 @@
 
         --ground: #14171c;
         --surface: #1a1e24;
+        --sunk: #171b21;
         --rule: #282e36;
         --field-rule: #3a424d;
 
@@ -241,6 +250,7 @@
 
     --ground: #14171c;
     --surface: #1a1e24;
+    --sunk: #171b21;
     --rule: #282e36;
     --field-rule: #3a424d;
 
@@ -325,12 +335,17 @@ h1 {
     margin-bottom: 1.25rem;
 }
 
+    /* No underline at rest. A breadcrumb is a trail of where you are rather than prose with links
+       in it, and four underlined words above the page title read as louder than the title. The
+       underline comes back on hover, so what is clickable is still answerable. */
     .breadcrumb a {
         color: var(--ink-soft);
+        text-decoration: none;
     }
 
     .breadcrumb a:hover {
         color: var(--accent);
+        text-decoration: underline;
     }
 
 .page-header {
@@ -1036,7 +1051,7 @@ h2:focus {
 }
 
 /* The filter row is where the table is acted on rather than part of what it holds, so it is set
-   back onto the page's own ground. The tint does the separating a single rule cannot: a line says
+   back onto the chrome tone. The tint does the separating a single rule cannot: a line says
    "next section", a change of ground says "different kind of thing".
 
    Declared here rather than beside the rest of .search below, because it has to come after the
@@ -1044,7 +1059,7 @@ h2:focus {
    not. Its margin was removed down there for the mirror-image reason — the run sets margin: 0 and
    the later rule was quietly putting a 1.25rem gap back, prising the card in two. */
 .search {
-    background: var(--ground);
+    background: var(--sunk);
 }
 
 /* Space under the card, since the pieces themselves no longer carry margins. */
@@ -1064,7 +1079,10 @@ h2:focus {
     .grid th,
     .grid td {
         border-bottom: 1px solid var(--rule);
-        padding: 0.5rem 0.75rem 0.5rem 0;
+        /* Even on both sides. It used to be 0.75rem right and nothing left, which put the whole
+           gap between two columns on one side of it and left every value flush against its own
+           edge — and made this table's spacing disagree with the other one's. */
+        padding: 0.5rem 0.75rem;
         text-align: left;
         vertical-align: top;
     }
@@ -1086,7 +1104,7 @@ h2:focus {
     }
 
     .grid th {
-        background: var(--ground);
+        background: var(--sunk);
         color: var(--ink-soft);
         font-size: var(--text-2xs);
         font-weight: 600;
@@ -1128,15 +1146,15 @@ h2:focus {
     }
 
         .grid .under-1 td:first-child {
-            padding-left: 1rem;
-        }
-
-        .grid .under-2 td:first-child {
             padding-left: 2rem;
         }
 
-        .grid .under-3 td:first-child {
+        .grid .under-2 td:first-child {
             padding-left: 3rem;
+        }
+
+        .grid .under-3 td:first-child {
+            padding-left: 4rem;
         }
 
     /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
@@ -1655,7 +1673,7 @@ h2:focus {
 }
 
     .instances th {
-        background: var(--ground);
+        background: var(--sunk);
         border-bottom: 1px solid var(--rule);
         font-size: var(--text-2xs);
         font-weight: 600;
@@ -1696,11 +1714,13 @@ h2:focus {
     }
 
     /* The same size and face the other table reads at, so the two list pages match. */
+    /* The same cell as .grid's: same face, same size, same padding, so the two list pages are one
+       table in two places rather than two tables that look nearly alike. */
     .instances td {
         border-bottom: 1px solid var(--rule);
         font-family: var(--mono);
         font-size: var(--text-md);
-        padding: 0.625rem 0.75rem;
+        padding: 0.5rem 0.75rem;
     }
 
     .instances tr > :first-child {
@@ -1722,19 +1742,9 @@ h2:focus {
         font-weight: 600;
     }
 
-    /* An identifier, not prose: the monospace face makes a mistyped character visible. */
-    .instances .sku {
-        font-family: var(--mono);
-        font-size: var(--text-md);
-    }
-
     .instances .numeric {
         font-variant-numeric: tabular-nums;
         text-align: right;
-    }
-
-    .instances .muted {
-        color: var(--ink-soft);
     }
 
 /* Nothing stored yet, said in the space the table would have filled. */
@@ -1812,10 +1822,13 @@ h2:focus {
     padding: 0;
 }
 
+    /* The anchor carries the cell's padding, so it has to carry exactly the cell's padding — the
+       same 0.5rem/0.75rem an ordinary row uses, or a table of links and a table of plain values
+       would sit at different heights. */
     .instances tr.clickable td a {
         color: inherit;
         display: block;
-        padding: 0.625rem 0.75rem;
+        padding: 0.5rem 0.75rem;
         text-decoration: none;
     }
 
@@ -1833,10 +1846,13 @@ h2:focus {
         outline: none;
     }
 
+/* And the card's own edge on the outermost columns, for the same reason: these were zero from when
+   the table ran to the page's edge and had no card around it to stand clear of. Left at zero the
+   first column's text sat against the card's left border while every other row's cleared it. */
 .instances tr.clickable > :first-child a {
-    padding-left: 0;
+    padding-left: 1rem;
 }
 
 .instances tr.clickable > :last-child a {
-    padding-right: 0;
+    padding-right: 1rem;
 }

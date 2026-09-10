@@ -169,9 +169,9 @@ else
                     @* The key the store filed the row under, whole. It carries the type version
                        after the model's own id, and it is shown as it was written because this is
                        the column the store has — a page saying what is held says it as it is held. *@
-                    <td class="sku">@Cell((link, row.StoreId, false))</td>
+                    <td>@Cell((link, row.StoreId, false))</td>
                     <td>@Cell((link, TypeOf(address, row), true))</td>
-                    <td class="muted">
+                    <td>
                         @if (IdentifierOf(address) is { } named)
                         {
                             @Cell((link, named, true))
@@ -184,7 +184,7 @@ else
                             <span class="missing">—</span>
                         }
                     </td>
-                    <td class="muted">
+                    <td>
                         @* Both inside the one link, because the stylesheet gives a clickable row's
                            padding to the anchor that fills the cell — anything beside it would sit
                            flush against the edge. *@
@@ -198,8 +198,8 @@ else
                         }
                     </td>
                     <td class="numeric">@Cell((link, row.Version.ToString(), true))</td>
-                    <td class="muted">@Cell((link, row.Created.ToLocalTime().ToString("g"), true))</td>
-                    <td class="muted">@Cell((link, row.Updated.ToLocalTime().ToString("g"), true))</td>
+                    <td>@Cell((link, row.Created.ToLocalTime().ToString("g"), true))</td>
+                    <td>@Cell((link, row.Updated.ToLocalTime().ToString("g"), true))</td>
                 </tr>
             }
             </tbody>
