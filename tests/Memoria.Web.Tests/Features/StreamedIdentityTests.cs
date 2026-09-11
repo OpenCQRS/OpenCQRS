@@ -98,6 +98,40 @@ public class StreamedIdentityTests
     }
 
     /// <summary>
+    /// The values the identifier was built from, which are what a stored id is made of and the
+    /// streamed counterpart of the tags a DCB boundary is stored under: the page holds the id the
+    /// store kept, and the values behind it are read back out of it.
+    /// </summary>
+    [Fact]
+    public void Reads_the_values_the_identifier_was_built_from()
+    {
+        var identity = StreamedIdentity.Of(
+            Catalogue, StreamedModelKind.Aggregate, typeof(SampleAggregate), "sample:alpha", "order-123");
+
+        identity.Values.Should().Equal(new Dictionary<string, string> { ["orderId"] = "123" });
+    }
+
+    /// <summary>
+    /// An identifier taking nothing to name it is built from no values, which is none to show rather
+    /// than none recovered.
+    /// </summary>
+    [Fact]
+    public void Reads_no_values_from_an_identifier_that_takes_none()
+    {
+        var naming = new DomainTypeCatalogue
+        {
+            StreamedStreamIds = Catalogue.StreamedStreamIds,
+            StreamedAggregates = Catalogue.StreamedAggregates,
+            StreamedAggregateIds = [typeof(SampleOnlyAggregateId)]
+        };
+
+        var identity = StreamedIdentity.Of(
+            naming, StreamedModelKind.Aggregate, typeof(SampleAggregate), "sample:alpha", "the-order");
+
+        identity.Values.Should().NotBeNull().And.BeEmpty();
+    }
+
+    /// <summary>
     /// Nothing registered writes ids of this shape. Null and empty are different answers: empty is a
     /// model folding the whole stream, and this is not knowing — which is a wider history than one
     /// model's, and a row nothing can be written for.
@@ -111,6 +145,7 @@ public class StreamedIdentityTests
         identity.IdentifierType.Should().BeNull();
         identity.Identifier.Should().BeNull();
         identity.Claim.Should().BeNull();
+        identity.Values.Should().BeNull();
         identity.IsRecovered.Should().BeFalse();
     }
 

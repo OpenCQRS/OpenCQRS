@@ -134,6 +134,17 @@ public class SamplePrefixedAggregateId(string orderId) : IAggregateId<SampleAggr
 }
 
 /// <summary>
+/// The only one of its kind in its stream, taking nothing to name it. Its id is fixed, so there are
+/// no values behind it to read back out.
+/// </summary>
+public class SampleOnlyAggregateId : IAggregateId<SampleAggregate>
+{
+    public string Id => "the-order";
+
+    public IDictionary<string, string>? EventPropertyFilter => null;
+}
+
+/// <summary>
 /// An identifier that narrows the stream it reads to the events carrying one of its values, which
 /// is what lets several models of one type share a stream.
 /// </summary>

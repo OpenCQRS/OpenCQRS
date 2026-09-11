@@ -82,16 +82,7 @@ else
             else
             {
                 <dl class="facts">
-                    @* What the store filed it under, then the id inside that key: the version the
-                       store joins on is the type's, not the model's, and a reader matching this
-                       page against the row they clicked wants the whole key. *@
-                    <dt>Stream Id</dt>
-                    <dd><code>@Stored.StreamId</code></dd>
-                    
-                    <dt>Id</dt>
-                    <dd><code>@Stored.StoreId</code></dd>
-
-                    @* Which identifier writes ids of that shape, if any of the registered ones do.
+                                        @* Which identifier writes ids of that shape, if any of the registered ones do.
                        A fact about the types rather than about the row — the store keeps the id an
                        identifier produced and not the identifier — which is why it is said here
                        rather than left to look like something the row carries. *@
@@ -106,6 +97,37 @@ else
                             <span class="missing">nothing registered writes ids of this shape</span>
                         }
                     </dd>
+
+                    @* The values behind that id, listed the way the DCB pages list the tags a
+                       boundary was stored under: what addresses this one instance rather than what
+                       names its type. The store keeps the id an identifier produced and not what it
+                       was given, so these are read back out of the id rather than off the row. *@
+                    <dt>Parameters</dt>
+                    <dd>
+                        @if (Values is { Count: > 0 })
+                        {
+                            <code>@ValueText</code>
+                        }
+                        else if (Values is not null)
+                        {
+                            @* An identifier taking nothing names one thing, and its id is the same
+                               id every time. Nothing was recovered because nothing went in. *@
+                            <span class="missing">that identifier takes none</span>
+                        }
+                        else
+                        {
+                            <span class="missing">could not be read back out of that id</span>
+                        }
+                    </dd>
+                    
+                    @* What the store filed it under, then the id inside that key: the version the
+                       store joins on is the type's, not the model's, and a reader matching this
+                       page against the row they clicked wants the whole key. *@
+                    <dt>Stream Id</dt>
+                    <dd><code>@Stored.StreamId</code></dd>
+
+                    <dt>Id</dt>
+                    <dd><code>@Stored.StoreId</code></dd>
 
                     <dt>Model type</dt>
                     @* The key the row was written under, said the way a version is said rather than
@@ -131,7 +153,7 @@ else
                        nobody is named against is an ordinary row rather than a broken one. *@
                     <dt>Created by</dt>
                     <dd>
-                        @if (Stored.CreatedBy is { Length: > 0 } createdBy)
+                        @if (Stored.CreatedBy is {Length: > 0} createdBy)
                         {
                             @createdBy
                         }
@@ -146,7 +168,7 @@ else
 
                     <dt>Updated by</dt>
                     <dd>
-                        @if (Stored.UpdatedBy is { Length: > 0 } updatedBy)
+                        @if (Stored.UpdatedBy is {Length: > 0} updatedBy)
                         {
                             @updatedBy
                         }
@@ -596,6 +618,30 @@ else
     /// the events tab says so rather than passing a wider history off as this model's.
     /// </remarks>
     private IReadOnlyDictionary<string, string>? Claim => Identity.Claim;
+
+    /// <summary>
+    /// The values the identifier was built from, by the parameter that supplied each, or null when
+    /// they could not be read back out of the id.
+    /// </summary>
+    /// <remarks>
+    /// The streamed counterpart of the tags a DCB row is stored under, and shown the way they are:
+    /// the pair of ids on the rows above says where the row is, and these say what it was addressed
+    /// with. Null and empty are different answers — empty is an identifier that takes nothing to
+    /// name what it addresses, and null is an id nothing registered could read back.
+    /// </remarks>
+    private IReadOnlyDictionary<string, string>? Values => Identity.Values;
+
+    /// <summary>
+    /// Those values on one line, each named by the parameter that filled it.
+    /// </summary>
+    /// <remarks>
+    /// One line rather than a row each, the way a stream lists the values it is built from and a
+    /// boundary lists its tags: they are read together, because what addresses the row is the whole
+    /// set of them rather than a fact per value.
+    /// </remarks>
+    private string ValueText => Values is null
+        ? string.Empty
+        : string.Join(", ", Values.Select(value => $"{value.Key}: {value.Value}"));
 
     private StoredStreamModel? Stored { get; set; }
 

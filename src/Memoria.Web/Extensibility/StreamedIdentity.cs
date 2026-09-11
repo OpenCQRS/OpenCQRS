@@ -16,6 +16,10 @@ namespace Memoria.Web.Extensibility;
 /// <param name="Identifier">
 /// That identifier built again from this row's own values, or null when it could not be.
 /// </param>
+/// <param name="Values">
+/// The values that identifier was built from, by the parameter that supplied each, or null when
+/// they could not be read back out of the id.
+/// </param>
 /// <remarks>
 /// The store keeps the ids a stream and an identifier produced rather than the types that produced
 /// them, so both are worked back to: whichever registered type writes ids of this shape, built again
@@ -30,10 +34,14 @@ namespace Memoria.Web.Extensibility;
 /// </para>
 /// </remarks>
 public sealed record StreamedIdentity(
-    Type? StreamType, object? Stream, Type? IdentifierType, object? Identifier)
+    Type? StreamType,
+    object? Stream,
+    Type? IdentifierType,
+    object? Identifier,
+    IReadOnlyDictionary<string, string>? Values)
 {
     /// <summary>Nothing worked out yet, for a page whose address names no row to work out.</summary>
-    public static readonly StreamedIdentity Unknown = new(null, null, null, null);
+    public static readonly StreamedIdentity Unknown = new(null, null, null, null, null);
 
     /// <summary>
     /// Gets the properties an event must carry to be this model's, or null when there is no
@@ -88,11 +96,16 @@ public sealed record StreamedIdentity(
             ? null
             : Writes(DomainTypeDescriber.IdentifiersOf(model, catalogue.Identifiers(kind)), addressedId);
 
+        // Asked once and used twice: the values are what the identifier is built from, so reading
+        // them and building it are the same question answered to two different depths.
+        var shape = identifierType is null ? null : IdShape.Of(identifierType);
+
         return new StreamedIdentity(
             streamType,
             streamType is null ? null : IdShape.Of(streamType)?.Rebuild(streamId),
             identifierType,
-            identifierType is null ? null : IdShape.Of(identifierType)?.Rebuild(addressedId!));
+            shape?.Rebuild(addressedId!),
+            shape?.ValuesFrom(addressedId!));
     }
 
     /// <summary>Which of these types writes ids of one stored id's shape, if any does.</summary>
