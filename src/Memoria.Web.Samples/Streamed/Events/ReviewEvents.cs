@@ -41,6 +41,22 @@ public record ProductReviewEditedEvent(
     DateTimeOffset EditedOn) : IEvent;
 
 /// <summary>
+/// The author revised a review they had already written — the shape this fact was first written in.
+/// </summary>
+/// <remarks>
+/// Version 1 of <c>ProductReviewEdited</c>, kept beside the version 2 above so the pair reads as a
+/// schema evolving rather than a name reused. It carries only the new body: the first revision
+/// feature could change the words but not the stars. Version 2 added <c>Rating</c> and
+/// <c>Title</c>, which is the single difference between the two shapes.
+/// </remarks>
+[EventType("ProductReviewEdited", 1)]
+public record ProductReviewEditedEventV1(
+    string ReviewId,
+    string ProductId,
+    string Body,
+    DateTimeOffset EditedOn) : IEvent;
+
+/// <summary>
 /// Another shopper marked a review as helpful, or not.
 /// </summary>
 /// <remarks>

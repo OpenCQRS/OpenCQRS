@@ -50,6 +50,20 @@ public record PurchaseOrderApprovedEvent(
     DateTimeOffset ApprovedOn) : IEvent;
 
 /// <summary>
+/// A purchase order was approved and sent to the supplier — the shape this fact was first written
+/// in.
+/// </summary>
+/// <remarks>
+/// Version 1 of <c>PurchaseOrderApproved</c>, kept beside the version 2 above so the pair reads as
+/// a schema evolving rather than a name reused. It records only that approval happened and when.
+/// Version 2 added <c>ApprovedBy</c>, which is the single difference between the two shapes.
+/// </remarks>
+[EventType("PurchaseOrderApproved", 1)]
+public record PurchaseOrderApprovedEventV1(
+    string PurchaseOrderId,
+    DateTimeOffset ApprovedOn) : IEvent;
+
+/// <summary>
 /// Goods against a purchase order arrived at the warehouse.
 /// </summary>
 /// <remarks>
