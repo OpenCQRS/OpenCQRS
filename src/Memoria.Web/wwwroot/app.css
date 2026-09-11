@@ -1286,8 +1286,19 @@ h2:focus {
             padding-left: 4rem;
         }
 
+    /* A column whose cells are one mark each rather than values read along a line. Centred heading
+       and all: there is no left edge for the eye to run down, so a mark left-aligned under a word
+       sat off to one side of its own column. The left padding is named because the right is the
+       card's own, which the last column already takes — without it the marks would be centred in a
+       box that is a quarter of a rem wider on one side than the other. */
+    .grid .marked {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        text-align: center;
+    }
+
     /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
-       it. The mark's own size is the .lens rule below. */
+       it. */
     .grid .icon-link {
         align-items: center;
         border-radius: 3px;
@@ -1307,16 +1318,15 @@ h2:focus {
             outline-offset: 1px;
         }
 
-/* The mark for looking at what is stored, drawn as a row's one link in a column that would
-   otherwise repeat one word down its whole length. It used to front the names in the index lists
-   too; those now carry the section mark of the place they lead to, which is the mark the same link
-   is entered by on the section page. Sized in ems so it follows the text beside it rather than a
-   fixed pixel, and kept from shrinking when that text is long enough to wrap. */
-.lens {
-    flex: none;
-    height: 1em;
-    width: 1em;
-}
+        /* The section mark standing alone as a row's whole link. Sized in ems so it follows the
+           row's own text rather than a fixed pixel, and larger than the em it replaces: the marks
+           are drawn inset in a 20-unit box where the magnifier filled a 16-unit one, so at the same
+           box size this would have come out a third smaller than the mark it took over from. */
+        .grid .icon-link .glyph {
+            flex: none;
+            height: 1.2em;
+            width: 1.2em;
+        }
 
 /* What one event carries, as the pairs it is made of: a name and the value it names, one to a line.
    Global rather than scoped to the page that first grew it, because a payload is a payload. */

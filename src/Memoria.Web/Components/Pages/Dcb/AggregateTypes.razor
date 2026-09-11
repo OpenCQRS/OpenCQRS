@@ -132,7 +132,10 @@ else
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Tags</th>
-                                    <th scope="col">Data</th>
+                                    @* Centred, heading and marks together: the column holds one
+                                       mark per row rather than a value read along a line, and
+                                       there is no left edge for the eye to run down. *@
+                                    <th class="marked" scope="col">Data</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -158,14 +161,22 @@ else
                                                 <span class="missing">could not be worked out</span>
                                             }
                                         </td>
-                                        @* A lens rather than a word: the column is one link per row
+                                        @* A mark rather than a word: the column is one link per row
                                            and the word repeats down it. The name it is read out by
                                            carries the identifier, so a row is told apart by more
-                                           than its position. *@
-                                        <td>
+                                           than its position.
+
+                                           The store's own mark, the same one the Data tile is
+                                           entered by on the section page and the index folds its
+                                           rows under — so every way into what has been stored looks
+                                           the same, and the magnifier that used to stand here is
+                                           one drawing fewer for a reader to learn. *@
+                                        <td class="marked">
                                             <a class="icon-link" href="@DataLink(Selected.Type, identifier)"
                                                aria-label="View data for @identifier.Name"
-                                               title="View data for @identifier.Name">@Lens</a>
+                                               title="View data for @identifier.Name">
+                                                <SectionMark Kind="SectionKind.Data"/>
+                                            </a>
                                         </td>
                                     </tr>
                                 }
@@ -526,18 +537,5 @@ else
     /// </summary>
     private static string Counted(int count, string noun) =>
         count == 1 ? $"1 {noun}" : $"{count} {noun}s";
-
-    /// <summary>
-    /// The lens that stands for looking at what is stored under an identifier, in the one column of
-    /// the identifiers tab that is a link per row. The index reaches the same page by the section
-    /// mark of the place it leads to, because there the whole row is the link and the mark is
-    /// beside a name rather than standing in for one.
-    /// </summary>
-    private RenderFragment Lens =>
-        @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
-              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <circle cx="7" cy="7" r="4.25"/>
-            <path d="M10.2 10.2 13.5 13.5"/>
-        </svg>;
 
 }
