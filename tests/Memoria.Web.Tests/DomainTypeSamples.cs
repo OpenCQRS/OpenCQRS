@@ -133,6 +133,18 @@ public class SamplePrefixedAggregateId(string orderId) : IAggregateId<SampleAggr
     public IDictionary<string, string>? EventPropertyFilter => null;
 }
 
+/// <summary>
+/// An identifier that narrows the stream it reads to the events carrying one of its values, which
+/// is what lets several models of one type share a stream.
+/// </summary>
+public class SampleFilteredAggregateId(string orderId) : IAggregateId<SampleAggregate>
+{
+    public string Id => $"order-{orderId}";
+
+    public IDictionary<string, string>? EventPropertyFilter { get; } =
+        new Dictionary<string, string> { ["OrderId"] = orderId };
+}
+
 [ProjectionType("SampleProjection", 1)]
 public class SampleProjection : Projection
 {

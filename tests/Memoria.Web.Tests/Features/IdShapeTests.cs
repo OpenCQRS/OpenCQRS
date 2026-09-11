@@ -147,6 +147,37 @@ public class IdShapeTests
     }
 
     /// <summary>
+    /// Which of a stream's events are one model's is the identifier's to say, and it says it by
+    /// naming the properties an event has to carry. Read off the same probe the pattern is: the
+    /// keys are the type's, the values beside them are the instance's and say nothing about it.
+    /// </summary>
+    [Fact]
+    public void Reads_the_properties_an_identifier_narrows_its_stream_by()
+    {
+        IdShape.Of(typeof(SampleFilteredAggregateId))!.Filter.Should().Equal("OrderId");
+    }
+
+    /// <summary>
+    /// An identifier narrowing by nothing folds the whole stream, which is a different model rather
+    /// than a shape that could not be worked out.
+    /// </summary>
+    [Fact]
+    public void Has_no_filter_when_the_identifier_folds_the_whole_stream()
+    {
+        IdShape.Of(typeof(SamplePrefixedAggregateId))!.Filter.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// A stream narrows nothing: it is where events are put, and which of them are a model's is
+    /// asked of the identifier folding it.
+    /// </summary>
+    [Fact]
+    public void Has_no_filter_for_a_stream()
+    {
+        IdShape.Of(typeof(SamplePrefixedStreamId))!.Filter.Should().BeEmpty();
+    }
+
+    /// <summary>
     /// Probing means building one, so the answer is kept: neither the type nor what it produces
     /// changes while the assemblies are loaded.
     /// </summary>

@@ -26,10 +26,11 @@ namespace Memoria.Web.Extensibility;
 /// </remarks>
 public sealed class IdShape
 {
-    private IdShape(Type named, string pattern)
+    private IdShape(Type named, string pattern, IReadOnlyList<string> filter)
     {
         Named = named;
         Pattern = pattern;
+        Filter = filter;
     }
 
     /// <summary>Gets the type this describes: a stream, or an identifier of a model in one.</summary>
@@ -50,6 +51,21 @@ public sealed class IdShape
     /// </para>
     /// </remarks>
     public string Pattern { get; }
+
+    /// <summary>
+    /// Gets the properties an event has to carry to be this model's, by name, or nothing when the
+    /// whole stream is folded.
+    /// </summary>
+    /// <remarks>
+    /// What lets several models share a stream: the stream says which events to read, and this says
+    /// which of them are one model's. Read off the same probe the pattern is, and only the keys are
+    /// kept — the values beside them are the instance's, the way a DCB identifier's tag values are.
+    /// <para>
+    /// Empty for a stream, which narrows nothing: it is where events are put, and which of them are
+    /// a model's is the identifier's question rather than its own.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<string> Filter { get; }
 
     /// <summary>
     /// Whether one stored id is of this shape.
@@ -145,8 +161,36 @@ public sealed class IdShape
         var pattern = probes.Aggregate(id,
             (rendered, probe) => rendered.Replace(probe.Probe!, "%", StringComparison.Ordinal));
 
-        return new IdShape(named, pattern);
+        return new IdShape(named, pattern, FilterOf(built));
     }
+
+    /// <summary>
+    /// The properties one built identifier narrows its stream by, in the order it names them.
+    /// </summary>
+    /// <remarks>
+    /// Reading it is the type's own code, like the id beside it. One that throws narrows by nothing
+    /// as far as this can tell, which is what an identifier with no filter says too — the page it
+    /// reaches is about the type, not about what could not be asked of it.
+    /// </remarks>
+    private static IReadOnlyList<string> FilterOf(object? built)
+    {
+        try
+        {
+            return built switch
+            {
+                IAggregateId aggregateId => Keys(aggregateId.EventPropertyFilter),
+                IProjectionId projectionId => Keys(projectionId.EventPropertyFilter),
+                _ => []
+            };
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    private static IReadOnlyList<string> Keys(IDictionary<string, string>? filter) =>
+        filter is null ? [] : [.. filter.Keys];
 
     /// <summary>
     /// Whether a type names something the store keeps by id: a stream, or a model inside one.
