@@ -134,7 +134,6 @@ else
                                 <thead>
                                 <tr>
                                     <th scope="col">Name</th>
-                                    <th scope="col">Ids</th>
                                     <th scope="col">Filter</th>
                                     @* Centred, heading and marks together: the column holds one
                                        mark per row rather than a value read along a line, and
@@ -149,12 +148,6 @@ else
                                         <td><code>@identifier.Name</code></td>
                                         @if (IdShape.Of(identifier) is { } shape)
                                         {
-                                            @* What its ids look like with the value it was given
-                                               left out, which is how the store is narrowed to the
-                                               rows this identifier wrote. An id that is the value
-                                               and nothing else leaves a bare wildcard: truthfully,
-                                               it could have written any of them. *@
-                                            <td><code>@shape.Pattern</code></td>
                                             <td>
                                                 @if (shape.Filter.Count > 0)
                                                 {
@@ -166,7 +159,7 @@ else
                                                 }
                                                 else
                                                 {
-                                                    <span class="hint">the whole stream</span>
+                                                    <span>the whole stream</span>
                                                 }
                                             </td>
                                         }
