@@ -218,7 +218,10 @@ else
                 <th scope="col" class="col-id">Id</th>
                 <th scope="col" class="col-type">Type</th>
                 <th scope="col" class="col-identifier">Identifier</th>
-                <th scope="col" class="col-version">Version</th>
+                @* Marked here as well as on the cells under it, the way the DCB lists mark theirs:
+                   a count is set against the column's right edge, and a heading left on the left
+                   would be a label standing over nothing. *@
+                <th scope="col" class="col-version numeric">Version</th>
                 @foreach (var column in Columns)
                 {
                     <th scope="col" class="col-date" aria-sort="@AriaSort(column.Sort)">
@@ -236,10 +239,17 @@ else
             <tbody>
             @foreach (var stored in Aggregates.Snapshots)
             {
-                <tr>
-                    <td><code>@stored.StreamId</code></td>
-                    <td><code>@stored.StoreId</code></td>
-                    <td><code>@stored.Name</code></td>
+                var link = DetailLink(stored);
+
+                @* The whole row is the target when there is one, so every cell carries the same
+                   link. Only the first is reachable by keyboard or read out: the rest repeat it. A
+                   row folded into a type this application no longer has is drawn without one —
+                   there would be nothing to read its payload back with — and it is still the
+                   store's own row, worth seeing. *@
+                <tr class="@(link is null ? null : "clickable")">
+                    <td>@Cell((link, stored.StreamId, false))</td>
+                    <td>@Cell((link, stored.StoreId, true))</td>
+                    <td>@Cell((link, stored.Name, true))</td>
                     <td>
                         @* What addressed the row, worked out rather than read: the store keeps the
                            id a model was written under and not the identifier that made it, so the
@@ -248,16 +258,16 @@ else
                            and the row is the store's own either way. *@
                         @if (IdentifierOf(stored) is { } named)
                         {
-                            <code>@named</code>
+                            @Cell((link, named, true))
                         }
                         else
                         {
                             <span class="missing">—</span>
                         }
                     </td>
-                    <td class="numeric">@stored.Version</td>
-                    <td>@stored.Created.ToLocalTime().ToString("g")</td>
-                    <td>@stored.Updated.ToLocalTime().ToString("g")</td>
+                    <td class="numeric">@Cell((link, stored.Version.ToString(), true))</td>
+                    <td>@Cell((link, stored.Created.ToLocalTime().ToString("g"), true))</td>
+                    <td>@Cell((link, stored.Updated.ToLocalTime().ToString("g"), true))</td>
                 </tr>
             }
             </tbody>
@@ -395,6 +405,80 @@ else
     }
 
     private readonly Dictionary<string, IReadOnlyList<Type>> _addressing = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Through to one row on its own: the type it was folded into, and the two ids the store keys it
+    /// by.
+    /// </summary>
+    /// <param name="row">The stored row.</param>
+    /// <returns>
+    /// The address of the page about it, or null when the uploaded assemblies no longer describe
+    /// what it was folded into — the page there reads the payload back into that type, and without
+    /// it there would be nothing to open.
+    /// </returns>
+    /// <remarks>
+    /// The ids as the store wrote them rather than the types behind them. A row whose stream or
+    /// identifier no registered type claims still opens: what it is addressed by is worked out
+    /// there, and not knowing costs the events tab its narrowing rather than the whole page.
+    /// </remarks>
+    private string? DetailLink(StoredStreamSnapshot row)
+    {
+        if (Folded(row.Type) is not { } model)
+        {
+            return null;
+        }
+
+        return "streamed/aggregates/detail" +
+               $"?type={Uri.EscapeDataString(model.FullName ?? model.Name)}" +
+               $"&stream={Uri.EscapeDataString(row.StreamId)}" +
+               $"&id={Uri.EscapeDataString(row.StoreId)}";
+    }
+
+    /// <summary>
+    /// The type a row was folded into, by the key the store wrote it under, kept for the length of
+    /// the page like the identifiers beside it: the rows name the same few types over and over.
+    /// </summary>
+    private Type? Folded(string modelType)
+    {
+        if (_folded.TryGetValue(modelType, out var known))
+        {
+            return known;
+        }
+
+        var model = AggregateTypes.FirstOrDefault(aggregate =>
+            DomainTypeDescriber.BindingOf(aggregate)?.Key == modelType);
+
+        _folded[modelType] = model;
+
+        return model;
+    }
+
+    private readonly Dictionary<string, Type?> _folded = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// One cell of a row, inside the row's link when it has one.
+    /// </summary>
+    /// <remarks>
+    /// A repeated cell is neither reachable by keyboard nor read out: the row is one target, and the
+    /// first cell is the one that carries it. A row with nothing to lead to is written as plain
+    /// text, which is also why the row is only marked clickable when it is — the stylesheet moves a
+    /// clickable row's padding onto the anchor that fills it, and there would be none.
+    /// </remarks>
+    private RenderFragment<(string? Link, string? Text, bool Repeat)> Cell => cell =>
+        @<text>
+            @if (cell.Link is null)
+            {
+                @cell.Text
+            }
+            else if (cell.Repeat)
+            {
+                <a href="@cell.Link" tabindex="-1" aria-hidden="true">@cell.Text</a>
+            }
+            else
+            {
+                <a href="@cell.Link">@cell.Text</a>
+            }
+        </text>;
 
     private StoredStreamSnapshots Aggregates { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);

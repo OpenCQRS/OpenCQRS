@@ -139,6 +139,97 @@ public static class StreamedSnapshots
     }
 
     /// <summary>
+    /// Reads the one model stored under an exact address, payload and all.
+    /// </summary>
+    /// <param name="context">The streamed store.</param>
+    /// <param name="address">Which kind, in which stream, under which key.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>
+    /// What is stored there, or nothing when the address reaches no row — which is an answer rather
+    /// than a fault: a stream can hold events no snapshot was ever written over.
+    /// </returns>
+    /// <remarks>
+    /// Exact on both ids rather than narrowed by a pattern, because this is the key the store wrote
+    /// the row under and a page about one model is about that row. The audit columns come back too,
+    /// which the lists have no use for: who wrote a row is a fact about the one being read rather
+    /// than a column to run an eye down.
+    /// </remarks>
+    public static async Task<ReadStreamModel> Model(
+        StreamedStoreDbContext context,
+        StreamedModelAddress address,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var stored = Whole(context, address.Kind).Where(snapshot =>
+                snapshot.StreamId == address.StreamId && snapshot.StoreId == address.StoreId);
+
+            var row = await stored.FirstOrDefaultAsync(cancellationToken);
+
+            return new ReadStreamModel(row is null ? null : Read(row), Error: null);
+        }
+        catch (Exception exception)
+        {
+            return new ReadStreamModel(Snapshot: null, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// The rows of one kind with everything on them, as one shape for both tables.
+    /// </summary>
+    /// <remarks>
+    /// The companion to <see cref="Rows"/> and read the same way, differing only in taking the
+    /// payload and the audit columns as well — which is the difference between a page about one
+    /// model and a list of many. By property rather than by constructor for the same reason: a
+    /// provider follows a member it assigned itself back to the column it came from, and refuses a
+    /// projection it cannot.
+    /// </remarks>
+    private static IQueryable<ModelRow> Whole(
+        StreamedStoreDbContext context, StreamedModelKind kind) =>
+        kind == StreamedModelKind.Projection
+            ? context.Projections.AsNoTracking().Select(projection => new ModelRow
+            {
+                StreamId = projection.StreamId,
+                StoreId = projection.Id,
+                Type = projection.ProjectionType,
+                Version = projection.Version,
+                Sequence = projection.LatestEventSequence,
+                Data = projection.Data,
+                Created = projection.CreatedDate,
+                CreatedBy = projection.CreatedBy,
+                Updated = projection.UpdatedDate,
+                UpdatedBy = projection.UpdatedBy
+            })
+            : context.Aggregates.AsNoTracking().Select(aggregate => new ModelRow
+            {
+                StreamId = aggregate.StreamId,
+                StoreId = aggregate.Id,
+                Type = aggregate.AggregateType,
+                Version = aggregate.Version,
+                Sequence = aggregate.LatestEventSequence,
+                Data = aggregate.Data,
+                Created = aggregate.CreatedDate,
+                CreatedBy = aggregate.CreatedBy,
+                Updated = aggregate.UpdatedDate,
+                UpdatedBy = aggregate.UpdatedBy
+            });
+
+    /// <summary>One whole row of either table, in the columns the two have in common.</summary>
+    private sealed class ModelRow : SnapshotRow
+    {
+        public string Data { get; init; } = string.Empty;
+
+        public string? CreatedBy { get; init; }
+
+        public string? UpdatedBy { get; init; }
+    }
+
+    /// <summary>One whole row as a page about a single model reads it.</summary>
+    private static StoredStreamModel Read(ModelRow row) =>
+        new(row.StreamId, row.StoreId, row.Type, row.Version, row.Sequence, row.Data,
+            row.Created, row.CreatedBy, row.Updated, row.UpdatedBy);
+
+    /// <summary>
     /// The rows of one kind, as the one shape both tables are read in.
     /// </summary>
     /// <remarks>
@@ -172,7 +263,7 @@ public static class StreamedSnapshots
             });
 
     /// <summary>One row of either table, in the columns the two have in common — which is all of them.</summary>
-    private sealed class SnapshotRow
+    private class SnapshotRow
     {
         public string StreamId { get; init; } = string.Empty;
 
@@ -245,6 +336,41 @@ public sealed record StoredStreamSnapshot(
     /// identifier's pattern is held against, because a pattern describes the id the identifier
     /// makes and knows nothing of the version the store joins to it.
     /// </remarks>
+    public string AddressedId => DomainTypeDescriber.SplitKey(StoreId).Name;
+
+    /// <summary>Gets its type as every page here names one: what it is bound as, and the version.</summary>
+    public string Name => DomainTypeDescriber.LabelOfKey(Type);
+}
+
+/// <summary>One model as the store holds it, read whole rather than listed.</summary>
+/// <param name="StreamId">The stream its events were appended to.</param>
+/// <param name="StoreId">The key it was written under, as <c>id:version</c>.</param>
+/// <param name="Type">The binding key its type was written under, as <c>name:version</c>.</param>
+/// <param name="Version">How many events it had folded when it was written.</param>
+/// <param name="Sequence">The sequence in its stream it had read up to.</param>
+/// <param name="Data">The payload, as the store wrote it.</param>
+/// <param name="Created">When it was first written.</param>
+/// <param name="CreatedBy">Who wrote it first, or null where the store attributes nothing.</param>
+/// <param name="Updated">When it was last written.</param>
+/// <param name="UpdatedBy">Who wrote it last, or null where the store attributes nothing.</param>
+/// <remarks>
+/// The list's <see cref="StoredStreamSnapshot"/> with the two things a page about one model needs
+/// and a table of many has no use for: the payload, which is the state the page exists to show, and
+/// the audit columns, which say who wrote the row a reader has stopped on.
+/// </remarks>
+public sealed record StoredStreamModel(
+    string StreamId,
+    string StoreId,
+    string Type,
+    int Version,
+    int Sequence,
+    string Data,
+    DateTimeOffset Created,
+    string? CreatedBy,
+    DateTimeOffset Updated,
+    string? UpdatedBy)
+{
+    /// <summary>Gets the id an identifier produced for it, without the version the store appends.</summary>
     public string AddressedId => DomainTypeDescriber.SplitKey(StoreId).Name;
 
     /// <summary>Gets its type as every page here names one: what it is bound as, and the version.</summary>

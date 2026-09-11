@@ -25,6 +25,8 @@ public sealed class EfStreamedReads(StreamedStoreDbContext context) : IStreamedR
             filter.Descending,
             filter.Page,
             filter.Size,
+            filter.EventTypes,
+            filter.Properties,
             cancellationToken);
 
     /// <inheritdoc />
@@ -42,4 +44,9 @@ public sealed class EfStreamedReads(StreamedStoreDbContext context) : IStreamedR
             filter.Page,
             filter.Size,
             cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ReadStreamModel> Model(
+        StreamedModelAddress address, CancellationToken cancellationToken = default) =>
+        StreamedSnapshots.Model(context, address, cancellationToken);
 }

@@ -26,12 +26,24 @@ namespace Memoria.Web.Extensibility;
 /// </remarks>
 public sealed class IdShape
 {
-    private IdShape(Type named, string pattern, IReadOnlyList<string> filter)
+    private IdShape(
+        Type named, string pattern, IReadOnlyList<string> filter, IReadOnlyList<string>? slots)
     {
         Named = named;
         Pattern = pattern;
         Filter = filter;
+        _slots = slots;
     }
+
+    /// <summary>
+    /// Which value fills each hole in the pattern, by the constructor parameter that supplied it,
+    /// left to right — or null when the holes and the values cannot be lined up.
+    /// </summary>
+    /// <remarks>
+    /// Not the constructor's own order: a type is free to write its values into an id in any order,
+    /// and what a hole gives back is whatever was written into that position.
+    /// </remarks>
+    private readonly IReadOnlyList<string>? _slots;
 
     /// <summary>Gets the type this describes: a stream, or an identifier of a model in one.</summary>
     public Type Named { get; }
@@ -85,12 +97,71 @@ public sealed class IdShape
     public bool Matches(string id) => Expression.IsMatch(id);
 
     /// <summary>
+    /// Turns one stored id back into the values the type was built from.
+    /// </summary>
+    /// <param name="id">The id as the store holds it.</param>
+    /// <returns>
+    /// The values by parameter name, or null when this id is not of this shape or its holes cannot
+    /// be lined up with the values that filled them.
+    /// </returns>
+    /// <remarks>
+    /// The pattern read rather than written: probing puts values in and keeps what came out, and
+    /// this takes an id that came out and says what must have gone in — which is how a page holding
+    /// nothing but a stored id builds the stream or the identifier that wrote it.
+    /// <para>
+    /// A type taking no values answers with none: there is nothing to recover, and it is still
+    /// built from nothing.
+    /// </para>
+    /// <para>
+    /// Holes are read as narrowly as they can be, so an id written with a separator between two
+    /// values splits where the separator is. Nothing separating two holes would leave the split
+    /// between them arbitrary; the values come back whole rather than the read failing, because a
+    /// type writing two values into an id with nothing between them has already made them
+    /// indistinguishable in the store.
+    /// </para>
+    /// The DCB counterpart of <see cref="IdentifierShape.ValuesFrom"/>, which recovers the same
+    /// values from the tags a boundary was stored under.
+    /// </remarks>
+    public IReadOnlyDictionary<string, string>? ValuesFrom(string id)
+    {
+        if (_slots is null)
+        {
+            return null;
+        }
+
+        var match = Reader.Match(id);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        for (var slot = 0; slot < _slots.Count; slot++)
+        {
+            // The groups follow the holes, so the first group is the first hole and the name beside
+            // it is the parameter that wrote there.
+            values[_slots[slot]] = match.Groups[slot + 1].Value;
+        }
+
+        return values;
+    }
+
+    /// <summary>
     /// The pattern as something that can be held against a string, built once per shape because a
     /// page asks it of every row it draws.
     /// </summary>
     private Regex Expression => _expression ??= Compile(Pattern);
 
     private Regex? _expression;
+
+    /// <summary>
+    /// The same pattern with its holes remembered rather than discarded, for reading an id back
+    /// into the values that made it. Built once, for the same reason.
+    /// </summary>
+    private Regex Reader => _reader ??= CompileReader(Pattern);
+
+    private Regex? _reader;
 
     private static Regex Compile(string pattern)
     {
@@ -100,6 +171,26 @@ public sealed class IdShape
         var expression = Regex.Escape(pattern)
             .Replace("%", ".*", StringComparison.Ordinal)
             .Replace("_", ".", StringComparison.Ordinal);
+
+        return new Regex($"^{expression}$", RegexOptions.CultureInvariant);
+    }
+
+    /// <summary>
+    /// The same expression with a group around each hole, so what matched one can be read back out.
+    /// </summary>
+    /// <remarks>
+    /// Every hole but the last is read as narrowly as it can be, and the last takes whatever is
+    /// left: an id ending in a value should give the whole of it back, separators and all, while
+    /// one with something written after a value stops at it.
+    /// </remarks>
+    private static Regex CompileReader(string pattern)
+    {
+        var escaped = Regex.Escape(pattern).Replace("_", ".", StringComparison.Ordinal);
+
+        var parts = escaped.Split('%');
+
+        var expression = string.Join(string.Empty, parts.Select((part, index) =>
+            index == 0 ? part : $"({(index == parts.Length - 1 ? ".*" : ".*?")}){part}"));
 
         return new Regex($"^{expression}$", RegexOptions.CultureInvariant);
     }
@@ -161,7 +252,43 @@ public sealed class IdShape
         var pattern = probes.Aggregate(id,
             (rendered, probe) => rendered.Replace(probe.Probe!, "%", StringComparison.Ordinal));
 
-        return new IdShape(named, pattern, FilterOf(built));
+        return new IdShape(named, pattern, FilterOf(built), Slots(id, probes));
+    }
+
+    /// <summary>
+    /// Which parameter wrote into each hole, left to right along the id.
+    /// </summary>
+    /// <param name="id">The id the probe values produced.</param>
+    /// <param name="probes">The value stood in for each parameter, in constructor order.</param>
+    /// <returns>
+    /// The parameter names in the order their values appear, or null when a value reached no hole
+    /// or reached more than one — either way the holes and the values cannot be lined up, so an id
+    /// of this shape cannot be read back into the values that made it.
+    /// </returns>
+    /// <remarks>
+    /// A type taking nothing has no holes and no values, which lines up trivially: there is nothing
+    /// to recover and nothing needed to build one.
+    /// </remarks>
+    private static IReadOnlyList<string>? Slots(
+        string id, IReadOnlyList<(string Name, string? Probe)> probes)
+    {
+        var placed = new List<(int At, string Name)>();
+
+        foreach (var (name, probe) in probes)
+        {
+            var at = id.IndexOf(probe!, StringComparison.Ordinal);
+
+            // Written nowhere, or written twice: in the first case the value is lost, in the second
+            // the pattern has more holes than values and neither hole is that value's alone.
+            if (at < 0 || id.IndexOf(probe!, at + probe!.Length, StringComparison.Ordinal) >= 0)
+            {
+                return null;
+            }
+
+            placed.Add((at, name));
+        }
+
+        return [.. placed.OrderBy(slot => slot.At).Select(slot => slot.Name)];
     }
 
     /// <summary>

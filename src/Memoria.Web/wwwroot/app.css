@@ -1384,7 +1384,12 @@ h2:focus {
     table-layout: fixed;
 }
 
-    .grid.events .col-position {
+    /* Where in the log a row sits, counted across the whole of it on the DCB side and within one
+       stream on the streamed side. One width for both, because it is one column under two names:
+       left unnamed, the streamed one collapsed to the width of a digit and its heading ran out
+       under the column beside it. */
+    .grid.events .col-position,
+    .grid.events .col-sequence {
         width: 10%;
     }
 
@@ -1456,25 +1461,40 @@ h2:focus {
 
 /* The snapshots table, declared the same way the log's is and for a different reason: nothing here
    opens, so the columns are declared to keep the two pages that use it — aggregates and projections
-   — reading identically however wide or narrow the ids in them happen to be. What a snapshot says
-   about itself is seven roughly equal facts, so the width is divided roughly equally. */
+   — reading identically however wide or narrow the ids in them happen to be.
+
+   Divided by what each column holds rather than into seven roughly equal parts, which is how it
+   started and what made a row a row and a half tall: a timestamp is a fixed width and broke over
+   two lines at a twelfth of the table, and a bound name is the longest thing here — the projections
+   page lists a CustomerOrderHistory addressed by a CustomerOrderHistoryId, and both wrapped where
+   an aggregate's shorter names had not. The two names get the most, the dates get what a timestamp
+   measures, and the ids and the count get what is left. */
 .grid.snapshots {
     table-layout: fixed;
 }
 
-    .grid.snapshots .col-stream,
-    .grid.snapshots .col-id,
-    .grid.snapshots .col-type,
-    .grid.snapshots .col-identifier {
-        width: 17%;
+    .grid.snapshots .col-stream {
+        width: 13%;
     }
 
+    .grid.snapshots .col-id {
+        width: 11%;
+    }
+
+    /* What a row was folded into and what addressed it: bound names, and the longest values on the
+       page. */
+    .grid.snapshots .col-type,
+    .grid.snapshots .col-identifier {
+        width: 19%;
+    }
+
+    /* A count of a few digits, and the narrowest column here for it. */
     .grid.snapshots .col-version {
-        width: 8%;
+        width: 6%;
     }
 
     .grid.snapshots .col-date {
-        width: 12%;
+        width: 16%;
     }
 
 /* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
@@ -1890,7 +1910,12 @@ h2:focus {
         font-weight: 600;
     }
 
-    .instances .numeric {
+    /* A count rather than a value read along a line, so it is set against the column's right edge
+       and its digits are held to one width. Both tables name it, like .hint above: a version means
+       the same thing on the DCB pages and the streamed ones, and was left-aligned on one of them
+       for want of this. */
+    .instances .numeric,
+    .grid .numeric {
         font-variant-numeric: tabular-nums;
         text-align: right;
     }
@@ -1965,26 +1990,32 @@ h2:focus {
     }
 
 /* The whole row is the link. The anchor fills its cell so there is no dead space between the
-   text and the cell edge, and the padding moves off the cell onto the anchor to make that so. */
-.instances tr.clickable td {
+   text and the cell edge, and the padding moves off the cell onto the anchor to make that so.
+
+   Both tables that list stored rows, because both of them open one: the DCB pages list into
+   .instances and the streamed pages into .grid, and a row that leads somewhere should not look like
+   a row of links in one and a row of text in the other. Named rather than left to the first table
+   that grew it — without this a linked cell fell back to the page's own anchor, and a table came
+   out as a block of underlined accent-coloured values. */
+:is(.instances, .grid) tr.clickable td {
     padding: 0;
 }
 
     /* The anchor carries the cell's padding, so it has to carry exactly the cell's padding — the
        same 0.5rem/0.75rem an ordinary row uses, or a table of links and a table of plain values
        would sit at different heights. */
-    .instances tr.clickable td a {
+    :is(.instances, .grid) tr.clickable td a {
         color: inherit;
         display: block;
         padding: 0.5rem 0.75rem;
         text-decoration: none;
     }
 
-.instances tr.clickable:hover td {
+:is(.instances, .grid) tr.clickable:hover td {
     background: var(--ground);
 }
 
-    .instances tr.clickable:hover td:first-child a {
+    :is(.instances, .grid) tr.clickable:hover td:first-child a {
         color: var(--accent);
     }
 

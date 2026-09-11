@@ -94,22 +94,48 @@ public static class ModelReader
             snapshot.UpdatedDate,
             snapshot.UpdatedBy);
 
+        var opened = Open(model, snapshot.Data);
+
+        return new LoadedModel(opened.Model, stored, opened.Error);
+    }
+
+    /// <summary>
+    /// Turns one stored payload back into the model it was written from.
+    /// </summary>
+    /// <param name="model">The aggregate or projection type the payload was written from.</param>
+    /// <param name="data">The payload, as the store wrote it.</param>
+    /// <returns>The model, or why it could not be read back.</returns>
+    /// <remarks>
+    /// The payload and nothing else, so both consistency models read one the same way: what a row
+    /// says about itself differs between the two stores, but a payload is a serialized model either
+    /// way and neither store is involved in opening it.
+    /// <para>
+    /// Written by <see cref="DomainSerializer"/> and only readable by it — the store's own reads go
+    /// through the same one, which is why a payload it wrote round-trips and a hand-edited row may
+    /// not.
+    /// </para>
+    /// </remarks>
+    public static OpenedModel Open(Type model, string data)
+    {
         try
         {
-            // Written by DomainSerializer and only readable by it — the store's own reads go through
-            // the same one, which is why a payload it wrote round-trips and a hand-edited row may not.
-            var read = DomainSerializer.Current.Deserialize(snapshot.Data, model);
+            var read = DomainSerializer.Current.Deserialize(data, model);
 
             return read is null
-                ? new LoadedModel(null, stored, "The stored payload is empty.")
-                : new LoadedModel(read, stored, null);
+                ? new OpenedModel(null, "The stored payload is empty.")
+                : new OpenedModel(read, null);
         }
         catch (Exception exception)
         {
-            return new LoadedModel(null, stored, exception.Message);
+            return new OpenedModel(null, exception.Message);
         }
     }
 }
+
+/// <summary>What one stored payload turned out to hold.</summary>
+/// <param name="Model">The model, or null when the payload was unreadable.</param>
+/// <param name="Error">Why it was unreadable, or null when it was not.</param>
+public sealed record OpenedModel(object? Model, string? Error);
 
 /// <summary>The outcome of a load.</summary>
 /// <param name="Model">The model, or null when there is no row or its payload was unreadable.</param>

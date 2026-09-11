@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Memoria.EventSourcing.Filtering;
 using Memoria.EventSourcing.Store.Cosmos.Documents;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
@@ -199,6 +200,69 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// One query and one partition, unlike everything else here: an address names the stream, which
+    /// is what the container is partitioned by, so this is the one read that knows where to look.
+    /// No ordering and no count either — an address reaches one document or none.
+    /// </remarks>
+    public async Task<ReadStreamModel> Model(
+        StreamedModelAddress address, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var container = client.GetContainer(databaseName, containerName);
+            var kind = SnapshotKind.Of(address.Kind);
+
+            var query = new QueryDefinition(
+                    $"SELECT c.streamId, c.id, {kind.TypeProperty} AS type, c.version, " +
+                    "c.latestEventSequence, c.data, c.createdDate, c.createdBy, " +
+                    "c.updatedDate, c.updatedBy " +
+                    "FROM c WHERE c.documentType = @documentType AND c.streamId = @streamId " +
+                    "AND c.id = @id")
+                .WithParameter("@documentType", kind.DocumentType)
+                .WithParameter("@streamId", address.StreamId)
+                .WithParameter("@id", address.StoreId);
+
+            var documents = await Read<ModelDocument>(container, query, cancellationToken);
+
+            var document = documents.FirstOrDefault();
+
+            return new ReadStreamModel(
+                document is null
+                    ? null
+                    : new StoredStreamModel(
+                        document.StreamId,
+                        document.Id,
+                        document.Type,
+                        document.Version,
+                        document.LatestEventSequence,
+                        document.Data,
+                        document.CreatedDate,
+                        document.CreatedBy,
+                        document.UpdatedDate,
+                        document.UpdatedBy),
+                Error: null);
+        }
+        catch (Exception exception)
+        {
+            return new ReadStreamModel(Snapshot: null, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// One snapshot read whole: what <see cref="SnapshotDocument"/> carries, and the payload and
+    /// audit properties a page about a single model shows besides.
+    /// </summary>
+    private sealed class ModelDocument : SnapshotDocument
+    {
+        [JsonProperty("data")] public string Data { get; set; } = string.Empty;
+
+        [JsonProperty("createdBy")] public string? CreatedBy { get; set; }
+
+        [JsonProperty("updatedBy")] public string? UpdatedBy { get; set; }
+    }
+
     /// <summary>
     /// One page of snapshots in the fullest order the container can serve.
     /// </summary>
@@ -304,7 +368,7 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
     /// One snapshot as both kinds are read into: the store's account of a model, with its type under
     /// one name whichever property the document held it in.
     /// </summary>
-    private sealed class SnapshotDocument
+    private class SnapshotDocument
     {
         [JsonProperty("streamId")] public string StreamId { get; set; } = string.Empty;
 
@@ -375,6 +439,33 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
             {
                 conditions.Add("c.eventType = @eventType");
                 values.Add(("@eventType", filter.EventType));
+            }
+
+            if (filter.EventTypes is { Count: > 0 } applied)
+            {
+                // The set a model folds, as one parameter rather than a clause per key: what is
+                // asked is whether the row's own key is among them, which is the one question.
+                conditions.Add("ARRAY_CONTAINS(@eventTypes, c.eventType)");
+                values.Add(("@eventTypes", applied.ToArray()));
+            }
+
+            if (filter.Properties is { Count: > 0 })
+            {
+                // The needles the store's own fold looks for, matched against the payload as text.
+                // CONTAINS with no third argument, unlike the typed text above: this is JSON the
+                // store wrote rather than something someone typed, so its case is the case it has.
+                var needles = filter.Properties
+                    .Select((property, index) => (
+                        Name: $"@property{index}",
+                        Value: $"{JsonConvert.ToString(property.Key)}:" +
+                               $"{EventPropertyFilterValue.ToJsonLiteral(property.Value)}"))
+                    .ToList();
+
+                foreach (var needle in needles)
+                {
+                    conditions.Add($"CONTAINS(c.data, {needle.Name})");
+                    values.Add((needle.Name, needle.Value));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(filter.StreamPattern))

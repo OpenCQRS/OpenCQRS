@@ -1,5 +1,7 @@
+using Memoria.EventSourcing.Filtering;
 using Memoria.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Memoria.Web.Extensibility;
 
@@ -32,6 +34,14 @@ public static class StreamedEvents
     /// <param name="descending">Whether the newest come first.</param>
     /// <param name="page">The page asked for, from one.</param>
     /// <param name="size">The rows per page.</param>
+    /// <param name="eventTypes">
+    /// The binding keys of the types a model applies, or null for every type. A set rather than the
+    /// one key above it, because a model folds several and a reader narrows within them.
+    /// </param>
+    /// <param name="properties">
+    /// The properties an event must carry to be one model's, or null for every event. An
+    /// identifier's own filter, matched the way the store matches it when it folds.
+    /// </param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <remarks>
     /// The stream and the sequence break a tie on the date: everything appended in one transaction
@@ -64,6 +74,8 @@ public static class StreamedEvents
         bool descending,
         int page,
         int size,
+        IReadOnlyList<string>? eventTypes = null,
+        IReadOnlyDictionary<string, string>? properties = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -81,6 +93,31 @@ public static class StreamedEvents
             if (!string.IsNullOrWhiteSpace(eventType))
             {
                 stored = stored.Where(appended => appended.EventType == eventType);
+            }
+
+            if (eventTypes is { Count: > 0 })
+            {
+                // The keys the model applies, held against the key the row was written under. A
+                // model's own filter is a list of CLR types; what the store holds is what each of
+                // them is bound as, which is the only thing a row and a type have in common.
+                var applied = eventTypes.ToList();
+
+                stored = stored.Where(appended => applied.Contains(appended.EventType));
+            }
+
+            if (properties is { Count: > 0 })
+            {
+                foreach (var (name, value) in properties)
+                {
+                    // The needle the store's own fold looks for, built the same way: the property
+                    // name and the value as JSON would have written them, matched against the
+                    // payload as text. Reproduced rather than shared because the store reaches it
+                    // through a provider-specific filter chosen at registration, and this reads a
+                    // column it was handed.
+                    var needle = $"{JsonConvert.ToString(name)}:{EventPropertyFilterValue.ToJsonLiteral(value)}";
+
+                    stored = stored.Where(appended => appended.Data.Contains(needle));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(text))

@@ -178,6 +178,63 @@ public class IdShapeTests
     }
 
     /// <summary>
+    /// The store keeps the id and not the type that made it, so a page holding one stored id and
+    /// wanting the thing back has to read the values out of it — which is the pattern run the other
+    /// way, its holes read rather than written.
+    /// </summary>
+    [Fact]
+    public void Reads_the_value_an_id_was_built_from()
+    {
+        IdShape.Of(typeof(SamplePrefixedAggregateId))!.ValuesFrom("order-123")
+            .Should().Equal(new Dictionary<string, string> { ["orderId"] = "123" });
+    }
+
+    /// <summary>
+    /// One value per hole, by the parameter that filled it — which is not always the order the
+    /// constructor asks for them in, because a type is free to write them in any order it likes.
+    /// </summary>
+    [Fact]
+    public void Reads_a_value_for_every_hole()
+    {
+        IdShape.Of(typeof(SampleTwoPartStreamId))!.ValuesFrom("sample:alpha:2024")
+            .Should().Equal(new Dictionary<string, string>
+            {
+                ["sampleId"] = "alpha",
+                ["year"] = "2024"
+            });
+    }
+
+    /// <summary>
+    /// An id that is the whole value gives the whole value back: there is nothing around it to
+    /// leave out.
+    /// </summary>
+    [Fact]
+    public void Reads_the_whole_id_when_the_pattern_is_a_bare_wildcard()
+    {
+        IdShape.Of(typeof(SampleStreamId))!.ValuesFrom("whatever")
+            .Should().Equal(new Dictionary<string, string> { ["id"] = "whatever" });
+    }
+
+    /// <summary>
+    /// Nothing went in, so nothing comes out — and the type is still built, from no values at all.
+    /// </summary>
+    [Fact]
+    public void Reads_no_values_when_the_type_takes_none()
+    {
+        IdShape.Of(typeof(SampleOnlyStreamId))!.ValuesFrom("samples").Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// An id of another shape has no values of this one in it, so there is nothing to hand back
+    /// rather than a guess at which part was which.
+    /// </summary>
+    [Fact]
+    public void Reads_nothing_from_an_id_of_another_shape()
+    {
+        IdShape.Of(typeof(SamplePrefixedAggregateId))!.ValuesFrom("summary-123").Should().BeNull();
+    }
+
+    /// <summary>
     /// Probing means building one, so the answer is kept: neither the type nor what it produces
     /// changes while the assemblies are loaded.
     /// </summary>
