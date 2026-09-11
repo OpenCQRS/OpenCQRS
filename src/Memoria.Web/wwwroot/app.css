@@ -1615,25 +1615,6 @@ h2:focus {
     gap: 0.5rem;
 }
 
-/* A setting that is a checkbox rather than a picker, with room for the sentence that says what it
-   is about. Set apart from the picker above it, which has no such sentence. */
-.preference {
-    color: var(--ink-soft);
-    font-size: var(--text-md);
-    margin-top: 1.5rem;
-}
-
-    .preference label {
-        align-items: center;
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .preference .hint {
-        margin-top: 0.35rem;
-        max-width: 42rem;
-    }
-
     /* The two ends of the footer, and which is which. The picker leads and the pager is held to the
        far end — reversed from the markup's own order, which puts the pager first because that is
        what a reader tabs to first. Ordered here rather than reordered in the markup so the reading
