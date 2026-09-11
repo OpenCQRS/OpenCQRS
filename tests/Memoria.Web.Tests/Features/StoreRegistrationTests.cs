@@ -99,6 +99,29 @@ public class StoreRegistrationTests
     }
 
     /// <summary>
+    /// Refreshing a snapshot is a write, and the streamed pages send it through
+    /// <c>IDomainService</c>. Only the relational store registers one, so the update tab is offered
+    /// where there is something behind it rather than offered and broken.
+    /// </summary>
+    [Theory]
+    [InlineData("Host=localhost;Database=memoria;Username=postgres;Password=x", true)]
+    [InlineData("Server=.;Database=memoria;Trusted_Connection=True", true)]
+    [InlineData("Data Source=memoria.db", true)]
+    [InlineData("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5", false)]
+    public void Offers_the_update_only_where_a_store_can_be_written_to(
+        string connectionString, bool expected)
+    {
+        var services = Registered(connectionString);
+
+        var capabilities = services
+            .Single(service => service.ServiceType == typeof(StoreCapabilities))
+            .ImplementationInstance
+            .Should().BeOfType<StoreCapabilities>().Subject;
+
+        capabilities.CanUpdate.Should().Be(expected);
+    }
+
+    /// <summary>
     /// A Cosmos connection string names an account, not a database or a container, so those two are
     /// configuration. They default to what the store's own options default to, so a store installed
     /// with those defaults needs no settings at all.

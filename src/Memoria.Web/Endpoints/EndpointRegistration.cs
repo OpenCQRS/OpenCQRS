@@ -1,3 +1,4 @@
+using Memoria.EventSourcing;
 using Memoria.EventSourcing.Dcb;
 using Memoria.Web.Components;
 using Memoria.Web.Extensibility;
@@ -30,6 +31,7 @@ public static class EndpointRegistration
     {
         app.MapSettings();
         app.MapDcbModels();
+        app.MapStreamedModels();
 
         app.MapStaticAssets();
         app.MapRazorComponents<App>()
@@ -161,6 +163,40 @@ public static class EndpointRegistration
             await Refresh(DcbModelKind.Projection, types, store, loggerFactory, request, type, id, returnUrl));
     }
 
+    /// <summary>
+    /// The same one write for the two streamed models.
+    /// </summary>
+    /// <remarks>
+    /// The streamed pages reach a row by the two ids the store keyed it with rather than by the
+    /// values an identifier was built from, because that is what the row they were opened from
+    /// carries. So these take the ids and work back to the things: the store folds a stream through
+    /// an identifier and neither is a string to it.
+    /// </remarks>
+    private static void MapStreamedModels(this WebApplication app)
+    {
+        app.MapPost("/streamed/aggregates/update", async (
+            DomainTypeRegistry types,
+            IDomainService store,
+            ILoggerFactory loggerFactory,
+            [FromForm] string type,
+            [FromForm] string stream,
+            [FromForm] string id,
+            [FromForm] string returnUrl) =>
+            await RefreshStreamed(
+                StreamedModelKind.Aggregate, types, store, loggerFactory, type, stream, id, returnUrl));
+
+        app.MapPost("/streamed/projections/update", async (
+            DomainTypeRegistry types,
+            IDomainService store,
+            ILoggerFactory loggerFactory,
+            [FromForm] string type,
+            [FromForm] string stream,
+            [FromForm] string id,
+            [FromForm] string returnUrl) =>
+            await RefreshStreamed(
+                StreamedModelKind.Projection, types, store, loggerFactory, type, stream, id, returnUrl));
+    }
+
     // Back to the settings page carrying what happened, so the outcome survives the redirect.
     // The tab is carried back with the message because the settings page writes each one under the
     // button that produced it: an upload's answer belongs on the installed tab, a refresh's on the
@@ -195,17 +231,6 @@ public static class EndpointRegistration
     {
         var logger = loggerFactory.CreateLogger("Memoria.Web.Dcb");
 
-        // Local: the return address arrives on the form, so it may not send anyone off-site.
-        IResult BackToModel(string? message = null, string? error = null)
-        {
-            var separator = returnUrl.Contains('?') ? "&" : "?";
-            var carried = message is not null
-                ? $"message={Uri.EscapeDataString(message)}"
-                : $"error={Uri.EscapeDataString(error ?? string.Empty)}";
-
-            return Results.LocalRedirect($"{returnUrl}{separator}{carried}");
-        }
-
         // Matched against what is registered, exactly as the page matches them, so a name posted here
         // can only ever reach a type this application already knows about — and only one of the two
         // kinds, so a projection cannot be refreshed through the aggregates' address.
@@ -218,7 +243,8 @@ public static class EndpointRegistration
 
         if (model is null || identifierType is null)
         {
-            return BackToModel(error: $"That {kind.ToString().ToLowerInvariant()} and identifier are no longer registered.");
+            return BackToModel(returnUrl,
+                error: $"That {Named(kind)} and identifier are no longer registered.");
         }
 
         // The identifier's own values, posted under the names its constructor takes — the same shape
@@ -231,22 +257,123 @@ public static class EndpointRegistration
 
         if (created.Instance is null)
         {
-            return BackToModel(error: created.Error ?? "That identifier could not be built.");
+            return BackToModel(returnUrl, error: created.Error ?? "That identifier could not be built.");
         }
 
         var refreshed = await ModelRefresher.Refresh(store, model, created.Instance);
 
+        return Answer(logger, returnUrl, model, refreshed,
+            nothingToDo: $"Nothing to refresh — no snapshot, and no events inside the boundary this " +
+                         $"{Named(kind)} applies.");
+    }
+
+    /// <summary>
+    /// Brings one streamed model's snapshot up to date and goes back to the page the button was
+    /// pressed on, carrying what happened.
+    /// </summary>
+    /// <remarks>
+    /// One handler for aggregates and projections, for the same reason the DCB one is: the two
+    /// differ only in which lists the posted names are matched against, and which of the store's two
+    /// update methods is called the refresher reads off the identifier rather than being told.
+    /// <para>
+    /// What differs from the DCB handler is what arrives. There the identifier's own values are
+    /// posted and the identifier is built from them; here the two ids the store keyed the row by are
+    /// posted, because that is what the row the page was opened from carries — so both the stream
+    /// and the identifier are worked back out of them before the store is asked to write.
+    /// </para>
+    /// </remarks>
+    private static async Task<IResult> RefreshStreamed(
+        StreamedModelKind kind,
+        DomainTypeRegistry types,
+        IDomainService store,
+        ILoggerFactory loggerFactory,
+        string type,
+        string stream,
+        string id,
+        string returnUrl)
+    {
+        var logger = loggerFactory.CreateLogger("Memoria.Web.Streamed");
+
+        // Matched against what is registered, exactly as the page matches it, so a name posted here
+        // can only ever reach a type this application already knows about — and only one of the two
+        // kinds, so a projection cannot be refreshed through the aggregates' address.
+        var model = DomainTypeDescriber.Select(types.Current.Streamed(kind), type);
+
+        if (model is null)
+        {
+            return BackToModel(returnUrl, error: $"That {Named(kind)} is no longer registered.");
+        }
+
+        // The id half of the store's key, which is what an identifier produced; the other half is
+        // the type's version, and no identifier ever wrote it.
+        var identity = StreamedIdentity.Of(
+            types.Current, kind, model, stream, DomainTypeDescriber.SplitKey(id).Name);
+
+        if (identity.Stream is null)
+        {
+            return BackToModel(returnUrl,
+                error: "Nothing registered writes stream ids of this shape, so there is nowhere to " +
+                       "fold a snapshot from.");
+        }
+
+        if (identity.Identifier is null)
+        {
+            return BackToModel(returnUrl,
+                error: $"Nothing registered addresses this {Named(kind)} by that id, so there is " +
+                       "nothing to refresh it with.");
+        }
+
+        var refreshed = await ModelRefresher.Refresh(store, model, identity.Stream, identity.Identifier);
+
+        return Answer(logger, returnUrl, model, refreshed,
+            nothingToDo: $"Nothing to refresh — no snapshot, and no events in this stream that this " +
+                         $"{Named(kind)} folds.");
+    }
+
+    /// <summary>
+    /// What a refresh did, logged and carried back to the page that asked for it.
+    /// </summary>
+    /// <param name="logger">The store's own logger.</param>
+    /// <param name="returnUrl">The page the button was pressed on.</param>
+    /// <param name="model">The model that was refreshed, for the log.</param>
+    /// <param name="refreshed">What the store said.</param>
+    /// <param name="nothingToDo">
+    /// What to say when there was nothing to bring up to date, which each store says in its own
+    /// terms: a boundary the model applies, or a stream it folds.
+    /// </param>
+    private static IResult Answer(
+        ILogger logger, string returnUrl, Type model, RefreshedModel refreshed, string nothingToDo)
+    {
         if (refreshed.Error is not null)
         {
             logger.LogWarning("Could not refresh {Model}: {Error}", model.Name, refreshed.Error);
-            return BackToModel(error: refreshed.Error);
+            return BackToModel(returnUrl, error: refreshed.Error);
         }
 
         logger.LogInformation("Refreshed the snapshot for {Model}.", model.Name);
 
-        return BackToModel(message: refreshed.Refreshed
-            ? "Snapshot refreshed."
-            : $"Nothing to refresh — no snapshot, and no events inside the boundary this " +
-              $"{kind.ToString().ToLowerInvariant()} applies.");
+        return BackToModel(returnUrl,
+            message: refreshed.Refreshed ? "Snapshot refreshed." : nothingToDo);
+    }
+
+    /// <summary>What a kind of model is called in a sentence.</summary>
+    private static string Named<TKind>(TKind kind) where TKind : struct, Enum =>
+        kind.ToString()!.ToLowerInvariant();
+
+    /// <summary>
+    /// Back to the page the button was pressed on, carrying what happened so the outcome survives
+    /// the redirect.
+    /// </summary>
+    /// <remarks>
+    /// A local redirect: the return address arrives on the form, so it may not send anyone off-site.
+    /// </remarks>
+    private static IResult BackToModel(string returnUrl, string? message = null, string? error = null)
+    {
+        var separator = returnUrl.Contains('?') ? "&" : "?";
+        var carried = message is not null
+            ? $"message={Uri.EscapeDataString(message)}"
+            : $"error={Uri.EscapeDataString(error ?? string.Empty)}";
+
+        return Results.LocalRedirect($"{returnUrl}{separator}{carried}");
     }
 }

@@ -1,9 +1,9 @@
 @page "/streamed/aggregates/detail"
-@using Memoria.EventSourcing.Domain
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
 @inject IStreamedReads Store
+@inject Memoria.Web.Data.StoreCapabilities Capabilities
 @inject NavigationManager Navigation
 
 <PageTitle>@Heading @Title</PageTitle>
@@ -64,10 +64,12 @@ else
         <p class="alert" role="alert">@Error</p>
     }
 
-    @* Three views of one aggregate, switched by the address rather than by script: each tab is a
-       link, so a view can be linked to and gone back to, and the page stays statically rendered
-       like the rest of them. Marked with aria-current for the same reason the breadcrumb is —
-       these are places to go, not scripted tabs, so they say so in the language of navigation. *@
+    @* Views of one aggregate, switched by the address rather than by script: each tab is a link, so
+       a view can be linked to and gone back to, and the page stays statically rendered like the
+       rest of them. Marked with aria-current for the same reason the breadcrumb is — these are
+       places to go, not scripted tabs, so they say so in the language of navigation. The three that
+       read come first and the one that writes comes last, and it is only there when the store the
+       tool was pointed at can be written to. *@
     <nav class="tabs" aria-label="Aggregate views">
         <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
            aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
@@ -75,10 +77,15 @@ else
            aria-current="@(Tab == StateTab ? "page" : null)">State</a>
         <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
            aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
+        @if (Capabilities.CanUpdate)
+        {
+            <a id="tab-@UpdateTab" href="@TabLink(UpdateTab)"
+               aria-current="@(Tab == UpdateTab ? "page" : null)">Update</a>
+        }
     </nav>
 
     @* Each panel is named by the tab that reaches it, so the label is written once and a reader
-       arriving by fragment is told which of the three they landed in. *@
+       arriving by fragment is told which of them they landed in. *@
     @if (Tab == InfoTab)
     {
         <section class="tab-panel" aria-labelledby="tab-@InfoTab">
@@ -219,7 +226,7 @@ else
             }
         </section>
     }
-    else
+    else if (Tab == EventsTab)
     {
         @* Narrowed to what this aggregate applies and to what its identifier claims, which is the
            pair the store itself folds through — so the count here agrees with the version on the
@@ -479,6 +486,74 @@ else
             }
         </section>
     }
+
+    else if (Tab == UpdateTab)
+    {
+        @* The one write these pages offer, given a tab of its own so the three that read stay
+           reading. It is the seam the other three meet at: it takes what the events tab lists and
+           writes it into what the info and state tabs show. *@
+        <section class="tab-panel" aria-labelledby="tab-@UpdateTab">
+            @* The store folds a stream through an identifier and takes the things rather than the
+               ids they produced, so both have to be worked back out of this row before it can be
+               asked. Each half that could not be is its own answer: the ids are the store's, and a
+               row addressed by something no uploaded type describes is still the store's own row. *@
+            @if (Identity.Stream is null)
+            {
+                <p class="missing">
+                    Nothing registered writes stream ids of this shape, so there is nowhere to fold
+                    a snapshot from.
+                </p>
+            }
+            else if (Identifier is null)
+            {
+                <p class="missing">
+                    Nothing registered writes ids of this shape, so there is nothing to address a
+                    snapshot with.
+                </p>
+            }
+            else if (Identity.Identifier is null)
+            {
+                <p class="missing">
+                    <code>@Identifier.Name</code> could not be rebuilt from this id, so there is
+                    nothing to address a snapshot with.
+                </p>
+            }
+            else
+            {
+                @* Above the button rather than beside it: on a tab of its own there is the width to
+                   read it as prose, and it says what pressing the button will do, so it comes
+                   first. *@
+                <p class="lede">
+                    Refreshes the stored snapshot: any events on the events tab that it has not
+                    applied yet are applied to it and the result is written back. Nothing is
+                    appended.
+                </p>
+
+                <form method="post" action="streamed/aggregates/update" class="refresh">
+                    <AntiforgeryToken/>
+                    @* The same three the reading forms carry, because they are what addresses the
+                       row: the type it was folded into, and the two ids the store keys it by. *@
+                    @Addressing
+                    @* Back to this tab, which is where the button was pressed and where the notice
+                       saying what it did is written. *@
+                    <input type="hidden" name="returnUrl" value="/@TabLink(UpdateTab)"/>
+                    <button type="submit" class="button">Update</button>
+                </form>
+
+                @* What the last press did, carried back on the address so it survives the redirect.
+                   Below the button rather than at the top of the page, so the answer is read where
+                   the question was asked. *@
+                @if (Message is not null)
+                {
+                    <p class="notice" role="status">@Message</p>
+                }
+                else if (RefreshError is not null)
+                {
+                    <p class="alert" role="alert">@RefreshError</p>
+                }
+            }
+        </section>
+    }
 }
 
 @code {
@@ -518,17 +593,18 @@ else
         StoreId is null ? null : DomainTypeDescriber.SplitKey(StoreId).Name;
 
     /// <summary>
-    /// Which registered stream writes ids of this shape, or null when none does.
+    /// The stream and the identifier this row came out of, worked back out of the two ids the store
+    /// keeps rather than read off it.
     /// </summary>
     /// <remarks>
-    /// Worked out rather than read: the store keeps the id a stream produced and not the type that
-    /// produced it. Two types that both could would leave it unanswered — naming one would be a
-    /// guess — and the line above the tabs shows the id either way.
+    /// Two tabs want it and each wants a different half: the events tab narrows the history by what
+    /// the identifier claims, and the update tab hands the pair to the store, which folds a stream
+    /// through an identifier and takes the things rather than the strings.
     /// </remarks>
-    private Type? StreamType { get; set; }
+    private StreamedIdentity Identity { get; set; } = StreamedIdentity.Unknown;
 
     /// <summary>Which registered identifier writes ids of this row's shape, if any does.</summary>
-    private Type? Identifier { get; set; }
+    private Type? Identifier => Identity.IdentifierType;
 
     /// <summary>
     /// What the identifier claims of its stream: the properties an event must carry to be this
@@ -539,7 +615,7 @@ else
     /// which is how a model is written when it is the only one in there; null is not knowing, and
     /// the events tab says so rather than passing a wider history off as this model's.
     /// </remarks>
-    private IReadOnlyDictionary<string, string>? Claim { get; set; }
+    private IReadOnlyDictionary<string, string>? Claim => Identity.Claim;
 
     private StoredStreamModel? Stored { get; set; }
 
@@ -621,8 +697,8 @@ else
     private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
 
     /// <summary>
-    /// The three views the page offers, named as they appear in the address. Which one is showing
-    /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
+    /// The views the page offers, named as they appear in the address. Which one is showing is the
+    /// address's to say, so a view can be linked to, bookmarked, and gone back to.
     /// </summary>
     private const string InfoTab = "info";
 
@@ -630,7 +706,19 @@ else
 
     private const string EventsTab = "events";
 
+    private const string UpdateTab = "update";
+
     private string Tab { get; set; } = InfoTab;
+
+    /// <summary>
+    /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
+    /// to answer for the aggregate at all rather than a button failing to do its job.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "message")]
+    private string? Message { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? RefreshError { get; set; }
 
     /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
     private string Of => Choice.IsAll ? string.Empty : $" of {Choice.Name}";
@@ -834,12 +922,14 @@ else
         string? Value(string name) =>
             query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
 
-        // Matched against the three the page has, so an unknown name in the address opens the one
-        // it opens with rather than a blank page.
+        // Matched against the ones the page has, so an unknown name in the address opens the one it
+        // opens with rather than a blank page — and so does the update tab against a store that has
+        // no write to offer, which is a view this page is not showing rather than an unknown one.
         Tab = (Value("tab") ?? string.Empty).ToLowerInvariant() switch
         {
             StateTab => StateTab,
             EventsTab => EventsTab,
+            UpdateTab when Capabilities.CanUpdate => UpdateTab,
             _ => InfoTab,
         };
 
@@ -855,8 +945,10 @@ else
             return;
         }
 
-        StreamType = Types.Current.StreamedStreamIds
-            .FirstOrDefault(candidate => IdShape.Of(candidate)?.Matches(StreamId) == true);
+        // The stream and the identifier behind the two ids the store keyed this row by, worked out
+        // before it is read: the events tab narrows by what the identifier claims, the update tab
+        // hands the pair to the store, and neither depends on a row being found.
+        Identity = StreamedIdentity.Of(Types.Current, Kind, Aggregate, StreamId, AddressedId);
 
         var read = await Store.Model(new StreamedModelAddress(Kind, StreamId, StoreId));
 
@@ -875,8 +967,6 @@ else
         // Read once, because two things want it: the store, which narrows the history to these, and
         // the dropdown above the table, which offers those same types to narrow that history by.
         Applies = BoundaryEvents.AppliedBy(Aggregate, Loaded);
-
-        Rebuild();
 
         Descending = string.Equals(Value("dir"), "desc", StringComparison.OrdinalIgnoreCase);
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
@@ -919,56 +1009,6 @@ else
             EventTypes = Keys(Applies),
             Properties = Claim
         });
-    }
-
-    /// <summary>
-    /// Works out which identifier addressed this row and what it claims of its stream.
-    /// </summary>
-    /// <remarks>
-    /// The store keeps the id an identifier produced rather than the identifier, so both are worked
-    /// back to: whichever registered identifier of this aggregate writes ids of this shape, built
-    /// again from the values that id must have been made of. What it claims is then its own to say.
-    /// <para>
-    /// Every step can come up empty — nothing writes ids like this, the values cannot be recovered,
-    /// the type will not build — and each leaves the claim unknown rather than empty. The events tab
-    /// says which it is, because an unknown claim is a wider history than this model's.
-    /// </para>
-    /// </remarks>
-    private void Rebuild()
-    {
-        if (Aggregate is null || AddressedId is null)
-        {
-            return;
-        }
-
-        var identifiers = DomainTypeDescriber
-            .IdentifiersOf(Aggregate, Types.Current.StreamedAggregateIds);
-
-        Identifier = identifiers
-            .FirstOrDefault(candidate => IdShape.Of(candidate)?.Matches(AddressedId) == true);
-
-        if (Identifier is null || IdShape.Of(Identifier) is not { } shape)
-        {
-            return;
-        }
-
-        if (shape.ValuesFrom(AddressedId) is not { } values)
-        {
-            return;
-        }
-
-        var created = IdentifierFactory.Create(Identifier,
-            values.ToDictionary(value => value.Key, value => (string?)value.Value));
-
-        // Read off the rebuilt identifier rather than off the shape, because the values matter: the
-        // shape knows which properties are claimed and only an identifier built from this row's own
-        // values knows what they have to equal.
-        Claim = created.Instance switch
-        {
-            IAggregateId addressed => addressed.EventPropertyFilter?.ToDictionary(
-                property => property.Key, property => property.Value) ?? [],
-            _ => null
-        };
     }
 
     /// <summary>

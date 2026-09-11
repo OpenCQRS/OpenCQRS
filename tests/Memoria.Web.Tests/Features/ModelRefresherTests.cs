@@ -1,5 +1,7 @@
 using FluentAssertions;
+using Memoria.EventSourcing;
 using Memoria.EventSourcing.Dcb;
+using Memoria.EventSourcing.Domain;
 using Memoria.Results;
 using Memoria.Web.Extensibility;
 using NSubstitute;
@@ -152,6 +154,158 @@ public class ModelRefresherTests
         var store = Substitute.For<IDcbDomainService>();
 
         var refreshed = await ModelRefresher.Refresh(store, typeof(SampleDcbAggregate), new object());
+
+        refreshed.Refreshed.Should().BeFalse();
+        refreshed.Error.Should().NotBeNullOrWhiteSpace();
+    }
+
+    // The streamed store asks for two things rather than one: a model there is folded from a stream
+    // through an identifier, and the identifier alone says nothing about where to read. Everything
+    // else — which method a kind of model is refreshed through, and how what comes back is read — is
+    // the same question asked of the other store.
+
+    private static readonly SampleStreamId Stream = new("sample-1");
+
+    private static readonly SampleAggregateId StreamedAggregateId = new("abc-1");
+
+    private static readonly SampleProjectionId StreamedProjectionId = new("abc-1");
+
+    private static IDomainService StreamedAggregateStore(Result<SampleAggregate?> result)
+    {
+        var store = Substitute.For<IDomainService>();
+
+        store.UpdateAggregate<SampleAggregate>(
+                Arg.Any<IStreamId>(),
+                Arg.Any<IAggregateId<SampleAggregate>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(result));
+
+        return store;
+    }
+
+    private static IDomainService StreamedProjectionStore(Result<SampleProjection?> result)
+    {
+        var store = Substitute.For<IDomainService>();
+
+        store.UpdateProjection<SampleProjection>(
+                Arg.Any<IStreamId>(),
+                Arg.Any<IProjectionId<SampleProjection>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(result));
+
+        return store;
+    }
+
+    /// <summary>
+    /// The stream is handed over as well as the identifier, and it is the one the page was reading:
+    /// a snapshot folded from another stream would be a different model written under this one's id.
+    /// </summary>
+    [Fact]
+    public async Task Refreshes_a_streamed_aggregate_from_the_stream_it_was_folded_from()
+    {
+        var store = StreamedAggregateStore(new SampleAggregate());
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), Stream, StreamedAggregateId);
+
+        refreshed.Refreshed.Should().BeTrue();
+        refreshed.Error.Should().BeNull();
+
+        await store.Received(1).UpdateAggregate<SampleAggregate>(
+            Stream, StreamedAggregateId, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// A read model is refreshed by the store's own projection method, for the same reason it is on
+    /// the other store: asking for it through <c>UpdateAggregate</c> would not compile a closed
+    /// method at all.
+    /// </summary>
+    [Fact]
+    public async Task Refreshes_a_streamed_projection_through_the_stores_projection_method()
+    {
+        var store = StreamedProjectionStore(new SampleProjection());
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleProjection), Stream, StreamedProjectionId);
+
+        refreshed.Refreshed.Should().BeTrue();
+        refreshed.Error.Should().BeNull();
+
+        await store.Received(1).UpdateProjection<SampleProjection>(
+            Stream, StreamedProjectionId, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// No snapshot and no events this model folds. That is an answer rather than a fault: there was
+    /// nothing to bring up to date.
+    /// </summary>
+    [Fact]
+    public async Task Reports_a_streamed_model_with_nothing_to_refresh_as_an_answer()
+    {
+        var store = StreamedAggregateStore(new Success<SampleAggregate?>(null));
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), Stream, StreamedAggregateId);
+
+        refreshed.Refreshed.Should().BeFalse();
+        refreshed.Error.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Reports_what_the_streamed_store_said_went_wrong()
+    {
+        var store = StreamedAggregateStore(
+            (Result<SampleAggregate?>)new Failure(ErrorCode.Error, "Stream unreadable",
+                "The sequence was missing."));
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), Stream, StreamedAggregateId);
+
+        refreshed.Refreshed.Should().BeFalse();
+        refreshed.Error.Should().Contain("Stream unreadable").And.Contain("The sequence was missing.");
+    }
+
+    [Fact]
+    public async Task Reports_a_streamed_store_that_threw()
+    {
+        var store = Substitute.For<IDomainService>();
+
+        store.UpdateAggregate<SampleAggregate>(
+                Arg.Any<IStreamId>(),
+                Arg.Any<IAggregateId<SampleAggregate>>(),
+                Arg.Any<CancellationToken>())
+            .Returns<Task<Result<SampleAggregate?>>>(_ => throw new InvalidOperationException("no connection"));
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), Stream, StreamedAggregateId);
+
+        refreshed.Refreshed.Should().BeFalse();
+        refreshed.Error.Should().Contain("no connection");
+    }
+
+    /// <summary>
+    /// Nothing registered writes stream ids of this shape, so what the page recovered is not a
+    /// stream at all. Said rather than handed to a store that would refuse it further in.
+    /// </summary>
+    [Fact]
+    public async Task Reports_a_stream_that_is_not_one()
+    {
+        var store = Substitute.For<IDomainService>();
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), new object(), StreamedAggregateId);
+
+        refreshed.Refreshed.Should().BeFalse();
+        refreshed.Error.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Reports_a_streamed_identifier_that_names_neither_kind_of_model()
+    {
+        var store = Substitute.For<IDomainService>();
+
+        var refreshed = await ModelRefresher.Refresh(
+            store, typeof(SampleAggregate), Stream, new object());
 
         refreshed.Refreshed.Should().BeFalse();
         refreshed.Error.Should().NotBeNullOrWhiteSpace();

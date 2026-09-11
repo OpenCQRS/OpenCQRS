@@ -148,6 +148,36 @@ public sealed class IdShape
     }
 
     /// <summary>
+    /// Builds the type again from one of its ids.
+    /// </summary>
+    /// <param name="id">The id as the store holds it.</param>
+    /// <returns>
+    /// The stream or the identifier that would produce this id, or null when the id is not of this
+    /// shape, its holes cannot be lined up with the values that filled them, or the type refuses
+    /// them.
+    /// </returns>
+    /// <remarks>
+    /// <see cref="ValuesFrom"/> and then the constructor those values came out of. What a page
+    /// holding nothing but a stored row needs before it can ask the store to write: a read is
+    /// answered by the id itself, but folding a snapshot is the store's own operation and it takes
+    /// the thing rather than the string.
+    /// </remarks>
+    public object? Rebuild(string id)
+    {
+        if (ValuesFrom(id) is not { } values)
+        {
+            return null;
+        }
+
+        // A type that took nothing is built from nothing. The factory is no use for one: it reads
+        // the constructor asking for the most values and there is none to find.
+        return values.Count == 0
+            ? Create(Named)
+            : IdentifierFactory.Create(Named,
+                values.ToDictionary(value => value.Key, value => (string?)value.Value)).Instance;
+    }
+
+    /// <summary>
     /// The pattern as something that can be held against a string, built once per shape because a
     /// page asks it of every row it draws.
     /// </summary>

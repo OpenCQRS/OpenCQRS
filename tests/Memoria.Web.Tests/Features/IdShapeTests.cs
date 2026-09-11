@@ -235,6 +235,54 @@ public class IdShapeTests
     }
 
     /// <summary>
+    /// The pattern read and then run back through the constructor the values came out of. What a
+    /// page holding nothing but a stored row needs before it can ask the store to write: a read is
+    /// answered by the id itself, but folding a snapshot is the store's own operation and it takes
+    /// the thing rather than the string.
+    /// </summary>
+    [Fact]
+    public void Builds_the_type_again_from_one_of_its_ids()
+    {
+        IdShape.Of(typeof(SamplePrefixedAggregateId))!.Rebuild("order-123")
+            .Should().BeOfType<SamplePrefixedAggregateId>()
+            .Which.Id.Should().Be("order-123");
+    }
+
+    /// <summary>
+    /// Every hole filled from the id it left, so a type built from several values comes back whole
+    /// rather than with its first value in every position.
+    /// </summary>
+    [Fact]
+    public void Builds_a_type_taking_more_than_one_value_again()
+    {
+        IdShape.Of(typeof(SampleTwoPartStreamId))!.Rebuild("sample:alpha:2024")
+            .Should().BeOfType<SampleTwoPartStreamId>()
+            .Which.Id.Should().Be("sample:alpha:2024");
+    }
+
+    /// <summary>
+    /// Nothing went in, so nothing is needed to build it again. Worth its own case because the
+    /// factory reads the constructor asking for the most values and there is none to find.
+    /// </summary>
+    [Fact]
+    public void Builds_a_type_that_takes_nothing()
+    {
+        IdShape.Of(typeof(SampleOnlyStreamId))!.Rebuild("samples")
+            .Should().BeOfType<SampleOnlyStreamId>()
+            .Which.Id.Should().Be("samples");
+    }
+
+    /// <summary>
+    /// An id of another shape has none of this type's values in it, so nothing is built rather than
+    /// something built from a guess at which part was which.
+    /// </summary>
+    [Fact]
+    public void Builds_nothing_from_an_id_of_another_shape()
+    {
+        IdShape.Of(typeof(SamplePrefixedAggregateId))!.Rebuild("summary-123").Should().BeNull();
+    }
+
+    /// <summary>
     /// Probing means building one, so the answer is kept: neither the type nor what it produces
     /// changes while the assemblies are loaded.
     /// </summary>
