@@ -51,11 +51,8 @@ else
         <span class="boundary-label">Stream</span>
         <code>@StreamId</code>
 
-        @if (StreamType is { } named)
+        @if (Identifier is { } named)
         {
-            @* Which of the registered streams writes ids of this shape. A hint rather than a fact:
-               the store keeps the id and not the type that made it, so this is what it must have
-               been rather than what it says it is. *@
             <span class="hint">@named.Name</span>
         }
     </p>
