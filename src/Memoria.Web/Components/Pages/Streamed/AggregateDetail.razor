@@ -39,23 +39,6 @@ else
     @* Named as every list here names a type: what it is bound as, and the version of that
        binding. Two versions of one name are two aggregates, and the heading has to say which. *@
     <h1>@Heading</h1>
-    <p class="lede">What the store holds under <code>@StoreId</code>, and what it was folded from.</p>
-
-    @* The stream itself, above the tabs rather than inside the info tab. All three are views of
-       what it holds — the snapshot folded out of it, the events inside it — so it belongs where it
-       stays put as they change rather than on one of them.
-
-       The same line the DCB pages give a boundary, because it answers the same question: what this
-       model was folded from. There it is a query over tags; here it is a place. *@
-    <p class="boundary">
-        <span class="boundary-label">Stream</span>
-        <code>@StreamId</code>
-
-        @if (Identifier is { } named)
-        {
-            <span class="hint">@named.Name</span>
-        }
-    </p>
 
     @* The store failing to answer for the aggregate at all, which leaves both the facts and the
        state without their values — so it is said once, above the tabs, rather than in each. *@
@@ -99,17 +82,14 @@ else
             else
             {
                 <dl class="facts">
-                    @* The stream is not among these. It is above the tabs, where it stays put for
-                       all three rather than being a fact this one alone gets to show. *@
-
                     @* What the store filed it under, then the id inside that key: the version the
                        store joins on is the type's, not the model's, and a reader matching this
                        page against the row they clicked wants the whole key. *@
+                    <dt>Stream Id</dt>
+                    <dd><code>@Stored.StreamId</code></dd>
+                    
                     <dt>Id</dt>
                     <dd><code>@Stored.StoreId</code></dd>
-
-                    <dt>Addressed id</dt>
-                    <dd><code>@Stored.AddressedId</code></dd>
 
                     @* Which identifier writes ids of that shape, if any of the registered ones do.
                        A fact about the types rather than about the row — the store keeps the id an

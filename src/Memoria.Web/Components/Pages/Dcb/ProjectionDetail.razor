@@ -41,7 +41,6 @@ else
     @* Named as every list here names a type: what it is bound as, and the version of that
        binding. Two versions of one name are two projections, and the heading has to say which. *@
     <h1>@Heading</h1>
-    <p class="lede">The snapshot stored under <code>@Identifier.Name</code> carries.</p>
 
     @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
        what it selects — the snapshot folded from it, the events inside it, the refresh that folds
@@ -126,6 +125,18 @@ else
                     <dt>Store id</dt>
                     <dd><code>@Stored.StoreId</code></dd>
 
+                    <dt>Identifier</dt>
+                    <dd>
+                        @if (Identifier is { } identifier)
+                        {
+                            <code>@identifier.Name</code>
+                        }
+                        else
+                        {
+                            <span class="missing">Nothing registered writes ids of this shape</span>
+                        }
+                    </dd>
+                    
                     <dt>Model type</dt>
                     @* The key the row was written under, said the way a version is said rather
                        than as the store joins it. Read off the row rather than off the type: this
