@@ -679,18 +679,50 @@ h2:focus {
     min-width: 0;
 }
 
-/* The index as one bordered group rather than a bare column of links: an aggregate to a row,
-   divided by rules, with the identifiers it can be loaded by folded under its own row. Bounded so
-   that a row opening does not read as the page growing a new section, and rounded because the
-   group is a single object beside the panel it drives. */
-.panel-index > ul {
+/* The index as a card, the same object every other surface on these pages is: the sheet's white
+   over the page's ground, carried by its rule and rounded to the same corner. It used to be a
+   bordered group with nothing behind it, so the page's grey showed through — a hole in the page
+   beside the white card of facts it drives, which was the one thing on these pages that did not
+   look like the rest of them.
+
+   The card is drawn on the panel rather than on the list inside it, because the list is no longer
+   the whole of it: a cap row names what is in the card the way a table's column headings name what
+   is under them, and the two have to sit inside one edge. */
+.panel-index {
+    /* As tall as the rows in it, rather than as tall as the panel beside it. A grid item stretches
+       to its row by default, which cost nothing while this column had no fill — and once it had
+       one, a list of three types beside a long panel of facts was a card with a hand's width of
+       empty sheet under its last row. */
+    align-self: start;
+    background: var(--surface);
     border: 1px solid var(--rule);
-    border-radius: 6px;
+    border-radius: 8px;
+    /* The cap and the last row take the card's corners; without this their own backgrounds square
+       them off again. */
+    overflow: hidden;
+}
+
+    /* What the card holds and how much of it, in the voice a table's column headings are set in:
+       the same ground, size, weight and letter-spacing, so a reader meets one kind of caption
+       across these pages. It also gives the column a top edge to line up with the heading of the
+       panel beside it, which a list starting straight into its first row had nothing to align. */
+    .panel-index .index-cap {
+        background: var(--sunk);
+        border-bottom: 1px solid var(--rule);
+        color: var(--ink-soft);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        margin: 0;
+        padding: 0.5rem 1rem;
+        text-transform: uppercase;
+    }
+
+/* One type to a row, divided by rules, with what addresses it folded under its own row. The border
+   and the radius belong to the card now; the list only has to be a list. */
+.panel-index > ul {
     list-style: none;
     margin: 0;
-    /* The first and last rows take the group's corners; without this a row's own background
-       squares them off again. */
-    overflow: hidden;
     padding: 0;
 }
 
@@ -698,24 +730,35 @@ h2:focus {
         border-top: 1px solid var(--rule);
     }
 
-    /* The whole group of the aggregate being shown on the right, so an open row and the
-       identifiers under it are marked as one block rather than only its first line. */
+    /* The whole group of the type being shown on the right, so an open row and what is folded under
+       it are marked as one block rather than only its first line.
+
+       A tint of the accent rather than the page's ground, which is what this used to take: on a
+       card that is now white, the page's grey made the row the reader had chosen the dullest one in
+       the list — the selection read as a dent rather than as a choice. Written against the accent's
+       channels so it is the same colour as the bar beside it at every strength, and so the dark
+       theme gets a light veil over a dark card rather than a colour that has to be picked twice. */
     .panel-index > ul > li.current {
-        background: var(--ground);
+        background: rgb(var(--accent-rgb) / 0.07);
         box-shadow: inset 0.2rem 0 0 var(--accent);
     }
 
-    /* The row that names an aggregate, whether it stands alone or opens the ones under it. */
+    /* The row that names a type, whether it stands alone or opens what is under it. The padding a
+       table's outermost cells take, so a name here starts on the same line a value in the card
+       beside it does. */
     .panel-index .index-row {
         display: block;
         min-width: 0;
-        padding: 0.6rem 0.5rem;
+        padding: 0.5rem 0.75rem 0.5rem 1rem;
         text-decoration: none;
     }
 
+    /* A veil of the page's own ink rather than a fixed grey: the dark theme turns the ink light,
+       and a row lifts off a dark card there for the same reason it settles into a light one. It
+       used to be the page's ground, which on a white card is the hole this stopped being. */
     .panel-index summary:hover,
     .panel-index .index-row:hover {
-        background: var(--ground);
+        background: rgb(var(--ink-rgb) / 0.045);
     }
 
     .panel-index summary {
@@ -736,16 +779,18 @@ h2:focus {
     }
 
     /* The disclosure caret, on the far side of the row from the name and outside the link: what is
-       under the row is opened here, and the name beside it still selects the aggregate. Drawn the
-       same way the header menu's is, so a caret means one thing across the site. */
+       under the row is opened here, and the name beside it still selects the type. Drawn the same
+       way the header menu's is, so a caret means one thing across the site. Set to finish on the
+       card's own padding, so the carets run down a line the values in the card opposite are set
+       against, and in the faint ink rather than the soft: it is the quietest thing on the row. */
     .panel-index summary::after {
         border-left: 0.3rem solid transparent;
         border-right: 0.3rem solid transparent;
-        border-top: 0.3rem solid var(--ink-soft);
+        border-top: 0.3rem solid var(--ink-faint);
         content: "";
         flex: none;
         height: 0;
-        margin: 0 0.6rem;
+        margin: 0 1rem 0 0.25rem;
         width: 0;
     }
 
@@ -754,29 +799,44 @@ h2:focus {
     }
 
     /* Broken mid-word if it has to be: the column is narrow, a bound name is as long as it is, and
-       it is now the only thing on the row to give the width to. */
+       it is the only thing on the row to give the width to.
+
+       Set in the page's ink rather than the accent. A column of nine bold violet names was the
+       loudest thing on a page whose tables set every value in plain ink, and it is the navigation
+       rather than the reading — so the list now says which one is being read the way the tabs above
+       the panel do, by marking the current one and leaving the rest alone. */
     .panel-index .index-name {
-        color: var(--accent);
+        color: var(--ink);
         display: block;
-        font-weight: 600;
         overflow-wrap: anywhere;
     }
 
+    /* The one being read: the accent it is marked by, at the weight that used to be on all of
+       them. It is the brightest row in the card, which is what a selection should be. */
     .panel-index > ul > li.current .index-name {
-        color: var(--ink);
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    /* The promise a link makes on the way to being clicked. The current row is already this
+       colour, so nothing about it changes under the pointer. */
+    .panel-index .index-row:hover .index-name {
+        color: var(--accent);
     }
 
     /* What a row can be loaded by, as rows of the same group, set quieter than the name above them
        because they are what one row leads to and not another thing to pick from the list. Divided
        off from that name by a rule held back from both edges: it separates the two halves of one
-       aggregate, and a full-width rule here would be read as the end of the aggregate itself. */
+       type, and a full-width rule here would be read as the end of the type itself. */
     .panel-index .index-links {
         border-top: 1px solid var(--rule);
         list-style: none;
-        margin: 0 0.5rem;
+        margin: 0 0.75rem 0 1rem;
         padding: 0.25rem 0 0.35rem;
     }
 
+        /* Stepped in from the name above it, so what is folded under a row reads as being under
+           that row rather than as more rows of the list. */
         .panel-index .index-links a {
             align-items: center;
             color: var(--ink-soft);
@@ -784,7 +844,7 @@ h2:focus {
             font-size: var(--text-sm);
             gap: 0.4rem;
             overflow-wrap: anywhere;
-            padding: 0.3rem 0.25rem;
+            padding: 0.3rem 0.25rem 0.3rem 0.5rem;
             text-decoration: none;
         }
 
@@ -793,6 +853,24 @@ h2:focus {
         .panel-index .index-links a:hover {
             color: var(--accent);
             text-decoration: underline;
+        }
+
+        /* The mark that says what kind of place the row leads to — the same one drawn on the tile
+           that enters it from the section page, so a store's mark met once is met again here. It
+           replaced a magnifier that stood for looking at data and was drawn nowhere else on the
+           site; the six section marks are the set the application has, and this is one of them.
+
+           Sized against the small text it sits in rather than against a tile's prose, and held off
+           the ink's weight so the mark stays behind the name it fronts. */
+        .panel-index .index-links .glyph {
+            color: var(--ink-faint);
+            flex: none;
+            height: 0.95rem;
+            width: 0.95rem;
+        }
+
+        .panel-index .index-links a:hover .glyph {
+            color: var(--accent);
         }
 
 .panel-detail h2 {
@@ -1209,7 +1287,7 @@ h2:focus {
         }
 
     /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
-       it. The mark's own size is the .lens rule below, which the index list uses too. */
+       it. The mark's own size is the .lens rule below. */
     .grid .icon-link {
         align-items: center;
         border-radius: 3px;
@@ -1229,9 +1307,11 @@ h2:focus {
             outline-offset: 1px;
         }
 
-/* The mark for looking at what is stored, wherever it is drawn: on its own as a row's one link, or
-   in front of the name in a list. Sized in ems so it follows the text beside it rather than a fixed
-   pixel, and kept from shrinking when that text is long enough to wrap. */
+/* The mark for looking at what is stored, drawn as a row's one link in a column that would
+   otherwise repeat one word down its whole length. It used to front the names in the index lists
+   too; those now carry the section mark of the place they lead to, which is the mark the same link
+   is entered by on the section page. Sized in ems so it follows the text beside it rather than a
+   fixed pixel, and kept from shrinking when that text is long enough to wrap. */
 .lens {
     flex: none;
     height: 1em;

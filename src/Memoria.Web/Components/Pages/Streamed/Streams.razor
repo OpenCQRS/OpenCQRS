@@ -25,6 +25,11 @@ else
 {
     <div class="panels">
         <nav class="panel panel-index" aria-label="Streams">
+            @* What the card holds, in the voice the tables cap their columns in — the card beside
+               this one is capped by the name of what is being read, and this one by what there is
+               to read. It is also the only place on the page the count appears. *@
+            <p class="index-cap">@Counted(StreamTypes.Count, "stream")</p>
+
             <ul>
                 @foreach (var stream in StreamTypes)
                 {
@@ -45,7 +50,7 @@ else
                             <summary>@NameRow(stream)</summary>
 
                             <ul class="index-links">
-                                @foreach (var (label, page) in DataPages)
+                                @foreach (var (label, page, mark) in DataPages)
                                 {
                                     <li>
                                         @* The stream travels in the address rather than the row
@@ -56,11 +61,12 @@ else
                                            page narrows by the type, matching the ids it writes, so
                                            this is the same choice its own dropdown offers. *@
                                         <a href="@DataLink(stream, page)">
-                                            @* The same lens the models' rows are read by, in front
-                                               of the word rather than opposite it: the whole row is
-                                               the one link, and the lens says what kind of place it
-                                               leads to. *@
-                                            @Lens
+                                            @* The mark the section it leads to is entered by
+                                               everywhere else, in front of the word rather than
+                                               opposite it: the whole row is the one link, and the
+                                               mark says which of the three it leads to without
+                                               repeating one lens down all of them. *@
+                                            <SectionMark Kind="mark"/>
                                             @label
                                         </a>
                                     </li>
@@ -248,13 +254,15 @@ else
 
     /// <summary>
     /// What is stored of a stream, and the page listing each of them. Named the way the menu and
-    /// the home page name the same three, so a reader meets one set of words for them.
+    /// the home page name the same three, so a reader meets one set of words for them — and marked
+    /// the way those pages are entered everywhere else, so the three rows are told apart by their
+    /// marks as well as by their words.
     /// </summary>
-    private static readonly IReadOnlyList<(string Label, string Page)> DataPages =
+    private static readonly IReadOnlyList<(string Label, string Page, SectionKind Mark)> DataPages =
     [
-        ("Events", "streamed/events/data"),
-        ("Aggregates", "streamed/aggregates/data"),
-        ("Projections", "streamed/projections/data")
+        ("Events", "streamed/events/data", SectionKind.Events),
+        ("Aggregates", "streamed/aggregates/data", SectionKind.Aggregates),
+        ("Projections", "streamed/projections/data", SectionKind.Projections)
     ];
 
     /// <summary>
@@ -312,15 +320,10 @@ else
         </text>;
 
     /// <summary>
-    /// The lens that stands for looking at what is stored, the same mark the models' lists reach
-    /// their own stored rows by, so one mark means one thing across these pages.
+    /// How many of something, written so one of it is not one of them.
     /// </summary>
-    private RenderFragment Lens =>
-        @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
-              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <circle cx="7" cy="7" r="4.25"/>
-            <path d="M10.2 10.2 13.5 13.5"/>
-        </svg>;
+    private static string Counted(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
 
     /// <summary>
     /// How far under something a row sits, as a class rather than a measurement, so how wide a step

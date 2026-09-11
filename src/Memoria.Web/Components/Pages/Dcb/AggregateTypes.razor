@@ -27,6 +27,12 @@ else
 {
     <div class="panels">
         <nav class="panel panel-index" aria-label="Aggregates">
+            @* What the card holds, in the voice the tables cap their columns in — the card beside
+               this one is capped by the name of what is being read, and this one by what there is
+               to read. It is also the only place on the page the count appears: the section page
+               says how many there are before a reader comes here, and nothing said it after. *@
+            <p class="index-cap">@Counted(Aggregates.Count, "aggregate")</p>
+
             <ul>
                 @foreach (var aggregate in Aggregates)
                 {
@@ -51,12 +57,14 @@ else
                                     @foreach (var identifier in identifiers)
                                     {
                                         <li>
-                                            @* The same lens the identifiers tab reads a row by, in
-                                               front of the name rather than opposite it: here the
-                                               whole row is the one link, and the lens says what
-                                               kind of place it leads to rather than which row. *@
+                                            @* The mark the Data tile on the section page is entered
+                                               through, in front of the name rather than opposite
+                                               it: here the whole row is the one link, and the mark
+                                               says what kind of place it leads to rather than which
+                                               row. The identifiers tab keeps the lens, because
+                                               there the mark is the link and one per row. *@
                                             <a href="@DataLink(aggregate, identifier)">
-                                                @Lens
+                                                <SectionMark Kind="SectionKind.Data"/>
                                                 @identifier.Name
                                             </a>
                                         </li>
@@ -514,9 +522,16 @@ else
         </ul>;
 
     /// <summary>
-    /// The lens that stands for looking at what is stored under an identifier. Written once because
-    /// the index and the identifiers tab reach the same page by it, and the two should not drift
-    /// into being two different marks for one destination.
+    /// How many of something, written so one of it is not one of them.
+    /// </summary>
+    private static string Counted(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+    /// <summary>
+    /// The lens that stands for looking at what is stored under an identifier, in the one column of
+    /// the identifiers tab that is a link per row. The index reaches the same page by the section
+    /// mark of the place it leads to, because there the whole row is the link and the mark is
+    /// beside a name rather than standing in for one.
     /// </summary>
     private RenderFragment Lens =>
         @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"

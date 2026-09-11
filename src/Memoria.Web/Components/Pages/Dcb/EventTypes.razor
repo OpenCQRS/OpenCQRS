@@ -27,6 +27,12 @@ else
 {
     <div class="panels">
         <nav class="panel panel-index" aria-label="Events">
+            @* What the card holds, in the voice the tables cap their columns in — the card beside
+               this one is capped by the name of what is being read, and this one by what there is
+               to read. It is also the only place on the page the count appears: the section page
+               says how many there are before a reader comes here, and nothing said it after. *@
+            <p class="index-cap">@Counted(Events.Count, "event type")</p>
+
             <ul>
                 @foreach (var @event in Events)
                 {
@@ -47,11 +53,13 @@ else
 
                             <ul class="index-links">
                                 <li>
-                                    @* The same lens the models' rows are read by, in front of the
-                                       word rather than opposite it: the whole row is the one link,
-                                       and the lens says what kind of place it leads to. *@
+                                    @* The mark the Data tile on the section page is entered
+                                       through, in front of the word rather than opposite it: the
+                                       whole row is the one link, and the mark says what kind of
+                                       place it leads to. The same mark in both places, so the way
+                                       into the store looks the same wherever a reader meets it. *@
                                     <a href="@DataLink(@event)">
-                                        @Lens
+                                        <SectionMark Kind="SectionKind.Data"/>
                                         Data
                                     </a>
                                 </li>
@@ -287,15 +295,10 @@ else
         </text>;
 
     /// <summary>
-    /// The lens that stands for looking at what is stored, the same mark the models' lists reach
-    /// their own stored rows by, so one mark means one thing across these pages.
+    /// How many of something, written so one of it is not one of them.
     /// </summary>
-    private RenderFragment Lens =>
-        @<svg class="lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
-              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <circle cx="7" cy="7" r="4.25"/>
-            <path d="M10.2 10.2 13.5 13.5"/>
-        </svg>;
+    private static string Counted(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
 
     /// <summary>
     /// How far under something a row sits, as a class rather than a measurement, so how wide a step
