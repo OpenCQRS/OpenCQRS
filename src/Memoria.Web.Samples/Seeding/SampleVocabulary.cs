@@ -48,6 +48,39 @@ public static class SampleVocabulary
         "stock count", "damaged in the warehouse", "found behind the racking"
     ];
 
+    private static readonly string[] Buyers =
+    [
+        "a.patel", "j.morrison", "s.okafor", "m.reid"
+    ];
+
+    private static readonly string[] PurchaseOrderCancellationReasons =
+    [
+        "supplier could not deliver in time", "raised against the wrong supplier",
+        "the shelves filled up without it"
+    ];
+
+    private static readonly string[] ReviewTitles =
+    [
+        "Does the job", "Better than expected", "Not what the picture showed",
+        "Sturdy and well made", "Would buy again", "Arrived scratched"
+    ];
+
+    private static readonly string[] ReviewBodies =
+    [
+        "Exactly as described and quick to arrive.",
+        "Solid enough, though the finish is duller than the photos.",
+        "Three weeks in and it is already showing wear.",
+        "A gift for my sister, who has not stopped mentioning it since.",
+        "Replaced the one I had for a decade. This one feels like it will last as long.",
+        "Smaller than I expected, which turned out to be exactly right for the kitchen."
+    ];
+
+    private static readonly string[] ReviewRemovalReasons =
+    [
+        "the author asked for it to be taken down", "it broke the house rules",
+        "it reviewed the courier rather than the product"
+    ];
+
     public static string ProductName(Random random) => Pick(random, Products);
 
     public static string Carrier(Random random) => Pick(random, Carriers);
@@ -59,6 +92,17 @@ public static class SampleVocabulary
     public static string DiscontinuationReason(Random random) => Pick(random, DiscontinuationReasons);
 
     public static string AdjustmentReason(Random random) => Pick(random, AdjustmentReasons);
+
+    public static string Buyer(Random random) => Pick(random, Buyers);
+
+    public static string PurchaseOrderCancellationReason(Random random) =>
+        Pick(random, PurchaseOrderCancellationReasons);
+
+    public static string ReviewTitle(Random random) => Pick(random, ReviewTitles);
+
+    public static string ReviewBody(Random random) => Pick(random, ReviewBodies);
+
+    public static string ReviewRemovalReason(Random random) => Pick(random, ReviewRemovalReasons);
 
     /// <summary>
     /// An identifier of the given kind, short enough to retype.

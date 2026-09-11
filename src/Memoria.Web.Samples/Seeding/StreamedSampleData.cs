@@ -2,6 +2,7 @@ using Memoria.EventSourcing;
 using Memoria.EventSourcing.Domain;
 using Memoria.Results;
 using Memoria.Web.Samples.Streamed.Aggregates;
+using Memoria.Web.Samples.Streamed.Events;
 using Memoria.Web.Samples.Streamed.Projections;
 using Memoria.Web.Samples.Streamed.Streams;
 using static Memoria.Web.Samples.Seeding.SampleVocabulary;
@@ -9,7 +10,7 @@ using static Memoria.Web.Samples.Seeding.SampleVocabulary;
 namespace Memoria.Web.Samples.Seeding;
 
 /// <summary>
-/// Writes customers, their orders, and the models folded from them.
+/// Writes customers, their orders, the reviews products collect, and the models folded from them.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -38,6 +39,13 @@ public static class StreamedSampleData
         for (var customer = 0; customer < customers; customer++)
         {
             await AddCustomer(store, random, time, report, cancellationToken);
+        }
+
+        var reviewedProducts = random.Next(1, 4);
+
+        for (var product = 0; product < reviewedProducts; product++)
+        {
+            await AddProductReviews(store, random, report, cancellationToken);
         }
     }
 
@@ -145,6 +153,130 @@ public static class StreamedSampleData
     }
 
     /// <summary>
+    /// Fills one product's review stream: a handful of reviews, the votes other shoppers cast on
+    /// them, and the summary folded from the lot.
+    /// </summary>
+    /// <remarks>
+    /// The summary is refreshed after a randomly chosen review, so it ends up current, behind, or
+    /// missing depending on where that lands — the same three states the customer's models are left
+    /// in.
+    /// </remarks>
+    private static async Task AddProductReviews(
+        IDomainService store,
+        Random random,
+        SeedReport report,
+        CancellationToken cancellationToken)
+    {
+        var productId = Id(random, "p");
+        var stream = new ProductReviewStreamId(productId);
+        var reviews = random.Next(1, 4);
+
+        // Which review the whole-stream summary is refreshed after. Land on the last one and it
+        // ends up current; land earlier and every review after it leaves it behind.
+        var refreshSummaryAfter = random.Next(reviews);
+
+        for (var review = 0; review < reviews; review++)
+        {
+            await AddReview(store, stream, productId, random, report, cancellationToken);
+
+            if (review == refreshSummaryAfter)
+            {
+                await store.UpdateProjection(stream, new ProductRatingSummaryId(productId), cancellationToken);
+            }
+        }
+
+        report.Add(new SeededModel("streamed", "projection", nameof(ProductRatingSummary),
+            nameof(ProductRatingSummaryId), productId,
+            () => MeasureProjection(store, stream, new ProductRatingSummaryId(productId))));
+    }
+
+    /// <summary>
+    /// One review's life: written, sometimes revised, occasionally taken down, and voted on by
+    /// other shoppers.
+    /// </summary>
+    /// <remarks>
+    /// Most reviews are driven through the current <see cref="ProductReview"/>; a share are driven
+    /// through <see cref="ProductReviewV1"/> instead, so the store holds snapshots of both shapes
+    /// side by side and the old revision event next to the new — which is the whole point of the
+    /// versioned pair. The votes are appended directly, because no write model stages them: a vote
+    /// belongs to the shopper who cast it, not to the review's own decisions.
+    /// </remarks>
+    private static async Task AddReview(
+        IDomainService store,
+        ProductReviewStreamId stream,
+        string productId,
+        Random random,
+        SeedReport report,
+        CancellationToken cancellationToken)
+    {
+        var reviewId = Id(random, "r");
+        var customerId = Id(random, "c");
+        var sequence = await LatestSequence(store, stream, cancellationToken);
+
+        if (Chance(random, 30))
+        {
+            var oldReview = new ProductReviewV1();
+            Allow(oldReview.Submit(reviewId, productId, customerId, random.Next(1, 6), ReviewBody(random)));
+
+            if (Chance(random, 40))
+            {
+                Allow(oldReview.Revise(ReviewBody(random)));
+            }
+
+            var oldEvents = oldReview.UncommittedEvents.Count();
+            Check(await store.SaveAggregate(stream, new ProductReviewV1Id(reviewId), oldReview, sequence, cancellationToken));
+            report.Appended(oldEvents);
+
+            report.Add(new SeededModel("streamed", "aggregate", nameof(ProductReviewV1),
+                nameof(ProductReviewV1Id), reviewId,
+                () => MeasureAggregate(store, stream, new ProductReviewV1Id(reviewId))));
+        }
+        else
+        {
+            var review = new ProductReview();
+            Allow(review.Submit(reviewId, productId, customerId, random.Next(1, 6),
+                ReviewTitle(random), ReviewBody(random)));
+
+            if (Chance(random, 40))
+            {
+                Allow(review.Revise(random.Next(1, 6), ReviewTitle(random), ReviewBody(random)));
+            }
+
+            if (Chance(random, 15))
+            {
+                Allow(review.Remove(ReviewRemovalReason(random)));
+            }
+
+            // Half the reviews are snapshotted as they are written; the rest only append, which is
+            // how a review's write model ends up with events waiting for it.
+            var events = review.UncommittedEvents.ToArray();
+
+            Check(Chance(random, 50)
+                ? await store.SaveAggregate(stream, new ProductReviewId(reviewId), review, sequence, cancellationToken)
+                : await store.SaveEvents(stream, events, sequence, cancellationToken));
+
+            report.Appended(events.Length);
+
+            report.Add(new SeededModel("streamed", "aggregate", nameof(ProductReview),
+                nameof(ProductReviewId), reviewId,
+                () => MeasureAggregate(store, stream, new ProductReviewId(reviewId))));
+        }
+
+        var votes = random.Next(0, 4);
+
+        if (votes > 0)
+        {
+            var voteEvents = Enumerable.Range(0, votes)
+                .Select(IEvent (_) => new ProductReviewVotedEvent(reviewId, productId, Chance(random, 70)))
+                .ToArray();
+
+            sequence = await LatestSequence(store, stream, cancellationToken);
+            Check(await store.SaveEvents(stream, voteEvents, sequence, cancellationToken));
+            report.Appended(votes);
+        }
+    }
+
+    /// <summary>
     /// One order's life, as a list of calls on the aggregate. Each of them produces exactly one
     /// event, which is what lets the caller decide how many of them the snapshot is written at.
     /// </summary>
@@ -235,6 +367,18 @@ public static class StreamedSampleData
             {
                 throw new InvalidOperationException($"The sample order script was refused: {refusal}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Refuses to carry on if the domain refused a step, for the same reason <see cref="Drive"/>
+    /// does: a refusal here is a bug in the script, not a fact about the data.
+    /// </summary>
+    private static void Allow(string? refusal)
+    {
+        if (refusal is not null)
+        {
+            throw new InvalidOperationException($"The sample review script was refused: {refusal}");
         }
     }
 

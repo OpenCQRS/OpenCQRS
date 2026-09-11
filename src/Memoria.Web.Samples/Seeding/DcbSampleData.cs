@@ -8,7 +8,8 @@ using static Memoria.Web.Samples.Seeding.SampleVocabulary;
 namespace Memoria.Web.Samples.Seeding;
 
 /// <summary>
-/// Writes a catalogue, stock for it, and orders holding some of that stock.
+/// Writes a catalogue, stock for it, orders holding some of that stock, and the purchase orders
+/// that restock it.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -54,17 +55,34 @@ public static class DcbSampleData
             orders.Add(await AddOrder(dcb, products, random, report, cancellationToken));
         }
 
+        var suppliers = new List<string>();
+        var purchaseOrders = new List<string>();
+
+        for (var index = 0; index < random.Next(1, 3); index++)
+        {
+            var supplierId = Id(random, "s");
+            suppliers.Add(supplierId);
+
+            foreach (var _ in Enumerable.Range(0, random.Next(1, 4)))
+            {
+                purchaseOrders.Add(
+                    await AddPurchaseOrder(dcb, supplierId, products, random, report, cancellationToken));
+            }
+        }
+
         // The middle of the run. What is refreshed here is snapshotted before the last phase appends
         // anything, so every one of these ends up behind.
-        await Refresh(dcb, products, orders, random, percent: 45, cancellationToken);
+        await Refresh(dcb, products, orders, suppliers, purchaseOrders, random, percent: 45, cancellationToken);
 
-        var lateOrder = await AddLaterEvents(dcb, products, orders, random, report, cancellationToken);
+        var lateOrder = await AddLaterEvents(
+            dcb, products, orders, purchaseOrders, random, report, cancellationToken);
 
         // And the end of it. What is refreshed here has nothing appended after it, so it is current.
         // The late order is left out of both refreshes, so it holds events and no snapshot at all.
-        await Refresh(dcb, products, orders, random, percent: 40, cancellationToken);
+        await Refresh(dcb, products, orders, suppliers, purchaseOrders, random, percent: 40, cancellationToken);
 
-        Report(products, lateOrder is null ? orders : [..orders, lateOrder], dcb, report);
+        Report(products, lateOrder is null ? orders : [..orders, lateOrder],
+            suppliers, purchaseOrders, dcb, report);
     }
 
     /// <summary>
@@ -129,6 +147,67 @@ public static class DcbSampleData
     }
 
     /// <summary>
+    /// Raises one purchase order with a supplier and walks it some way through its life.
+    /// </summary>
+    /// <remarks>
+    /// Every decision goes through <see cref="PurchaseOrder"/> itself, which reads only the order's
+    /// own tag; the events it stages carry the supplier's tag as well, which is what
+    /// <see cref="SupplierPurchasing"/> folds from. Some orders stop as drafts, some are cancelled,
+    /// and approved ones receive all, part, or none of what they asked for, so the supplier's page
+    /// has every state to show.
+    /// </remarks>
+    private static async Task<string> AddPurchaseOrder(
+        IDcbDomainService dcb,
+        string supplierId,
+        IReadOnlyList<SeededProduct> products,
+        Random random,
+        SeedReport report,
+        CancellationToken cancellationToken)
+    {
+        var purchaseOrderId = Id(random, "po");
+        var id = new PurchaseOrderId(purchaseOrderId);
+
+        await Decide(dcb, id, report, cancellationToken,
+            model => model.Raise(purchaseOrderId, supplierId));
+
+        var lines = Sample(products, random.Next(1, 4), random)
+            .Select(product => (product.ProductId, Quantity: random.Next(5, 30), Cost: Price(random, 2, 120)))
+            .ToList();
+
+        foreach (var line in lines)
+        {
+            await Decide(dcb, id, report, cancellationToken,
+                model => model.AddLine(line.ProductId, line.Quantity, line.Cost));
+        }
+
+        if (Chance(random, 15))
+        {
+            var reason = PurchaseOrderCancellationReason(random);
+            await Decide(dcb, id, report, cancellationToken, model => model.Cancel(reason));
+            return purchaseOrderId;
+        }
+
+        if (!Chance(random, 75))
+        {
+            // Left as a draft, which is a perfectly ordinary place for a purchase order to sit.
+            return purchaseOrderId;
+        }
+
+        var approver = Buyer(random);
+        await Decide(dcb, id, report, cancellationToken, model => model.Approve(approver));
+
+        foreach (var line in lines.Where(_ => Chance(random, 70)))
+        {
+            // All of the line or part of it, so some orders end up received and some keep waiting.
+            var delivered = Chance(random, 60) ? line.Quantity : random.Next(1, line.Quantity + 1);
+            await Decide(dcb, id, report, cancellationToken,
+                model => model.Receive(line.ProductId, delivered));
+        }
+
+        return purchaseOrderId;
+    }
+
+    /// <summary>
     /// Everything that happens to the catalogue and the shelves after the first orders are in.
     /// </summary>
     /// <remarks>
@@ -142,6 +221,7 @@ public static class DcbSampleData
         IDcbDomainService dcb,
         IReadOnlyList<SeededProduct> products,
         IReadOnlyList<string> orders,
+        IReadOnlyList<string> purchaseOrders,
         Random random,
         SeedReport report,
         CancellationToken cancellationToken)
@@ -196,6 +276,30 @@ public static class DcbSampleData
             }
         }
 
+        foreach (var purchaseOrderId in purchaseOrders.Where(_ => Chance(random, 40)))
+        {
+            // A late delivery against whatever is still outstanding. Decided inside the fold,
+            // because only the folded model knows which lines are still waiting; an order with
+            // nothing outstanding refuses, and the run simply moves on.
+            await Decide(dcb, new PurchaseOrderId(purchaseOrderId), report, cancellationToken,
+                model =>
+                {
+                    var outstanding = model.Ordered
+                        .Where(line => model.Received.GetValueOrDefault(line.Key) < line.Value)
+                        .ToList();
+
+                    if (outstanding.Count == 0)
+                    {
+                        return "Nothing is outstanding on this order.";
+                    }
+
+                    var line = outstanding[random.Next(outstanding.Count)];
+                    var waiting = line.Value - model.Received.GetValueOrDefault(line.Key);
+
+                    return model.Receive(line.Key, random.Next(1, waiting + 1));
+                }, snapshot: Chance(random, 50));
+        }
+
         // A late order, so the last events in the log are not all corrections. It is placed after
         // the middle refresh and left out of the final one, which is how a run ends up with a
         // boundary holding events and no snapshot at all.
@@ -227,6 +331,8 @@ public static class DcbSampleData
         IDcbDomainService dcb,
         IReadOnlyList<SeededProduct> products,
         IReadOnlyList<string> orders,
+        IReadOnlyList<string> suppliers,
+        IReadOnlyList<string> purchaseOrders,
         Random random,
         int percent,
         CancellationToken cancellationToken)
@@ -262,11 +368,37 @@ public static class DcbSampleData
                     new OrderLineReservationId(product.ProductId, orderId), cancellationToken);
             }
         }
+
+        foreach (var purchaseOrderId in purchaseOrders)
+        {
+            if (Chance(random, percent))
+            {
+                await dcb.UpdateAggregate(new PurchaseOrderId(purchaseOrderId), cancellationToken);
+            }
+        }
+
+        foreach (var supplierId in suppliers)
+        {
+            if (Chance(random, percent))
+            {
+                await dcb.UpdateProjection(new SupplierPurchasingId(supplierId), cancellationToken);
+            }
+
+            // A few suppliers also get a snapshot written by the old shape of the page, so the
+            // store holds version 1 and version 2 snapshots side by side — which is what the
+            // versioned pair is there to show.
+            if (Chance(random, percent / 2))
+            {
+                await dcb.UpdateProjection(new SupplierPurchasingV1Id(supplierId), cancellationToken);
+            }
+        }
     }
 
     private static void Report(
         IReadOnlyList<SeededProduct> products,
         IReadOnlyList<string> orders,
+        IReadOnlyList<string> suppliers,
+        IReadOnlyList<string> purchaseOrders,
         IDcbDomainService dcb,
         SeedReport report)
     {
@@ -290,6 +422,20 @@ public static class DcbSampleData
             report.Add(new SeededModel("dcb", "projection", nameof(OrderHoldings),
                 nameof(OrderHoldingsId), orderId,
                 () => MeasureProjection(dcb, new OrderHoldingsId(orderId))));
+        }
+
+        foreach (var purchaseOrderId in purchaseOrders)
+        {
+            report.Add(new SeededModel("dcb", "aggregate", nameof(PurchaseOrder),
+                nameof(PurchaseOrderId), purchaseOrderId,
+                () => MeasureAggregate(dcb, new PurchaseOrderId(purchaseOrderId))));
+        }
+
+        foreach (var supplierId in suppliers)
+        {
+            report.Add(new SeededModel("dcb", "projection", nameof(SupplierPurchasing),
+                nameof(SupplierPurchasingId), supplierId,
+                () => MeasureProjection(dcb, new SupplierPurchasingId(supplierId))));
         }
     }
 
