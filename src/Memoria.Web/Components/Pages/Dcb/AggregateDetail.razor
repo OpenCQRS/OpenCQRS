@@ -42,32 +42,6 @@ else
        binding. Two versions of one name are two aggregates, and the heading has to say which. *@
     <h1>@Heading</h1>
 
-    @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
-       what it selects — the snapshot folded from it, the events inside it, the refresh that folds
-       the rest in — so it belongs where it stays put as they change, rather than on one of them. *@
-    <p class="boundary">
-        @* Called by what it is made of, the same word the data pages head the column with. The
-           class it is styled by still says boundary, because that is what the line is: a boundary
-           written as the tags it selects on. *@
-        <span class="boundary-label">Tags</span>
-
-        @if (Tags is not null)
-        {
-            <code>@Tags.Text</code>
-
-            @if (Tags.Combination is { } combination)
-            {
-                <span class="hint">@combination</span>
-            }
-        }
-        else
-        {
-            @* Said here rather than left blank, because a page with no boundary is a page whose
-               tabs have nothing to show, and this is the first place that is true. *@
-            <span class="missing">could not be worked out from those values</span>
-        }
-    </p>
-
     @* The store failing to answer for the aggregate at all, which leaves both the facts and the
        state without their values — so it is said once, above the tabs, rather than in each. *@
     @if (Error is not null)
@@ -97,14 +71,44 @@ else
     {
         <section class="tab-panel" aria-labelledby="tab-@InfoTab">
             <dl class="facts">
-                @foreach (var parameter in Parameters)
-                {
-                    <dt>@parameter.Name</dt>
-                    <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
-                }
+                @* The two facts that are the page's own rather than the store's: what shape of id
+                   the address names, and the boundary those values work out to. Said whether or not
+                   a snapshot was found, because a boundary holding events nothing has been folded
+                   over still has both of these to show. The values they were built from are not
+                   listed — they are in the address, and repeating them said the same thing twice. *@
+                <dt>Identifier</dt>
+                <dd>
+                    @if (Identifier is { } identifier)
+                    {
+                        <code>@identifier.Name</code>
+                    }
+                    else
+                    {
+                        <span class="missing">Nothing registered writes ids of this shape</span>
+                    }
+                </dd>
 
-                @* The boundary is not among these. It is above the tabs, where it stays put for
-                   all four rather than being a fact this one alone gets to show. *@
+                @* One row, however many tags it selects on, with the word for how they combine
+                   beside them rather than folded into the line. *@
+                <dt>Tags</dt>
+                <dd>
+                    @if (Tags is not null)
+                    {
+                        <code>@Tags.Text</code>
+
+                        @if (Tags.Combination is { } combination)
+                        {
+                            <span class="hint">@combination</span>
+                        }
+                    }
+                    else
+                    {
+                        @* Said here rather than left blank, because a page with no boundary is a
+                           page whose tabs have nothing to show, and this is the first place that is
+                           true. *@
+                        <span class="missing">could not be worked out from those values</span>
+                    }
+                </dd>
 
                 @* All of these off the row rather than out of the payload: the store's account of
                    the write, not the model's own state. The version is the stored one, so a
@@ -114,7 +118,7 @@ else
                 @if (Stored is not null)
                 {
                     @* What the row is filed under, whole: its kind, the store id, and the digest of
-                       the boundary above the tabs. Shown as the store wrote it rather than taken
+                       the boundary the tags row names. Shown as the store wrote it rather than taken
                        apart, because this is the value that finds the row again in the table. *@
                     <dt>Id</dt>
                     <dd><code>@Stored.Id</code></dd>
@@ -125,18 +129,6 @@ else
                     <dt>Store id</dt>
                     <dd><code>@Stored.StoreId</code></dd>
 
-                    <dt>Identifier</dt>
-                    <dd>
-                        @if (Identifier is { } identifier)
-                        {
-                            <code>@identifier.Name</code>
-                        }
-                        else
-                        {
-                            <span class="missing">Nothing registered writes ids of this shape</span>
-                        }
-                    </dd>
-                    
                     <dt>Model type</dt>
                     @* The key the row was written under, said the way a version is said rather
                        than as the store joins it. Read off the row rather than off the type: this
@@ -559,7 +551,7 @@ else
     private TagQuery? Boundary { get; set; }
 
     /// <summary>
-    /// The boundary as the line above the tabs shows it: its tags listed one way whichever way they
+    /// The boundary as the info tab's tags row shows it: its tags listed one way whichever way they
     /// combine, and the word that tells the two apart beside them.
     /// </summary>
     /// <remarks>

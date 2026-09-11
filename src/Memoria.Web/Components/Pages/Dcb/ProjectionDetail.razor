@@ -42,32 +42,6 @@ else
        binding. Two versions of one name are two projections, and the heading has to say which. *@
     <h1>@Heading</h1>
 
-    @* The boundary itself, above the tabs rather than inside the info tab. All four are views of
-       what it selects — the snapshot folded from it, the events inside it, the refresh that folds
-       the rest in — so it belongs where it stays put as they change, rather than on one of them. *@
-    <p class="boundary">
-        @* Called by what it is made of, the same word the data pages head the column with. The
-           class it is styled by still says boundary, because that is what the line is: a boundary
-           written as the tags it selects on. *@
-        <span class="boundary-label">Tags</span>
-
-        @if (Tags is not null)
-        {
-            <code>@Tags.Text</code>
-
-            @if (Tags.Combination is { } combination)
-            {
-                <span class="hint">@combination</span>
-            }
-        }
-        else
-        {
-            @* Said here rather than left blank, because a page with no boundary is a page whose
-               tabs have nothing to show, and this is the first place that is true. *@
-            <span class="missing">could not be worked out from those values</span>
-        }
-    </p>
-
     @* The store failing to answer for the projection at all, which leaves both the facts and the
        state without their values — so it is said once, above the tabs, rather than in each. *@
     @if (Error is not null)
@@ -97,14 +71,39 @@ else
     {
         <section class="tab-panel" aria-labelledby="tab-@InfoTab">
             <dl class="facts">
-                @foreach (var parameter in Parameters)
-                {
-                    <dt>@parameter.Name</dt>
-                    <dd><code>@Values.GetValueOrDefault(parameter.Name)</code></dd>
-                }
+                <dt>Identifier</dt>
+                <dd>
+                    @if (Identifier is { } identifier)
+                    {
+                        <code>@identifier.Name</code>
+                    }
+                    else
+                    {
+                        <span class="missing">Nothing registered writes ids of this shape</span>
+                    }
+                </dd>
 
-                @* The boundary is not among these. It is above the tabs, where it stays put for
-                   all four rather than being a fact this one alone gets to show. *@
+                @* One row, however many tags it selects on, with the word for how they combine
+                   beside them rather than folded into the line. *@
+                <dt>Tags</dt>
+                <dd>
+                    @if (Tags is not null)
+                    {
+                        <code>@Tags.Text</code>
+
+                        @if (Tags.Combination is { } combination)
+                        {
+                            <span class="hint">@combination</span>
+                        }
+                    }
+                    else
+                    {
+                        @* Said here rather than left blank, because a page with no boundary is a
+                           page whose tabs have nothing to show, and this is the first place that is
+                           true. *@
+                        <span class="missing">could not be worked out from those values</span>
+                    }
+                </dd>
 
                 @* All of these off the row rather than out of the payload: the store's account of
                    the write, not the model's own state. The version is the stored one, so a
@@ -124,18 +123,6 @@ else
                        here can match the row they clicked. *@
                     <dt>Store id</dt>
                     <dd><code>@Stored.StoreId</code></dd>
-
-                    <dt>Identifier</dt>
-                    <dd>
-                        @if (Identifier is { } identifier)
-                        {
-                            <code>@identifier.Name</code>
-                        }
-                        else
-                        {
-                            <span class="missing">Nothing registered writes ids of this shape</span>
-                        }
-                    </dd>
                     
                     <dt>Model type</dt>
                     @* The key the row was written under, said the way a version is said rather

@@ -991,6 +991,14 @@ h2:focus {
                 font-size: inherit;
             }
 
+            /* A note set beside a value — how a boundary's tags combine, beside the tags — the same
+               way the tables that list stored rows set one. Spaced here rather than by a space in
+               the markup, which a conditional block swallows. */
+            .tab-panel .facts dd .hint {
+                font-size: inherit;
+                margin-left: 0.5rem;
+            }
+
         /* The last row's rule and the card's bottom edge are the same line drawn twice. */
         .tab-panel .facts dt:last-of-type,
         .tab-panel .facts dd:last-of-type {
