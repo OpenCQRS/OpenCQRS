@@ -859,30 +859,78 @@ h2:focus {
     /* Name beside value rather than above it: the facts about a stored model are read by scanning
        the labels for one of them, and a column of labels is quicker to run down than a list that
        alternates. The label column takes the width of its longest label and the value column the
-       rest, so the values line up whatever they are. */
+       rest, so the values line up whatever they are.
+
+       Set on the card the tables are set on, and out of the same two tones: the label takes the
+       ground a column heading takes, the value the ground a data row takes. The tab beside this
+       one holds a table, and a reader stepping between them should be reading one kind of surface
+       rather than two — what changes is that the headings run down the side rather than across the
+       top, because each row here is one fact rather than one record.
+
+       The cell grounds are clipped to the corners rather than each outer cell carrying a radius of
+       its own: this is a grid, not a table, so the container can do it in one line. */
     .tab-panel .facts {
-        align-items: baseline;
-        column-gap: 2rem;
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
         display: grid;
         grid-template-columns: max-content minmax(0, 1fr);
-        row-gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
     }
 
-        /* The stacking margin belongs to the layout this replaces. */
+        /* The padding a table's cells carry, including the extra the outermost ones take for the
+           card's own edge — the label column is the first and the value column the last. */
+        .tab-panel .facts dt,
         .tab-panel .facts dd {
+            border-bottom: 1px solid var(--rule);
             margin: 0;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .tab-panel .facts dt {
+            background: var(--sunk);
+            color: var(--ink-soft);
+            font-size: var(--text-2xs);
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            padding-left: 1rem;
+            text-transform: uppercase;
+        }
+
+        .tab-panel .facts dd {
+            font-size: var(--text-md);
+            padding-right: 1rem;
+        }
+
+            /* Still prose rather than a stored value, but at the size of the cell it sits in: the
+               larger size the stacked layout gave it read as a heading once the value had a ground
+               of its own. */
+            .tab-panel .facts dd .missing {
+                font-size: inherit;
+            }
+
+        /* The last row's rule and the card's bottom edge are the same line drawn twice. */
+        .tab-panel .facts dt:last-of-type,
+        .tab-panel .facts dd:last-of-type {
+            border-bottom: 0;
         }
 
     /* Too narrow for two: a boundary naming several tags would be left wrapping in a few
        characters' worth of column. Back to the label above its value, at the same width the page
-       already decides two columns have stopped being readable. */
+       already decides two columns have stopped being readable. The banding stays — a full-width
+       tinted label with its value under it still says where one fact ends and the next begins. */
     @media (max-width: 40rem) {
         .tab-panel .facts {
             display: block;
         }
 
+            .tab-panel .facts dt {
+                padding-right: 1rem;
+            }
+
             .tab-panel .facts dd {
-                margin: 0.1rem 0 0.75rem;
+                padding-left: 1rem;
             }
     }
 
