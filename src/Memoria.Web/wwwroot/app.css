@@ -285,9 +285,12 @@ html {
 
 body {
     background: var(--ground);
-    margin: 0;
-    font-family: var(--font);
     color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font);
+    margin: 0;
+    min-height: 100vh;
 }
 
 /* Shared page furniture. Global rather than scoped per page, so every section stays
