@@ -135,6 +135,25 @@
             color: var(--ink);
         }
 
+        /* Every select on the card, drawn the way the picker under a table is drawn: one of them is
+           that picker, and the theme beside it is the same kind of choice made the same way. The
+           rows-per-page row carries .page-size and would be drawn by that rule alone; this says the
+           same thing for the rest, so a select added here does not arrive as a native control. */
+        .preference select {
+            background: var(--surface);
+            border: 1px solid var(--field-rule);
+            border-radius: 4px;
+            color: var(--ink);
+            font: inherit;
+            padding: 0.3rem 0.4rem;
+        }
+
+        .preference select:focus-visible {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+            outline: none;
+        }
+
         /* Sized and coloured, because a checkbox left alone is drawn by the operating system and
            arrives in whatever blue that machine happens to use — the one control on the page that
            would not be in the site's own colour. */

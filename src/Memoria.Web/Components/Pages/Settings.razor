@@ -236,6 +236,34 @@ else
            nothing to head — two rows of two, and the line under each is a sentence rather than a
            third column. *@
         <div class="preferences">
+            @* First, because it is the one preference that changes every page rather than the
+               tables on some of them.
+
+               Three choices rather than a switch between two: nothing chosen is its own answer —
+               the operating system's — and it is the one the page opens at, so a reader who has
+               never picked has something to go back to. That third state is stored as the absence
+               of the value rather than the word "system", which is why picking it clears the key
+               instead of writing to it.
+
+               Rendered at System and corrected to what was stored once the page is running, like
+               the two below. Without scripting the select does nothing, so it is hidden until the
+               script that drives it has run — and the page still follows the operating system,
+               which is what System says anyway. *@
+            <div class="preference" data-preference-row="theme" hidden>
+                <div class="control">
+                    <label for="theme">Theme</label>
+                    <select id="theme" data-preference="theme">
+                        <option value="system" selected>System</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <p class="hint">
+                    How this application is coloured, in this browser. System follows the light or
+                    dark setting the operating system asks for and changes with it.
+                </p>
+            </div>
+
             @* The same picker as the one under a table, carrying the same class, because it is the
                same choice: what is picked here is what that picker opens at, and what is picked
                there is what stands here afterwards. There is no form and nothing to submit — the

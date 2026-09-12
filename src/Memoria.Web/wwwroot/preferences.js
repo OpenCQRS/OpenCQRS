@@ -130,56 +130,60 @@ function storedTheme() {
     }
 }
 
+// Following the operating system is the absence of a choice rather than a choice of its own, so
+// picking it takes the value away instead of writing "system" down. The head script and the stamp
+// below both read this key as "was anything chosen at all", and a third word stored here would
+// have had to be understood in two more places to mean nothing.
 function rememberTheme(theme) {
     try {
-        window.localStorage.setItem(themeKey, theme);
+        if (theme === "dark" || theme === "light") {
+            window.localStorage.setItem(themeKey, theme);
+        } else {
+            window.localStorage.removeItem(themeKey);
+        }
     } catch {
     }
 }
 
-// What is actually on the screen, which is not the same question as what was chosen: with nothing
-// chosen the operating system decides, and the button still has to know which way it is pointing.
-function currentTheme() {
-    const stamped = document.documentElement.getAttribute("data-theme");
-
-    if (stamped === "dark" || stamped === "light") {
-        return stamped;
-    }
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-// The button is rendered hidden and shown here, so it never appears where nothing can drive it.
-// Which glyph shows is the stylesheet's business; what is set here is the label, and it names what
-// pressing the button will do rather than which theme is on — "dark theme" on a button that is
-// already dark reads as a statement rather than an offer.
-// Puts the chosen theme back on the root if it has gone missing. Enhanced navigation is why it
-// goes missing: Blazor swaps a page in by diffing the new document against this one, and the
-// document the server sends has no data-theme on it, because the choice is the browser's and the
-// server has never heard of it. So the attribute is stripped on the way through, and the page
-// arrives in whatever theme the operating system asks for.
+// Puts the chosen theme back on the root if it has gone missing, and takes it off when nothing is
+// chosen any more. Enhanced navigation is why it goes missing: Blazor swaps a page in by diffing
+// the new document against this one, and the document the server sends has no data-theme on it,
+// because the choice is the browser's and the server has never heard of it. So the attribute is
+// stripped on the way through, and the page arrives in whatever theme the operating system asks
+// for. Nothing else writes the attribute, which is what makes removing it safe: with nothing
+// stored there is nothing it could be saying.
 function stampTheme() {
     const choice = storedTheme();
+    const root = document.documentElement;
 
     if (choice !== "dark" && choice !== "light") {
+        if (root.hasAttribute("data-theme")) {
+            root.removeAttribute("data-theme");
+        }
+
         return;
     }
 
-    if (document.documentElement.getAttribute("data-theme") !== choice) {
-        document.documentElement.setAttribute("data-theme", choice);
+    if (root.getAttribute("data-theme") !== choice) {
+        root.setAttribute("data-theme", choice);
     }
 }
 
+// The row is rendered hidden and shown here, so the select never appears where nothing can drive
+// it — and the page under it still follows the operating system, which is what the select would
+// have said anyway.
 function applyTheme() {
     stampTheme();
 
-    const next = currentTheme() === "dark" ? "light" : "dark";
-    const label = `Switch to ${next} theme`;
+    const choice = storedTheme();
+    const value = choice === "dark" || choice === "light" ? choice : "system";
 
-    for (const button of document.querySelectorAll("#theme-toggle")) {
-        button.hidden = false;
-        button.setAttribute("aria-label", label);
-        button.title = label;
+    for (const select of document.querySelectorAll('select[data-preference="theme"]')) {
+        select.value = value;
+    }
+
+    for (const row of document.querySelectorAll('[data-preference-row="theme"]')) {
+        row.hidden = false;
     }
 }
 
@@ -193,35 +197,23 @@ new MutationObserver(stampTheme).observe(document.documentElement, {
     attributeFilter: ["data-theme"]
 });
 
-document.addEventListener("click", event => {
-    const control = event.target;
+// The theme changes as the select does, with nothing to submit: the choice is this browser's and
+// the server is never told. Written down and put on the root in the same breath, so the page
+// answers the pick rather than the next navigation.
+document.addEventListener("change", event => {
+    const select = event.target;
 
-    // Element, not HTMLElement. What is pressed here is almost always the glyph, and an SVG node is
-    // an Element without being an HTMLElement — so the stricter test threw away every click that
-    // landed on the icon and kept only the few that found the padding around it. closest() is
-    // defined on Element, so it is the right floor to check against.
-    if (!(control instanceof Element) || !control.closest("#theme-toggle")) {
+    if (!(select instanceof HTMLSelectElement) || select.dataset.preference !== "theme") {
         return;
     }
 
-    const next = currentTheme() === "dark" ? "light" : "dark";
-
-    document.documentElement.setAttribute("data-theme", next);
-    rememberTheme(next);
-    applyTheme();
-});
-
-// The operating system can change under a reader who never chose, and then the label is pointing
-// the wrong way. Only the label: the stylesheet has already followed the change on its own.
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    if (!storedTheme()) {
-        applyTheme();
-    }
+    rememberTheme(select.value);
+    stampTheme();
 });
 
 function apply() {
-    // First, and before the early return below: the button is on every page, and a reader who
-    // never picked a rows-per-page size still has a theme to switch.
+    // First, and before the early return below: the theme is the whole application's, and a reader
+    // who never picked a rows-per-page size still has one.
     applyTheme();
 
     // Both settings are put back on every page, and this one first: the note is rendered for

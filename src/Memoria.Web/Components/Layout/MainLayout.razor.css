@@ -39,13 +39,9 @@ header {
     /* At the size the pages under it are read at, not the browser's prose default. The bar names
        where you are in a tool whose content is dense; set two pixels larger than the tables it
        leads to, it read as the loudest thing on the page. */
-    /* Grows to fill the bar so the theme button can be held at the far end of it. Left to size
-       itself the nav stopped after the last link, the button stopped with it, and the right third
-       of the bar was empty. */
     header nav {
         align-items: center;
         display: flex;
-        flex: 1;
         font-size: var(--text-md);
         gap: 1rem;
     }
@@ -63,66 +59,6 @@ header {
             color: var(--accent);
             font-weight: 600;
         }
-
-/* Quiet until you go near it: changing the theme is not what anyone came to this page to do. */
-.theme-toggle {
-    align-items: center;
-    /* Held at the far end of the bar, away from the links: it is the one control up here that
-       changes the page rather than leaves it. */
-    margin-left: auto;
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    color: var(--ink-soft);
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-    /* Sized in ems so the glyph follows the bar's text; the padding keeps the target bigger than
-       the mark inside it. */
-    padding: 0.3rem;
-}
-
-    .theme-toggle svg {
-        height: 1.15em;
-        width: 1.15em;
-    }
-
-    .theme-toggle:hover {
-        background: var(--ground);
-        color: var(--ink);
-    }
-
-    .theme-toggle:focus-visible {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
-        outline: none;
-    }
-
-/* One glyph at a time, chosen by the theme showing rather than by script, so the button is right
-   the moment it is unhidden and stays right when the operating system changes underneath it. The
-   sun shows in the dark theme, because pressing it is what returns you to the light one. */
-.theme-toggle .glyph-light {
-    display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .theme-toggle .glyph-dark {
-        display: none;
-    }
-
-    :root:not([data-theme="light"]) .theme-toggle .glyph-light {
-        display: inline;
-    }
-}
-
-:root[data-theme="dark"] .theme-toggle .glyph-dark {
-    display: none;
-}
-
-:root[data-theme="dark"] .theme-toggle .glyph-light {
-    display: inline;
-}
 
 /* Admin and the pages under it. */
 .menu {

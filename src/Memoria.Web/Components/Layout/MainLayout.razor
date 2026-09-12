@@ -98,28 +98,9 @@
         </details>
 }
 
+        @* The theme is picked under Settings rather than up here: it is this browser's own
+           preference, which is what that tab holds, and the bar is for places to go. *@
         <NavLink href="settings">Settings</NavLink>
-
-        @* Last in the bar and set apart from the links, because it goes nowhere: it changes how
-           this page looks rather than which page you are on. Hidden until the script that drives
-           it runs — without scripting it would be a button that does nothing, and the page still
-           follows the operating system's own choice, which is the right answer anyway.
-
-           Both glyphs are drawn and one is hidden, so pressing it swaps which is shown without a
-           round trip. The label says what pressing it will do, not which theme is on. *@
-        <button id="theme-toggle" class="theme-toggle" type="button" hidden
-                aria-label="Switch to dark theme" title="Switch to dark theme">
-            <svg class="glyph-dark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                <path d="M16.5 12.4A7 7 0 0 1 7.6 3.5a7 7 0 1 0 8.9 8.9Z"
-                      fill="none" stroke="currentColor" stroke-width="1.6"
-                      stroke-linejoin="round"/>
-            </svg>
-            <svg class="glyph-light" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                <circle cx="10" cy="10" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M10 1.6v2.2M10 16.2v2.2M18.4 10h-2.2M3.8 10H1.6M15.9 4.1l-1.6 1.6M5.7 14.3l-1.6 1.6M15.9 15.9l-1.6-1.6M5.7 5.7 4.1 4.1"
-                      stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-        </button>
     </nav>
 </header>
 
