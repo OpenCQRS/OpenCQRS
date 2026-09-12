@@ -92,6 +92,7 @@ else
                    reached it — and the version is part of it, because two versions of one name are
                    two rows there. The class it is bound from is the first fact on the info tab. *@
                 <h2>@BoundAs(selected.Type)</h2>
+                <ObsoleteNote Type="selected.Type"/>
 
                 @* The four views of it, drawn by the component the detail page opens over a stored
                    row as well: what is true of a declared type is the same wherever it is read, and
@@ -200,7 +201,7 @@ else
                writes and the one a stored row is found under, and it is the name that stays put
                when the class is renamed. The namespace it came from is on the info tab, with the
                rest of what is true of the class rather than of the binding. *@
-            <span class="index-name">@BoundAs(projection)</span>
+            <span class="index-name">@BoundAs(projection)<ObsoleteMark Type="projection"/></span>
         </a>;
 
     /// <summary>

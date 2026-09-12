@@ -348,7 +348,7 @@ else
                         @foreach (var applied in EventTypes)
                         {
                             <option value="@(applied.FullName)" selected="@(applied == Choice.Chosen)">
-                                @DomainTypeDescriber.LabelOf(applied)
+                                @DomainTypeDescriber.OptionLabelOf(applied)
                             </option>
                         }
                     </select>

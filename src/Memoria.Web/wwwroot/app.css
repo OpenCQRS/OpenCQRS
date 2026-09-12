@@ -737,6 +737,45 @@ h2:focus {
         width: 0.95em;
     }
 
+/* A type the domain has retired, said two ways: a mark after its name wherever types are listed,
+   and a line under its name once it is opened, in the words the attribute retired it with. The
+   caution ink for both, for the reason the snapshot warning wears it — nothing failed and nothing
+   is wrong with the type, but it is one a reader should know not to write any more of — and the
+   same ink on both so the mark on the row and the note on the panel read as one fact.
+
+   The mark rides the text it follows, sized in em like the warning's glyph rather than in rem like
+   the marks beside headings: a name in a list, a name in a heading and a name in a table cell are
+   three sizes, and the mark should be the right size for each. */
+.obsolete-mark {
+    color: var(--caution-ink);
+    margin-left: 0.35em;
+    white-space: nowrap;
+}
+
+    .obsolete-mark .glyph {
+        height: 0.95em;
+        vertical-align: -0.15em;
+        width: 0.95em;
+    }
+
+.obsolete {
+    color: var(--caution-ink);
+    margin: 0 0 1rem;
+}
+
+    .obsolete .glyph {
+        height: 0.95em;
+        margin-right: 0.25em;
+        vertical-align: -0.15em;
+        width: 0.95em;
+    }
+
+    /* Pulled up under the heading it is about, which carries its own space below. */
+    .panel-detail > .obsolete,
+    .dialog-body > .obsolete {
+        margin-top: -0.5rem;
+    }
+
 /* Something went right and the page is saying so. */
 .notice {
     background: var(--notice-ground);

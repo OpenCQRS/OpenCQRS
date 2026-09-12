@@ -1,0 +1,35 @@
+@using Memoria.Web.Extensibility
+
+@* The line under a retired type's name saying so, in the words the domain retired it with. One
+   component rather than a copy under each heading: the same sentence is true of a retired
+   aggregate, projection, event, stream and identifier, and a reader who meets it on one page
+   should meet the same mark and the same shape on the next.
+
+   Drawn only when the type is retired and nothing otherwise, so every heading can ask for it and
+   a heading over a live type is left exactly as it was. The mark in front is the one the list
+   rows carry after the name, so what was clicked and what arrived look like the same thing.
+
+   A caution in the page's own sense of the word: nothing failed and nothing is wrong with the
+   type. It is bound, its rows still read, and the note is the domain saying not to write any
+   more of them. *@
+@if (DomainTypeDescriber.ObsoleteOf(Type) is { } obsolete)
+{
+    <p class="obsolete">
+        <svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+             fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="7.1"/>
+            <path d="M5 5l10 10"/>
+        </svg>
+        @obsolete
+    </p>
+}
+
+@code {
+
+    /// <summary>The type the note is under.</summary>
+    [Parameter]
+    [EditorRequired]
+    public Type Type { get; set; } = null!;
+
+}

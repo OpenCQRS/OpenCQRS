@@ -33,6 +33,11 @@
         </header>
 
         <div class="dialog-body">
+            @* Under the name rather than in the header beside it, where the types pages put it
+               too: what was clicked and what arrived should say the same thing in the same
+               place. Drawn only when the type is retired. *@
+            <ObsoleteNote Type="Description.Type"/>
+
             @* The same four views the types pages show, drawn by the same component: a reader
                reaching a type from a stored row and a reader reaching it from the list of types are
                reading the same thing, and there is one place to change it. The tabs carry their own

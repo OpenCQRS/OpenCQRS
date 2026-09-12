@@ -71,7 +71,7 @@ else
                    stream they mean, and customer:% is how the log is asked rather than a thing to
                    choose. *@
                 <option value="@streamId.FullName" selected="@(streamId == Stream.Chosen)">
-                    @BoundAs(streamId)
+                    @DomainTypeDescriber.OptionLabelOf(streamId)
                 </option>
             }
         </select>
@@ -82,7 +82,7 @@ else
             @foreach (var @event in EventTypes)
             {
                 <option value="@(@event.FullName)" selected="@(@event == Choice.Chosen)">
-                    @BoundAs(@event)
+                    @DomainTypeDescriber.OptionLabelOf(@event)
                 </option>
             }
         </select>

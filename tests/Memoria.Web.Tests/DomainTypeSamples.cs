@@ -10,6 +10,19 @@ namespace Memoria.Web.Tests;
 public record SampleHappenedEvent(string Id) : IEvent;
 
 /// <summary>
+/// An event the domain has retired: still bound, so the rows it wrote still read, and marked so
+/// the pages can say so. The message is what a page repeats.
+/// </summary>
+[Obsolete("Retired in the sample. Kept so its rows still read.")]
+[EventType("SampleRetired", 1)]
+public record SampleRetiredEvent(string Id) : IEvent;
+
+/// <summary>Retired with nothing said about why, which is a shape the attribute allows.</summary>
+[Obsolete]
+[EventType("SampleQuietlyRetired", 1)]
+public record SampleQuietlyRetiredEvent(string Id) : IEvent;
+
+/// <summary>
 /// A value an event carries whole, rather than as loose numbers beside each other.
 /// </summary>
 public record SampleMeasurement(decimal Width, decimal Height);

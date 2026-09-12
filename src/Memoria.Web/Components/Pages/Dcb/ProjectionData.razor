@@ -54,7 +54,7 @@ else
             @foreach (var model in Models)
             {
                 <option value="@model.FullName" selected="@(model == Choice.Model)">
-                    @DomainTypeDescriber.LabelOf(model)
+                    @DomainTypeDescriber.OptionLabelOf(model)
                 </option>
             }
         </select>

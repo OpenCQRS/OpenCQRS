@@ -71,7 +71,7 @@ else
                    stream they mean, and customer:% is how the store is asked rather than a thing to
                    choose. *@
                 <option value="@streamId.FullName" selected="@(streamId == Stream.Chosen)">
-                    @BoundAs(streamId)
+                    @DomainTypeDescriber.OptionLabelOf(streamId)
                 </option>
             }
         </select>
@@ -82,7 +82,7 @@ else
             @foreach (var aggregate in AggregateTypes)
             {
                 <option value="@aggregate.FullName" selected="@(aggregate == Choice.Chosen)">
-                    @BoundAs(aggregate)
+                    @DomainTypeDescriber.OptionLabelOf(aggregate)
                 </option>
             }
         </select>

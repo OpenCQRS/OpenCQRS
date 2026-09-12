@@ -2,6 +2,9 @@ using FluentAssertions;
 using Memoria.Web.Extensibility;
 using Xunit;
 
+// Two of the sample types are obsolete on purpose. Naming them is the point.
+#pragma warning disable CS0612, CS0618
+
 namespace Memoria.Web.Tests.Features;
 
 public class DomainTypeDescriberTests
@@ -34,6 +37,32 @@ public class DomainTypeDescriberTests
     public void Reports_no_binding_for_a_type_that_carries_no_attribute()
     {
         Describe(typeof(SampleDcbAggregateId)).Binding.Should().BeNull();
+    }
+
+    /// <summary>
+    /// A retired type is said to be retired in the attribute's own words, after the word that says
+    /// what the words are about — so a reader meets "Obsolete" first and the reason second.
+    /// </summary>
+    [Fact]
+    public void Says_a_retired_type_is_obsolete_in_the_words_of_its_attribute()
+    {
+        DomainTypeDescriber.ObsoleteOf(typeof(SampleRetiredEvent))
+            .Should().Be("Obsolete — Retired in the sample. Kept so its rows still read.");
+    }
+
+    /// <summary>
+    /// The attribute allows no message at all, and a type retired that way is still retired.
+    /// </summary>
+    [Fact]
+    public void Says_a_type_retired_without_a_reason_is_obsolete_and_no_more()
+    {
+        DomainTypeDescriber.ObsoleteOf(typeof(SampleQuietlyRetiredEvent)).Should().Be("Obsolete");
+    }
+
+    [Fact]
+    public void Says_nothing_of_a_type_that_is_not_retired()
+    {
+        DomainTypeDescriber.ObsoleteOf(typeof(SampleHappenedEvent)).Should().BeNull();
     }
 
     /// <summary>

@@ -59,7 +59,7 @@ else
             @foreach (var @event in EventTypes)
             {
                 <option value="@(@event.FullName)" selected="@(@event == Choice.Chosen)">
-                    @BoundAs(@event)
+                    @DomainTypeDescriber.OptionLabelOf(@event)
                 </option>
             }
         </select>

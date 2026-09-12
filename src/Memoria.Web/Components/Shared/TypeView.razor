@@ -57,7 +57,7 @@
                 @foreach (var identifier in Description.Identifiers)
                 {
                     <tr>
-                        <td><code>@identifier.Name</code></td>
+                        <td><code>@identifier.Name</code><ObsoleteMark Type="identifier"/></td>
                         <td>@NarrowedBy(identifier)</td>
                         @* A mark rather than a word: the column is one link per row and the word
                            repeats down it. The name it is read out by carries the identifier, so a
@@ -117,12 +117,12 @@ else if (Showing == EventsTab)
                            none. *@
                         @if (DomainTypeDescriber.BindingOf(eventType) is { } binding)
                         {
-                            <td><code>@binding.Name</code></td>
+                            <td><code>@binding.Name</code><ObsoleteMark Type="eventType"/></td>
                             <td>@binding.Version</td>
                         }
                         else
                         {
-                            <td><code>@eventType.Name</code></td>
+                            <td><code>@eventType.Name</code><ObsoleteMark Type="eventType"/></td>
                             <td><span class="missing">not bound</span></td>
                         }
                         <td>

@@ -78,6 +78,7 @@ else
                    reached it — and the version is part of it, because two versions of one name are
                    two rows there. The class it is bound from is the first fact on the info tab. *@
                 <h2>@BoundAs(Selected)</h2>
+                <ObsoleteNote Type="Selected"/>
 
                 @* Two views, switched by the address rather than by script: each tab is a link, so a
                    view can be linked to and gone back to, and the page stays statically rendered
@@ -267,7 +268,7 @@ else
                the log and the one a stored event is read back under, and it is the name that stays
                put when the class is renamed. The namespace it came from is on the info tab, with
                the rest of what is true of the class rather than of the binding. *@
-            <span class="index-name">@BoundAs(@event)</span>
+            <span class="index-name">@BoundAs(@event)<ObsoleteMark Type="@(@event)"/></span>
         </a>;
 
     /// <summary>

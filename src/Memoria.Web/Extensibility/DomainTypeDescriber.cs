@@ -91,6 +91,37 @@ public static class DomainTypeDescriber
         BindingOf(type) is { } binding ? Label(binding.Name, binding.Version) : type.Name;
 
     /// <summary>
+    /// The same name, with a word after it when the type is retired, for a control that can hold
+    /// text and nothing else — an option in a select, which has no room for the mark every other
+    /// list carries and would otherwise be the one place a retired type looked current.
+    /// </summary>
+    /// <param name="type">The type to name.</param>
+    public static string OptionLabelOf(Type type) =>
+        ObsoleteOf(type) is null ? LabelOf(type) : $"{LabelOf(type)} (obsolete)";
+
+    /// <summary>
+    /// That a type is retired, in the words of its own <see cref="ObsoleteAttribute"/>, or null
+    /// when it is not.
+    /// </summary>
+    /// <param name="type">The type to read.</param>
+    /// <returns>
+    /// "Obsolete", then the attribute's message after a dash when it carries one — so a reader
+    /// meets what the sentence is about before the reason — and null for a type carrying no such
+    /// attribute.
+    /// </returns>
+    /// <remarks>
+    /// Retired is not the same as old. A type with a later version beside it is old, and the
+    /// version says so; a retired type is one nothing should write through any more, whether or
+    /// not anything replaced it, and the attribute is the only place the domain says that. It stays
+    /// bound all the same: the rows it wrote are still in the store, and only its own shape can
+    /// read them back.
+    /// </remarks>
+    public static string? ObsoleteOf(Type type) =>
+        type.GetCustomAttribute<ObsoleteAttribute>() is { } obsolete
+            ? string.IsNullOrWhiteSpace(obsolete.Message) ? "Obsolete" : $"Obsolete — {obsolete.Message}"
+            : null;
+
+    /// <summary>
     /// The same name, worked out from a stored key rather than from a type — which is what a page
     /// saying what the store holds has to hand.
     /// </summary>

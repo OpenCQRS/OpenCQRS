@@ -1,0 +1,35 @@
+@using Memoria.Web.Extensibility
+
+@* The mark after a retired type's name wherever types are listed: a circle struck through, which
+   is the one drawing that reads as "not any more" without a word beside it. Drawn only when the
+   type is retired and nothing otherwise, so every list can ask for it on every row and a list
+   with nothing retired in it looks exactly as it did.
+
+   The sentence the mark stands for is on the panel a click on the row opens, in ObsoleteNote; here
+   there is room for the mark and no more, so it carries the word for a screen reader and a title
+   for the pointer, and leaves the reason to the panel. *@
+@if (DomainTypeDescriber.ObsoleteOf(Type) is not null)
+{
+    <span class="obsolete-mark" title="Obsolete">
+        @* Built to the box, stroke and linecap every other mark here is built to, so a mark after
+           a name is drawn at the weight of the marks in front of the headings. Hidden from screen
+           readers: the word after it says what it means. *@
+        <svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+             fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="7.1"/>
+            <path d="M5 5l10 10"/>
+        </svg>
+        <span class="visually-hidden">obsolete</span>
+    </span>
+}
+
+@code {
+
+    /// <summary>The type the mark is after. Read here rather than handed in as a flag, so a row
+    /// cannot say the wrong thing about it.</summary>
+    [Parameter]
+    [EditorRequired]
+    public Type Type { get; set; } = null!;
+
+}
