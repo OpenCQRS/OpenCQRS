@@ -89,6 +89,7 @@ public static class ModelReader
             snapshot.ModelType,
             snapshot.Version,
             snapshot.LatestPosition,
+            snapshot.Data,
             snapshot.CreatedDate,
             snapshot.CreatedBy,
             snapshot.UpdatedDate,
@@ -154,6 +155,11 @@ public sealed record LoadedModel(object? Model, StoredSnapshot? Snapshot, string
 /// <param name="ModelType">The binding key the payload was stored under, as <c>name:version</c>.</param>
 /// <param name="Version">The version the row was stored at.</param>
 /// <param name="LatestPosition">The global position in the log the fold reached.</param>
+/// <param name="Data">
+/// The payload as the store wrote it. Kept beside the model it opened into, because the Json tab
+/// shows the row's own text rather than a re-serialisation — and shows it whether or not the model
+/// could be read back.
+/// </param>
 /// <param name="Created">When it was first stored.</param>
 /// <param name="CreatedBy">Who first stored it, or null when the store attributes nothing.</param>
 /// <param name="Updated">When it was last stored.</param>
@@ -164,6 +170,7 @@ public sealed record StoredSnapshot(
     string ModelType,
     int Version,
     long LatestPosition,
+    string Data,
     DateTimeOffset Created,
     string? CreatedBy,
     DateTimeOffset Updated,

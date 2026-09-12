@@ -67,9 +67,18 @@ shared and stepped back through.
 
 ![Aggregate data: rows narrowed by stream, aggregate and identifier](../images/memoria-web/aggregate-data.png)
 
-Opening a row reaches a detail page with four tabs: **Info** (how the row is identified and where its
-snapshot stands), **State** (the model folded), **Events** (what it applied, or what its boundary
-holds), and **Update**.
+Opening a row reaches a detail page with five tabs: **Info** (how the row is identified and where its
+snapshot stands), **State** (the model folded), **Json** (the stored payload itself), **Events** (what
+it applied, or what its boundary holds), and **Update**.
+
+**State** and **Json** show the same payload two ways. State reads it through the model's own
+properties; Json shows the text the store holds, laid out one value per line and coloured by kind,
+in a box that scrolls once it grows past the screen. It is the row's own text rather than the model
+serialised again, so a payload the model cannot read back, or one carrying more than the model
+declares, is still there to see — and a payload that is not JSON at all is shown as it is, under a
+note saying why it could not be laid out. A **Copy** button above the box puts the laid-out text on
+the clipboard; it appears only where the browser allows the page to write there, which means a
+secure context: `localhost` or HTTPS.
 
 ![An aggregate folded from its events, on the State tab](../images/memoria-web/aggregate-details.png)
 

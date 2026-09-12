@@ -50,7 +50,7 @@ else
     @* Views of one aggregate, switched by the address rather than by script: each tab is a link, so
        a view can be linked to and gone back to, and the page stays statically rendered like the
        rest of them. Marked with aria-current for the same reason the breadcrumb is — these are
-       places to go, not scripted tabs, so they say so in the language of navigation. The three that
+       places to go, not scripted tabs, so they say so in the language of navigation. The four that
        read come first and the one that writes comes last, and it is only there when the store the
        tool was pointed at can be written to. *@
     <nav class="tabs" aria-label="Aggregate views">
@@ -58,6 +58,8 @@ else
            aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
         <a id="tab-@StateTab" href="@TabLink(StateTab)"
            aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+        <a id="tab-@JsonTab" href="@TabLink(JsonTab)"
+           aria-current="@(Tab == JsonTab ? "page" : null)">Json</a>
         <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
            aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
         @if (Capabilities.CanUpdate)
@@ -225,6 +227,60 @@ else
                     @StateRows((State, 0))
                     </tbody>
                 </table>
+            }
+        </section>
+    }
+    else if (Tab == JsonTab)
+    {
+        @* The payload as the store wrote it, laid out to be read. The state tab reads the same
+           payload through the model's own properties; this shows the text those were read from, so
+           a payload the model cannot open, or one holding more than the model declares, is still
+           there to look at. Laid out by the server as text, like the rest of the page. *@
+        <section class="tab-panel" aria-labelledby="tab-@JsonTab">
+            @if (Error is not null)
+            {
+                @* Said above the tabs already; nothing to add here but the absence. *@
+                <p class="missing">There is no payload to show.</p>
+            }
+            else if (Stored is null)
+            {
+                <p class="empty">
+                    No snapshot is stored at that address. Nothing has been written for this
+                    aggregate in this stream, or it was written under another id.
+                </p>
+            }
+            else
+            {
+                var json = JsonView.Render(Stored.Data);
+
+                @if (json.Markup is not null)
+                {
+                    <div class="json-view">
+                        @* Hidden until script shows it: copying is the one thing on this page that
+                           needs script, and a reader without it should see no button that does
+                           nothing. See wwwroot/preferences.js. *@
+                        <div class="json-tools" data-json-tools hidden>
+                            <button type="button" class="quiet" data-copy-json>Copy</button>
+                        </div>
+                        <pre class="json">@((MarkupString)json.Markup)</pre>
+                    </div>
+                }
+                else
+                {
+                    @* The row is there and its payload is not JSON. Said, and then shown as it is:
+                       what the store holds is the thing this tab exists to show. *@
+                    <p class="alert" role="alert">@json.Error</p>
+
+                    @if (!string.IsNullOrWhiteSpace(Stored.Data))
+                    {
+                        <div class="json-view">
+                            <div class="json-tools" data-json-tools hidden>
+                                <button type="button" class="quiet" data-copy-json>Copy</button>
+                            </div>
+                            <pre class="json">@Stored.Data</pre>
+                        </div>
+                    }
+                }
             }
         </section>
     }
@@ -730,6 +786,8 @@ else
 
     private const string StateTab = "state";
 
+    private const string JsonTab = "json";
+
     private const string EventsTab = "events";
 
     private const string UpdateTab = "update";
@@ -795,7 +853,7 @@ else
     /// One address for the whole page, carrying everything that addresses the row as well as the
     /// state of the events table, so a link only changes what it means to change.
     /// </summary>
-    /// <param name="tab">Which of the three views to show.</param>
+    /// <param name="tab">Which of the views to show.</param>
     /// <param name="descending">Whether the newest events come first.</param>
     /// <param name="page">The events page to land on, from one.</param>
     /// <param name="toTable">Whether to land at the events panel rather than at the top.</param>
@@ -954,6 +1012,7 @@ else
         Tab = (Value("tab") ?? string.Empty).ToLowerInvariant() switch
         {
             StateTab => StateTab,
+            JsonTab => JsonTab,
             EventsTab => EventsTab,
             UpdateTab when Capabilities.CanUpdate => UpdateTab,
             _ => InfoTab,
@@ -1000,8 +1059,8 @@ else
         PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
 
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
-        // the other two needs the events read, and reading them anyway would cost the info and
-        // state tabs a count and a page of rows each to render nothing from.
+        // the other tabs needs the events read, and reading them anyway would cost the info, state
+        // and json tabs a count and a page of rows each to render nothing from.
         if (Tab != EventsTab)
         {
             return;

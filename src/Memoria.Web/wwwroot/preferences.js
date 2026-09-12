@@ -211,10 +211,63 @@ document.addEventListener("change", event => {
     stampTheme();
 });
 
+// The copy button on the Json tab. Rendered hidden — it is the one control on these pages that does
+// nothing without script — and shown here only where the clipboard can be written to, which the
+// browser allows in a secure context alone: localhost or https. Shown as a strip rather than one
+// button at a time, so the card has no strip with nothing in it when the clipboard is refused.
+function showCopyButtons() {
+    const canCopy = Boolean(navigator.clipboard && navigator.clipboard.writeText);
+
+    for (const tools of document.querySelectorAll("[data-json-tools]")) {
+        tools.hidden = !canCopy;
+    }
+}
+
+// What is copied is the text of the box, so a reader gets the payload laid out as they see it
+// rather than the one line the store holds. The button says what happened for a moment and then
+// goes back to offering, so it can be pressed again; the label it goes back to is remembered on the
+// button the first time, so a second press during that moment does not remember "Copied".
+document.addEventListener("click", async event => {
+    const control = event.target;
+
+    if (!(control instanceof HTMLElement)) {
+        return;
+    }
+
+    const button = control.closest("[data-copy-json]");
+
+    if (!button) {
+        return;
+    }
+
+    const source = button.closest(".json-view")?.querySelector("pre.json");
+
+    if (!source) {
+        return;
+    }
+
+    button.dataset.label ??= button.textContent;
+
+    try {
+        await navigator.clipboard.writeText(source.textContent);
+        button.textContent = "Copied";
+    } catch {
+        button.textContent = "Could not copy";
+    }
+
+    window.setTimeout(() => {
+        button.textContent = button.dataset.label;
+    }, 2000);
+});
+
 function apply() {
     // First, and before the early return below: the theme is the whole application's, and a reader
     // who never picked a rows-per-page size still has one.
     applyTheme();
+
+    // Before the early return below, for the same reason: a reader who never picked a size can
+    // still be looking at a payload.
+    showCopyButtons();
 
     // Both settings are put back on every page, and this one first: the note is rendered for
     // everyone, so a reader who hid it should not watch it go. Before the early return below,

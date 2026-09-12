@@ -49,16 +49,18 @@ else
         <p class="alert" role="alert">@Error</p>
     }
 
-    @* Four views of one projection, switched by the address rather than by script: each tab is a
+    @* Five views of one projection, switched by the address rather than by script: each tab is a
        link, so a view can be linked to and gone back to, and the page stays statically rendered
        like the rest of them. Marked with aria-current for the same reason the breadcrumb is —
        these are places to go, not scripted tabs, so they say so in the language of navigation.
-       The three that read come first and the one that writes comes last. *@
+       The four that read come first and the one that writes comes last. *@
     <nav class="tabs" aria-label="Projection views">
         <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
            aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
         <a id="tab-@StateTab" href="@TabLink(StateTab)"
            aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+        <a id="tab-@JsonTab" href="@TabLink(JsonTab)"
+           aria-current="@(Tab == JsonTab ? "page" : null)">Json</a>
         <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
            aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
         <a id="tab-@UpdateTab" href="@TabLink(UpdateTab)"
@@ -66,7 +68,7 @@ else
     </nav>
 
     @* Each panel is named by the tab that reaches it, so the label is written once and a reader
-       arriving by fragment is told which of the four they landed in. *@
+       arriving by fragment is told which of the five they landed in. *@
     @if (Tab == InfoTab)
     {
         <section class="tab-panel" aria-labelledby="tab-@InfoTab">
@@ -208,6 +210,60 @@ else
                     @StateRows((State, 0))
                     </tbody>
                 </table>
+            }
+        </section>
+    }
+    else if (Tab == JsonTab)
+    {
+        @* The payload as the store wrote it, laid out to be read. The state tab reads the same
+           payload through the model's own properties; this shows the text those were read from, so
+           a payload the model cannot open, or one holding more than the model declares, is still
+           there to look at. Laid out by the server as text, like the rest of the page. *@
+        <section class="tab-panel" aria-labelledby="tab-@JsonTab">
+            @if (Error is not null)
+            {
+                @* Said above the tabs already; nothing to add here but the absence. *@
+                <p class="missing">There is no payload to show.</p>
+            }
+            else if (Stored is null)
+            {
+                <p class="empty">
+                    No snapshot is stored under those values. Nothing has been written under the
+                    boundary they describe, or it was written under a wider one.
+                </p>
+            }
+            else
+            {
+                var json = JsonView.Render(Stored.Data);
+
+                @if (json.Markup is not null)
+                {
+                    <div class="json-view">
+                        @* Hidden until script shows it: copying is the one thing on this page that
+                           needs script, and a reader without it should see no button that does
+                           nothing. See wwwroot/preferences.js. *@
+                        <div class="json-tools" data-json-tools hidden>
+                            <button type="button" class="quiet" data-copy-json>Copy</button>
+                        </div>
+                        <pre class="json">@((MarkupString)json.Markup)</pre>
+                    </div>
+                }
+                else
+                {
+                    @* The row is there and its payload is not JSON. Said, and then shown as it is:
+                       what the store holds is the thing this tab exists to show. *@
+                    <p class="alert" role="alert">@json.Error</p>
+
+                    @if (!string.IsNullOrWhiteSpace(Stored.Data))
+                    {
+                        <div class="json-view">
+                            <div class="json-tools" data-json-tools hidden>
+                                <button type="button" class="quiet" data-copy-json>Copy</button>
+                            </div>
+                            <pre class="json">@Stored.Data</pre>
+                        </div>
+                    }
+                }
             }
         </section>
     }
@@ -644,12 +700,14 @@ else
     private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
 
     /// <summary>
-    /// The four views the page offers, named as they appear in the address. Which one is showing
+    /// The five views the page offers, named as they appear in the address. Which one is showing
     /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
     /// </summary>
     private const string InfoTab = "info";
 
     private const string StateTab = "state";
+
+    private const string JsonTab = "json";
 
     private const string EventsTab = "events";
 
@@ -712,7 +770,7 @@ else
     /// One address for the whole page, carrying everything that addresses the projection as well as
     /// the state of the events table, so a link only changes what it means to change.
     /// </summary>
-    /// <param name="tab">Which of the four views to show.</param>
+    /// <param name="tab">Which of the five views to show.</param>
     /// <param name="descending">Whether the newest events come first.</param>
     /// <param name="page">The events page to land on, from one.</param>
     /// <param name="toTable">
@@ -869,11 +927,12 @@ else
             pair => pair.Key, pair => (string?)pair.Value.LastOrDefault(),
             StringComparer.OrdinalIgnoreCase);
 
-        // Matched against the four the page has, so an unknown name in the address opens the one
+        // Matched against the five the page has, so an unknown name in the address opens the one
         // it opens with rather than a blank page.
         Tab = (Values.GetValueOrDefault("tab") ?? string.Empty).ToLowerInvariant() switch
         {
             StateTab => StateTab,
+            JsonTab => JsonTab,
             EventsTab => EventsTab,
             UpdateTab => UpdateTab,
             _ => InfoTab,
@@ -934,8 +993,8 @@ else
             Values.GetValueOrDefault("payloads"), Open, StringComparison.OrdinalIgnoreCase);
 
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
-        // the other two needs the events read, and reading them anyway would cost the info and
-        // state tabs a count and a page of rows each to render nothing from.
+        // the other tabs needs the events read, and reading them anyway would cost the info, state
+        // and json tabs a count and a page of rows each to render nothing from.
         if (Tab == EventsTab)
         {
             // A name in the address is matched against what the projection applies, so it can only

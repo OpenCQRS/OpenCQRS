@@ -103,6 +103,21 @@ public class ModelReaderTests
     }
 
     /// <summary>
+    /// The payload as the store wrote it, kept beside the model it opened into: the Json tab shows
+    /// the row's own text rather than a re-serialisation of the model, so it has to survive the
+    /// read whether or not the model did.
+    /// </summary>
+    [Fact]
+    public void Carries_the_payload_the_row_holds()
+    {
+        ModelReader.Read(typeof(SampleDcbAggregate), Row("""{"Name":"Kettle"}"""))
+            .Snapshot!.Data.Should().Be("""{"Name":"Kettle"}""");
+
+        ModelReader.Read(typeof(SampleDcbAggregate), Row("{not json"))
+            .Snapshot!.Data.Should().Be("{not json");
+    }
+
+    /// <summary>
     /// Audit is a store concern the application may leave switched off, so an unattributed row is
     /// an ordinary row rather than a broken one.
     /// </summary>

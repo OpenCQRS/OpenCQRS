@@ -145,6 +145,15 @@
        rows: a control has to announce itself, a table's rules only have to separate. */
     --field-rule: #c6ccd4;
 
+    /* The kinds of token a stored payload is made of, on the Json tab. Four hues that are not the
+       accent, so a key does not read as a link and a value does not read as a control; null takes
+       the faint ink rather than a hue of its own, because it is the absence of a value. Each is
+       held dark enough on the light sheet to be read as text, and the dark theme lifts them. */
+    --json-key: #1a5fb4;
+    --json-string: #2f7d40;
+    --json-number: #a35d00;
+    --json-bool: #8250df;
+
     /* The sizes the application is allowed to set, and the whole of them. This grew to ten ad-hoc
        values — 0.875, 0.9 and 0.9375rem were three names for the same size, and 1.0625, 1.1 and
        1.2rem three for another — which is why headings a reader met on different pages were never
@@ -224,6 +233,11 @@
         --rule: #282e36;
         --field-rule: #3a424d;
 
+        --json-key: #82aaff;
+        --json-string: #7fd191;
+        --json-number: #e5b567;
+        --json-bool: #c3a6ff;
+
         color-scheme: dark;
     }
 }
@@ -257,6 +271,11 @@
     --sunk: #171b21;
     --rule: #282e36;
     --field-rule: #3a424d;
+
+    --json-key: #82aaff;
+    --json-string: #7fd191;
+    --json-number: #e5b567;
+    --json-bool: #c3a6ff;
 
     color-scheme: dark;
 }
@@ -1048,6 +1067,85 @@ h2:focus {
     .tab-panel h3 + .lede {
         margin-top: 0;
     }
+
+    /* The payload as the store wrote it, on the same card the facts and the state table are set
+       on, so stepping between those tabs and this one is reading one surface rather than two.
+
+       Capped in height and scrolled inside rather than growing with the payload: a large model
+       serialises to hundreds of lines, and a reader wanting the page's end should not have to go
+       past all of them. The cap is a share of the window with a ceiling, so the box is as tall as
+       the screen allows without a small window turning it into a slot. Long lines wrap rather than
+       scroll sideways — a long string value is read on, not chased — and break anywhere, because
+       an id or a hash has no spaces to break at. */
+    .tab-panel .json-view {
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+        /* The strip above the box, holding what acts on the whole payload — today, copying it.
+           On the ground a column heading takes, so it reads as the card's chrome rather than as
+           the first line of the payload, and outside the box's scroll so it stays put while the
+           payload moves under it. Hidden until script shows it, and gone entirely rather than
+           empty when it stays hidden. */
+        .tab-panel .json-tools {
+            background: var(--sunk);
+            border-bottom: 1px solid var(--rule);
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.5rem 0.75rem;
+        }
+
+            /* Said outright, because display: flex above would otherwise outweigh the browser's
+               own rule for the attribute and the strip would show with script off. */
+            .tab-panel .json-tools[hidden] {
+                display: none;
+            }
+
+            /* Smaller than the page's two buttons: this acts on one box rather than on the store,
+               and at their size it would outweigh the payload it copies. */
+            .tab-panel .json-tools .quiet {
+                font-size: var(--text-sm);
+                padding: 0.3rem 0.75rem;
+            }
+
+        .tab-panel .json {
+            color: var(--ink);
+            font-family: var(--mono);
+            font-size: var(--text-md);
+            line-height: 1.55;
+            margin: 0;
+            max-height: min(40rem, 70vh);
+            overflow: auto;
+            overflow-wrap: anywhere;
+            padding: 1rem 1.25rem;
+            white-space: pre-wrap;
+        }
+
+        /* One colour per kind of token. The punctuation between them stays in the ink, so the
+           shape of the document is drawn in the quietest colour and the values stand out of it. */
+        .tab-panel .json .json-key {
+            color: var(--json-key);
+        }
+
+        .tab-panel .json .json-string {
+            color: var(--json-string);
+        }
+
+        .tab-panel .json .json-number {
+            color: var(--json-number);
+        }
+
+        .tab-panel .json .json-bool {
+            color: var(--json-bool);
+        }
+
+        .tab-panel .json .json-null {
+            color: var(--ink-faint);
+            font-style: italic;
+        }
 
 /* Label above value, so a long type name has the width to itself. */
 .facts {
