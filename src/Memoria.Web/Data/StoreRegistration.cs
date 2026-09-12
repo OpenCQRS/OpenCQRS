@@ -42,28 +42,16 @@ public static class StoreRegistration
         {
             var store = CosmosStore.Of(database, configuration);
 
-            services.AddSingleton(_ => new CosmosClient(store.ConnectionString, new CosmosClientOptions
-            {
-                // The pages ask across streams, so every read is a cross-partition query. Gateway
-                // mode is the one that works wherever the tool is run, including from behind the
-                // proxies an operator's machine tends to sit behind.
-                ConnectionMode = ConnectionMode.Gateway
-            }));
+            // The client, and the streamed store's own read and write path over it — the write half
+            // being what lets the Update tab refresh a snapshot. Shared with the sample seeder, so
+            // both reach the same container from the same connection string.
+            services.AddCosmosStreamedStore(store);
 
+            // The tool's own questions, which are asked of the documents directly rather than
+            // through the framework: they are the two the pages ask, and no store operation answers
+            // them. Read through the one client registered above.
             services.AddScoped<IStreamedReads>(provider => new CosmosStreamedReads(
                 provider.GetRequiredService<CosmosClient>(), store.DatabaseName, store.ContainerName));
-
-            // The streamed write path, so the Update tab can refresh a snapshot. It reuses the one
-            // client above rather than opening a second: the provider is handed the shared client
-            // and told not to own it, so shutdown disposes the client once, through the singleton
-            // registered here. TimeProvider and the HTTP context accessor are the write types' other
-            // dependencies, which AddMemoriaCosmos would otherwise have registered.
-            services.AddSingleton(TimeProvider.System);
-            services.AddHttpContextAccessor();
-            services.AddSingleton(provider => new CosmosClientProvider(
-                provider.GetRequiredService<CosmosClient>(), store.DatabaseName, store.ContainerName));
-            services.AddScoped<ICosmosDataStore, CosmosDataStore>();
-            services.AddScoped<IDomainService, CosmosDomainService>();
 
             return services;
         }
@@ -94,32 +82,4 @@ public static class StoreRegistration
 
         return services;
     }
-}
-
-/// <summary>
-/// Where a Cosmos store's documents are, which its connection string does not say.
-/// </summary>
-/// <param name="ConnectionString">The account, as given.</param>
-/// <param name="DatabaseName">The database the container is in.</param>
-/// <param name="ContainerName">The container the store writes into.</param>
-/// <remarks>
-/// A Cosmos connection string names an account and nothing more, so the database and the container
-/// are asked for separately. They default to what <c>CosmosOptions</c> defaults to, so a store
-/// installed under those names needs no settings at all.
-/// </remarks>
-public sealed record CosmosStore(string ConnectionString, string DatabaseName, string ContainerName)
-{
-    /// <summary>The setting holding the database name.</summary>
-    public const string DatabaseSetting = "Database:Cosmos:DatabaseName";
-
-    /// <summary>The setting holding the container name.</summary>
-    public const string ContainerSetting = "Database:Cosmos:ContainerName";
-
-    /// <summary>
-    /// Reads where a Cosmos store's documents are.
-    /// </summary>
-    public static CosmosStore Of(DatabaseConnection database, IConfiguration configuration) =>
-        new(database.ConnectionString,
-            configuration[DatabaseSetting] is { Length: > 0 } databaseName ? databaseName : "Memoria",
-            configuration[ContainerSetting] is { Length: > 0 } containerName ? containerName : "Domain");
 }

@@ -12,6 +12,7 @@
         <ProjectReference Include="..\Memoria\Memoria.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing\Memoria.EventSourcing.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing.Store.EntityFrameworkCore\Memoria.EventSourcing.Store.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\Memoria.EventSourcing.Store.Cosmos\Memoria.EventSourcing.Store.Cosmos.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing.Dcb\Memoria.EventSourcing.Dcb.csproj" />
         <ProjectReference Include="..\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.csproj" />
     </ItemGroup>
@@ -33,6 +34,7 @@
              web application in with it. -->
         <Compile Include="..\Memoria.Web\Data\DatabaseProvider.cs" Link="Data\DatabaseProvider.cs" />
         <Compile Include="..\Memoria.Web\Data\DatabaseConnection.cs" Link="Data\DatabaseConnection.cs" />
+        <Compile Include="..\Memoria.Web\Data\CosmosStore.cs" Link="Data\CosmosStore.cs" />
     </ItemGroup>
 
     <ItemGroup>

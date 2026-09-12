@@ -49,20 +49,45 @@ public static class Menu
             SampleDataAction.None);
 
     /// <summary>
-    /// Asks which store the data is for.
+    /// Asks which of the store's data the run is for.
     /// </summary>
+    /// <param name="holds">
+    /// What the store can hold, from <see cref="ISampleStore.Holds"/>. Only these are offered: a
+    /// Cosmos store has no dynamic consistency boundary in it, and offering that half would be
+    /// offering something that cannot be done.
+    /// </param>
     /// <remarks>
-    /// Only asked when something is being added. A deletion on its own clears both stores, because
-    /// there is nothing to choose between when the answer is "none of it".
+    /// Nothing is asked when the store holds one kind only — there is nothing to choose between, and
+    /// a question with a single answer is a question not worth asking. <c>Both</c> is offered as
+    /// whatever the store holds rather than as the flag pair, so it never means more than the store
+    /// has.
     /// </remarks>
-    public static SampleDataScope AskForScope() =>
-        Ask("Which data?",
-            [
-                ("Streamed data", SampleDataScope.Streamed),
-                ("DCB data", SampleDataScope.Dcb),
-                ("Both", SampleDataScope.Both)
-            ],
-            SampleDataScope.None);
+    public static SampleDataScope AskForScope(SampleDataScope holds)
+    {
+        var options = new List<(string Label, SampleDataScope Choice)>();
+
+        if (holds.HasFlag(SampleDataScope.Streamed))
+        {
+            options.Add(("Streamed data", SampleDataScope.Streamed));
+        }
+
+        if (holds.HasFlag(SampleDataScope.Dcb))
+        {
+            options.Add(("DCB data", SampleDataScope.Dcb));
+        }
+
+        if (options.Count > 1)
+        {
+            options.Add(("Both", holds));
+        }
+
+        return options.Count switch
+        {
+            0 => SampleDataScope.None,
+            1 => options[0].Choice,
+            _ => Ask("Which data?", options, SampleDataScope.None)
+        };
+    }
 
     private static T Ask<T>(string question, IReadOnlyList<(string Label, T Choice)> options, T nothing)
     {

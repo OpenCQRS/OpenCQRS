@@ -108,6 +108,7 @@
     <Project Path="tests/Memoria.Caching.Memory.Tests/Memoria.Caching.Memory.Tests.csproj" />
     <Project Path="tests/Memoria.Caching.Redis.Tests/Memoria.Caching.Redis.Tests.csproj" />
     <Project Path="tests/Memoria.Web.Tests/Memoria.Web.Tests.csproj" />
+    <Project Path="tests/Memoria.Web.Samples.Tests/Memoria.Web.Samples.Tests.csproj" />
   </Folder>
   <Folder Name="/examples/">
     <Project Path="examples/Memoria.Examples.EventSourcing.EntityFrameworkCore/Memoria.Examples.EventSourcing.EntityFrameworkCore.csproj" />

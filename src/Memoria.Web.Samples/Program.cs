@@ -1,18 +1,12 @@
 using Memoria;
 using Memoria.EventSourcing;
 using Memoria.EventSourcing.Dcb;
-using Memoria.EventSourcing.Domain;
 using Memoria.EventSourcing.Dcb.Extensions;
-using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
-using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.Extensions;
+using Memoria.EventSourcing.Domain;
 using Memoria.EventSourcing.Extensions;
-using Memoria.EventSourcing.Store.EntityFrameworkCore;
-using Memoria.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using Memoria.Extensions;
 using Memoria.Web.Data;
-using Memoria.Web.Samples.Data;
 using Memoria.Web.Samples.Seeding;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,25 +28,6 @@ var database = DatabaseConnection.Of(
     builder.Configuration.GetConnectionString(DatabaseConnection.Name),
     builder.Configuration[DatabaseConnection.Setting]);
 
-// Both contexts take their options as the base type's DbContextOptions rather than their own
-// closed type, so each is registered against that.
-builder.Services.AddScoped(serviceProvider =>
-{
-    var options = new DbContextOptionsBuilder<DomainDbContext>();
-    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
-    return options.Options;
-});
-
-builder.Services.AddScoped(serviceProvider =>
-{
-    var options = new DbContextOptionsBuilder<DcbDbContext>();
-    database.Apply(options).UseApplicationServiceProvider(serviceProvider);
-    return options.Options;
-});
-
-builder.Services.AddDbContext<StreamedStoreDbContext>(options => database.Apply(options));
-builder.Services.AddDbContext<DcbStoreDbContext>(options => database.Apply(options));
-
 builder.Services.AddMemoria(typeof(Program));
 
 // The two event sourcing models side by side. Each store call replaces the default no-op service
@@ -60,31 +35,30 @@ builder.Services.AddMemoria(typeof(Program));
 builder.Services.AddMemoriaEventSourcing(typeof(Program));
 builder.Services.AddMemoriaDcb(typeof(Program));
 
-builder.Services.AddMemoriaEntityFrameworkCore<StreamedStoreDbContext>();
-builder.Services.AddMemoriaDcbEntityFrameworkCore<DcbStoreDbContext>();
+// Whichever store the connection string named. A relational store brings a context for each model
+// with it; a Cosmos store brings a client, the streamed model, and no context.
+builder.Services.AddSampleStore(database, builder.Configuration);
 
 var host = builder.Build();
 
 using var scope = host.Services.CreateScope();
 var services = scope.ServiceProvider;
 
-var streamedContext = services.GetRequiredService<StreamedStoreDbContext>();
-var dcbContext = services.GetRequiredService<DcbStoreDbContext>();
+var store = services.GetRequiredService<ISampleStore>();
 
 Console.WriteLine("Memoria.Web.Samples");
-Console.WriteLine($"  database : {streamedContext.Database.GetDbConnection().Database}");
+Console.WriteLine($"  store    : {database.Provider}");
+Console.WriteLine($"  writing  : {store.Where}");
 Console.WriteLine($"  bound    : {Count(TypeBindings.EventTypeBindings)} events, " +
                   $"{Count(TypeBindings.AggregateTypeBindings)}+{Count(DcbTypeBindings.AggregateTypeBindings)} aggregates, " +
                   $"{Count(TypeBindings.ProjectionTypeBindings)}+{Count(DcbTypeBindings.ProjectionTypeBindings)} projections " +
                   "(streamed+dcb)");
 
-// The samples have a database to themselves, which may not exist yet and will have no tables in it
-// the first time. Both stores are installed before anything asks a question, so a deletion has
-// something to delete from.
+// The samples have a store to themselves, which may not exist yet and will hold nothing the first
+// time. It is installed before anything asks a question, so a deletion has something to delete from.
 try
 {
-    if (await StoreSchema.Ensure(streamedContext, "DomainAggregates") |
-        await StoreSchema.Ensure(dcbContext, "DcbSnapshots"))
+    if (await store.Install())
     {
         Console.WriteLine("  schema   : installed");
     }
@@ -108,11 +82,13 @@ if (action == SampleDataAction.None)
     return 0;
 }
 
-// A deletion on its own clears both stores; a deletion before a write clears what is about to be
-// written, so that the run leaves the store holding exactly what it just put there.
+// A deletion on its own clears everything the store holds; a deletion before a write clears what is
+// about to be written, so that the run leaves the store holding exactly what it just put there.
+// Either way the scope never reaches past what this store has in it — a Cosmos store has no dynamic
+// consistency boundary, so neither half of this offers one.
 var scopeOfRun = action == SampleDataAction.DeleteAll
-    ? SampleDataScope.Both
-    : Menu.AskForScope();
+    ? store.Holds
+    : Menu.AskForScope(store.Holds);
 
 if (scopeOfRun == SampleDataScope.None)
 {
@@ -122,7 +98,12 @@ if (scopeOfRun == SampleDataScope.None)
 
 if (action is SampleDataAction.ReplaceAll or SampleDataAction.DeleteAll)
 {
-    await Delete(scopeOfRun);
+    Console.WriteLine();
+
+    foreach (var (table, rows) in await store.Erase(scopeOfRun))
+    {
+        Console.WriteLine($"deleted {rows,7} from {table}");
+    }
 }
 
 if (action is SampleDataAction.Add or SampleDataAction.ReplaceAll)
@@ -131,31 +112,6 @@ if (action is SampleDataAction.Add or SampleDataAction.ReplaceAll)
 }
 
 return 0;
-
-async Task Delete(SampleDataScope what)
-{
-    Console.WriteLine();
-
-    if (what.HasFlag(SampleDataScope.Streamed))
-    {
-        Report(await SampleDataEraser.EraseStreamed(streamedContext));
-    }
-
-    if (what.HasFlag(SampleDataScope.Dcb))
-    {
-        Report(await SampleDataEraser.EraseDcb(dcbContext));
-    }
-
-    return;
-
-    static void Report(IReadOnlyList<(string Table, int Rows)> deleted)
-    {
-        foreach (var (table, rows) in deleted)
-        {
-            Console.WriteLine($"deleted {rows,7} from {table}");
-        }
-    }
-}
 
 async Task Seed(SampleDataScope what)
 {
