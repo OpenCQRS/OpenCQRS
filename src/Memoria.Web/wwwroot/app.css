@@ -1687,6 +1687,44 @@ h2:focus {
         text-align: center;
     }
 
+    /* A row of the compare tab that the two folds disagree on, washed in the colour the page
+       already uses for that kind of news: a value that changed reads as a caution, one that
+       appeared as a notice, one that went as a danger. The whole row rather than the two value
+       cells, so a shape marked for something inside it is marked where its name is. Nested rows
+       keep their softer ink; the wash says what happened and the ink says where it sits. */
+    .grid tr.changed td {
+        background: var(--caution-ground);
+    }
+
+    .grid tr.added td {
+        background: var(--notice-ground);
+    }
+
+    .grid tr.removed td {
+        background: var(--danger-ground);
+    }
+
+    .grid tr.changed .change {
+        color: var(--caution-ink);
+    }
+
+    .grid tr.added .change {
+        color: var(--notice-ink);
+    }
+
+    .grid tr.removed .change {
+        color: var(--danger-strong);
+    }
+
+    /* The word saying how a row differs: small and set apart from the values, as the mark rather
+       than another value. */
+    .grid .change {
+        font-size: var(--text-xs);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
     /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
        it. */
     .grid .icon-link {

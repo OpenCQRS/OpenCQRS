@@ -125,85 +125,18 @@ public static class ModelRefresher
 
     /// <summary>
     /// Closes one of the store's update methods over the model in hand, calls it, and reads what
-    /// comes back.
+    /// comes back as whether a snapshot was written.
     /// </summary>
     /// <remarks>
-    /// The generic method is closed inside the guard rather than before it: a model that does not
-    /// satisfy the constraint — an aggregate without a constructor taking nothing, say — throws
-    /// here, and that is a page's answer rather than the application's.
+    /// A success carrying nothing is the store saying there was nothing to bring up to date, which
+    /// is an answer rather than a fault — so it is neither a refresh nor an error.
     /// </remarks>
     private static async Task<RefreshedModel> Invoke(
         MethodInfo update, Type model, object service, object?[] arguments)
     {
-        try
-        {
-            var task = (Task?)update.MakeGenericMethod(model).Invoke(service, arguments);
+        var answer = await StoreCall.Invoke(update, model, service, arguments);
 
-            if (task is null)
-            {
-                return new RefreshedModel(false, "The store returned nothing at all.");
-            }
-
-            await task;
-
-            var result = task.GetType().GetProperty(nameof(Task<object>.Result))?.GetValue(task);
-
-            if (result is null)
-            {
-                return new RefreshedModel(false, "The store returned nothing at all.");
-            }
-
-            var resultType = result.GetType();
-
-            if (Read(resultType, result, "IsNotSuccess") is true)
-            {
-                return new RefreshedModel(false, Describe(Read(resultType, result, "Failure")));
-            }
-
-            return new RefreshedModel(Read(resultType, result, "Value") is not null, null);
-        }
-        catch (TargetInvocationException exception)
-        {
-            return new RefreshedModel(false, exception.InnerException?.Message ?? exception.Message);
-        }
-        catch (Exception exception)
-        {
-            return new RefreshedModel(false, exception.Message);
-        }
-    }
-
-    /// <summary>
-    /// Reads one property off a result.
-    /// </summary>
-    /// <remarks>
-    /// Declared properties first: <c>Result&lt;T&gt;.Value</c> hides a base member of the same name,
-    /// and asking for it by name alone is an ambiguous match rather than the one wanted.
-    /// </remarks>
-    private static object? Read(Type type, object instance, string name)
-    {
-        var property =
-            type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            ?? type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(candidate => candidate.Name == name);
-
-        return property?.GetValue(instance);
-    }
-
-    private static string Describe(object? failure)
-    {
-        if (failure is null)
-        {
-            return "The store reported a failure with no detail.";
-        }
-
-        var type = failure.GetType();
-        var title = type.GetProperty("Title")?.GetValue(failure) as string;
-        var description = type.GetProperty("Description")?.GetValue(failure) as string;
-
-        return string.Join(" — ", new[] { title, description }.Where(part => !string.IsNullOrWhiteSpace(part)))
-            is { Length: > 0 } message
-            ? message
-            : failure.ToString() ?? "The store reported a failure.";
+        return new RefreshedModel(answer.Value is not null, answer.Error);
     }
 }
 
