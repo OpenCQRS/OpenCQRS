@@ -1927,6 +1927,24 @@ h2:focus {
     width: 5%;
 }
 
+/* The same table on a streamed model's events tab, with the way into comparing the two folds
+   either side of each row at the end of it. Its own modifier for the same reason the tags have one:
+   the four proportions above are shared by tables that draw no such column, and a share declared
+   for it there would be a share those tables left empty. What it needs — two sequences and an
+   arrow — comes out of the payload, which is the column with room to spare, and a little from the
+   type, which is a name and rarely needs a quarter of the width. */
+.grid.events.compared .col-type {
+    width: 22%;
+}
+
+.grid.events.compared .col-payload {
+    width: 36%;
+}
+
+.grid.events.compared .col-compare {
+    width: 9%;
+}
+
 /* The snapshots table, declared the same way the log's is and for a different reason: nothing here
    opens, so the columns are declared to keep the two pages that use it — aggregates and projections
    — reading identically however wide or narrow the ids in them happen to be.
