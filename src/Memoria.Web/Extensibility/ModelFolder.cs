@@ -21,19 +21,22 @@ namespace Memoria.Web.Extensibility;
 /// </remarks>
 public static class ModelFolder
 {
-    private static readonly MethodInfo FoldAggregate =
+    private static readonly MethodInfo FoldAggregate = UpToSequence(nameof(IDomainService.GetInMemoryAggregate));
+
+    private static readonly MethodInfo FoldProjection = UpToSequence(nameof(IDomainService.GetInMemoryProjection));
+
+    private static MethodInfo UpToSequence(string name) =>
         typeof(IDomainService).GetMethods()
             .SingleOrDefault(method =>
-                method.Name == nameof(IDomainService.GetInMemoryAggregate) &&
+                method.Name == name &&
                 method.GetParameters() is [_, _, { ParameterType.Name: nameof(Int32) }, _])
-        ?? throw new InvalidOperationException(
-            "IDomainService.GetInMemoryAggregate up to a sequence is missing.");
+        ?? throw new InvalidOperationException($"IDomainService.{name} up to a sequence is missing.");
 
     /// <summary>
-    /// Folds a streamed aggregate's state up to a sequence.
+    /// Folds a streamed model's state up to a sequence.
     /// </summary>
     /// <param name="service">The streamed domain service.</param>
-    /// <param name="model">The aggregate type to fold.</param>
+    /// <param name="model">The aggregate or projection type to fold.</param>
     /// <param name="streamId">The stream it is folded from.</param>
     /// <param name="identifier">An identifier instance naming it inside that stream.</param>
     /// <param name="upToSequence">The last sequence to fold, inclusive.</param>
@@ -42,6 +45,10 @@ public static class ModelFolder
     /// The folded model, or what went wrong. A stream with nothing to fold up to that sequence
     /// comes back as the model in its opening state, which is an answer rather than a fault.
     /// </returns>
+    /// <remarks>
+    /// Which of the store's two reads is called follows from the identifier rather than being
+    /// asked for, as with a refresh: an identifier names one model and only one kind of model.
+    /// </remarks>
     public static async Task<FoldedModel> Fold(
         IDomainService service,
         Type model,
@@ -56,14 +63,21 @@ public static class ModelFolder
                 $"{streamId.GetType().Name} is not a stream, so there is nowhere to fold from.");
         }
 
-        if (identifier is not IAggregateId)
+        var read = identifier switch
+        {
+            IAggregateId => FoldAggregate,
+            IProjectionId => FoldProjection,
+            _ => null
+        };
+
+        if (read is null)
         {
             return new FoldedModel(null,
-                $"{identifier.GetType().Name} is not a streamed aggregate identifier, so nothing names what to fold.");
+                $"{identifier.GetType().Name} is not a streamed identifier, so nothing names what to fold.");
         }
 
         var answer = await StoreCall.Invoke(
-            FoldAggregate, model, service, [streamId, identifier, upToSequence, cancellationToken]);
+            read, model, service, [streamId, identifier, upToSequence, cancellationToken]);
 
         return new FoldedModel(answer.Value, answer.Error);
     }

@@ -121,4 +121,55 @@ public class ModelFolderTests
         fold.Error.Should().NotBeNullOrWhiteSpace();
         store.ReceivedCalls().Should().BeEmpty();
     }
+
+    // A read model is folded by the store's own projection method. Asking for it through the
+    // aggregate's would not compile a closed method at all — the constraint is on IAggregateRoot —
+    // so which one is called is what makes the projection page's compare tab work rather than a
+    // detail of how. As with the refresh, the identifier says which.
+
+    private static readonly SampleProjectionId ProjectionId = new("abc-1");
+
+    private static IDomainService ProjectionStore(int upToSequence, Result<SampleProjection> result)
+    {
+        var store = Substitute.For<IDomainService>();
+
+        store.GetInMemoryProjection<SampleProjection>(
+                Arg.Any<IStreamId>(),
+                Arg.Any<IProjectionId<SampleProjection>>(),
+                upToSequence,
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(result));
+
+        return store;
+    }
+
+    [Fact]
+    public async Task Folds_a_projection_through_the_stores_projection_method()
+    {
+        var folded = new SampleProjection();
+        var store = ProjectionStore(3, folded);
+
+        var fold = await ModelFolder.Fold(store, typeof(SampleProjection), Stream, ProjectionId, 3);
+
+        fold.Model.Should().BeSameAs(folded);
+        fold.Error.Should().BeNull();
+
+        await store.Received(1).GetInMemoryProjection<SampleProjection>(
+            Stream, ProjectionId, 3, Arg.Any<CancellationToken>());
+        await store.DidNotReceive().GetInMemoryProjection<SampleProjection>(
+            Arg.Any<IStreamId>(), Arg.Any<IProjectionId<SampleProjection>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Reports_what_the_store_said_went_wrong_about_a_projection()
+    {
+        var store = ProjectionStore(3,
+            (Result<SampleProjection>)new Failure(ErrorCode.Error, "Stream unreadable",
+                "An event type could not be resolved."));
+
+        var fold = await ModelFolder.Fold(store, typeof(SampleProjection), Stream, ProjectionId, 3);
+
+        fold.Model.Should().BeNull();
+        fold.Error.Should().Contain("Stream unreadable");
+    }
 }

@@ -1,0 +1,194 @@
+@using Memoria.Web.Extensibility
+
+@* Two folds of a stream through one row's identifier, one up to each sequence, laid over each other
+   as one table: the same rows the state tab lists, with a value from each fold and a mark on the
+   rows where the two disagree. Neither fold is written anywhere — the row stays at whatever version
+   the info tab says.
+
+   One component rather than a copy on each streamed detail page: a projection is compared exactly as
+   an aggregate is, and a reader who meets the table on one page should meet the same table on the
+   other. What differs — which word the page calls its model, where the form posts back to, and
+   which fields carry the row along — comes in from the page. *@
+<section class="tab-panel" aria-labelledby="tab-@Tab">
+    @* The store folds a stream through an identifier and takes the things rather than the ids they
+       produced, so both have to be worked back out of this row before it can be asked — the same
+       three answers the update tab gives when one of them cannot be. *@
+    @if (Identity.Stream is null)
+    {
+        <p class="missing">
+            Nothing registered writes stream ids of this shape, so there is nowhere to fold from.
+        </p>
+    }
+    else if (Identity.IdentifierType is null)
+    {
+        <p class="missing">
+            Nothing registered writes ids of this shape, so there is nothing to say what to fold.
+        </p>
+    }
+    else if (Identity.Identifier is null)
+    {
+        <p class="missing">
+            <code>@Identity.IdentifierType.Name</code> could not be rebuilt from this id, so there
+            is nothing to say what to fold.
+        </p>
+    }
+    else
+    {
+        @* Which two folds, chosen here as well as by a link from the events table: two sequences
+           rather than two lists of events, because a history can run to thousands and a number is
+           typed faster than a list is scrolled. Bounded by the model's own last event, since past
+           it there is nothing more to fold. The form replaces the whole query, so the row travels
+           with it as it does on the events tab. *@
+        <form class="search compare-range" method="get" action="@Action">
+            <label for="from">Up to</label>
+            <input id="from" type="number" name="from" value="@(Comparison.Range?.From)"
+                   min="0" max="@Comparison.LastSequence" required/>
+            <label for="to">against up to</label>
+            <input id="to" type="number" name="to" value="@(Comparison.Range?.To)"
+                   min="1" max="@Comparison.LastSequence" required/>
+            @Carried
+            <input type="hidden" name="tab" value="@Tab"/>
+            <button type="submit" class="quiet">Compare</button>
+        </form>
+
+        @if (Comparison.Error is not null)
+        {
+            @* A pair the address could not be read as, or a fold the store refused. Its own line
+               rather than the page alert above, which is the store failing to answer for the row
+               at all — and under the form, which is where it is put right. *@
+            <p class="alert" role="alert">@Comparison.Error</p>
+        }
+        else if (Comparison.Range is { } range)
+        {
+            <p class="lede">
+                The @Noun folded up to sequence @range.From against the same fold carried on to
+                sequence @range.To. Folded here and not written: the stored snapshot is left as it
+                is.
+            </p>
+
+            @if (Comparison.Rows.Count == 0)
+            {
+                <p class="missing">It declares no properties of its own.</p>
+            }
+            else
+            {
+                @* The state tab's rows, with its one value column made two and a column saying how
+                   they differ. Every row is drawn, marked or not: a changed value reads by the
+                   unchanged shape around it. *@
+                <table class="grid compare">
+                    <thead>
+                    <tr>
+                        <th scope="col">Property</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Up to @range.From</th>
+                        <th scope="col">Up to @range.To</th>
+                        <th scope="col">Change</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @Rows((Comparison.Rows, 0))
+                    </tbody>
+                </table>
+            }
+        }
+    }
+</section>
+
+@code {
+
+    /// <summary>
+    /// What the view is called in the address, and the id of the tab link the panel is labelled by.
+    /// The pages' to use, so the word is spelt once.
+    /// </summary>
+    public const string Tab = "compare";
+
+    /// <summary>The stream and identifier worked back out of the row's ids, or the half that could not be.</summary>
+    [Parameter]
+    [EditorRequired]
+    public StreamedIdentity Identity { get; set; } = StreamedIdentity.Unknown;
+
+    /// <summary>The two folds, or why there are none.</summary>
+    [Parameter]
+    [EditorRequired]
+    public ModelComparison Comparison { get; set; } = ModelComparison.None;
+
+    /// <summary>What the page calls its model — "aggregate" or "projection" — for the sentence above the table.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Noun { get; set; } = "model";
+
+    /// <summary>Where the form posts back to: the page's own address, landing on this panel.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Action { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The hidden fields that carry the row and the events table's state through the form, which
+    /// replaces the whole query. The tab is added here; everything else is the page's to say.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment? Carried { get; set; }
+
+    /// <summary>
+    /// The rows: a value from each fold and the way they differ, with the insides of any value one
+    /// holds in rows under it.
+    /// </summary>
+    /// <remarks>
+    /// Drawn like the state tab's rows, so a nested property keeps its own row and the two value
+    /// columns stay lined up across both folds — which is what makes one table readable where two
+    /// side by side would drift apart the moment one fold has a row the other lacks.
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DiffRow> Rows, int Depth)> Rows =>
+        rows =>
+        @<text>
+            @foreach (var row in rows.Rows)
+            {
+                <tr class="@RowClass(rows.Depth, row.Change)">
+                    <td>@row.Name</td>
+                    <td><code>@row.TypeName</code></td>
+                    <td>@Shown(row.From, row.Change == Change.Added, row.Children.Count)</td>
+                    <td>@Shown(row.To, row.Change == Change.Removed, row.Children.Count)</td>
+                    <td class="change">@Mark(row.Change)</td>
+                </tr>
+
+                @if (row.Children.Count > 0)
+                {
+                    @Rows((row.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// One fold's cell: empty where that fold had no such row at all, or where the value is a shape
+    /// with its own rows below; a dash where the row is there and the value unset.
+    /// </summary>
+    private static string Shown(string? value, bool absent, int children) =>
+        absent ? string.Empty : value ?? (children > 0 ? string.Empty : "—");
+
+    /// <summary>
+    /// The word for a difference, which is both the class the stylesheet colours the row by and
+    /// what the change column says. Nothing for a row that has not changed: the marked rows are the
+    /// ones to find, and a word on every row would leave none of them standing out.
+    /// </summary>
+    private static string? Mark(Change change) => change switch
+    {
+        Change.Changed => "changed",
+        Change.Added => "added",
+        Change.Removed => "removed",
+        _ => null
+    };
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, the way the state
+    /// tab says it. Three steps because the describer unfolds three deep.
+    /// </summary>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
+
+    private static string? RowClass(int depth, Change change) =>
+        string.Join(' ', new[] { Under(depth), Mark(change) }.Where(part => part is not null))
+            is { Length: > 0 } classes
+            ? classes
+            : null;
+
+}

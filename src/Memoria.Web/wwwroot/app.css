@@ -1722,6 +1722,12 @@ h2:focus {
         width: 6.5rem;
     }
 
+    /* A property's name is one word, and it is the word the eye runs down: it keeps its line and
+       the two values beside it are what wrap when the four columns fight for the width. */
+    .grid.compare td:first-child {
+        white-space: nowrap;
+    }
+
     /* The word saying how a row differs: small and set apart from the values, as the mark rather
        than another value. */
     .grid .change {

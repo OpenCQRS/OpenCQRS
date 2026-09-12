@@ -1,8 +1,10 @@
 @page "/streamed/projections/detail"
+@using Memoria.EventSourcing
 @using Memoria.Web.Extensibility
 @using Microsoft.AspNetCore.WebUtilities
 @inject DomainTypeRegistry Types
 @inject IStreamedReads Store
+@inject IDomainService Folds
 @inject Memoria.Web.Data.StoreCapabilities Capabilities
 @inject NavigationManager Navigation
 
@@ -73,6 +75,10 @@ else
            aria-current="@(Tab == JsonTab ? "page" : null)">Json</a>
         <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
            aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
+        @* Reads, like the four before it, but of two folds of the stream rather than of the row —
+           so it comes after the history it folds and before the one tab that writes. *@
+        <a id="tab-@CompareTab" href="@TabLink(CompareTab)"
+           aria-current="@(Tab == CompareTab ? "page" : null)">Compare</a>
         @if (Capabilities.CanUpdate)
         {
             <a id="tab-@UpdateTab" href="@TabLink(UpdateTab)"
@@ -459,6 +465,10 @@ else
                                what the store actually wrote. Last, because it is a way to something
                                rather than a value to run an eye down. *@
                             <th scope="col" class="col-json marked">Json</th>
+                            @* What the row did to the projection: the fold up to the sequence
+                               before it against the fold up to it. A way to something, like the
+                               column before it, so it sits with it at the end. *@
+                            <th scope="col" class="col-compare">Compare</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -511,6 +521,18 @@ else
                                         <JsonMark/>
                                     </a>
                                 </td>
+                                @* The two sequences the link compares, which is what tells the
+                                   link on one row from the link on the next. Offered on every row:
+                                   a payload that will not read back is exactly the event whose
+                                   effect is worth seeing, and the fold either applies it or says
+                                   why it could not. *@
+                                <td>
+                                    <a href="@CompareLink(stored.Event.Position)"
+                                       aria-label="Compare the state before and after sequence @stored.Event.Position"
+                                       title="Compare the state before and after sequence @stored.Event.Position">
+                                        @(stored.Event.Position - 1) → @stored.Event.Position
+                                    </a>
+                                </td>
                             </tr>
                         }
                         </tbody>
@@ -559,6 +581,21 @@ else
         </section>
     }
 
+    else if (Tab == CompareTab)
+    {
+        @* Two folds of the stream through this row's identifier, laid over each other as one
+           table. Drawn by the panel the aggregate page draws the same thing with; what is this
+           page's to say is which model, where the form comes back to, and what carries the row. *@
+        <ComparePanel Identity="Identity" Comparison="Comparison" Noun="projection"
+                      Action="@($"streamed/projections/detail#tab-{CompareTab}")">
+            <Carried>
+                @Addressing
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                <input type="hidden" name="size" value="@PageSize"/>
+                <input type="hidden" name="page" value="@Page"/>
+            </Carried>
+        </ComparePanel>
+    }
     else if (Tab == UpdateTab)
     {
         @* The one write these pages offer, given a tab of its own so the three that read stay
@@ -749,6 +786,11 @@ else
 
     private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
 
+    /// <summary>
+    /// The compare tab's two folds, or why there are none. Nothing until that tab asks for it.
+    /// </summary>
+    private ModelComparison Comparison { get; set; } = ModelComparison.None;
+
     private StoredStreamEvents Events { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
@@ -841,6 +883,8 @@ else
 
     private const string UpdateTab = "update";
 
+    private const string CompareTab = ComparePanel.Tab;
+
     private string Tab { get; set; } = InfoTab;
 
     /// <summary>
@@ -922,7 +966,9 @@ else
         bool clearEvent = false,
         bool clearText = false,
         string? view = null,
-        string? json = null) =>
+        string? json = null,
+        long? from = null,
+        long? to = null) =>
         $"{Address}&tab={tab}" +
         $"&dir={(descending ? "desc" : "asc")}" +
         $"&size={PageSize}" +
@@ -934,6 +980,11 @@ else
         (!clearText && IsFiltered ? $"&text={Uri.EscapeDataString(Text!)}" : string.Empty) +
         (view is { Length: > 0 } ? $"&view={view}" : string.Empty) +
         (json is { Length: > 0 } ? $"&json={Uri.EscapeDataString(json)}" : string.Empty) +
+        // The pair the compare tab folds up to, named only by a link to that tab: the others have
+        // nothing to fold, and carrying a pair along would leave it in the address of a view that
+        // does not read it.
+        (from is { } earlier ? $"&from={earlier}" : string.Empty) +
+        (to is { } later ? $"&to={later}" : string.Empty) +
         // Last, because everything after a fragment is part of it.
         (toTable ? $"#{EventsAnchor}" : string.Empty);
 
@@ -1012,6 +1063,18 @@ else
     /// returns to the page and order it was read at rather than to the first one.
     /// </summary>
     private string TabLink(string tab) => DetailLink(tab, Descending, Page);
+
+    /// <summary>
+    /// The compare tab folded up to the sequence before an event against the fold up to the event:
+    /// what that one event did to the projection.
+    /// </summary>
+    /// <remarks>
+    /// The sequence before the first event is zero, and a fold up to zero is the projection before
+    /// anything happened to it — the store hands back a fresh one — so the first row compares
+    /// against that rather than needing a link of its own.
+    /// </remarks>
+    private string CompareLink(long position) =>
+        DetailLink(CompareTab, Descending, Events.Page, from: position - 1, to: position);
 
     private string EventsLink(bool descending, int page, bool toTable = true) =>
         DetailLink(EventsTab, descending, page, toTable);
@@ -1150,6 +1213,7 @@ else
             StateTab => StateTab,
             JsonTab => JsonTab,
             EventsTab => EventsTab,
+            CompareTab => CompareTab,
             UpdateTab when Capabilities.CanUpdate => UpdateTab,
             _ => InfoTab,
         };
@@ -1193,6 +1257,14 @@ else
         PageSize = InstanceQuery.PageSizeOf(Value("size"));
         Page = int.TryParse(Value("page"), out var asked) ? asked : 1;
         PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
+
+        // Two folds of the stream, read only for the tab that draws them: each is a read of the
+        // whole history up to a sequence, and no other tab has anything to show for one.
+        if (Tab == CompareTab)
+        {
+            Comparison = await ModelComparison.Of(Store, Folds, new ComparisonRequest(
+                Projection, Identity, StreamId, Keys(Applies), Value("from"), Value("to")));
+        }
 
         // The info tab reports no counts either, but it does report the version, and a version only
         // means something against the history behind it — so the one thing asked for here is how

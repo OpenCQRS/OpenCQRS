@@ -583,101 +583,18 @@ else
 
     else if (Tab == CompareTab)
     {
-        @* Two folds of the stream through this row's identifier, one up to each sequence, laid
-           over each other as one table: the same rows the state tab lists, with a value from each
-           fold and a mark on the rows where the two disagree. Neither fold is written anywhere —
-           the row stays at whatever version the info tab says. *@
-        <section class="tab-panel" aria-labelledby="tab-@CompareTab">
-            @* The store folds a stream through an identifier and takes the things rather than the
-               ids they produced, so both have to be worked back out of this row before it can be
-               asked — the same three answers the update tab gives when one of them cannot be. *@
-            @if (Identity.Stream is null)
-            {
-                <p class="missing">
-                    Nothing registered writes stream ids of this shape, so there is nowhere to fold
-                    from.
-                </p>
-            }
-            else if (Identifier is null)
-            {
-                <p class="missing">
-                    Nothing registered writes ids of this shape, so there is nothing to say what to
-                    fold.
-                </p>
-            }
-            else if (Identity.Identifier is null)
-            {
-                <p class="missing">
-                    <code>@Identifier.Name</code> could not be rebuilt from this id, so there is
-                    nothing to say what to fold.
-                </p>
-            }
-            else
-            {
-                @* Which two folds, chosen here as well as by a link from the events table: two
-                   sequences rather than two lists of events, because a history can run to
-                   thousands and a number is typed faster than a list is scrolled. Bounded by the
-                   aggregate's own last event, since past it there is nothing more to fold. The
-                   form replaces the whole query, so the row travels with it as it does on the
-                   events tab. *@
-                <form class="search compare-range" method="get" action="streamed/aggregates/detail#tab-@CompareTab">
-                    <label for="from">Up to</label>
-                    <input id="from" type="number" name="from" value="@(Range?.From)"
-                           min="0" max="@LastSequence" required/>
-                    <label for="to">against up to</label>
-                    <input id="to" type="number" name="to" value="@(Range?.To)"
-                           min="1" max="@LastSequence" required/>
-                    @Addressing
-                    <input type="hidden" name="tab" value="@CompareTab"/>
-                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
-                    <input type="hidden" name="size" value="@PageSize"/>
-                    <input type="hidden" name="page" value="@Page"/>
-                    <button type="submit" class="quiet">Compare</button>
-                </form>
-
-                @if (CompareError is not null)
-                {
-                    @* A pair the address could not be read as, or a fold the store refused. Its
-                       own line rather than the page alert above, which is the store failing to
-                       answer for the row at all — and under the form, which is where it is put
-                       right. *@
-                    <p class="alert" role="alert">@CompareError</p>
-                }
-                else if (Range is { } range)
-                {
-                    <p class="lede">
-                        The aggregate folded up to sequence @range.From against the same fold
-                        carried on to sequence @range.To. Folded here and not written: the stored
-                        snapshot is left as it is.
-                    </p>
-
-                    @if (Comparison.Count == 0)
-                    {
-                        <p class="missing">It declares no properties of its own.</p>
-                    }
-                    else
-                    {
-                        @* The state tab's rows, with its one value column made two and a column
-                           saying how they differ. Every row is drawn, marked or not: a changed
-                           value reads by the unchanged shape around it. *@
-                        <table class="grid compare">
-                            <thead>
-                            <tr>
-                                <th scope="col">Property</th>
-                                <th scope="col">Type</th>
-                                <th scope="col">Up to @range.From</th>
-                                <th scope="col">Up to @range.To</th>
-                                <th scope="col">Change</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @DiffRows((Comparison, 0))
-                            </tbody>
-                        </table>
-                    }
-                }
-            }
-        </section>
+        @* Two folds of the stream through this row's identifier, laid over each other as one
+           table. Drawn by the panel the projection page draws the same thing with; what is this
+           page's to say is which model, where the form comes back to, and what carries the row. *@
+        <ComparePanel Identity="Identity" Comparison="Comparison" Noun="aggregate"
+                      Action="@($"streamed/aggregates/detail#tab-{CompareTab}")">
+            <Carried>
+                @Addressing
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                <input type="hidden" name="size" value="@PageSize"/>
+                <input type="hidden" name="page" value="@Page"/>
+            </Carried>
+        </ComparePanel>
     }
     else if (Tab == UpdateTab)
     {
@@ -870,31 +787,9 @@ else
     private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
 
     /// <summary>
-    /// The two sequences the compare tab folds up to, or null when the address names no pair that
-    /// can be folded, with <see cref="CompareError"/> saying why.
+    /// The compare tab's two folds, or why there are none. Nothing until that tab asks for it.
     /// </summary>
-    private CompareRange? Range { get; set; }
-
-    /// <summary>
-    /// The last sequence this aggregate has to fold up to, or null when the history could not be
-    /// counted. What the compare tab defaults to, and the most its form offers.
-    /// </summary>
-    /// <remarks>
-    /// The aggregate's own last event rather than the stream's: on a stream several models share,
-    /// the events past this one are another model's, and a fold up to them is the same fold as up
-    /// to this.
-    /// </remarks>
-    private long? LastSequence { get; set; }
-
-    /// <summary>The rows of the compare tab: the later fold's state against the earlier's.</summary>
-    private IReadOnlyList<DiffRow> Comparison { get; set; } = [];
-
-    /// <summary>
-    /// Why the compare tab has no table: a pair the address could not be read as, or a fold the
-    /// store refused. Named apart from <see cref="Error"/>, which is the store failing to answer
-    /// for the row at all.
-    /// </summary>
-    private string? CompareError { get; set; }
+    private ModelComparison Comparison { get; set; } = ModelComparison.None;
 
     private StoredStreamEvents Events { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
@@ -988,7 +883,7 @@ else
 
     private const string UpdateTab = "update";
 
-    private const string CompareTab = "compare";
+    private const string CompareTab = ComparePanel.Tab;
 
     private string Tab { get; set; } = InfoTab;
 
@@ -1181,124 +1076,6 @@ else
     private string CompareLink(long position) =>
         DetailLink(CompareTab, Descending, Events.Page, from: position - 1, to: position);
 
-    /// <summary>
-    /// Reads the pair the address names and folds the aggregate up to each, leaving the rows to
-    /// draw or the reason there are none.
-    /// </summary>
-    /// <remarks>
-    /// Only once the identifier is known to have been rebuilt: the panel says why when it was not,
-    /// and there is nothing to ask the store for. The aggregate's last event is read first — one
-    /// row, newest first, narrowed the way the events tab is — because it is what a pair is checked
-    /// against and what an address naming no pair compares by default.
-    /// </remarks>
-    private async Task Compare(string? fromText, string? toText)
-    {
-        if (!Identity.IsRecovered || Aggregate is null || Claim is null || StreamId is null)
-        {
-            return;
-        }
-
-        var history = await Store.Events(new StreamedEventFilter(
-            StreamPattern: StreamId,
-            EventType: null,
-            Text: null,
-            Descending: true,
-            Page: 1,
-            Size: 1)
-        {
-            EventTypes = Keys(Applies),
-            Properties = Claim
-        });
-
-        // A count that failed says nothing rather than nothing found: a history the store could
-        // not read is not an empty one, and the range reader is told the difference.
-        LastSequence = history.Error is null
-            ? history.Events.FirstOrDefault()?.Event.Position ?? 0
-            : null;
-
-        var reading = CompareRange.Of(fromText, toText, LastSequence);
-
-        Range = reading.Range;
-        CompareError = reading.Error;
-
-        if (Range is null)
-        {
-            return;
-        }
-
-        var before = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, Range.From);
-        var after = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, Range.To);
-
-        CompareError = before.Error ?? after.Error;
-
-        if (CompareError is null && (before.Model is null || after.Model is null))
-        {
-            CompareError = "The store folded nothing for one of the two sequences.";
-        }
-
-        if (CompareError is null)
-        {
-            Comparison = StateDiff.Of(
-                DomainTypeDescriber.ReadState(before.Model!),
-                DomainTypeDescriber.ReadState(after.Model!));
-        }
-    }
-
-    /// <summary>
-    /// The compare tab's rows: the state tab's, with a value from each fold and the way they differ,
-    /// and the insides of any value one holds in rows under it.
-    /// </summary>
-    /// <remarks>
-    /// Drawn like <see cref="StateRows"/>, so a nested property keeps its own row and the two value
-    /// columns stay lined up across both folds — which is what makes one table readable where two
-    /// side by side would drift apart the moment one fold has a row the other lacks.
-    /// </remarks>
-    private RenderFragment<(IReadOnlyList<DiffRow> Rows, int Depth)> DiffRows =>
-        rows =>
-        @<text>
-            @foreach (var row in rows.Rows)
-            {
-                <tr class="@RowClass(rows.Depth, row.Change)">
-                    <td>@row.Name</td>
-                    <td><code>@row.TypeName</code></td>
-                    <td>@Shown(row.From, row.Change == Change.Added, row.Children.Count)</td>
-                    <td>@Shown(row.To, row.Change == Change.Removed, row.Children.Count)</td>
-                    <td class="change">@Mark(row.Change)</td>
-                </tr>
-
-                @if (row.Children.Count > 0)
-                {
-                    @DiffRows((row.Children, rows.Depth + 1))
-                }
-            }
-        </text>;
-
-    /// <summary>
-    /// One fold's cell: empty where that fold had no such row at all, or where the value is a shape
-    /// with its own rows below; a dash where the row is there and the value unset.
-    /// </summary>
-    private static string Shown(string? value, bool absent, int children) =>
-        absent ? string.Empty : value ?? (children > 0 ? string.Empty : "—");
-
-    /// <summary>
-    /// The word for a difference, which is both the class the stylesheet colours the row by and
-    /// what the change column says. Nothing for a row that has not changed: the marked rows are the
-    /// ones to find, and a word on every row would leave none of them standing out.
-    /// </summary>
-    private static string? Mark(Change change) => change switch
-    {
-        Change.Changed => "changed",
-        Change.Added => "added",
-        Change.Removed => "removed",
-        _ => null
-    };
-
-    private static string? RowClass(int depth, Change change) =>
-        string.Join(' ', new[] { Under(depth), Mark(change) }.Where(part => part is not null))
-            is { Length: > 0 } classes
-            ? classes
-            : null;
-
     private string EventsLink(bool descending, int page, bool toTable = true) =>
         DetailLink(EventsTab, descending, page, toTable);
 
@@ -1485,36 +1262,8 @@ else
         // whole history up to a sequence, and no other tab has anything to show for one.
         if (Tab == CompareTab)
         {
-            await Compare(Value("from"), Value("to"));
-        }
-
-        // The info tab reports no counts either, but it does report the version, and a version only
-        // means something against the history behind it — so the one thing asked for here is how
-        // many events there are. A page of one, because the rows themselves are the events tab's;
-        // the total is the whole count whatever page is asked for, which is what is wanted.
-        //
-        // Only when the identifier's claim is known. Without it the stream is narrowed by type
-        // alone, which on a stream several models share counts events that are not this one's — and
-        // a warning that the row is behind a history it was never folded from would be worse than no
-        // warning. The events tab says as much above its table; here there is nothing to say.
-        if (Tab == InfoTab && Stored is not null && Claim is not null)
-        {
-            var history = await Store.Events(new StreamedEventFilter(
-                StreamPattern: StreamId,
-                EventType: null,
-                Text: null,
-                Descending: false,
-                Page: 1,
-                Size: 1)
-            {
-                EventTypes = Keys(Applies),
-                Properties = Claim
-            });
-
-            // A count that failed says nothing rather than nothing found: a stream the store could
-            // not read is not a stream holding no events, and either would leave the warning
-            // undrawn — but only one of them would be honest about it.
-            Lag = SnapshotLag.Of(Stored.Version, history.Error is null ? history.Total : null);
+            Comparison = await ModelComparison.Of(Store, Folds, new ComparisonRequest(
+                Aggregate, Identity, StreamId, Keys(Applies), Value("from"), Value("to")));
         }
 
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
