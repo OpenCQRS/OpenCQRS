@@ -28,12 +28,14 @@ header {
         text-decoration: none;
     }
 
-        /* Sized in ems so the tile follows the wordmark beside it rather than a fixed pixel, and
-           kept from shrinking if the bar is ever squeezed. */
+        /* Sized in ems so the mark follows the wordmark beside it rather than a fixed pixel, and
+           kept from shrinking if the bar is ever squeezed. Larger than the square tile it replaced:
+           this mark is eight cubes with gaps between them rather than a filled shape, so at the
+           same box it reads noticeably smaller than the word it sits against. */
         header .brand .mark {
             flex: none;
-            height: 1.15em;
-            width: 1.15em;
+            height: 1.6em;
+            width: 1.6em;
         }
 
     /* At the size the pages under it are read at, not the browser's prose default. The bar names

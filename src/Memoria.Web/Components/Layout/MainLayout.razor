@@ -3,20 +3,16 @@
 @inject Memoria.Web.Data.StoreCapabilities Store
 
 <header>
-    @* Inline rather than an <img> to the favicon, so the tile follows --accent: choosing a new
-       accent is meant to be one line, and a referenced file would have held a second copy of the
-       old one. aria-hidden because the link already says Memoria beside it, and a screen reader
-       announcing the mark as well would say it twice. *@
+    @* The project's own mark, the same artwork the tab icon is cut from. An <img> rather than the
+       inline SVG that used to stand here: this is a painted illustration with gradients on every
+       face, not a shape a token could recolour, so there is nothing for it to follow. It carries
+       its own colour in both themes — the cubes are saturated enough to hold against the light
+       ground and the dark one alike, which is why no second file is shipped for dark.
+
+       alt="" because the link says Memoria beside it, and a screen reader naming the mark as well
+       would say it twice. *@
     <a class="brand" href="">
-        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-            <rect width="32" height="32" rx="7" fill="var(--accent)"/>
-            <path d="M8 23V10l8 8 8-8v13"
-                  fill="none"
-                  stroke="var(--on-fill)"
-                  stroke-width="3.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"/>
-        </svg>
+        <img class="mark" src="@Assets["logo.png"]" alt=""/>
         Memoria
     </a>
     <nav>
