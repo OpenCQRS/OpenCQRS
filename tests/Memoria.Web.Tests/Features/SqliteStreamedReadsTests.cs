@@ -138,6 +138,29 @@ public class SqliteStreamedReadsTests : IAsyncLifetime
         page.Events.Select(appended => appended.Event.Written).Should().BeInDescendingOrder();
     }
 
+    /// <summary>
+    /// The event before a given one in a stream is the newest of those below its sequence. What the
+    /// compare column asks for, one row at a time, to say which of a model's own events a row
+    /// follows on a stream it shares.
+    /// </summary>
+    [Fact]
+    public async Task GivenASequenceBound_WhenTheLogIsRead_ThenOnlyTheEventsBelowItComeBack()
+    {
+        await using var context = Read();
+
+        var page = await new EfStreamedReads(context).Events(Filter(descending: true, size: 1) with
+        {
+            StreamPattern = "customer:c-0000",
+            BeforeSequence = 3
+        });
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(3, "the stream holds sequences 0 to 3 and the bound excludes 3 itself");
+        page.Events.Should().ContainSingle().Which.Event.Position.Should().Be(2);
+    }
+
     [Fact]
     public async Task GivenASqliteStore_WhenAscendingIsAsked_ThenTheOldestComeFirst()
     {

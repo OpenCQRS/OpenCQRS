@@ -474,6 +474,14 @@ public sealed class CosmosStreamedReads(CosmosClient client, string databaseName
                 values.Add(("@streamPattern", filter.StreamPattern));
             }
 
+            if (filter.BeforeSequence is { } bound)
+            {
+                // Below rather than at or below, as the relational read has it: what is asked is
+                // which event a row follows, and the row itself is not the answer.
+                conditions.Add("c.sequence < @beforeSequence");
+                values.Add(("@beforeSequence", bound));
+            }
+
             if (!string.IsNullOrWhiteSpace(filter.Text))
             {
                 // The row's own key as well as the stream it names and the payload it carries — the

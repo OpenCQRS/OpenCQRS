@@ -521,17 +521,28 @@ else
                                         <JsonMark/>
                                     </a>
                                 </td>
-                                @* The two sequences the link compares, which is what tells the
-                                   link on one row from the link on the next. Offered on every row:
-                                   a payload that will not read back is exactly the event whose
-                                   effect is worth seeing, and the fold either applies it or says
-                                   why it could not. *@
+                                @* The two versions the link compares, which is what tells the link
+                                   on one row from the link on the next: the version this event
+                                   produced, and the one before it. Versions rather than sequences,
+                                   because they climb by one down the aggregate's history where the
+                                   sequence skips whatever other models put in the stream. Offered
+                                   on every row: a payload that will not read back is exactly the
+                                   event whose effect is worth seeing, and the fold either applies
+                                   it or says why it could not. A row whose place the store would
+                                   not say has nothing honest to link to, and says so. *@
                                 <td>
-                                    <a href="@CompareLink(stored.Event.Position)"
-                                       aria-label="Compare the state before and after sequence @stored.Event.Position"
-                                       title="Compare the state before and after sequence @stored.Event.Position">
-                                        @(stored.Event.Position - 1) → @stored.Event.Position
-                                    </a>
+                                    @if (Versions.TryGetValue(stored.Event.Position, out var version))
+                                    {
+                                        <a href="@CompareLink(version)"
+                                           aria-label="Compare version @(version - 1) with version @version"
+                                           title="Compare version @(version - 1) with version @version">
+                                            @(version - 1) → @version
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="missing">—</span>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -790,6 +801,12 @@ else
     /// The compare tab's two folds, or why there are none. Nothing until that tab asks for it.
     /// </summary>
     private ModelComparison Comparison { get; set; } = ModelComparison.None;
+
+    /// <summary>
+    /// Each row's sequence on the events tab to the version of the aggregate it produced, for the
+    /// compare column. A row the store would not answer for is not in it.
+    /// </summary>
+    private IReadOnlyDictionary<long, int> Versions { get; set; } = new Dictionary<long, int>();
 
     private StoredStreamEvents Events { get; set; } =
         new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
@@ -1065,16 +1082,16 @@ else
     private string TabLink(string tab) => DetailLink(tab, Descending, Page);
 
     /// <summary>
-    /// The compare tab folded up to the sequence before an event against the fold up to the event:
-    /// what that one event did to the aggregate.
+    /// The compare tab with the version an event produced held against the one before it: what
+    /// that one event did to the aggregate.
     /// </summary>
     /// <remarks>
-    /// The sequence before the first event is zero, and a fold up to zero is the aggregate before
-    /// anything happened to it — the store hands back a fresh one — so the first row compares
-    /// against that rather than needing a link of its own.
+    /// Before the first version is zero, and version zero is the aggregate before anything happened
+    /// to it — the store hands back a fresh one — so the first row compares against that rather
+    /// than needing a link of its own.
     /// </remarks>
-    private string CompareLink(long position) =>
-        DetailLink(CompareTab, Descending, Events.Page, from: position - 1, to: position);
+    private string CompareLink(int version) =>
+        DetailLink(CompareTab, Descending, Events.Page, from: version - 1, to: version);
 
     private string EventsLink(bool descending, int page, bool toTable = true) =>
         DetailLink(EventsTab, descending, page, toTable);
@@ -1302,6 +1319,20 @@ else
             EventTypes = Keys(Applies),
             Properties = Claim
         });
+
+        // Which version of the aggregate each row produced, for the compare column. Worked out after
+        // the page is read, because a table showing the whole history answers it for every row
+        // from where the page sits in it.
+        Versions = await EventVersions.Of(
+            Store,
+            new StreamedEventFilter(StreamId, EventType: null, Text: null, Descending, Page, PageSize)
+            {
+                EventTypes = Keys(Applies),
+                Properties = Claim
+            },
+            Events,
+            Descending,
+            IsNarrowed);
     }
 
     /// <summary>

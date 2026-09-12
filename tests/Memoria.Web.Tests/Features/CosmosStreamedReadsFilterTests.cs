@@ -121,6 +121,27 @@ public class CosmosStreamedReadsFilterTests : IAsyncLifetime
         string? streamPattern = null, string? eventType = null, string? text = null) =>
         new(streamPattern, eventType, text, Descending: true, Page: 1, Size: 50);
 
+    /// <summary>
+    /// The event before a given one in a stream is the newest of those below its sequence. What the
+    /// compare column asks for, one row at a time, to say which of a model's own events a row
+    /// follows on a stream it shares.
+    /// </summary>
+    [Fact]
+    public async Task GivenASequenceBound_WhenThePageIsRead_ThenOnlyTheEventsBelowItComeBack()
+    {
+        var page = await _reads.Events(Filter(streamPattern: "order-0001") with
+        {
+            Size = 1,
+            BeforeSequence = 3
+        });
+
+        using var scope = new AssertionScope();
+
+        page.Error.Should().BeNull();
+        page.Total.Should().Be(3, "the stream holds sequences 0 to 3 and the bound excludes 3 itself");
+        page.Events.Should().ContainSingle().Which.Event.Position.Should().Be(2);
+    }
+
     private static async Task<(string[] Streams, int Total, string? Error)> Read(
         CosmosStreamedReads reads, StreamedEventFilter filter)
     {

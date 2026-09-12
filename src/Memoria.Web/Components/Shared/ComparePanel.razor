@@ -1,9 +1,9 @@
 @using Memoria.Web.Extensibility
 
-@* Two folds of a stream through one row's identifier, one up to each sequence, laid over each other
-   as one table: the same rows the state tab lists, with a value from each fold and a mark on the
-   rows where the two disagree. Neither fold is written anywhere — the row stays at whatever version
-   the info tab says.
+@* Two versions of one row's model laid over each other as one table: the same rows the state tab
+   lists, with a value from each version and a mark on the rows where the two disagree. Each version
+   is folded from the stream through the row's identifier, up to the model's own event that produced
+   it, and neither fold is written anywhere — the row stays at whatever version the info tab says.
 
    One component rather than a copy on each streamed detail page: a projection is compared exactly as
    an aggregate is, and a reader who meets the table on one page should meet the same table on the
@@ -34,18 +34,18 @@
     }
     else
     {
-        @* Which two folds, chosen here as well as by a link from the events table: two sequences
-           rather than two lists of events, because a history can run to thousands and a number is
-           typed faster than a list is scrolled. Bounded by the model's own last event, since past
-           it there is nothing more to fold. The form replaces the whole query, so the row travels
-           with it as it does on the events tab. *@
+        @* Which two versions, chosen here as well as by a link from the events table. Versions
+           rather than sequences: a model's versions climb by one on every row of its history,
+           where a sequence on a shared stream skips the other models' events. Bounded by the
+           model's last version, since past it there is nothing more to fold. The form replaces the
+           whole query, so the row travels with it as it does on the events tab. *@
         <form class="search compare-range" method="get" action="@Action">
-            <label for="from">Up to</label>
+            <label for="from">Version</label>
             <input id="from" type="number" name="from" value="@(Comparison.Range?.From)"
-                   min="0" max="@Comparison.LastSequence" required/>
-            <label for="to">against up to</label>
+                   min="0" max="@Comparison.LastVersion" required/>
+            <label for="to">against version</label>
             <input id="to" type="number" name="to" value="@(Comparison.Range?.To)"
-                   min="1" max="@Comparison.LastSequence" required/>
+                   min="1" max="@Comparison.LastVersion" required/>
             @Carried
             <input type="hidden" name="tab" value="@Tab"/>
             <button type="submit" class="quiet">Compare</button>
@@ -58,12 +58,16 @@
                at all — and under the form, which is where it is put right. *@
             <p class="alert" role="alert">@Comparison.Error</p>
         }
-        else if (Comparison.Range is { } range)
+        else if (Comparison is { Range: { } range, Sequences: { } sequences })
         {
+            @* Which event each version is, in the words the events tab uses: a version is the
+               model's own count, and the sequence is where in the stream the event that produced it
+               sits. Said here once, so the columns below can be headed by the number that climbs
+               by one. *@
             <p class="lede">
-                The @Noun folded up to sequence @range.From against the same fold carried on to
-                sequence @range.To. Folded here and not written: the stored snapshot is left as it
-                is.
+                Version @range.From of the @Noun — folded up to sequence @sequences.From — against
+                version @range.To, folded up to sequence @sequences.To. Folded here and not written:
+                the stored snapshot is left as it is.
             </p>
 
             @if (Comparison.Rows.Count == 0)
@@ -80,8 +84,8 @@
                     <tr>
                         <th scope="col">Property</th>
                         <th scope="col">Type</th>
-                        <th scope="col">Up to @range.From</th>
-                        <th scope="col">Up to @range.To</th>
+                        <th scope="col">Version @range.From</th>
+                        <th scope="col">Version @range.To</th>
                         <th scope="col">Change</th>
                     </tr>
                     </thead>
@@ -107,7 +111,7 @@
     [EditorRequired]
     public StreamedIdentity Identity { get; set; } = StreamedIdentity.Unknown;
 
-    /// <summary>The two folds, or why there are none.</summary>
+    /// <summary>The two versions, or why there are none.</summary>
     [Parameter]
     [EditorRequired]
     public ModelComparison Comparison { get; set; } = ModelComparison.None;
@@ -131,13 +135,13 @@
     public RenderFragment? Carried { get; set; }
 
     /// <summary>
-    /// The rows: a value from each fold and the way they differ, with the insides of any value one
-    /// holds in rows under it.
+    /// The rows: a value from each version and the way they differ, with the insides of any value
+    /// one holds in rows under it.
     /// </summary>
     /// <remarks>
     /// Drawn like the state tab's rows, so a nested property keeps its own row and the two value
-    /// columns stay lined up across both folds — which is what makes one table readable where two
-    /// side by side would drift apart the moment one fold has a row the other lacks.
+    /// columns stay lined up across both versions — which is what makes one table readable where
+    /// two side by side would drift apart the moment one version has a row the other lacks.
     /// </remarks>
     private RenderFragment<(IReadOnlyList<DiffRow> Rows, int Depth)> Rows =>
         rows =>
@@ -160,8 +164,8 @@
         </text>;
 
     /// <summary>
-    /// One fold's cell: empty where that fold had no such row at all, or where the value is a shape
-    /// with its own rows below; a dash where the row is there and the value unset.
+    /// One version's cell: empty where that version had no such row at all, or where the value is
+    /// a shape with its own rows below; a dash where the row is there and the value unset.
     /// </summary>
     private static string Shown(string? value, bool absent, int children) =>
         absent ? string.Empty : value ?? (children > 0 ? string.Empty : "—");

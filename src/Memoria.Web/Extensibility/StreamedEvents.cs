@@ -76,11 +76,19 @@ public static class StreamedEvents
         int size,
         IReadOnlyList<string>? eventTypes = null,
         IReadOnlyDictionary<string, string>? properties = null,
+        long? beforeSequence = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
             var stored = context.Events.AsNoTracking();
+
+            if (beforeSequence is { } bound)
+            {
+                // Below rather than at or below: what is asked is which event a row follows, and
+                // the row itself is not the answer.
+                stored = stored.Where(appended => appended.Sequence < bound);
+            }
 
             if (!string.IsNullOrWhiteSpace(streamPattern))
             {

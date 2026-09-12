@@ -27,6 +27,7 @@ public sealed class EfStreamedReads(StreamedStoreDbContext context) : IStreamedR
             filter.Size,
             filter.EventTypes,
             filter.Properties,
+            filter.BeforeSequence,
             cancellationToken);
 
     /// <inheritdoc />

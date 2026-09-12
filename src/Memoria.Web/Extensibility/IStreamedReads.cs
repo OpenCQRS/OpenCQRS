@@ -121,6 +121,17 @@ public sealed record StreamedEventFilter(
     /// counted.
     /// </remarks>
     public IReadOnlyDictionary<string, string>? Properties { get; init; }
+
+    /// <summary>
+    /// Gets the sequence every event must sit below, or null to keep every sequence.
+    /// </summary>
+    /// <remarks>
+    /// Exclusive, and only meaningful with a pattern matching one stream: a sequence counts within
+    /// a stream. What the compare column asks with — newest first and one row — to find which of a
+    /// model's own events a row follows on a stream it shares, since the sequence before the row
+    /// may well be another model's.
+    /// </remarks>
+    public long? BeforeSequence { get; init; }
 }
 
 /// <summary>
