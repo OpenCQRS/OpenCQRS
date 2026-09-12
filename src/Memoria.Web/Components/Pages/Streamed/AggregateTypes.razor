@@ -86,252 +86,22 @@ else
 
         <section class="panel panel-detail">
             @* Selected is only null when the list is empty, which the branch above already covers. *@
-            @if (Selected is not null)
+            @if (Selected is { } selected)
             {
                 @* The same name the row in the list carries, so the heading answers the click that
                    reached it — and the version is part of it, because two versions of one name are
                    two rows there. The class it is bound from is the first fact on the info tab. *@
-                <h2>@BoundAs(Selected.Type)</h2>
+                <h2>@BoundAs(selected.Type)</h2>
 
-                @* Four views of the chosen aggregate, switched by the address rather than by
-                   script: each tab is a link, so a view can be linked to and gone back to, and the
-                   page stays statically rendered like the rest of them. What the type is, then the
-                   shape it is folded into, then what it is folded from, and last what addresses it
-                   — the one view that leads off the page, at the end of the row it leaves from. *@
-                <nav class="tabs" aria-label="Aggregate views">
-                    <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
-                       aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
-                    <a id="tab-@StateTab" href="@TabLink(StateTab)"
-                       aria-current="@(Tab == StateTab ? "page" : null)">State</a>
-                    <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
-                       aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
-                    <a id="tab-@IdentifiersTab" href="@TabLink(IdentifiersTab)"
-                       aria-current="@(Tab == IdentifiersTab ? "page" : null)">Identifiers</a>
-                </nav>
-
-                @* Each panel is named by the tab that reaches it, so the label is written once
-                   rather than repeated as a heading under the row that already says it. *@
-                @if (Tab == IdentifiersTab)
-                {
-                    <section class="tab-panel" aria-labelledby="tab-@IdentifiersTab">
-                        <p class="lede">
-                            The identifiers that address this aggregate. Each one names it a
-                            different way: the ids beside it are the ones it writes, and the filter
-                            after them is which of its stream's events are its own. An identifier
-                            filtering by a property folds only the events carrying it, which is what
-                            lets several aggregates share one stream; one filtering by nothing folds
-                            the whole stream.
-                        </p>
-
-                        @if (Selected.Identifiers.Count == 0)
-                        {
-                            <p class="missing">Nothing addresses this aggregate.</p>
-                        }
-                        else
-                        {
-                            <table class="grid">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Filter</th>
-                                    @* Centred, heading and marks together: the column holds one
-                                       mark per row rather than a value read along a line, and
-                                       there is no left edge for the eye to run down. *@
-                                    <th class="marked" scope="col">Data</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var identifier in Selected.Identifiers)
-                                {
-                                    <tr>
-                                        <td><code>@identifier.Name</code></td>
-                                        @if (IdShape.Of(identifier) is { } shape)
-                                        {
-                                            <td>
-                                                @if (shape.Filter.Count > 0)
-                                                {
-                                                    @* The property names, not the values: a value
-                                                       is one instance's and the filter is the
-                                                       type's, the same way a DCB identifier is
-                                                       listed by its tag keys. *@
-                                                    <code>@Filter(shape)</code>
-                                                }
-                                                else
-                                                {
-                                                    <span>the whole stream</span>
-                                                }
-                                            </td>
-                                        }
-                                        else
-                                        {
-                                            @* Worth saying rather than leaving the cells blank: an
-                                               identifier with no shape is also one the data page
-                                               cannot narrow to, so the gap here is the gap the link
-                                               leads to. One cell across the two, because it is one
-                                               finding — it could not be built, so neither the ids
-                                               it writes nor what it filters by could be read. *@
-                                            <td colspan="2">
-                                                <span class="missing">could not be worked out</span>
-                                            </td>
-                                        }
-                                        @* A mark rather than a word: the column is one link per row
-                                           and the word repeats down it. The name it is read out by
-                                           carries the identifier, so a row is told apart by more
-                                           than its position.
-
-                                           The store's own mark, the same one the Data tile is
-                                           entered by on the section page and the index folds its
-                                           rows under — so every way into what has been stored looks
-                                           the same. *@
-                                        <td class="marked">
-                                            <a class="icon-link" href="@DataLink(Selected.Type, identifier)"
-                                               aria-label="View data for @identifier.Name"
-                                               title="View data for @identifier.Name">
-                                                <SectionMark Kind="SectionKind.Data"/>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        }
-                    </section>
-                }
-                else if (Tab == EventsTab)
-                {
-                    <section class="tab-panel" aria-labelledby="tab-@EventsTab">
-                        <p class="lede">
-                            The event types this aggregate applies, and what each one carries.
-                            Folding a stream runs these into its state and passes the rest over.
-                        </p>
-
-                        @if (Selected.EventTypes.Count == 0)
-                        {
-                            <p class="missing">No event type filter — it applies every event in its stream.</p>
-                        }
-                        else
-                        {
-                            <table class="grid">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Event</th>
-                                    <th scope="col">Version</th>
-                                    <th scope="col">State</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var eventType in Selected.EventTypes)
-                                {
-                                    <tr>
-                                        @* Named and versioned by what it is bound as, in two cells
-                                           rather than one: that is the name written into the stream
-                                           and the one a stored event is read back under, and the
-                                           version beside it is what a change to its shape is
-                                           answered with. An event carrying no [EventType] is read
-                                           back by nothing, so the class name stands in and the
-                                           version cell says why there is none. *@
-                                        @if (DomainTypeDescriber.BindingOf(eventType) is { } binding)
-                                        {
-                                            <td><code>@binding.Name</code></td>
-                                            <td>@binding.Version</td>
-                                        }
-                                        else
-                                        {
-                                            <td><code>@eventType.Name</code></td>
-                                            <td><span class="missing">not bound</span></td>
-                                        }
-                                        <td>
-                                            @* Read the same way the aggregate's own state is, so an
-                                               event's payload and the state it lands in are written
-                                               in the same terms. A property holding a value of the
-                                               domain's own is unfolded under the line that holds
-                                               it: the type name on its own says there is a shape
-                                               and not what is in it. *@
-                                            @if (DomainTypeDescriber.PropertiesOf(eventType) is { Count: > 0 } carried)
-                                            {
-                                                @Carried(carried)
-                                            }
-                                            else
-                                            {
-                                                <span class="missing">It carries nothing of its own.</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        }
-                    </section>
-                }
-                else if (Tab == StateTab)
-                {
-                    <section class="tab-panel" aria-labelledby="tab-@StateTab">
-                        <p class="lede">
-                            The properties the aggregate declares — the shape folding its stream
-                            leaves it in. These belong to the type; the values one stored instance
-                            holds are reached through an identifier on the identifiers tab.
-                        </p>
-
-                        @if (Selected.Properties.Count == 0)
-                        {
-                            <p class="missing">It declares no properties of its own.</p>
-                        }
-                        else
-                        {
-                            @* The same two columns the events and the streams list their shape in,
-                               so every declared shape on these pages is read the same way. *@
-                            <table class="grid">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Property</th>
-                                    <th scope="col">Type</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @StateRows((Selected.Properties, 0))
-                                </tbody>
-                            </table>
-                        }
-                    </section>
-                }
-                else
-                {
-                    <section class="tab-panel" aria-labelledby="tab-@InfoTab">
-                        <dl class="facts">
-                            @* The two halves of what the store writes it under, apart: the name
-                               outlives a rename of the class, and the version is what a change to
-                               the shape stored under that name is answered with. *@
-                            <dt>Name</dt>
-                            <dd>
-                                @if (Selected.Binding is { } named)
-                                {
-                                    <code>@named.Name</code>
-                                }
-                                else
-                                {
-                                    <span class="missing">not bound — it carries no [AggregateType]</span>
-                                }
-                            </dd>
-
-                            @if (Selected.Binding is { } versioned)
-                            {
-                                <dt>Version</dt>
-                                <dd>@versioned.Version</dd>
-                            }
-
-                            @* The class the binding below is carried by. Not "Full name", which
-                               read as the long form of the name under it once that name became the
-                               bound one, and not "Type", which the data page already uses for the
-                               binding key — this is the one fact here that is plainly the CLR
-                               class, so it says so. *@
-                            <dt>Class</dt>
-                            <dd><code>@Selected.Type.FullName</code></dd>
-
-                            <dt>Assembly</dt>
-                            <dd>@Selected.AssemblyName</dd>
-                        </dl>
-                    </section>
-                }
+                @* The four views of it, drawn by the component the detail page opens over a stored
+                   row as well: what is true of a declared type is the same wherever it is read, and
+                   there is one place it is written. *@
+                <TypeView Description="selected"
+                          Kind="ModelKind.Aggregate"
+                          Store="ModelStore.Streamed"
+                          Tab="@Tab"
+                          TabLink="TabLink"
+                          DataLink="@(identifier => DataLink(selected.Type, identifier))"/>
             }
         </section>
     </div>
@@ -349,32 +119,14 @@ else
     [SupplyParameterFromQuery(Name = "type")]
     private string? SelectedName { get; set; }
 
-    /// <summary>
-    /// The four views the panel offers, named as they appear in the address. Which one is showing
-    /// is the address's to say, so a view can be linked to, bookmarked, and gone back to.
-    /// </summary>
-    private const string InfoTab = "info";
-
-    private const string IdentifiersTab = "identifiers";
-
-    private const string StateTab = "state";
-
-    private const string EventsTab = "events";
-
     [SupplyParameterFromQuery(Name = "tab")]
     private string? RequestedTab { get; set; }
 
     /// <summary>
-    /// Matched against the four the page has, so an unknown name in the address opens the one it
-    /// opens with rather than an empty panel.
+    /// Which view is open, matched against the four there are so an unknown name in the address
+    /// opens the one a type opens with rather than an empty panel.
     /// </summary>
-    private string Tab => (RequestedTab ?? string.Empty).ToLowerInvariant() switch
-    {
-        IdentifiersTab => IdentifiersTab,
-        StateTab => StateTab,
-        EventsTab => EventsTab,
-        _ => InfoTab,
-    };
+    private string Tab => TypeView.Match(RequestedTab);
 
     private IReadOnlyList<Type> Aggregates => Types.Current.StreamedAggregates;
 
@@ -399,12 +151,6 @@ else
     /// said. The key itself is on the info tab, in the two halves it is made of.
     /// </remarks>
     private static string BoundAs(Type aggregate) => DomainTypeDescriber.LabelOf(aggregate);
-
-    /// <summary>
-    /// The properties an identifier narrows its stream by, on one line. The values are left out:
-    /// they are an instance's, not the type's.
-    /// </summary>
-    private static string Filter(IdShape shape) => string.Join(", ", shape.Filter);
 
     /// <summary>
     /// The identifiers that address one aggregate. Read off the type on its own rather than out of
@@ -456,79 +202,6 @@ else
                rest of what is true of the class rather than of the binding. *@
             <span class="index-name">@BoundAs(aggregate)</span>
         </a>;
-
-    /// <summary>
-    /// The properties a type declares, a row each, with the properties of any value one holds in
-    /// rows under it.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Rows rather than a list inside one cell, which is how the events tab shows the same shape.
-    /// There it is one column's worth of a row about something else; here it is the table itself,
-    /// and a nested property kept on its own row keeps its type under the type column, where the
-    /// eye is already running down.
-    /// </para>
-    /// <para>
-    /// Draws itself and carries how deep it has got, because the depth is what the indent is made
-    /// of. How far there is to go is the describer's to decide, not this.
-    /// </para>
-    /// </remarks>
-    private RenderFragment<(IReadOnlyList<DomainProperty> Properties, int Depth)> StateRows => rows =>
-        @<text>
-            @foreach (var property in rows.Properties)
-            {
-                <tr class="@Under(rows.Depth)">
-                    <td>@property.Name</td>
-                    <td><code>@property.TypeName</code></td>
-                </tr>
-
-                @if (property.Children.Count > 0)
-                {
-                    @StateRows((property.Children, rows.Depth + 1))
-                }
-            }
-        </text>;
-
-    /// <summary>
-    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
-    /// is stays the stylesheet's to say.
-    /// </summary>
-    /// <remarks>
-    /// A row at the top is not under anything and carries no class at all. Past the third step the
-    /// class stops changing: the describer stops unfolding before then, and a table that keeps
-    /// stepping in stops being a table.
-    /// </remarks>
-    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
-
-    /// <summary>
-    /// What an event carries: one line per property, and the shape of any value of the domain's own
-    /// unfolded under the line holding it.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// A fragment that draws itself, because the shape nests and how deep is the describer's to
-    /// decide — this only draws what came back. Written as a property rather than a field so the
-    /// reference to itself is resolved when it is drawn rather than when the field is built.
-    /// </para>
-    /// <para>
-    /// Nested lists rather than one flat one with indentation on it: what is under a property is
-    /// under it in the markup too, so a reader following the indent and a reader following the
-    /// structure are following the same thing.
-    /// </para>
-    /// </remarks>
-    private RenderFragment<IReadOnlyList<DomainProperty>> Carried => properties =>
-        @<ul class="carried">
-            @foreach (var property in properties)
-            {
-                <li>
-                    <code>@property.TypeName</code> @property.Name
-                    @if (property.Children.Count > 0)
-                    {
-                        @Carried(property.Children)
-                    }
-                </li>
-            }
-        </ul>;
 
     /// <summary>
     /// How many of something, written so one of it is not one of them.

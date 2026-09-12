@@ -40,7 +40,18 @@ else
 {
     @* Named as every list here names a type: what it is bound as, and the version of that
        binding. Two versions of one name are two projections, and the heading has to say which. *@
-    <h1>@Heading</h1>
+    <div class="page-header">
+        <h1>@Heading</h1>
+
+        @* Across from the name, because it is about the name: the heading says what this row was
+           folded into, and this is the way to what that type actually declares. Not among the tabs
+           under it — those are five views of this one stored row, and the type is true of every row
+           of it. The mark is the one the types pages are entered by everywhere else. *@
+        <a class="button-mark quiet" href="@ViewTypeLink(TypeView.InfoTab)">
+            <SectionMark Kind="SectionKind.Types"/>
+            View Type
+        </a>
+    </div>
 
     @* The store failing to answer for the projection at all, which leaves both the facts and the
        state without their values — so it is said once, above the tabs, rather than in each. *@
@@ -576,6 +587,20 @@ else
             }
         </section>
     }
+
+    @* What the row was folded into, opened over whichever tab was being read. Last in the markup
+       because it covers the page rather than sitting anywhere in it, and drawn only when the
+       address asks for it — so the page underneath is the page a reader left. *@
+    @if (ViewedType is { } viewed)
+    {
+        <TypeDialog Description="viewed"
+                    Kind="ModelKind.Projection"
+                    Store="ModelStore.Dcb"
+                    Tab="@View"
+                    TabLink="ViewTypeLink"
+                    CloseLink="@TabLink(Tab)"
+                    DataLink="TypeDataLink"/>
+    }
 }
 
 @code {
@@ -796,7 +821,8 @@ else
         bool toTable = false,
         bool? open = null,
         bool clearEvent = false,
-        bool clearText = false) =>
+        bool clearText = false,
+        string? view = null) =>
         $"{Address}&tab={tab}" +
         $"&dir={(descending ? "desc" : "asc")}" +
         $"&size={PageSize}" +
@@ -806,8 +832,48 @@ else
             ? $"&event={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}"
             : string.Empty) +
         (!clearText && IsFiltered ? $"&text={Uri.EscapeDataString(Text!)}" : string.Empty) +
+        (view is { Length: > 0 } ? $"&view={view}" : string.Empty) +
         // Last, because everything after a fragment is part of it.
         (toTable ? $"#{EventsAnchor}" : string.Empty);
+
+    /// <summary>
+    /// Which view of the declared type is open over the page, or nothing when none is.
+    /// </summary>
+    /// <remarks>
+    /// Named only when it is open, which is what makes every other link on the page close it: a
+    /// reader who moves the page underneath has left the type behind, and carrying it along would
+    /// leave a panel hanging over a row it is no longer about.
+    /// </remarks>
+    [SupplyParameterFromQuery(Name = "view")]
+    private string? RequestedView { get; set; }
+
+    /// <summary>Which of the type's four views to show once it is open.</summary>
+    private string View => TypeView.Match(RequestedView);
+
+    /// <summary>
+    /// The type this row was folded into, described, or null when the address is not asking for it.
+    /// Described only when it is asked for: it walks the type's whole shape, and a page reading one
+    /// stored row has no other use for it.
+    /// </summary>
+    private DomainTypeDescription? ViewedType =>
+        !string.IsNullOrWhiteSpace(RequestedView) && Projection is { } projection
+            ? DomainTypeDescriber.Describe(projection, Types.Current.DcbProjectionIds)
+            : null;
+
+    /// <summary>
+    /// The page as it stands with one of the type's views open over it, landing on the panel so a
+    /// reader who was far down the events table is taken to what they just opened.
+    /// </summary>
+    private string ViewTypeLink(string view) =>
+        DetailLink(Tab, Descending, Page, view: view) + $"#{TypeDialog.Anchor}";
+
+    /// <summary>
+    /// Out to every row one identifier addresses, from the panel's identifiers tab. The type is this
+    /// page's own; only the identifier varies, which is what the column is one link per row for.
+    /// </summary>
+    private string TypeDataLink(Type identifier) =>
+        $"dcb/projections/data?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}";
 
     /// <summary>
     /// A tab, keeping the events table where it was left, so leaving the events tab and coming back

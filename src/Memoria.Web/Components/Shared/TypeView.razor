@@ -1,0 +1,488 @@
+@using Memoria.Web.Extensibility
+
+@* Everything one declared model has to show, in the four views it is read through. Written once
+   rather than per page: the same four facets are true of a streamed aggregate, a streamed
+   projection and both of their DCB counterparts, and they are now also read from the detail page of
+   one stored instance, which is a fifth place the same panels have to mean the same thing. What
+   actually differs between them — a stream against a boundary, a filter against tags, which
+   attribute binds it — is named by the two parameters below and said in one place each. *@
+
+@* Views of the chosen type, switched by the address rather than by script: each tab is a link, so a
+   view can be linked to and gone back to, and the pages stay statically rendered. What the type is,
+   then the shape it is folded into, then what it is folded from, and last what addresses it — the
+   one view that leads off the page, at the end of the row it leaves from. *@
+<nav class="tabs" aria-label="@Views">
+    <a id="@TabId(InfoTab)" href="@TabLink(InfoTab)"
+       aria-current="@Current(InfoTab)">Info</a>
+    <a id="@TabId(StateTab)" href="@TabLink(StateTab)"
+       aria-current="@Current(StateTab)">State</a>
+    <a id="@TabId(EventsTab)" href="@TabLink(EventsTab)"
+       aria-current="@Current(EventsTab)">Events</a>
+    <a id="@TabId(IdentifiersTab)" href="@TabLink(IdentifiersTab)"
+       aria-current="@Current(IdentifiersTab)">Identifiers</a>
+</nav>
+
+@* Each panel is named by the tab that reaches it, so the label is written once rather than repeated
+   as a heading under the row that already says it. *@
+@if (Showing == IdentifiersTab)
+{
+    <section class="tab-panel" aria-labelledby="@TabId(IdentifiersTab)">
+        <p class="lede">@IdentifiersLede</p>
+
+        @if (Description.Identifiers.Count == 0)
+        {
+            <p class="missing">Nothing addresses this @Noun.</p>
+        }
+        else
+        {
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    @* What the identifier narrows by, which each store narrows by differently: a
+                       stream by the properties an event carries, a boundary by the tags it is
+                       built from. *@
+                    <th scope="col">@(Tagged ? "Tags" : "Filter")</th>
+                    @* Centred, heading and marks together: the column holds one mark per row rather
+                       than a value read along a line, and there is no left edge for the eye to run
+                       down. Absent where nothing was handed in to link to — a view opened over a
+                       stored instance is already inside the data this would lead to. *@
+                    @if (DataLink is not null)
+                    {
+                        <th class="marked" scope="col">Data</th>
+                    }
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var identifier in Description.Identifiers)
+                {
+                    <tr>
+                        <td><code>@identifier.Name</code></td>
+                        <td>@NarrowedBy(identifier)</td>
+                        @* A mark rather than a word: the column is one link per row and the word
+                           repeats down it. The name it is read out by carries the identifier, so a
+                           row is told apart by more than its position.
+
+                           The store's own mark, the same one the Data tile is entered by on the
+                           section page and the index folds its rows under — so every way into what
+                           has been stored looks the same. *@
+                        @if (DataLink is { } link)
+                        {
+                            <td class="marked">
+                                <a class="icon-link" href="@link(identifier)"
+                                   aria-label="View data for @identifier.Name"
+                                   title="View data for @identifier.Name">
+                                    <SectionMark Kind="SectionKind.Data"/>
+                                </a>
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+else if (Showing == EventsTab)
+{
+    <section class="tab-panel" aria-labelledby="@TabId(EventsTab)">
+        <p class="lede">
+            The event types this @Noun applies, and what each one carries.
+            Folding a @Folded runs these into its state and passes the rest over.
+        </p>
+
+        @if (Description.EventTypes.Count == 0)
+        {
+            <p class="missing">No event type filter — it applies every event in its @Folded.</p>
+        }
+        else
+        {
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th scope="col">Event</th>
+                    <th scope="col">Version</th>
+                    <th scope="col">State</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var eventType in Description.EventTypes)
+                {
+                    <tr>
+                        @* Named and versioned by what it is bound as, in two cells rather than one:
+                           that is the name written into the store and the one a stored event is read
+                           back under, and the version beside it is what a change to its shape is
+                           answered with. An event carrying no [EventType] is read back by nothing,
+                           so the class name stands in and the version cell says why there is
+                           none. *@
+                        @if (DomainTypeDescriber.BindingOf(eventType) is { } binding)
+                        {
+                            <td><code>@binding.Name</code></td>
+                            <td>@binding.Version</td>
+                        }
+                        else
+                        {
+                            <td><code>@eventType.Name</code></td>
+                            <td><span class="missing">not bound</span></td>
+                        }
+                        <td>
+                            @* Read the same way the model's own state is, so an event's payload and
+                               the state it lands in are written in the same terms. A property
+                               holding a value of the domain's own is unfolded under the line that
+                               holds it: the type name on its own says there is a shape and not what
+                               is in it. *@
+                            @if (DomainTypeDescriber.PropertiesOf(eventType) is { Count: > 0 } carried)
+                            {
+                                @Carried(carried)
+                            }
+                            else
+                            {
+                                <span class="missing">It carries nothing of its own.</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+else if (Showing == StateTab)
+{
+    <section class="tab-panel" aria-labelledby="@TabId(StateTab)">
+        <p class="lede">@StateLede</p>
+
+        @if (Description.Properties.Count == 0)
+        {
+            <p class="missing">It declares no properties of its own.</p>
+        }
+        else
+        {
+            @* The same two columns the events and the stored instances list their shape in, so every
+               declared shape on these pages is read the same way. The third column, the one holding
+               what an instance actually has in it, is the one this view has nothing to put in. *@
+            <table class="grid">
+                <thead>
+                <tr>
+                    <th scope="col">Property</th>
+                    <th scope="col">Type</th>
+                </tr>
+                </thead>
+                <tbody>
+                @StateRows((Description.Properties, 0))
+                </tbody>
+            </table>
+        }
+    </section>
+}
+else
+{
+    <section class="tab-panel" aria-labelledby="@TabId(InfoTab)">
+        <dl class="facts">
+            @* The two halves of what the store writes it under, apart: the name outlives a rename
+               of the class, and the version is what a change to the shape stored under that name is
+               answered with. *@
+            <dt>Name</dt>
+            <dd>
+                @if (Description.Binding is { } named)
+                {
+                    <code>@named.Name</code>
+                }
+                else
+                {
+                    <span class="missing">not bound — it carries no @Kind.Attribute()</span>
+                }
+            </dd>
+
+            @if (Description.Binding is { } versioned)
+            {
+                <dt>Version</dt>
+                <dd>@versioned.Version</dd>
+            }
+
+            @* The class the binding above is carried by. Not "Full name", which read as the long
+               form of the name under it once that name became the bound one, and not "Type", which
+               the data pages already use for the binding key — this is the one fact here that is
+               plainly the CLR class, so it says so. *@
+            <dt>Class</dt>
+            <dd><code>@Description.Type.FullName</code></dd>
+
+            <dt>Assembly</dt>
+            <dd>@Description.AssemblyName</dd>
+        </dl>
+    </section>
+}
+
+@code {
+
+    /// <summary>
+    /// The four views a declared type is read through, named as they appear in the address. Which
+    /// one is showing is the address's to say, so a view can be linked to, bookmarked and gone back
+    /// to — public because the pages build those addresses and match what comes back out of them,
+    /// and a name spelled twice is a name that can drift.
+    /// </summary>
+    public const string InfoTab = "info";
+
+    /// <summary>The shape the type declares.</summary>
+    public const string StateTab = "state";
+
+    /// <summary>The events it is folded from.</summary>
+    public const string EventsTab = "events";
+
+    /// <summary>What addresses it.</summary>
+    public const string IdentifiersTab = "identifiers";
+
+    /// <summary>
+    /// Matches a name from an address against the four there are, so an unknown one opens the view
+    /// a type opens with rather than an empty panel.
+    /// </summary>
+    public static string Match(string? tab) => (tab ?? string.Empty).ToLowerInvariant() switch
+    {
+        StateTab => StateTab,
+        EventsTab => EventsTab,
+        IdentifiersTab => IdentifiersTab,
+        _ => InfoTab
+    };
+
+    /// <summary>What is being shown: the type, described.</summary>
+    [Parameter]
+    [EditorRequired]
+    public DomainTypeDescription Description { get; set; } = null!;
+
+    /// <summary>Which of the two models it is, for the noun and the attribute that binds it.</summary>
+    [Parameter]
+    [EditorRequired]
+    public ModelKind Kind { get; set; }
+
+    /// <summary>Which store folds it, for what it is folded from and how it is narrowed.</summary>
+    [Parameter]
+    [EditorRequired]
+    public ModelStore Store { get; set; }
+
+    /// <summary>Which view to draw.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Tab { get; set; } = InfoTab;
+
+    /// <summary>
+    /// Where each tab leads. Handed in rather than built here: the same four views are reached from
+    /// four types pages and from the detail page of a stored instance, and each of those has its own
+    /// address to keep the rest of.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public Func<string, string> TabLink { get; set; } = null!;
+
+    /// <summary>
+    /// Through to what has been stored under one identifier, or null to leave the column out.
+    /// </summary>
+    /// <remarks>
+    /// Null is a real answer rather than a missing one: opened over a stored instance, this view is
+    /// already inside the data those links lead to, and a column of ways back to the list a reader
+    /// came from is a column of noise.
+    /// </remarks>
+    [Parameter]
+    public Func<Type, string>? DataLink { get; set; }
+
+    /// <summary>
+    /// What the tabs' own ids start with, so two of these on one page do not both claim the same
+    /// four. Each panel is labelled by the tab that reaches it, and a duplicated id would have half
+    /// of them labelled by the wrong one.
+    /// </summary>
+    [Parameter]
+    public string Prefix { get; set; } = "tab";
+
+    private string TabId(string tab) => $"{Prefix}-{tab}";
+
+    /// <summary>The view actually drawn, which is the asked-for one only if there is such a view.</summary>
+    private string Showing => Match(Tab);
+
+    private string? Current(string tab) => Showing == tab ? "page" : null;
+
+    private string Noun => Kind.Noun();
+
+    /// <summary>What the store folds it from, in that store's own word for it.</summary>
+    private string Folded => Store.Folded();
+
+    /// <summary>Whether it is narrowed by tags rather than by what an event carries.</summary>
+    private bool Tagged => Store == ModelStore.Dcb;
+
+    /// <summary>The row of views, named for a reader who reaches it by landmark.</summary>
+    private string Views => Kind == ModelKind.Projection ? "Projection views" : "Aggregate views";
+
+    /// <summary>
+    /// What an identifier narrows by, read off the identifier itself.
+    /// </summary>
+    /// <remarks>
+    /// Nothing declares it either way — a streamed identifier is asked for the pattern of the ids it
+    /// writes, a DCB one for the boundary it resolves to — so both are probed, and both can come
+    /// back with nothing. That is worth saying rather than leaving the cell blank: an identifier
+    /// with no shape is also one the data page cannot narrow to, so the gap here is the gap the link
+    /// beside it leads to.
+    /// </remarks>
+    private RenderFragment<Type> NarrowedBy => identifier =>
+        @<text>
+            @if (Tagged)
+            {
+                @if (IdentifierShape.Of(identifier) is { } shape)
+                {
+                    @* The tag names, not the values: a value is one instance's and the tags are the
+                       type's. *@
+                    <code>@string.Join(", ", shape.TagKeys)</code>
+
+                    @if (Combination(shape) is { } combination)
+                    {
+                        <span class="hint">@combination</span>
+                    }
+                }
+                else
+                {
+                    <span class="missing">could not be worked out</span>
+                }
+            }
+            else
+            {
+                @if (IdShape.Of(identifier) is { } shape)
+                {
+                    @if (shape.Filter.Count > 0)
+                    {
+                        @* The property names, not the values: a value is one instance's and the
+                           filter is the type's, the same way a DCB identifier is listed by its tag
+                           keys. *@
+                        <code>@string.Join(", ", shape.Filter)</code>
+                    }
+                    else
+                    {
+                        <span>the whole stream</span>
+                    }
+                }
+                else
+                {
+                    <span class="missing">could not be worked out</span>
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// Which of the two shapes a boundary comes in, in the words the library itself uses, or null
+    /// over a single tag — the two are the same boundary there, so there is nothing to tell apart
+    /// and a marker would only be a word to read past on every such row.
+    /// </summary>
+    private static string? Combination(IdentifierShape shape) => shape.Combination switch
+    {
+        TagCombination.AnyOf => "(AnyOf)",
+        TagCombination.AllOf => "(AllOf)",
+        _ => null
+    };
+
+    /// <summary>
+    /// What the identifiers are and how each one narrows, which is the one thing the two stores
+    /// answer differently enough to be worth two sentences rather than one with a word swapped.
+    /// </summary>
+    private string IdentifiersLede =>
+        (Tagged
+            ? $"The identifiers that address this {Noun}. Each one names it a different way and " +
+              "resolves to a boundary of events to fold, built from the tags beside it. Where " +
+              "there is more than one, (AnyOf) takes in every event carrying one of those tags " +
+              "and (AllOf) only those carrying all of them."
+            : $"The identifiers that address this {Noun}. Each one names it a different way, and " +
+              "the filter beside it is which of its stream's events are its own. An identifier " +
+              "filtering by a property folds only the events carrying it, which is what lets " +
+              $"several {Noun}s share one stream; one filtering by nothing folds the whole stream.")
+        + Contends;
+
+    /// <summary>
+    /// Why a read model may be addressed as freely as it likes, said only of read models. A write
+    /// model's identifiers decide what it may do, so the same sentence about it would be false.
+    /// </summary>
+    private string Contends => Kind != ModelKind.Projection
+        ? string.Empty
+        : Tagged
+            ? " A read model is free to draw its boundary wherever the question is: it decides " +
+              "nothing, so it contends with nobody."
+            : " A read model is free to be folded from wherever the question is: it decides " +
+              "nothing, so it contends with nobody.";
+
+    /// <summary>
+    /// What the shape below belongs to, and where the values one instance holds are instead.
+    /// </summary>
+    private string StateLede =>
+        $"The properties the {Noun} declares — the shape folding its {Folded} leaves it in" +
+        (Kind == ModelKind.Projection ? ", and the shape it is stored and read back as" : string.Empty) +
+        ". These belong to the type; the values one stored instance holds are reached through an " +
+        "identifier on the identifiers tab.";
+
+    /// <summary>
+    /// The properties a type declares, a row each, with the properties of any value one holds in
+    /// rows under it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Rows rather than a list inside one cell, which is how the events tab shows the same shape.
+    /// There it is one column's worth of a row about something else; here it is the table itself,
+    /// and a nested property kept on its own row keeps its type under the type column, where the
+    /// eye is already running down.
+    /// </para>
+    /// <para>
+    /// Draws itself and carries how deep it has got, because the depth is what the indent is made
+    /// of. How far there is to go is the describer's to decide, not this.
+    /// </para>
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DomainProperty> Properties, int Depth)> StateRows => rows =>
+        @<text>
+            @foreach (var property in rows.Properties)
+            {
+                <tr class="@Under(rows.Depth)">
+                    <td>@property.Name</td>
+                    <td><code>@property.TypeName</code></td>
+                </tr>
+
+                @if (property.Children.Count > 0)
+                {
+                    @StateRows((property.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
+    /// is stays the stylesheet's to say.
+    /// </summary>
+    /// <remarks>
+    /// A row at the top is not under anything and carries no class at all. Past the third step the
+    /// class stops changing: the describer stops unfolding before then, and a table that keeps
+    /// stepping in stops being a table.
+    /// </remarks>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
+
+    /// <summary>
+    /// What an event carries: one line per property, and the shape of any value of the domain's own
+    /// unfolded under the line holding it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A fragment that draws itself, because the shape nests and how deep is the describer's to
+    /// decide — this only draws what came back. Written as a property rather than a field so the
+    /// reference to itself is resolved when it is drawn rather than when the field is built.
+    /// </para>
+    /// <para>
+    /// Nested lists rather than one flat one with indentation on it: what is under a property is
+    /// under it in the markup too, so a reader following the indent and a reader following the
+    /// structure are following the same thing.
+    /// </para>
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainProperty>> Carried => properties =>
+        @<ul class="carried">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <code>@property.TypeName</code> @property.Name
+                    @if (property.Children.Count > 0)
+                    {
+                        @Carried(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
+
+}
