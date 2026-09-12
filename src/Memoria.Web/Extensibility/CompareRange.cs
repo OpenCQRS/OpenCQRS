@@ -17,6 +17,23 @@ namespace Memoria.Web.Extensibility;
 public sealed record CompareRange(int From, int To)
 {
     /// <summary>
+    /// The same pair one version earlier, or null when it is already against version zero.
+    /// </summary>
+    /// <remarks>
+    /// The same distance apart: stepping is moving up and down the events table, and a pair a row
+    /// wide stays a row wide as it goes.
+    /// </remarks>
+    public CompareRange? Earlier() => From > 0 ? new CompareRange(From - 1, To - 1) : null;
+
+    /// <summary>
+    /// The same pair one version later, or null when the later version would be past the last —
+    /// or when the last is not known, since a step into the unknown would be a link to an error.
+    /// </summary>
+    /// <param name="lastVersion">The model's last version, or null when the history could not be counted.</param>
+    public CompareRange? Later(long? lastVersion) =>
+        lastVersion is { } last && To < last ? new CompareRange(From + 1, To + 1) : null;
+
+    /// <summary>
     /// Reads a pair out of what the address carries.
     /// </summary>
     /// <param name="from">What the address says for the earlier version, or null when it says nothing.</param>

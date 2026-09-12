@@ -598,7 +598,8 @@ else
            table. Drawn by the panel the projection page draws the same thing with; what is this
            page's to say is which model, where the form comes back to, and what carries the row. *@
         <ComparePanel Identity="Identity" Comparison="Comparison" Noun="aggregate"
-                      Action="@($"streamed/aggregates/detail#tab-{CompareTab}")">
+                      Action="@($"streamed/aggregates/detail#tab-{CompareTab}")"
+                      Link="@(pair => DetailLink(CompareTab, Descending, Page, from: pair.From, to: pair.To))">
             <Carried>
                 @Addressing
                 <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>

@@ -49,6 +49,31 @@
             @Carried
             <input type="hidden" name="tab" value="@Tab"/>
             <button type="submit" class="quiet">Compare</button>
+
+            @* The same pair one row up or down the events table, as the pager steps a page: a
+               reader walking a history one event at a time should not have to retype two numbers
+               for each step. Only the steps there are, as the pager draws only the pages there
+               are — below version zero and past the last there is nothing to step to. Links, like
+               every other way between views here, so a step can be gone back from. *@
+            @if (Comparison.Range is { } stepped)
+            {
+                <nav class="compare-step" aria-label="Neighbouring comparisons">
+                    @if (stepped.Earlier() is { } earlier)
+                    {
+                        <a class="button-mark quiet" rel="prev" href="@Link(earlier)"
+                           aria-label="Compare version @earlier.From with version @earlier.To">
+                            &lsaquo; @earlier.From → @earlier.To
+                        </a>
+                    }
+                    @if (stepped.Later(Comparison.LastVersion) is { } later)
+                    {
+                        <a class="button-mark quiet" rel="next" href="@Link(later)"
+                           aria-label="Compare version @later.From with version @later.To">
+                            @later.From → @later.To &rsaquo;
+                        </a>
+                    }
+                </nav>
+            }
         </form>
 
         @if (Comparison.Error is not null)
@@ -133,6 +158,14 @@
     [Parameter]
     [EditorRequired]
     public RenderFragment? Carried { get; set; }
+
+    /// <summary>
+    /// The address of this tab comparing a given pair, for the steps beside the form. The page's
+    /// to build, since only it knows what else the address carries.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public Func<CompareRange, string> Link { get; set; } = _ => string.Empty;
 
     /// <summary>
     /// The rows: a value from each version and the way they differ, with the insides of any value

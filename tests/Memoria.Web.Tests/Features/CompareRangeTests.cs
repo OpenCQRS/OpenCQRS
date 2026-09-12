@@ -120,4 +120,37 @@ public class CompareRangeTests
     {
         CompareRange.Of("3", "14", lastVersion: 14).Range.Should().Be(new CompareRange(3, 14));
     }
+
+    // Stepping the pair one version down or up the history, which is what the two buttons beside
+    // the comparison do: the same distance apart, one row earlier or later on the events table.
+
+    [Fact]
+    public void Steps_the_pair_one_version_earlier()
+    {
+        new CompareRange(6, 7).Earlier().Should().Be(new CompareRange(5, 6));
+        new CompareRange(2, 9).Earlier().Should().Be(new CompareRange(1, 8));
+    }
+
+    [Fact]
+    public void Has_no_earlier_pair_below_version_zero()
+    {
+        new CompareRange(0, 1).Earlier().Should().BeNull();
+    }
+
+    [Fact]
+    public void Steps_the_pair_one_version_later_while_the_history_has_one()
+    {
+        new CompareRange(6, 7).Later(lastVersion: 8).Should().Be(new CompareRange(7, 8));
+        new CompareRange(6, 7).Later(lastVersion: 7).Should().BeNull();
+    }
+
+    /// <summary>
+    /// A history that could not be counted has no known end, and a step into the unknown would be
+    /// a link to an error rather than to a comparison.
+    /// </summary>
+    [Fact]
+    public void Has_no_later_pair_when_the_last_version_is_unknown()
+    {
+        new CompareRange(6, 7).Later(lastVersion: null).Should().BeNull();
+    }
 }

@@ -1722,6 +1722,15 @@ h2:focus {
         width: 6.5rem;
     }
 
+    /* The two steps beside the form, pushed to the row's far end: they move the pair the form
+       holds, so they belong on its row, and set apart from its button so a step is not read as a
+       second way of submitting. */
+    .compare-step {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
     /* A property's name is one word, and it is the word the eye runs down: it keeps its line and
        the two values beside it are what wrap when the four columns fight for the width. */
     .grid.compare td:first-child {
