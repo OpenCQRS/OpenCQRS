@@ -20,11 +20,14 @@ models and writes data through it.
 > scoped-CSS bundle answers 500 — the application renders unstyled. The same applies to anything run
 > out of `bin/` rather than out of `dotnet publish` output.
 
-## No authentication
+## No authentication yet
 
 Anyone who can reach `/settings` can upload a `.dll` that this process will load and execute. There
 is no login and no role. Run it on localhost, or behind a proxy that authenticates **every** request
 including the form posts, and grant access to the people you would give shell access on that host to.
+
+Authentication and authorization are coming in the next release. Until they do, a proxy is the only
+thing that can stand in for them.
 
 ## Configuration
 

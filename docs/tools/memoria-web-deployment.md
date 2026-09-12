@@ -4,8 +4,9 @@
 repository, and you build it, publish it, and host it yourself.
 
 > **Read [Security](memoria-web.md#security) before deciding where to put it.** There is no
-> authentication of any kind, and anyone who can reach `/settings` can upload an assembly this
-> process will load and execute.
+> authentication or authorization of any kind in this release, and anyone who can reach `/settings`
+> can upload an assembly this process will load and execute. Both are coming in the next release;
+> everything on this page describes the tool as it stands.
 
 ## Run it locally
 
@@ -112,13 +113,19 @@ ENTRYPOINT ["dotnet", "Memoria.Web.dll"]
 
 ## Putting authentication in front of it
 
-The application has none, so the proxy has to be the whole of it. Whatever you use — an identity-aware
-proxy, OAuth2 Proxy, a Kubernetes ingress with an auth annotation, basic auth on nginx — the
-requirement is the same: **no request reaches the application unauthenticated**, including
-`POST /settings/upload`. Protecting the pages and leaving the form posts open protects nothing.
+The application has none in this release, so the proxy has to be the whole of it. Whatever you use —
+an identity-aware proxy, OAuth2 Proxy, a Kubernetes ingress with an auth annotation, basic auth on
+nginx — the requirement is the same: **no request reaches the application unauthenticated**,
+including `POST /settings/upload`. Protecting the pages and leaving the form posts open protects
+nothing.
 
 Grant access to the people you would give shell access on that host to, because an uploaded assembly
 runs with the application's own privileges.
+
+The next release adds authentication and authorization to the application itself, which will make
+this section a choice rather than the only option. A proxy in front of it stays perfectly valid
+either way — and until then it is the only thing standing between the internet and an upload form
+that runs code.
 
 ## Pointing it at production data
 

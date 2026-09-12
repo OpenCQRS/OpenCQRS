@@ -113,14 +113,19 @@ They are stored in the browser and the server is never told.
 
 ## Security
 
-> **The tool has no authentication, and uploading is running code.** Anyone who can reach
-> `/settings` can upload a `.dll` that this process will load and execute. There is no login, no
-> role, and no restriction on what an uploaded assembly may do.
+> **The tool has no authentication or authorization today, and uploading is running code.** Anyone
+> who can reach `/settings` can upload a `.dll` that this process will load and execute. There is no
+> login, no role, and no restriction on what an uploaded assembly may do. Both are planned for the
+> next release; everything below describes the tool as it stands.
 
-Run it on localhost, or on a network where everyone who can reach it is already trusted with the
-store it is pointed at. Do not expose it to the internet. If you must, put authentication in front of
-it — a reverse proxy that requires a login before any request reaches the application — and treat
-upload rights as equivalent to shell access on the host.
+**Authentication and authorization are coming in the next release.** Until they land, the tool has
+no notion of a user at all: every visitor can read every page and press every button, including the
+ones that change what everyone else resolves. Plan for that rather than around it.
+
+So for now, run it on localhost, or on a network where everyone who can reach it is already trusted
+with the store it is pointed at. Do not expose it to the internet. If you must, put authentication in
+front of it — a reverse proxy that requires a login before any request reaches the application — and
+treat upload rights as equivalent to shell access on the host.
 
 Two more things worth knowing before pointing it at anything that matters:
 

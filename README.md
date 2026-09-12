@@ -55,6 +55,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Event property filtering across aggregates and stream queries
 
 ### 🕙 To Follow
+- Authentication and authorization in Memoria Web, so it no longer depends on a proxy in front of it
 - Option to automatically validate commands
 - Event Grid messaging provider
 - Kafka messaging provider
@@ -147,8 +148,9 @@ It is in the repository rather than on NuGet, so you build and run it yourself. 
 and deletes nothing: the only write it offers is refreshing a snapshot that has fallen behind its
 stream or its boundary.
 
-> **It has no authentication, and uploading an assembly runs code in its process.** Keep it on
-> localhost or behind a proxy that authenticates every request.
+> **It has no authentication or authorization yet, and uploading an assembly runs code in its
+> process.** Keep it on localhost or behind a proxy that authenticates every request. Both are
+> coming in the next release.
 
 To try it without a domain of your own, `src/Memoria.Web.Samples` carries a sample ecommerce domain
 modelled in both consistency models and fills a store with data written through it.
