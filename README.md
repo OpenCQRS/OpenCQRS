@@ -130,6 +130,19 @@ side.
 dotnet run --project src/Memoria.Web
 ```
 
+![The home page: the streamed model and the DCB model side by side](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/home.png)
+
+Every section has a **Types** page, listing what the uploaded assemblies declare, and a **Data**
+page, listing what the store actually holds — filtered, sorted and paged, with all of it in the
+query string so a view can be bookmarked and shared.
+
+![Aggregate data: rows narrowed by stream, aggregate and identifier](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/aggregate-data.png)
+
+Open a row and the aggregate is folded from its events, so you can see the state a snapshot stands
+at and how far behind its stream it is.
+
+![An aggregate folded from its events, on the State tab](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/aggregate-details.png)
+
 It is in the repository rather than on NuGet, so you build and run it yourself. It creates nothing
 and deletes nothing: the only write it offers is refreshing a snapshot that has fallen behind its
 stream or its boundary.

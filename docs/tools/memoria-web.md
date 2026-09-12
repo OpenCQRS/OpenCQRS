@@ -8,6 +8,8 @@ It is not a sample application and not a package. It lives in the repository at
 [`src/Memoria.Web`](https://github.com/lucabriguglia/Memoria/tree/main/src/Memoria.Web), and you
 build and run it yourself — see [Deployment](memoria-web-deployment.md).
 
+![The home page: the streamed model and the DCB model side by side](../images/memoria-web/home.png)
+
 - [Configuration](memoria-web-configuration.md) — the connection string, the provider, the Cosmos
   database and container, where uploads are kept
 - [Deployment](memoria-web-deployment.md) — publishing it, hosting it, and what has to be true of
@@ -45,6 +47,11 @@ The two consistency models sit side by side from the home page, and each is laid
 - **Events**, **Aggregates**, **Projections** (and **Streams**, streamed only) — each a section with
   a **Types** page (what the uploaded assemblies declare) and a **Data** page (what the store holds)
 
+A **Types** page reads the registration rather than the store: what each type is bound as, at which
+version, and the assembly it came out of.
+
+![Event types: the events the streamed model declares, with the binding for one of them](../images/memoria-web/event-types.png)
+
 Data pages page, sort and filter, and every piece of that state — the filter, the sort, the page, the
 page size, which payloads are expanded — travels in the query string, so a view can be bookmarked,
 shared and stepped back through.
@@ -58,9 +65,13 @@ shared and stepped back through.
 | DCB → Aggregates → Data       | Aggregate type, identifier, and text in a tag        |
 | DCB → Projections → Data      | Projection type, identifier, and text in a tag       |
 
+![Aggregate data: rows narrowed by stream, aggregate and identifier](../images/memoria-web/aggregate-data.png)
+
 Opening a row reaches a detail page with four tabs: **Info** (how the row is identified and where its
 snapshot stands), **State** (the model folded), **Events** (what it applied, or what its boundary
 holds), and **Update**.
+
+![An aggregate folded from its events, on the State tab](../images/memoria-web/aggregate-details.png)
 
 ## The one thing it writes
 
