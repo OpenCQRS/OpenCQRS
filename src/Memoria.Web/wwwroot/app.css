@@ -1954,6 +1954,14 @@ h2:focus {
     width: 9%;
 }
 
+/* The link in that column, in the shape the steps on the compare tab have, brought down a step to
+   sit inside a row rather than beside a form: a control in a table is read at the table's small
+   size, and at the full size it lifted every row to make room for itself. */
+.grid.events.compared td .button-mark {
+    font-size: var(--text-sm);
+    padding: 0.25rem 0.6rem;
+}
+
 /* The snapshots table, declared the same way the log's is and for a different reason: nothing here
    opens, so the columns are declared to keep the two pages that use it — aggregates and projections
    — reading identically however wide or narrow the ids in them happen to be.

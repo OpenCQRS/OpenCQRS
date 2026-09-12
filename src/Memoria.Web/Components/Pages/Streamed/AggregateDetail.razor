@@ -533,7 +533,7 @@ else
                                 <td>
                                     @if (Versions.TryGetValue(stored.Event.Position, out var version))
                                     {
-                                        <a href="@CompareLink(version)"
+                                        <a class="button-mark quiet" href="@CompareLink(version)"
                                            aria-label="Compare version @(version - 1) with version @version"
                                            title="Compare version @(version - 1) with version @version">
                                             @(version - 1) → @version
