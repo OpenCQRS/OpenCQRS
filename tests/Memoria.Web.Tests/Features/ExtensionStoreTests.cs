@@ -206,6 +206,19 @@ public class ExtensionStoreTests : IDisposable
             .Should().BeEquivalentTo("one.zip", "two.zip");
     }
 
+    /// <summary>
+    /// The settings page says what each archive brought, so an archive has to know which assembly
+    /// files it holds — by file name alone, the same way they were extracted.
+    /// </summary>
+    [Fact]
+    public void Lists_the_assemblies_each_archive_holds()
+    {
+        var store = Store();
+        store.Install("pack.zip", ZipOf("bin/Release/Two.dll", "One.dll", "readme.txt"));
+
+        store.InstalledArchives().Single().Assemblies.Should().Equal("One.dll", "Two.dll");
+    }
+
     [Fact]
     public void Lists_no_archives_before_anything_is_uploaded()
     {

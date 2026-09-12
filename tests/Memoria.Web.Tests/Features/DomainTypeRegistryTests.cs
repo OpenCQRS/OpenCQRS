@@ -116,6 +116,36 @@ public class DomainTypeRegistryTests : IDisposable
         registry.Current.Errors.Should().Contain(error => error.Contains("SampleHappened"));
     }
 
+    /// <summary>
+    /// The settings page lists, under each archive, the types the assemblies in it brought — so the
+    /// catalogue has to say which file each type was registered from.
+    /// </summary>
+    [Fact]
+    public void Says_which_types_were_registered_from_each_file()
+    {
+        PutInLibrary("Domain.dll");
+        var registry = Registry();
+
+        registry.Reload();
+
+        var registered = registry.Current.RegisteredFrom("Domain.dll");
+        registered.Should().Contain(kind => kind.Label == "Streamed aggregates")
+            .Which.Types.Should().Contain(type => type.Name == nameof(SampleAggregate));
+        registered.Should().Contain(kind => kind.Label == "Streamed events")
+            .Which.Types.Should().Contain(type => type.Name == nameof(SampleHappenedEvent));
+    }
+
+    [Fact]
+    public void Registers_nothing_from_a_file_that_was_not_loaded()
+    {
+        PutInLibrary("Domain.dll");
+        var registry = Registry();
+
+        registry.Reload();
+
+        registry.Current.RegisteredFrom("Missing.dll").Should().BeEmpty();
+    }
+
     public void Dispose()
     {
         TypeBindings.EventTypeBindings = new Dictionary<string, Type>();

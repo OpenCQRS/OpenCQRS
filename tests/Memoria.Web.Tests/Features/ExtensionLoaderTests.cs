@@ -78,13 +78,28 @@ public class ExtensionLoaderTests : IDisposable
     public void Reads_an_assembly_that_was_replaced_since_the_last_load()
     {
         var path = PutInLibrary("Replaced.dll", SampleAssembly);
-        var first = ExtensionLoader.Load(Store()).Assemblies.Single().GetName().Name;
+        var first = ExtensionLoader.Load(Store()).Assemblies.Single().Assembly.GetName().Name;
 
         File.WriteAllBytes(path, AnotherAssembly);
-        var second = ExtensionLoader.Load(Store()).Assemblies.Single().GetName().Name;
+        var second = ExtensionLoader.Load(Store()).Assemblies.Single().Assembly.GetName().Name;
 
         first.Should().Be("Memoria.Web.Tests");
         second.Should().Be("FluentAssertions");
+    }
+
+    /// <summary>
+    /// The file is what the settings page knows an assembly by, and it need not be called what the
+    /// assembly calls itself.
+    /// </summary>
+    [Fact]
+    public void Says_which_file_each_assembly_was_loaded_from()
+    {
+        PutInLibrary("Sound.dll", SampleAssembly);
+
+        var loaded = ExtensionLoader.Load(Store()).Assemblies.Single();
+
+        loaded.FileName.Should().Be("Sound.dll");
+        loaded.Assembly.GetName().Name.Should().Be("Memoria.Web.Tests");
     }
 
     public void Dispose()

@@ -28,7 +28,7 @@ public static class ExtensionLoader
     /// </remarks>
     public static LoadedExtensions Load(ExtensionStore store)
     {
-        var assemblies = new List<Assembly>();
+        var assemblies = new List<LoadedAssembly>();
         var errors = new List<string>();
 
         var paths = store.AssemblyPaths();
@@ -46,7 +46,8 @@ public static class ExtensionLoader
                 // Into the default context, not a private one: an uploaded assembly references
                 // Memoria's own assemblies, and those types have to be the ones this process
                 // already loaded, or nothing it holds would satisfy IEvent or IAggregateRoot.
-                assemblies.Add(Assembly.Load(File.ReadAllBytes(path)));
+                assemblies.Add(new LoadedAssembly(
+                    Path.GetFileName(path), Assembly.Load(File.ReadAllBytes(path))));
             }
             catch (Exception exception)
             {
@@ -84,6 +85,17 @@ public static class ExtensionLoader
 /// <summary>
 /// The outcome of a load.
 /// </summary>
-/// <param name="Assemblies">The assemblies that loaded.</param>
+/// <param name="Assemblies">The assemblies that loaded, each with the file it came from.</param>
 /// <param name="Errors">One line per file that did not.</param>
-public sealed record LoadedExtensions(IReadOnlyList<Assembly> Assemblies, IReadOnlyList<string> Errors);
+public sealed record LoadedExtensions(IReadOnlyList<LoadedAssembly> Assemblies, IReadOnlyList<string> Errors);
+
+/// <summary>
+/// One assembly and the file it was loaded from.
+/// </summary>
+/// <param name="FileName">
+/// The file's name in the library, which is the name an archive entry carried it under. Kept
+/// because it is what the settings page knows an assembly by, and an assembly need not be called
+/// what its file is.
+/// </param>
+/// <param name="Assembly">What loaded from it.</param>
+public sealed record LoadedAssembly(string FileName, Assembly Assembly);

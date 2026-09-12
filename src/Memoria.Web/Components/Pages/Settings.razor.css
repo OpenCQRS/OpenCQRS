@@ -8,7 +8,7 @@
 }
 
     .grid.archives .col-file {
-        width: 48%;
+        width: 42%;
     }
 
     .grid.archives .col-size {
@@ -17,6 +17,12 @@
 
     .grid.archives .col-uploaded {
         width: 32%;
+    }
+
+    /* The way into what a row brought, and nothing else: a mark and the word above it. Taken from
+       the file, which is the column with room to spare. */
+    .grid.archives .col-types {
+        width: 6%;
     }
 
     .grid.archives .col-actions {

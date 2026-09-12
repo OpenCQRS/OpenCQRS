@@ -60,6 +60,15 @@ public sealed record DomainTypeCatalogue
     public IReadOnlyList<Type> DcbEvents { get; init; } = [];
 
     /// <summary>
+    /// The uploaded assemblies the types were read from, each with the file it was loaded from.
+    /// </summary>
+    /// <remarks>
+    /// Only the uploads: the application's own assembly is scanned alongside them but was not
+    /// brought by any file, and the one question this answers is which file brought what.
+    /// </remarks>
+    public IReadOnlyList<LoadedAssembly> Assemblies { get; init; } = [];
+
+    /// <summary>
     /// What went wrong while loading, one line per assembly that could not be read. Held rather
     /// than thrown so a bad upload leaves the application running and able to say so.
     /// </summary>
@@ -67,6 +76,59 @@ public sealed record DomainTypeCatalogue
 
     /// <summary>Gets when this catalogue was built, or null before the first reload.</summary>
     public DateTime? ReloadedUtc { get; init; }
+
+    /// <summary>
+    /// The types registered from one assembly file, grouped under the kind of thing each is.
+    /// </summary>
+    /// <param name="fileName">The file's name in the library, as the archive that holds it lists it.</param>
+    /// <returns>
+    /// One group per kind something was registered under, in the order the Types tab counts them
+    /// — the streamed model's kinds, then the DCB model's — and nothing for a file that was not
+    /// loaded or declared none of them. The types within a group keep the order they are
+    /// catalogued in.
+    /// </returns>
+    /// <remarks>
+    /// The events are split the way the event pages split them: each model's group holds the
+    /// events that model applies, so an event both apply is under both, and one no model applies
+    /// is under neither — the same answer those pages give.
+    /// <para>
+    /// Compared without regard to case: the name comes from an archive entry on one side and a
+    /// directory listing on the other, and neither is somewhere a difference of case is a
+    /// different file.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<RegisteredKind> RegisteredFrom(string fileName)
+    {
+        var assembly = Assemblies
+            .FirstOrDefault(loaded => string.Equals(loaded.FileName, fileName, StringComparison.OrdinalIgnoreCase))
+            ?.Assembly;
+
+        if (assembly is null)
+        {
+            return [];
+        }
+
+        IReadOnlyList<(string Label, IReadOnlyList<Type> Types)> kinds =
+        [
+            ("Streamed events", StreamedEvents),
+            ("Streamed aggregates", StreamedAggregates),
+            ("Streamed aggregate ids", StreamedAggregateIds),
+            ("Streamed projections", StreamedProjections),
+            ("Streamed projection ids", StreamedProjectionIds),
+            ("Streams", StreamedStreamIds),
+            ("DCB events", DcbEvents),
+            ("DCB aggregates", DcbAggregates),
+            ("DCB aggregate ids", DcbAggregateIds),
+            ("DCB projections", DcbProjections),
+            ("DCB projection ids", DcbProjectionIds)
+        ];
+
+        return kinds
+            .Select(kind => new RegisteredKind(kind.Label,
+                kind.Types.Where(type => type.Assembly == assembly).ToList()))
+            .Where(kind => kind.Types.Count > 0)
+            .ToList();
+    }
 
     /// <summary>Gets the number of domain types found, identifiers included.</summary>
     /// <remarks>
@@ -82,3 +144,10 @@ public sealed record DomainTypeCatalogue
         DcbProjections.Count + DcbProjectionIds.Count +
         Events.Count;
 }
+
+/// <summary>
+/// The types one file registered under one kind of thing.
+/// </summary>
+/// <param name="Label">The kind, in the words the Types tab counts it in.</param>
+/// <param name="Types">The types of that kind the file's assembly declares.</param>
+public sealed record RegisteredKind(string Label, IReadOnlyList<Type> Types);

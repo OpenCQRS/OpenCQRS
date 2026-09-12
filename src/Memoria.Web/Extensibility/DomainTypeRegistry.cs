@@ -45,9 +45,10 @@ public sealed class DomainTypeRegistry(ExtensionStore store, Assembly? host = nu
 
             var loaded = ExtensionLoader.Load(store);
 
+            var uploaded = loaded.Assemblies.Select(assembly => assembly.Assembly);
             var assemblies = host is null
-                ? loaded.Assemblies
-                : new List<Assembly>([host, .. loaded.Assemblies]);
+                ? uploaded.ToList()
+                : new List<Assembly>([host, .. uploaded]);
 
             var scanned = DomainTypeScanner.Scan(assemblies);
             var errors = new List<string>([.. loaded.Errors, .. scanned.Errors]);
@@ -64,7 +65,12 @@ public sealed class DomainTypeRegistry(ExtensionStore store, Assembly? host = nu
             DcbTypeBindings.AggregateTypeBindings = dcbAggregates;
             DcbTypeBindings.ProjectionTypeBindings = dcbProjections;
 
-            Current = scanned with { Errors = errors, ReloadedUtc = DateTime.UtcNow };
+            Current = scanned with
+            {
+                Assemblies = loaded.Assemblies,
+                Errors = errors,
+                ReloadedUtc = DateTime.UtcNow
+            };
         }
     }
 

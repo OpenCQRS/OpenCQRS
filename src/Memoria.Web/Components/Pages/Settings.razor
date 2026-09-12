@@ -34,7 +34,8 @@
     <section class="tab-panel" aria-labelledby="tab-@InstalledTab">
         <p class="lede">
             The zips of assemblies uploaded, each holding domain types. They are read as
-            soon as they arrive — the application does not restart.
+            soon as they arrive — the application does not restart. The mark on a row opens the
+            assemblies in that zip and the types registered from each.
         </p>
 
         @if (Archives.Count == 0)
@@ -53,6 +54,9 @@
                     <th scope="col" class="col-file">File</th>
                     <th scope="col" class="col-size">Size</th>
                     <th scope="col" class="col-uploaded">Uploaded</th>
+                    @* The way into what a row brought, and nothing else: a mark and the word
+                       above it, like the JSON column on a page of the log. *@
+                    <th scope="col" class="col-types marked">Types</th>
                     <th class="col-actions"><span class="visually-hidden">Actions</span></th>
                 </tr>
                 </thead>
@@ -63,9 +67,22 @@
                     var dialog = $"delete-{index}";
 
                     <tr>
-                        <td>@archive.Name</td>
+                        <td class="name">@archive.Name</td>
                         <td>@($"{archive.Length / 1024:n0} KB")</td>
                         <td>@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
+                        @* A mark rather than a word: the column is one link per row and the word
+                           repeats down it. The name it is read out by tells a row from the one
+                           above, which its place in the column alone would not. The site's mark for
+                           a declaration, because a list of types is what opens. Offered on every
+                           row, including one that brought nothing: that is exactly the row worth
+                           looking into. *@
+                        <td class="marked">
+                            <a class="icon-link" href="@TypesLink(archive)"
+                               aria-label="View the types registered from @archive.Name"
+                               title="View the types registered from @archive.Name">
+                                <SectionMark Kind="SectionKind.Types"/>
+                            </a>
+                        </td>
                         <td class="actions">
                             @* Asked before it happens, because removing an archive takes the types it
                                brought away from everyone, not just from whoever pressed it. Opened the same
@@ -135,6 +152,14 @@
                 </div>
             </form>
         </dialog>
+
+        @* One archive's contents, opened over the table it was listed in. Last in the markup because
+           it covers the panel rather than sitting anywhere in it, and drawn only when the address
+           names an archive that is installed — so the table behind it is the table a reader left. *@
+        @if (Opened is { } opened)
+        {
+            <ArchiveTypesDialog Archive="opened" Catalogue="Catalogue" CloseLink="@InstalledLink"/>
+        }
     </section>
 }
 else if (Tab == TypesTab)
@@ -400,6 +425,29 @@ else
     /// <summary>The archive whose removal is being confirmed, when one is.</summary>
     [SupplyParameterFromQuery(Name = "delete")]
     private string? DeleteAsked { get; set; }
+
+    /// <summary>The archive whose contents the address asks to see, when it asks for one.</summary>
+    [SupplyParameterFromQuery(Name = "types")]
+    private string? TypesAsked { get; set; }
+
+    /// <summary>
+    /// The archive the address asks to see the contents of, or null when it asks for nothing or
+    /// for a name that is not installed — a name typed into the address bar opens nothing rather
+    /// than an empty sheet.
+    /// </summary>
+    private InstalledArchive? Opened =>
+        Archives.FirstOrDefault(archive => archive.Name == TypesAsked);
+
+    /// <summary>The Installed tab with nothing asked for, which is what closes the sheet.</summary>
+    private static string InstalledLink => $"settings?tab={InstalledTab}";
+
+    /// <summary>
+    /// The address that opens one archive's contents over the Installed tab. Lands on the sheet,
+    /// so on a long list the reader arrives at what they opened rather than at the top of the
+    /// page.
+    /// </summary>
+    private static string TypesLink(InstalledArchive archive) =>
+        $"{InstalledLink}&types={Uri.EscapeDataString(archive.Name)}#{ArchiveTypesDialog.Anchor}";
 
     private DomainTypeCatalogue Catalogue => Types.Current;
 

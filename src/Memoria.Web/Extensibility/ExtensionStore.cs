@@ -115,8 +115,38 @@ public sealed class ExtensionStore(string root)
         return Directory.EnumerateFiles(ArchiveDirectory, "*.zip")
             .Select(path => new FileInfo(path))
             .OrderByDescending(file => file.LastWriteTimeUtc)
-            .Select(file => new InstalledArchive(file.Name, file.Length, file.LastWriteTimeUtc))
+            .Select(file => new InstalledArchive(
+                file.Name, file.Length, file.LastWriteTimeUtc, AssembliesIn(file.FullName)))
             .ToList();
+    }
+
+    /// <summary>
+    /// The assembly files one stored archive holds, by the names they were extracted under.
+    /// </summary>
+    /// <remarks>
+    /// Read off the archive each time rather than written down when it arrived: the archive is
+    /// kept whole, so it is its own record of what it brought. Two entries that flatten to one
+    /// name are one file in the library, and are listed once. An archive that cannot be read —
+    /// which only a file put in the directory by hand could be, since an upload is checked before
+    /// it is kept — holds nothing that could have been extracted.
+    /// </remarks>
+    private static IReadOnlyList<string> AssembliesIn(string path)
+    {
+        try
+        {
+            using var archive = ZipFile.OpenRead(path);
+
+            return archive.Entries
+                .Where(IsAssembly)
+                .Select(entry => Path.GetFileName(entry.Name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException)
+        {
+            return [];
+        }
     }
 
     /// <summary>Gets the assemblies to load, in a stable order.</summary>
@@ -144,4 +174,6 @@ public sealed class ExtensionStore(string root)
 /// <param name="Name">The file name it was uploaded under.</param>
 /// <param name="Length">Its size in bytes.</param>
 /// <param name="UploadedUtc">When it was last written.</param>
-public sealed record InstalledArchive(string Name, long Length, DateTime UploadedUtc);
+/// <param name="Assemblies">The assembly files it holds, by the names they were extracted under.</param>
+public sealed record InstalledArchive(
+    string Name, long Length, DateTime UploadedUtc, IReadOnlyList<string> Assemblies);
