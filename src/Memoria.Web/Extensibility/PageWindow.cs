@@ -9,7 +9,7 @@ namespace Memoria.Web.Extensibility;
 /// <remarks>
 /// A table grows with the log behind it, so the strip under it cannot: a dropdown of every page was
 /// one option per page, and a log of ten thousand pages drew ten thousand of them. What is drawn
-/// instead is one group of ten at a time.
+/// instead is one group of five at a time.
 /// <para>
 /// Groups rather than a window sliding around the page being read: stepping from one page to the
 /// next inside a group leaves the numbers where they were, so a reader crossing a table moves along
@@ -21,7 +21,7 @@ namespace Memoria.Web.Extensibility;
 public sealed record PageWindow(IReadOnlyList<int> Pages, int? Back, int? Forward)
 {
     /// <summary>How many numbers are drawn at once, and so how long a group is.</summary>
-    public const int Most = 10;
+    public const int Most = 5;
 
     /// <summary>
     /// Works out the group the page being read falls in.
