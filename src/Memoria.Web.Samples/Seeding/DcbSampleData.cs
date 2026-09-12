@@ -62,11 +62,21 @@ public static class DcbSampleData
         {
             var supplierId = Id(random, "s");
             suppliers.Add(supplierId);
+            var raised = new List<string>();
 
             foreach (var _ in Enumerable.Range(0, random.Next(1, 4)))
             {
-                purchaseOrders.Add(
-                    await AddPurchaseOrder(dcb, supplierId, products, random, report, cancellationToken));
+                raised.Add(await AddPurchaseOrder(dcb, supplierId, products, random, report, cancellationToken));
+            }
+
+            purchaseOrders.AddRange(raised);
+
+            // A share of suppliers were scored under the rating scheme before it was dropped, so
+            // their boundaries hold the retired event beside the purchasing ones and the store holds
+            // snapshots only a retired shape can read.
+            if (Chance(random, 50))
+            {
+                await AddRatings(dcb, supplierId, raised, random, report, cancellationToken);
             }
         }
 
@@ -206,6 +216,60 @@ public static class DcbSampleData
 
         return purchaseOrderId;
     }
+
+    // The scheme is retired, and this is the history it left: the seeder writes what an older
+    // release would have written, which is the one place the retired types are still meant to be
+    // written through.
+#pragma warning disable CS0618
+
+    /// <summary>
+    /// Scores a supplier on some of their orders, the way the rating scheme did before it was
+    /// dropped, and leaves the rating and the scorecard where a dropped scheme leaves them.
+    /// </summary>
+    /// <remarks>
+    /// Each score is snapshotted or merely appended by chance, and the scorecard is refreshed after
+    /// a randomly chosen score or not at all — so the retired models are found in the same three
+    /// states as the live ones: current, behind, and never snapshotted.
+    /// </remarks>
+    private static async Task AddRatings(
+        IDcbDomainService dcb,
+        string supplierId,
+        IReadOnlyList<string> purchaseOrders,
+        Random random,
+        SeedReport report,
+        CancellationToken cancellationToken)
+    {
+        var ratingId = new SupplierRatingId(supplierId);
+
+        // The first order is always scored; the scheme was in force when the supplier was taken on.
+        var scored = purchaseOrders.Where((_, index) => index == 0 || Chance(random, 60)).ToList();
+        var refreshScorecardAfter = random.Next(scored.Count + 1);
+
+        for (var index = 0; index < scored.Count; index++)
+        {
+            var purchaseOrderId = scored[index];
+            var score = random.Next(1, 6);
+            var buyer = Buyer(random);
+
+            await Decide(dcb, ratingId, report, cancellationToken,
+                model => model.Rate(purchaseOrderId, score, buyer), snapshot: Chance(random, 50));
+
+            if (index == refreshScorecardAfter)
+            {
+                await dcb.UpdateProjection(new SupplierScorecardId(supplierId), cancellationToken);
+            }
+        }
+
+        report.Add(new SeededModel("dcb", "aggregate", nameof(SupplierRating),
+            nameof(SupplierRatingId), supplierId,
+            () => MeasureAggregate(dcb, ratingId)));
+
+        report.Add(new SeededModel("dcb", "projection", nameof(SupplierScorecard),
+            nameof(SupplierScorecardId), supplierId,
+            () => MeasureProjection(dcb, new SupplierScorecardId(supplierId))));
+    }
+
+#pragma warning restore CS0618
 
     /// <summary>
     /// Everything that happens to the catalogue and the shelves after the first orders are in.

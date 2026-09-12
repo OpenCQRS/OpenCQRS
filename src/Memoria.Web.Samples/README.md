@@ -16,7 +16,7 @@ dotnet run --project src/Memoria.Web.Samples
 Memoria.Web.Samples
   store    : Npgsql
   writing  : memoria_samples
-  bound    : 28 events, 4+4 aggregates, 3+5 projections (streamed+dcb)
+  bound    : 30 events, 5+5 aggregates, 4+6 projections (streamed+dcb)
   schema   : installed
 ```
 
@@ -62,6 +62,16 @@ of both shapes side by side.
 **DCB** — a catalogue, stock for it, orders holding some of that stock, and the
 purchase orders that restock it. Every append follows the read-decide-append cycle on
 condition that the boundary has not moved, the way an application would write it.
+
+**Retired** — each half also carries a feature the shop no longer runs: a loyalty
+scheme on the streamed side (`LoyaltyPointsEarned`, `LoyaltyBalance`,
+`LoyaltyStatement`) and supplier ratings on the DCB side (`SupplierRated`,
+`SupplierRating`, `SupplierScorecard`). Their event, aggregate, projection and
+identifiers are marked `[Obsolete]`, which is a different thing from a versioned pair:
+nothing replaced them, and they stay only so the history they wrote still reads. Nothing
+an application still runs would write through them; the seeder does, for a share of
+customers and suppliers, because a store with no such history has nothing to show for
+them. They bind like any other type, so they are registered and listed like any other.
 
 Snapshots are deliberately left in three states, because a store where everything is
 current has nothing to demonstrate:

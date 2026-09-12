@@ -64,10 +64,11 @@ public static class StreamedSampleData
         // one and they end up current; land earlier and every order after it leaves them behind.
         var refreshAccountAfter = random.Next(orders);
         var refreshHistoryAfter = random.Next(orders);
+        var orderIds = new List<string>();
 
         for (var order = 0; order < orders; order++)
         {
-            await AddOrder(store, stream, customerId, random, time, report, cancellationToken);
+            orderIds.Add(await AddOrder(store, stream, customerId, random, time, report, cancellationToken));
 
             if (order == refreshAccountAfter)
             {
@@ -80,6 +81,14 @@ public static class StreamedSampleData
             }
         }
 
+        // A share of customers were in the loyalty scheme before it closed, so their streams hold
+        // the retired event beside the orders and the store holds snapshots only a retired shape
+        // can read.
+        if (Chance(random, 40))
+        {
+            await AddLoyaltyHistory(store, stream, customerId, orderIds, random, time, report, cancellationToken);
+        }
+
         report.Add(new SeededModel("streamed", "aggregate", nameof(CustomerAccount),
             nameof(CustomerAccountId), customerId,
             () => MeasureAggregate(store, stream, new CustomerAccountId(customerId))));
@@ -89,7 +98,8 @@ public static class StreamedSampleData
             () => MeasureProjection(store, stream, new CustomerOrderHistoryId(customerId))));
     }
 
-    private static async Task AddOrder(
+    /// <returns>The order's id, so the customer's other models can be told which orders exist.</returns>
+    private static async Task<string> AddOrder(
         IDomainService store,
         CustomerStreamId stream,
         string customerId,
@@ -150,7 +160,86 @@ public static class StreamedSampleData
         report.Add(new SeededModel("streamed", "projection", nameof(OrderSummary),
             nameof(OrderSummaryId), orderId,
             () => MeasureProjection(store, stream, new OrderSummaryId(orderId))));
+
+        return orderId;
     }
+
+    // The scheme is retired, and this is the history it left: the seeder writes what an older
+    // release would have written, which is the one place the retired types are still meant to be
+    // written through.
+#pragma warning disable CS0618
+
+    /// <summary>
+    /// Awards the customer the points the loyalty scheme would have, for some of their orders, and
+    /// leaves the balance and the statement where a closed scheme leaves them.
+    /// </summary>
+    /// <remarks>
+    /// Half the balances are snapshotted as the points are written and half only ever appended. The
+    /// statement folds the orders as well as the points, so refreshing it before the points leaves
+    /// it behind by exactly them, refreshing it after leaves it current, and not refreshing it
+    /// leaves it missing — the same three states the live models are left in, so the web tool has a
+    /// retired snapshot to open, a retired snapshot with an update waiting, and a retired event
+    /// nothing has folded.
+    /// </remarks>
+    private static async Task AddLoyaltyHistory(
+        IDomainService store,
+        CustomerStreamId stream,
+        string customerId,
+        IReadOnlyList<string> orderIds,
+        Random random,
+        TimeProvider time,
+        SeedReport report,
+        CancellationToken cancellationToken)
+    {
+        var refreshStatement = (StatementRefresh)random.Next(3);
+
+        if (refreshStatement == StatementRefresh.BeforeThePoints)
+        {
+            await store.UpdateProjection(stream, new LoyaltyStatementId(customerId), cancellationToken);
+        }
+
+        var balance = new LoyaltyBalance();
+
+        // The first order always earned; the scheme was in force when the customer joined.
+        foreach (var orderId in orderIds.Where((_, index) => index == 0 || Chance(random, 60)))
+        {
+            Allow(balance.Earn(customerId, orderId, random.Next(1, 25) * 10, RecentMoment(random, time)));
+        }
+
+        var events = balance.UncommittedEvents.ToArray();
+        var sequence = await LatestSequence(store, stream, cancellationToken);
+
+        Check(Chance(random, 50)
+            ? await store.SaveAggregate(stream, new LoyaltyBalanceId(customerId), balance, sequence, cancellationToken)
+            : await store.SaveEvents(stream, events, sequence, cancellationToken));
+
+        report.Appended(events.Length);
+
+        if (refreshStatement == StatementRefresh.AfterThePoints)
+        {
+            await store.UpdateProjection(stream, new LoyaltyStatementId(customerId), cancellationToken);
+        }
+
+        report.Add(new SeededModel("streamed", "aggregate", nameof(LoyaltyBalance),
+            nameof(LoyaltyBalanceId), customerId,
+            () => MeasureAggregate(store, stream, new LoyaltyBalanceId(customerId))));
+
+        report.Add(new SeededModel("streamed", "projection", nameof(LoyaltyStatement),
+            nameof(LoyaltyStatementId), customerId,
+            () => MeasureProjection(store, stream, new LoyaltyStatementId(customerId))));
+    }
+
+    /// <summary>
+    /// When, if at all, a customer's statement is refreshed relative to the points being written.
+    /// </summary>
+    private enum StatementRefresh
+    {
+        BeforeThePoints,
+        AfterThePoints,
+        Never
+    }
+
+#pragma warning restore CS0618
 
     /// <summary>
     /// Fills one product's review stream: a handful of reviews, the votes other shoppers cast on
