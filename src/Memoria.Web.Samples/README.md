@@ -14,14 +14,17 @@ dotnet run --project src/Memoria.Web.Samples
 
 ```
 Memoria.Web.Samples
-  store    : Npgsql
-  writing  : memoria_samples
+  store    : Cosmos
+  writing  : memoria_samples/Domain
   bound    : 28 events, 4+4 aggregates, 3+5 projections (streamed+dcb)
   schema   : installed
 ```
 
-The default store is PostgreSQL on `localhost:5432`, database `memoria_samples` —
-see [Point it at a store](#point-it-at-a-store) for the others.
+Out of the box this is the local Azure Cosmos DB emulator, database `memoria_samples`,
+container `Domain` — start the emulator first, or the run stops with "Could not reach
+the database" before asking anything. See [Point it at a store](#point-it-at-a-store)
+for PostgreSQL, SQL Server and SQLite; `appsettings.json` carries the PostgreSQL
+string as a comment, ready to swap in.
 
 ## What it asks
 
