@@ -612,52 +612,69 @@ else
                     nothing to say what to fold.
                 </p>
             }
-            else if (CompareError is not null)
-            {
-                @* A pair the address could not be read as, or a fold the store refused. Its own
-                   line rather than the page alert above, which is the store failing to answer for
-                   the row at all. *@
-                <p class="alert" role="alert">@CompareError</p>
-            }
-            else if (Range is null)
-            {
-                <p class="empty">
-                    Nothing is being compared yet. Pick an event on the
-                    <a href="@TabLink(EventsTab)">events tab</a> to see the state before it against
-                    the state after it.
-                </p>
-            }
             else
             {
-                <p class="lede">
-                    The aggregate folded up to sequence @Range.Value.From against the same fold
-                    carried on to sequence @Range.Value.To. Folded here and not written: the stored
-                    snapshot is left as it is.
-                </p>
+                @* Which two folds, chosen here as well as by a link from the events table: two
+                   sequences rather than two lists of events, because a history can run to
+                   thousands and a number is typed faster than a list is scrolled. Bounded by the
+                   aggregate's own last event, since past it there is nothing more to fold. The
+                   form replaces the whole query, so the row travels with it as it does on the
+                   events tab. *@
+                <form class="search compare-range" method="get" action="streamed/aggregates/detail#tab-@CompareTab">
+                    <label for="from">Up to</label>
+                    <input id="from" type="number" name="from" value="@(Range?.From)"
+                           min="0" max="@LastSequence" required/>
+                    <label for="to">against up to</label>
+                    <input id="to" type="number" name="to" value="@(Range?.To)"
+                           min="1" max="@LastSequence" required/>
+                    @Addressing
+                    <input type="hidden" name="tab" value="@CompareTab"/>
+                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                    <input type="hidden" name="size" value="@PageSize"/>
+                    <input type="hidden" name="page" value="@Page"/>
+                    <button type="submit" class="quiet">Compare</button>
+                </form>
 
-                @if (Comparison.Count == 0)
+                @if (CompareError is not null)
                 {
-                    <p class="missing">It declares no properties of its own.</p>
+                    @* A pair the address could not be read as, or a fold the store refused. Its
+                       own line rather than the page alert above, which is the store failing to
+                       answer for the row at all — and under the form, which is where it is put
+                       right. *@
+                    <p class="alert" role="alert">@CompareError</p>
                 }
-                else
+                else if (Range is { } range)
                 {
-                    @* The state tab's rows, with its one value column made two and a column
-                       saying how they differ. Every row is drawn, marked or not: a changed value
-                       reads by the unchanged shape around it. *@
-                    <table class="grid compare">
-                        <thead>
-                        <tr>
-                            <th scope="col">Property</th>
-                            <th scope="col">Type</th>
-                            <th scope="col">Up to @Range.Value.From</th>
-                            <th scope="col">Up to @Range.Value.To</th>
-                            <th scope="col">Change</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @DiffRows((Comparison, 0))
-                        </tbody>
-                    </table>
+                    <p class="lede">
+                        The aggregate folded up to sequence @range.From against the same fold
+                        carried on to sequence @range.To. Folded here and not written: the stored
+                        snapshot is left as it is.
+                    </p>
+
+                    @if (Comparison.Count == 0)
+                    {
+                        <p class="missing">It declares no properties of its own.</p>
+                    }
+                    else
+                    {
+                        @* The state tab's rows, with its one value column made two and a column
+                           saying how they differ. Every row is drawn, marked or not: a changed
+                           value reads by the unchanged shape around it. *@
+                        <table class="grid compare">
+                            <thead>
+                            <tr>
+                                <th scope="col">Property</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Up to @range.From</th>
+                                <th scope="col">Up to @range.To</th>
+                                <th scope="col">Change</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @DiffRows((Comparison, 0))
+                            </tbody>
+                        </table>
+                    }
                 }
             }
         </section>
@@ -853,10 +870,21 @@ else
     private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
 
     /// <summary>
-    /// The two sequences the compare tab folds up to, or null when the address names no pair. A
-    /// pair that could not be read as one is null too, with <see cref="CompareError"/> saying why.
+    /// The two sequences the compare tab folds up to, or null when the address names no pair that
+    /// can be folded, with <see cref="CompareError"/> saying why.
     /// </summary>
-    private (int From, int To)? Range { get; set; }
+    private CompareRange? Range { get; set; }
+
+    /// <summary>
+    /// The last sequence this aggregate has to fold up to, or null when the history could not be
+    /// counted. What the compare tab defaults to, and the most its form offers.
+    /// </summary>
+    /// <remarks>
+    /// The aggregate's own last event rather than the stream's: on a stream several models share,
+    /// the events past this one are another model's, and a fold up to them is the same fold as up
+    /// to this.
+    /// </remarks>
+    private long? LastSequence { get; set; }
 
     /// <summary>The rows of the compare tab: the later fold's state against the earlier's.</summary>
     private IReadOnlyList<DiffRow> Comparison { get; set; } = [];
@@ -1158,39 +1186,48 @@ else
     /// draw or the reason there are none.
     /// </summary>
     /// <remarks>
-    /// A pair is two whole numbers with the first below the second and neither below zero: a fold
-    /// up to a negative sequence is nothing, and a fold against itself or an earlier one has nothing
-    /// to say. Read as <c>int</c> because that is what the store folds up to; a sequence past that
-    /// is not one the store could reach.
-    /// <para>
-    /// Only folded once the identifier is known to have been rebuilt: the panel says why when it
-    /// was not, and there is nothing to ask the store for.
-    /// </para>
+    /// Only once the identifier is known to have been rebuilt: the panel says why when it was not,
+    /// and there is nothing to ask the store for. The aggregate's last event is read first — one
+    /// row, newest first, narrowed the way the events tab is — because it is what a pair is checked
+    /// against and what an address naming no pair compares by default.
     /// </remarks>
     private async Task Compare(string? fromText, string? toText)
     {
-        if (fromText is null && toText is null)
+        if (!Identity.IsRecovered || Aggregate is null || Claim is null || StreamId is null)
         {
             return;
         }
 
-        if (!int.TryParse(fromText, out var from) || !int.TryParse(toText, out var to) || from < 0 || from >= to)
+        var history = await Store.Events(new StreamedEventFilter(
+            StreamPattern: StreamId,
+            EventType: null,
+            Text: null,
+            Descending: true,
+            Page: 1,
+            Size: 1)
         {
-            CompareError =
-                $"'{fromText}' to '{toText}' is not a pair of sequences to compare: both must be whole numbers, from zero up, with the first below the second.";
+            EventTypes = Keys(Applies),
+            Properties = Claim
+        });
 
+        // A count that failed says nothing rather than nothing found: a history the store could
+        // not read is not an empty one, and the range reader is told the difference.
+        LastSequence = history.Error is null
+            ? history.Events.FirstOrDefault()?.Event.Position ?? 0
+            : null;
+
+        var reading = CompareRange.Of(fromText, toText, LastSequence);
+
+        Range = reading.Range;
+        CompareError = reading.Error;
+
+        if (Range is null)
+        {
             return;
         }
 
-        Range = (from, to);
-
-        if (!Identity.IsRecovered || Aggregate is null)
-        {
-            return;
-        }
-
-        var before = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, from);
-        var after = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, to);
+        var before = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, Range.From);
+        var after = await ModelFolder.Fold(Folds, Aggregate, Identity.Stream!, Identity.Identifier!, Range.To);
 
         CompareError = before.Error ?? after.Error;
 

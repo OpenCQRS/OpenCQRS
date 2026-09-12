@@ -1716,6 +1716,12 @@ h2:focus {
         color: var(--danger-strong);
     }
 
+    /* The two sequences the compare tab folds up to. Narrow boxes, because a sequence is a few
+       digits and a box the width of a search would read as room for a sentence. */
+    .search.compare-range input[type="number"] {
+        width: 6.5rem;
+    }
+
     /* The word saying how a row differs: small and set apart from the values, as the mark rather
        than another value. */
     .grid .change {
@@ -2395,7 +2401,8 @@ h2:focus {
     gap: 0.5rem;
 }
 
-    .search input[type="search"] {
+    .search input[type="search"],
+    .search input[type="number"] {
         background: var(--surface);
         border: 1px solid var(--field-rule);
         border-radius: 4px;
@@ -2406,7 +2413,8 @@ h2:focus {
         width: 18rem;
     }
 
-    .search input[type="search"]:focus-visible {
+    .search input[type="search"]:focus-visible,
+    .search input[type="number"]:focus-visible {
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
         outline: none;
