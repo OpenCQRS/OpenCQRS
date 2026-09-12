@@ -21,11 +21,20 @@ namespace Memoria.EventSourcing.Store.Cosmos;
 /// singleton. Because the client is built once, changes to <see cref="CosmosOptions"/> after the
 /// first resolution have no effect on the connection it holds.
 /// </para>
+/// <para>
+/// A client may instead be supplied and owned externally through the
+/// <see cref="CosmosClientProvider(CosmosClient, string, string)"/> constructor. That is for a host
+/// that already registers its own <see cref="CosmosClient"/> singleton and wants the store to reuse
+/// it; in that case this provider does not dispose the client, leaving its lifetime to the owner.
+/// </para>
 /// </remarks>
 public sealed class CosmosClientProvider : IDisposable
 {
+    private readonly bool _ownsClient;
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="CosmosClientProvider"/> class.
+    /// Initializes a new instance of the <see cref="CosmosClientProvider"/> class that builds and
+    /// owns its own <see cref="CosmosClient"/> from the given options.
     /// </summary>
     /// <param name="options">The Cosmos DB configuration options.</param>
     public CosmosClientProvider(IOptions<CosmosOptions> options)
@@ -34,6 +43,21 @@ public sealed class CosmosClientProvider : IDisposable
 
         Client = new CosmosClient(cosmosOptions.Endpoint, cosmosOptions.AuthKey, cosmosOptions.ClientOptions);
         Container = Client.GetContainer(cosmosOptions.DatabaseName, cosmosOptions.ContainerName);
+        _ownsClient = true;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CosmosClientProvider"/> class that wraps an
+    /// externally-owned <see cref="CosmosClient"/>. The client is not disposed by this provider.
+    /// </summary>
+    /// <param name="client">The shared client, owned by whoever created it.</param>
+    /// <param name="databaseName">The database the container is in.</param>
+    /// <param name="containerName">The container the store writes into.</param>
+    public CosmosClientProvider(CosmosClient client, string databaseName, string containerName)
+    {
+        Client = client;
+        Container = client.GetContainer(databaseName, containerName);
+        _ownsClient = false;
     }
 
     /// <summary>
@@ -48,8 +72,15 @@ public sealed class CosmosClientProvider : IDisposable
     public Container Container { get; }
 
     /// <summary>
-    /// Disposes the shared Cosmos DB client. Called by the dependency injection container when the
-    /// application shuts down.
+    /// Disposes the shared Cosmos DB client, but only when this provider owns it. Called by the
+    /// dependency injection container when the application shuts down. When the client was supplied
+    /// externally its lifetime belongs to its owner, so this is a no-op for the client.
     /// </summary>
-    public void Dispose() => Client.Dispose();
+    public void Dispose()
+    {
+        if (_ownsClient)
+        {
+            Client.Dispose();
+        }
+    }
 }

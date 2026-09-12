@@ -2,10 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Memoria.EventSourcing;
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
+using Memoria.EventSourcing.Store.Cosmos;
 using Memoria.EventSourcing.Store.EntityFrameworkCore;
 using Memoria.Web.Data;
 using Memoria.Web.Extensibility;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -76,6 +79,33 @@ public class StoreRegistrationTests
     }
 
     /// <summary>
+    /// Refreshing a Cosmos snapshot is a write, carried by the SDK-based <c>IDomainService</c>. The
+    /// branch wires that write path onto the very client the reads use, rather than opening a
+    /// second one or provisioning anything, so exactly one client is registered and neither the
+    /// options nor the setup <c>AddMemoriaCosmos</c> would add is present.
+    /// </summary>
+    [Fact]
+    public void Writes_a_cosmos_store_through_the_same_client_it_reads_with()
+    {
+        var services = Registered("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5");
+
+        using var scope = new AssertionScope();
+
+        services.Should().ContainSingle(service => service.ServiceType == typeof(IDomainService))
+            .Which.ImplementationType.Should().Be<CosmosDomainService>(
+                "the update tab sends the write through the Cosmos domain service");
+        services.Should().ContainSingle(service => service.ServiceType == typeof(ICosmosDataStore))
+            .Which.ImplementationType.Should().Be<CosmosDataStore>();
+        services.Should().Contain(service => service.ServiceType == typeof(CosmosClientProvider),
+            "the write path reaches the container through a provider");
+
+        services.Should().ContainSingle(service => service.ServiceType == typeof(CosmosClient),
+            "the write path reuses the one client the reads already registered");
+        services.Should().NotContain(service => service.ServiceType == typeof(CosmosSetup),
+            "nothing is provisioned; the store already exists");
+    }
+
+    /// <summary>
     /// What the tool can offer depends on the store it was pointed at. Only the dynamic consistency
     /// boundary differs today: there is no DCB store for Cosmos, so those pages have nothing to read
     /// and are not offered rather than offered and broken.
@@ -100,14 +130,15 @@ public class StoreRegistrationTests
 
     /// <summary>
     /// Refreshing a snapshot is a write, and the streamed pages send it through
-    /// <c>IDomainService</c>. Only the relational store registers one, so the update tab is offered
-    /// where there is something behind it rather than offered and broken.
+    /// <c>IDomainService</c>. Every store registers one now — the relational stores through Entity
+    /// Framework Core and Cosmos through its SDK-based domain service — so the update tab is offered
+    /// for all of them.
     /// </summary>
     [Theory]
     [InlineData("Host=localhost;Database=memoria;Username=postgres;Password=x", true)]
     [InlineData("Server=.;Database=memoria;Trusted_Connection=True", true)]
     [InlineData("Data Source=memoria.db", true)]
-    [InlineData("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5", false)]
+    [InlineData("AccountEndpoint=https://localhost:8081/;AccountKey=a2V5", true)]
     public void Offers_the_update_only_where_a_store_can_be_written_to(
         string connectionString, bool expected)
     {

@@ -1,5 +1,7 @@
+using Memoria.EventSourcing;
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore;
 using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.Extensions;
+using Memoria.EventSourcing.Store.Cosmos;
 using Memoria.EventSourcing.Store.EntityFrameworkCore;
 using Memoria.EventSourcing.Store.EntityFrameworkCore.Extensions;
 using Memoria.Web.Extensibility;
@@ -16,7 +18,10 @@ namespace Memoria.Web.Data;
 /// Entity Framework Core opens; a Cosmos store is read through the SDK the store itself writes with,
 /// and has no context to open — its model carries index definitions the Cosmos provider refuses, and
 /// there is no dynamic consistency boundary store for it at all. Registering the relational half
-/// anyway would leave four contexts nothing can resolve.
+/// anyway would leave four contexts nothing can resolve. The Cosmos branch does register the
+/// streamed write path (the SDK-based <see cref="IDomainService"/>) so a snapshot can be refreshed,
+/// but it wires that onto the same <see cref="CosmosClient"/> the reads use rather than opening a
+/// second one; there is still no dynamic consistency boundary service for it.
 /// </remarks>
 public static class StoreRegistration
 {
@@ -47,6 +52,18 @@ public static class StoreRegistration
 
             services.AddScoped<IStreamedReads>(provider => new CosmosStreamedReads(
                 provider.GetRequiredService<CosmosClient>(), store.DatabaseName, store.ContainerName));
+
+            // The streamed write path, so the Update tab can refresh a snapshot. It reuses the one
+            // client above rather than opening a second: the provider is handed the shared client
+            // and told not to own it, so shutdown disposes the client once, through the singleton
+            // registered here. TimeProvider and the HTTP context accessor are the write types' other
+            // dependencies, which AddMemoriaCosmos would otherwise have registered.
+            services.AddSingleton(TimeProvider.System);
+            services.AddHttpContextAccessor();
+            services.AddSingleton(provider => new CosmosClientProvider(
+                provider.GetRequiredService<CosmosClient>(), store.DatabaseName, store.ContainerName));
+            services.AddScoped<ICosmosDataStore, CosmosDataStore>();
+            services.AddScoped<IDomainService, CosmosDomainService>();
 
             return services;
         }

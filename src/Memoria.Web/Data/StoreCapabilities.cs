@@ -22,14 +22,15 @@ public sealed record StoreCapabilities(bool HasDcb, bool CanUpdate)
     /// What a store in this engine can be asked for.
     /// </summary>
     /// <remarks>
-    /// Cosmos is the odd one out on both counts. The dynamic consistency boundary has one store and
-    /// it is built on Entity Framework Core; there is no Cosmos equivalent, and the model would not
-    /// build on that provider even if there were. Refreshing a snapshot is a write, and the pages
-    /// send it through the framework's own domain service — which the tool registers for a
-    /// relational store and not for a Cosmos one, where the documents are read through the SDK
-    /// instead. The three relational providers carry both.
+    /// Every store can be updated: refreshing a snapshot is a write, and the pages send it through
+    /// the framework's own domain service — which the tool registers for a relational store, and now
+    /// for a Cosmos one too, carried by the SDK-based domain service over the same client the reads
+    /// use. Cosmos remains the odd one out on the dynamic consistency boundary: it has one store,
+    /// built on Entity Framework Core, and there is no Cosmos equivalent — the model would not build
+    /// on that provider even if there were — so <see cref="HasDcb"/> stays false for it while the
+    /// three relational providers carry both.
     /// </remarks>
     public static StoreCapabilities Of(DatabaseProvider provider) =>
         new(HasDcb: provider is not DatabaseProvider.Cosmos,
-            CanUpdate: provider is not DatabaseProvider.Cosmos);
+            CanUpdate: true);
 }
