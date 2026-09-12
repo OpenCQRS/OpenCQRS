@@ -63,7 +63,7 @@
                     var dialog = $"delete-{index}";
 
                     <tr>
-                        <td class="name">@archive.Name</td>
+                        <td>@archive.Name</td>
                         <td>@($"{archive.Length / 1024:n0} KB")</td>
                         <td>@archive.UploadedUtc.ToLocalTime().ToString("g")</td>
                         <td class="actions">

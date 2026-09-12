@@ -27,7 +27,6 @@
        voice — the same exception the instance lists make for the names in them. */
     .grid.archives .name {
         font-family: var(--font);
-        font-weight: 600;
     }
 
     /* The row's one link, held at the end of the row it acts on. */
