@@ -1,0 +1,31 @@
+@* One value of a filtered row, with the text the filter was typed against marked wherever it
+   occurs in it. The value is written whole when nothing was typed, so every cell a filter can
+   reach can ask for this on every row and a table that is not filtered looks exactly as it did.
+
+   A <mark>, because that is the element for text picked out for its relevance to what the reader
+   is doing — and what they are doing is looking for exactly this. Blazor writes each run as text,
+   so nothing a value carries reaches the page as markup. *@
+@foreach (var run in Highlight.Runs(Text, Needle))
+{
+    if (run.IsMatch)
+    {
+        <mark class="hit">@run.Text</mark>
+    }
+    else
+    {
+        @run.Text
+    }
+}
+
+@code {
+
+    /// <summary>The value a row carries.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Text { get; set; } = "";
+
+    /// <summary>What was typed into the filter, or null or blank when nothing was.</summary>
+    [Parameter]
+    public string? Needle { get; set; }
+
+}

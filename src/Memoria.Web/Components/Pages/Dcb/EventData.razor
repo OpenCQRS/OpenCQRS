@@ -197,7 +197,19 @@ else
                         }
                         else
                         {
-                            <code>@string.Join(", ", stored.Tags)</code>
+                            @* One tag at a time rather than the joined string, so what was typed
+                               is marked within a tag, the way the store matched it, and never
+                               across the comma between two. *@
+                            <code>
+                                @for (var i = 0; i < stored.Tags.Count; i++)
+                                {
+                                    if (i > 0)
+                                    {
+                                        <text>, </text>
+                                    }
+                                    <Highlighted Text="@stored.Tags[i]" Needle="@Text"/>
+                                }
+                            </code>
                         }
                     </td>
                     <td>
@@ -519,17 +531,30 @@ else
     /// Draws itself, because a payload nests as deep as the describer read it. Inside a cell rather
     /// than as rows: the whole payload is one column of a row about the event, so there are no
     /// columns of its own to keep anything lined up with.
+    /// <para>
+    /// Names and values both mark what the filter was typed against: the store matched the payload
+    /// as it was written, and a name is in that text as much as a value is.
+    /// </para>
     /// </remarks>
     private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
         @<ul class="pairs">
             @foreach (var property in properties)
             {
                 <li>
-                    <span class="pair-name">@property.Name</span>
+                    <span class="pair-name"><Highlighted Text="@property.Name" Needle="@Text"/></span>
 
                     @if (property.Children.Count == 0)
                     {
-                        <span class="pair-value">@(property.Value ?? "—")</span>
+                        <span class="pair-value">
+                            @if (property.Value is null)
+                            {
+                                <text>—</text>
+                            }
+                            else
+                            {
+                                <Highlighted Text="@property.Value" Needle="@Text"/>
+                            }
+                        </span>
                     }
                     else
                     {
@@ -537,7 +562,7 @@ else
                            that the pairs under it do not say better. *@
                         @if (property.Value is not null)
                         {
-                            <span class="pair-value">@property.Value</span>
+                            <span class="pair-value"><Highlighted Text="@property.Value" Needle="@Text"/></span>
                         }
 
                         @Pairs(property.Children)

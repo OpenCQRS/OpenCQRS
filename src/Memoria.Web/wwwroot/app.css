@@ -110,6 +110,12 @@
     --caution-rule: #b8791a;
     --caution-ink: #7a4f0c;
 
+    /* Text picked out because it is what the reader typed into a filter. The colour of a
+       highlighter pen, which is the one ground every reader already knows the meaning of, and a
+       ground alone: the ink stays whatever the text around it is, so a marked stretch reads as
+       the same word with a pen run over it rather than as a different word. */
+    --hit-ground: #ffe98a;
+
     /* The page worked. */
     --notice-ground: #f2f8f3;
     --notice-rule: #2f7d40;
@@ -222,6 +228,7 @@
         --caution-ground: #2a2114;
         --caution-rule: #d9a441;
         --caution-ink: #e8c98a;
+        --hit-ground: #6b5a12;
 
         --notice-ground: #14261a;
         --notice-rule: #4fa96a;
@@ -261,6 +268,7 @@
     --caution-ground: #2a2114;
     --caution-rule: #d9a441;
     --caution-ink: #e8c98a;
+    --hit-ground: #6b5a12;
 
     --notice-ground: #14261a;
     --notice-rule: #4fa96a;
@@ -1751,6 +1759,20 @@ h2:focus {
         margin: 0.1rem 0 0.2rem 0.15rem;
         padding-left: 0.6rem;
     }
+
+/* What a filtered row was kept for, marked wherever the filter found it: in a stream, an id, a tag,
+   or a name or value of the payload. A ground and nothing else — no ink of its own, no weight, no
+   underline — so the marked stretch stays the same word in the same face as the text on either
+   side of it, and a stream id half-marked still reads as one id. Rounded a hair and let out
+   sideways by a whisker, the way a pen overruns the letters it is drawn across. Global, because the
+   same mark is drawn in the log of either store. */
+.hit {
+    background: var(--hit-ground);
+    border-radius: 0.15em;
+    color: inherit;
+    margin: 0 -0.05em;
+    padding: 0 0.05em;
+}
 
 /* The table of stored events, wherever it is drawn: on its own page, or on the events tab of a
    model folded from them. Its columns are declared rather than measured, because a folded payload
