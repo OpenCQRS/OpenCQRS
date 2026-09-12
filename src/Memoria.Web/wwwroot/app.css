@@ -990,6 +990,12 @@ h2:focus {
     width: 100%;
 }
 
+    /* For a sheet whose content is read down rather than across. Short of the width above, which
+       is what four views laid out in columns need. */
+    .dialog.dialog-narrow {
+        max-width: 48rem;
+    }
+
 .dialog-header {
     align-items: center;
     border-bottom: 1px solid var(--rule);
@@ -1037,9 +1043,42 @@ h2:focus {
         outline-offset: 2px;
     }
 
+/* Which row a sheet is about, above what it holds. One fact, so one line rather than the grid a
+   detail page lists several in — but read the same way: the label small, spaced and set apart in
+   the softer ink, and the value in the face every stored value here is set in. */
+.dialog-id {
+    align-items: baseline;
+    display: flex;
+    font-family: var(--mono);
+    font-size: var(--text-md);
+    gap: 0.6rem;
+    margin: 0 0 0.75rem;
+    overflow-wrap: anywhere;
+}
+
+    .dialog-id .dialog-id-label {
+        color: var(--ink-soft);
+        flex: none;
+        font-family: var(--font);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .dialog-id code {
+        font-family: inherit;
+        font-size: inherit;
+    }
+
 .dialog-body {
     padding: 0 1.25rem 1.25rem;
 }
+
+    /* The line above the card carries the space the header used to sit against. */
+    .dialog-body .dialog-id {
+        padding-top: 1rem;
+    }
 
     /* The row of views opens straight under the header it hangs from, rather than carrying the
        space it needs when it follows a heading in the middle of a page. */
@@ -1204,84 +1243,97 @@ h2:focus {
         margin-top: 0;
     }
 
-    /* The payload as the store wrote it, on the same card the facts and the state table are set
-       on, so stepping between those tabs and this one is reading one surface rather than two.
+/* The payload as the store wrote it. On the same card the facts and the state table are set on, so
+   stepping between a detail page's tabs is reading one surface rather than several — and written
+   without the tab panel in front of it, because the pop-up an event table opens holds the same card
+   over a page with no tabs at all.
 
-       Capped in height and scrolled inside rather than growing with the payload: a large model
-       serialises to hundreds of lines, and a reader wanting the page's end should not have to go
-       past all of them. The cap is a share of the window with a ceiling, so the box is as tall as
-       the screen allows without a small window turning it into a slot. Long lines wrap rather than
-       scroll sideways — a long string value is read on, not chased — and break anywhere, because
-       an id or a hash has no spaces to break at. */
-    .tab-panel .json-view {
-        background: var(--surface);
-        border: 1px solid var(--rule);
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        overflow: hidden;
+   Capped in height and scrolled inside rather than growing with the payload: a large model
+   serialises to hundreds of lines, and a reader wanting the page's end should not have to go past
+   all of them. The cap is a share of the window with a ceiling, so the box is as tall as the screen
+   allows without a small window turning it into a slot. Long lines wrap rather than scroll
+   sideways — a long string value is read on, not chased — and break anywhere, because an id or a
+   hash has no spaces to break at. */
+.json-view {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+    /* The strip above the box, holding what acts on the whole payload — today, copying it. On the
+       ground a column heading takes, so it reads as the card's chrome rather than as the first line
+       of the payload, and outside the box's scroll so it stays put while the payload moves under
+       it. Hidden until script shows it, and gone entirely rather than empty when it stays hidden. */
+    .json-tools {
+        background: var(--sunk);
+        border-bottom: 1px solid var(--rule);
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.5rem 0.75rem;
     }
 
-        /* The strip above the box, holding what acts on the whole payload — today, copying it.
-           On the ground a column heading takes, so it reads as the card's chrome rather than as
-           the first line of the payload, and outside the box's scroll so it stays put while the
-           payload moves under it. Hidden until script shows it, and gone entirely rather than
-           empty when it stays hidden. */
-        .tab-panel .json-tools {
-            background: var(--sunk);
-            border-bottom: 1px solid var(--rule);
-            display: flex;
-            justify-content: flex-end;
-            padding: 0.5rem 0.75rem;
+        /* Said outright, because display: flex above would otherwise outweigh the browser's own
+           rule for the attribute and the strip would show with script off. */
+        .json-tools[hidden] {
+            display: none;
         }
 
-            /* Said outright, because display: flex above would otherwise outweigh the browser's
-               own rule for the attribute and the strip would show with script off. */
-            .tab-panel .json-tools[hidden] {
-                display: none;
-            }
-
-            /* Smaller than the page's two buttons: this acts on one box rather than on the store,
-               and at their size it would outweigh the payload it copies. */
-            .tab-panel .json-tools .quiet {
-                font-size: var(--text-sm);
-                padding: 0.3rem 0.75rem;
-            }
-
-        .tab-panel .json {
-            color: var(--ink);
-            font-family: var(--mono);
-            font-size: var(--text-md);
-            line-height: 1.55;
-            margin: 0;
-            max-height: min(40rem, 70vh);
-            overflow: auto;
-            overflow-wrap: anywhere;
-            padding: 1rem 1.25rem;
-            white-space: pre-wrap;
+        /* Smaller than the page's two buttons: this acts on one box rather than on the store, and
+           at their size it would outweigh the payload it copies. */
+        .json-tools .quiet {
+            font-size: var(--text-sm);
+            padding: 0.3rem 0.75rem;
         }
 
-        /* One colour per kind of token. The punctuation between them stays in the ink, so the
-           shape of the document is drawn in the quietest colour and the values stand out of it. */
-        .tab-panel .json .json-key {
-            color: var(--json-key);
-        }
+    .json {
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: var(--text-md);
+        line-height: 1.55;
+        margin: 0;
+        max-height: min(40rem, 70vh);
+        overflow: auto;
+        overflow-wrap: anywhere;
+        padding: 1rem 1.25rem;
+        white-space: pre-wrap;
+    }
 
-        .tab-panel .json .json-string {
-            color: var(--json-string);
-        }
+    /* One colour per kind of token. The punctuation between them stays in the ink, so the shape of
+       the document is drawn in the quietest colour and the values stand out of it. */
+    .json .json-key {
+        color: var(--json-key);
+    }
 
-        .tab-panel .json .json-number {
-            color: var(--json-number);
-        }
+    .json .json-string {
+        color: var(--json-string);
+    }
 
-        .tab-panel .json .json-bool {
-            color: var(--json-bool);
-        }
+    .json .json-number {
+        color: var(--json-number);
+    }
 
-        .tab-panel .json .json-null {
-            color: var(--ink-faint);
-            font-style: italic;
-        }
+    .json .json-bool {
+        color: var(--json-bool);
+    }
+
+    .json .json-null {
+        color: var(--ink-faint);
+        font-style: italic;
+    }
+
+/* The same card inside a pop-up, where the sheet's own edge is already around it and the body under
+   the header already carries the space. Held shorter than on a tab as well: a box as tall as the
+   tab's would push the header off a short window and leave the veil scrolling a sheet whose title
+   and Copy button had gone, which is the one thing a reader opened this for. */
+.dialog-body .json-view {
+    margin-bottom: 0;
+}
+
+    .dialog-body .json {
+        max-height: min(32rem, 60vh);
+    }
 
 /* Label above value, so a long type name has the width to itself. */
 .facts {
@@ -1658,7 +1710,13 @@ h2:focus {
     }
 
     .grid.events .col-payload {
-        width: 49%;
+        width: 43%;
+    }
+
+    /* The way into one row's stored text, and nothing else: a mark and the word above it. Taken
+       from the payload beside it, which is the column with room to spare. */
+    .grid.events .col-json {
+        width: 6%;
     }
 
 /* The same table with the tags the log wrote each row under, which only the log's own page has: a
@@ -1684,7 +1742,11 @@ h2:focus {
 }
 
 .grid.events.tagged .col-payload {
-    width: 35%;
+    width: 30%;
+}
+
+.grid.events.tagged .col-json {
+    width: 5%;
 }
 
 /* The same table with the stream and the store's own key in front of it, so the columns above keep
@@ -1712,7 +1774,11 @@ h2:focus {
 }
 
 .grid.events.streamed .col-payload {
-    width: 31%;
+    width: 26%;
+}
+
+.grid.events.streamed .col-json {
+    width: 5%;
 }
 
 /* The snapshots table, declared the same way the log's is and for a different reason: nothing here

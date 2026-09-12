@@ -219,7 +219,7 @@ public static class BoundaryEvents
 
         if (!TypeBindings.EventTypeBindings.TryGetValue(eventType, out var clrType))
         {
-            return new StoredEvent(position, eventType, written, [],
+            return new StoredEvent(position, eventType, written, data, [],
                 $"No uploaded type is registered as {eventType}.", under);
         }
 
@@ -228,13 +228,13 @@ public static class BoundaryEvents
             var @event = DomainSerializer.Current.Deserialize(data, clrType);
 
             return @event is null
-                ? new StoredEvent(position, eventType, written, [], "The stored payload is empty.", under)
-                : new StoredEvent(position, eventType, written, DomainTypeDescriber.ReadState(@event), null,
-                    under);
+                ? new StoredEvent(position, eventType, written, data, [], "The stored payload is empty.", under)
+                : new StoredEvent(position, eventType, written, data, DomainTypeDescriber.ReadState(@event),
+                    null, under);
         }
         catch (Exception exception)
         {
-            return new StoredEvent(position, eventType, written, [], exception.Message, under);
+            return new StoredEvent(position, eventType, written, data, [], exception.Message, under);
         }
     }
 }
@@ -252,6 +252,12 @@ public sealed record StoredEvents(
 /// <param name="Position">Its global position.</param>
 /// <param name="Type">The binding key it was stored under.</param>
 /// <param name="Written">When it was appended.</param>
+/// <param name="Data">
+/// Its payload, as the log wrote it. Kept beside the properties it was read into, because the Json
+/// column shows the row's own text rather than the event serialised again — and shows it whatever
+/// became of the read, since a type nothing uploaded describes and a payload that will not open are
+/// exactly the rows worth looking at.
+/// </param>
 /// <param name="State">What its payload holds, or empty when that could not be read.</param>
 /// <param name="Error">Why its payload could not be read, or null when it was.</param>
 /// <param name="Tags">
@@ -264,6 +270,7 @@ public sealed record StoredEvent(
     long Position,
     string Type,
     DateTimeOffset Written,
+    string Data,
     IReadOnlyList<DomainPropertyValue> State,
     string? Error,
     IReadOnlyList<string> Tags)

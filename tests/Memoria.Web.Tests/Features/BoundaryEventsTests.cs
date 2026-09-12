@@ -123,6 +123,24 @@ public class BoundaryEventsTests : IDisposable
     }
 
     /// <summary>
+    /// The payload as the log wrote it, kept beside the properties it was read into: the Json column
+    /// shows the row's own text, and it has to survive whatever becomes of the read — a type nothing
+    /// uploaded describes and a payload that will not open are exactly the rows worth looking at.
+    /// </summary>
+    [Fact]
+    public void Keeps_the_payload_the_log_wrote()
+    {
+        BoundaryEvents.Read(position: 7, "SampleHappened:1", """{"Id":"abc-1"}""", Written)
+            .Data.Should().Be("""{"Id":"abc-1"}""");
+
+        BoundaryEvents.Read(position: 7, "NeverUploaded:1", """{"Id":"abc-1"}""", Written)
+            .Data.Should().Be("""{"Id":"abc-1"}""");
+
+        BoundaryEvents.Read(position: 7, "SampleHappened:1", "{not json", Written)
+            .Data.Should().Be("{not json");
+    }
+
+    /// <summary>
     /// The filter is a model's own account of which events it applies, so it is read off the model
     /// rather than worked out from anything else.
     /// </summary>

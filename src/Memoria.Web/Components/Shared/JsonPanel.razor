@@ -1,0 +1,56 @@
+@using Memoria.Web.Extensibility
+
+@* One stored payload, laid out to be read and with a way to take it away. The card the Json tab of
+   a detail page is, and the card the pop-up over an event table holds — one component rather than
+   two that drift, because they are the same thing about two different rows.
+
+   Everything a reader does here is a read: what is drawn is the text the store holds, re-laid out.
+   A payload that is not JSON is still shown, under a line saying why it could not be laid out —
+   this is the view that exists to show what is actually in the row, so refusing to draw it would
+   fail at the one job it has. *@
+@if (Rendered.Markup is { } markup)
+{
+    <div class="json-view">
+        @* Hidden until script shows it: copying is the one thing on these pages that needs script,
+           and a reader without it should see no button that does nothing. See
+           wwwroot/preferences.js. *@
+        <div class="json-tools" data-json-tools hidden>
+            <button type="button" class="quiet" data-copy-json>Copy</button>
+        </div>
+        <pre class="json">@((MarkupString)markup)</pre>
+    </div>
+}
+else
+{
+    <p class="alert" role="alert">@Rendered.Error</p>
+
+    @* Nothing to show as it is when there was nothing there: the line above has already said so,
+       and an empty box under it would say it again in the shape of a box that failed to fill. *@
+    @if (!string.IsNullOrWhiteSpace(Data))
+    {
+        <div class="json-view">
+            <div class="json-tools" data-json-tools hidden>
+                <button type="button" class="quiet" data-copy-json>Copy</button>
+            </div>
+            <pre class="json">@Data</pre>
+        </div>
+    }
+}
+
+@code {
+
+    /// <summary>The payload, as the store wrote it.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Data { get; set; } = string.Empty;
+
+    /// <summary>That payload laid out, or why it could not be.</summary>
+    /// <remarks>
+    /// Laid out once when the payload arrives rather than on each mention of it: the markup is read
+    /// twice in the branches above, and parsing is the one thing here with a cost worth naming.
+    /// </remarks>
+    private RenderedJson Rendered { get; set; } = new(null, null);
+
+    protected override void OnParametersSet() => Rendered = JsonView.Render(Data);
+
+}

@@ -1,0 +1,93 @@
+@* The payload of one event, over the table it was listed in. A page of the log is read by running
+   down the positions and the types; the payload column opens what a row holds as the properties it
+   was read into, and this is the other question about the same row — what the store actually wrote.
+
+   Open because the address says so and closed by a link that takes that back, like the type pop-up
+   and every other view on these pages. No script and no <dialog>: these pages render statically,
+   the framework's modal needs JavaScript to open at all, and a reader who followed a link here can
+   leave the way they came — the close is a link, the backdrop behind it is the same link, and the
+   browser's own back button undoes the whole thing. *@
+<div class="overlay" id="@Anchor" tabindex="-1">
+    @* The way out that a click anywhere outside is. Kept out of the reading order and out of the
+       accessibility tree: it is the same address as the Close beside the title, and offered twice
+       it would be read out twice. *@
+    <a class="overlay-dismiss" href="@CloseLink" tabindex="-1" aria-hidden="true"></a>
+
+    @* Named by its heading rather than marked aria-modal: nothing here traps focus or hides the
+       page behind it from a screen reader, and saying otherwise would promise a reader something
+       that is not true. What it is instead is a region with a name, which is what it behaves as. *@
+    @* Narrower than the sheet the type opens on: that one lays four views out in columns, and this
+       one holds a payload, whose lines are short and are read down rather than across. *@
+    <section class="dialog dialog-narrow" role="dialog" aria-labelledby="@(Anchor)-title">
+        <header class="dialog-header">
+            @* The same mark the column that opened this is marked with, so what was clicked and
+               what arrived look like the same thing. The type the row was written under and nothing
+               else: what kind of thing is open is the title's to say, and which one is said below,
+               where a key as long as the sheet is wide has the width to be read. *@
+            <h2 id="@(Anchor)-title">
+                <JsonMark/>
+                @Title
+            </h2>
+
+            <a class="dialog-close" href="@CloseLink" aria-label="Close" title="Close">&times;</a>
+        </header>
+
+        <div class="dialog-body">
+            @* Which row this is, above the payload it holds: a fact about the row, in the shape the
+               facts on a detail page are listed in — the label small and set apart, the value in the
+               face every stored value here is set in. *@
+            @if (Id is { Length: > 0 } id)
+            {
+                <p class="dialog-id">
+                    <span class="dialog-id-label">@IdLabel</span>
+                    <code>@id</code>
+                </p>
+            }
+
+            <JsonPanel Data="@Data"/>
+        </div>
+    </section>
+</div>
+
+@code {
+
+    /// <summary>What the row was written under, as every table here names a type.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// What the table it was opened from calls the value below: where in the log the row sits, or
+    /// the key the store wrote it under.
+    /// </summary>
+    /// <remarks>
+    /// Given by the caller rather than worked out here, because the two logs name a row by different
+    /// things: a DCB event has one position across the whole log, and a streamed event has a
+    /// sequence that counts within its stream and so is only unique with the stream in front of it.
+    /// </remarks>
+    [Parameter]
+    [EditorRequired]
+    public string IdLabel { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Which row it is, or null where there is nothing to say.
+    /// </summary>
+    [Parameter]
+    public string? Id { get; set; }
+
+    /// <summary>The payload, as the store wrote it.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string Data { get; set; } = string.Empty;
+
+    /// <summary>This page with nothing asked for, which is what closes it.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string CloseLink { get; set; } = null!;
+
+    /// <summary>
+    /// What this is called in the address, so the link that opens it can land on it.
+    /// </summary>
+    public const string Anchor = "json";
+
+}

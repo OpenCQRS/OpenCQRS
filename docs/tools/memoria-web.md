@@ -80,6 +80,12 @@ note saying why it could not be laid out. A **Copy** button above the box puts t
 the clipboard; it appears only where the browser allows the page to write there, which means a
 secure context: `localhost` or HTTPS.
 
+Every table of events offers the same thing per row — the two **Events → Data** pages and the
+**Events** tab of any aggregate or projection. Beside the **Payload** column, which opens what the
+row was read into, a **Json** column opens what the store actually wrote in a pop-up over the table,
+with the same Copy button. It is a link like every other view here, so it can be bookmarked and is
+closed by the browser's back button as well as by the sheet's own close.
+
 ![An aggregate folded from its events, on the State tab](../images/memoria-web/aggregate-details.png)
 
 ## The one thing it writes

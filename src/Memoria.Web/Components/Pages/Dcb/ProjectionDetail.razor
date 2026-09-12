@@ -245,36 +245,9 @@ else
             }
             else
             {
-                var json = JsonView.Render(Stored.Data);
-
-                @if (json.Markup is not null)
-                {
-                    <div class="json-view">
-                        @* Hidden until script shows it: copying is the one thing on this page that
-                           needs script, and a reader without it should see no button that does
-                           nothing. See wwwroot/preferences.js. *@
-                        <div class="json-tools" data-json-tools hidden>
-                            <button type="button" class="quiet" data-copy-json>Copy</button>
-                        </div>
-                        <pre class="json">@((MarkupString)json.Markup)</pre>
-                    </div>
-                }
-                else
-                {
-                    @* The row is there and its payload is not JSON. Said, and then shown as it is:
-                       what the store holds is the thing this tab exists to show. *@
-                    <p class="alert" role="alert">@json.Error</p>
-
-                    @if (!string.IsNullOrWhiteSpace(Stored.Data))
-                    {
-                        <div class="json-view">
-                            <div class="json-tools" data-json-tools hidden>
-                                <button type="button" class="quiet" data-copy-json>Copy</button>
-                            </div>
-                            <pre class="json">@Stored.Data</pre>
-                        </div>
-                    }
-                }
+                @* The same card the pop-up over an event table holds, because it is the same
+                   question about a different row: what the store actually wrote. *@
+                <JsonPanel Data="@Stored.Data"/>
             }
         </section>
     }
@@ -438,6 +411,11 @@ else
                                to skip it. *@
                             <th scope="col" class="col-type">Type</th>
                             <th scope="col" class="col-payload">Payload</th>
+                            @* The same payload as the column before it, and the other question
+                               about it: that one opens what the row was read into, this one opens
+                               what the store actually wrote. Last, because it is a way to something
+                               rather than a value to run an eye down. *@
+                            <th scope="col" class="col-json marked">Json</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -483,6 +461,21 @@ else
                                             @Pairs(stored.State)
                                         </details>
                                     }
+                                </td>
+                                @* A mark rather than a word: the column is one link per row and
+                                   the word repeats down it. The position it is read out by tells a
+                                   row from the one above, which its place alone would not.
+
+                                   Offered on every row, including the two the column beside it has
+                                   nothing to show for: a payload that will not read back and a type
+                                   nothing uploaded describes are exactly the rows whose text is
+                                   worth looking at. *@
+                                <td class="marked">
+                                    <a class="icon-link" href="@JsonLink(stored.Position)"
+                                       aria-label="View the stored JSON at position @stored.Position"
+                                       title="View the stored JSON at position @stored.Position">
+                                        <JsonMark/>
+                                    </a>
                                 </td>
                             </tr>
                         }
@@ -600,6 +593,16 @@ else
                     TabLink="ViewTypeLink"
                     CloseLink="@TabLink(Tab)"
                     DataLink="TypeDataLink"/>
+    }
+
+    @* One event's payload, opened over the tab it was listed on. Drawn only when the address asks
+       for a row that is on the page under it, so the table behind it is the table a reader left. *@
+    @if (OpenedEvent is { } appended)
+    {
+        <JsonDialog Title="@DomainTypeDescriber.LabelOfKey(appended.Type)"
+                    IdLabel="Position" Id="@appended.Position.ToString()"
+                    Data="@appended.Data"
+                    CloseLink="@EventsLink(Descending, Events.Page)"/>
     }
 }
 
@@ -822,7 +825,8 @@ else
         bool? open = null,
         bool clearEvent = false,
         bool clearText = false,
-        string? view = null) =>
+        string? view = null,
+        string? json = null) =>
         $"{Address}&tab={tab}" +
         $"&dir={(descending ? "desc" : "asc")}" +
         $"&size={PageSize}" +
@@ -833,6 +837,7 @@ else
             : string.Empty) +
         (!clearText && IsFiltered ? $"&text={Uri.EscapeDataString(Text!)}" : string.Empty) +
         (view is { Length: > 0 } ? $"&view={view}" : string.Empty) +
+        (json is { Length: > 0 } ? $"&json={Uri.EscapeDataString(json)}" : string.Empty) +
         // Last, because everything after a fragment is part of it.
         (toTable ? $"#{EventsAnchor}" : string.Empty);
 
@@ -859,6 +864,38 @@ else
         !string.IsNullOrWhiteSpace(RequestedView) && Projection is { } projection
             ? DomainTypeDescriber.Describe(projection, Types.Current.DcbProjectionIds)
             : null;
+
+    /// <summary>
+    /// Which event's payload is open over the page, or null when none is.
+    /// </summary>
+    /// <remarks>
+    /// Named only when it is open, which is what makes every other link on the page close it: a
+    /// reader who changes tab, pages or narrows has left that row behind, and carrying it along
+    /// would leave a payload hanging over a table it is no longer in.
+    /// </remarks>
+    [SupplyParameterFromQuery(Name = "json")]
+    private string? RequestedJson { get; set; }
+
+    /// <summary>
+    /// The row it names, or null when the address names none or names one that is not on this page.
+    /// </summary>
+    /// <remarks>
+    /// Found among the rows already read rather than fetched on its own: the pop-up opens over the
+    /// page it was opened from, so the row is one of the ones drawn underneath it. A key that is not
+    /// there costs nothing and shows nothing, which is what a stale link should do.
+    /// </remarks>
+    private StoredEvent? OpenedEvent =>
+        long.TryParse(RequestedJson, out var position)
+            ? Events.Events.FirstOrDefault(row => row.Position == position)
+            : null;
+
+    /// <summary>
+    /// The events tab as it stands with one row's payload open over it, landing on the panel so a
+    /// reader far down the table is taken to what they just opened.
+    /// </summary>
+    private string JsonLink(long position) =>
+        DetailLink(EventsTab, Descending, Events.Page, json: position.ToString()) +
+        $"#{JsonDialog.Anchor}";
 
     /// <summary>
     /// The page as it stands with one of the type's views open over it, landing on the panel so a

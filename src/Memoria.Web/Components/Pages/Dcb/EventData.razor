@@ -169,6 +169,11 @@ else
                    stored row and met on the model that folds it are read alike. *@
                 <th scope="col" class="col-tags">Tags</th>
                 <th scope="col" class="col-payload">Payload</th>
+                @* The same payload as the column before it, and the other question about it: that
+                   one opens what the row was read into, this one opens what the store actually
+                   wrote. Last, because it is a way to something rather than a value to run an eye
+                   down — and narrow, because all it holds is the way in. *@
+                <th scope="col" class="col-json marked">Json</th>
             </tr>
             </thead>
             <tbody>
@@ -224,6 +229,20 @@ else
                             </details>
                         }
                     </td>
+                    @* A mark rather than a word: the column is one link per row and the word
+                       repeats down it. The position it is read out by tells a row from the one
+                       above, which its place in the column alone would not.
+
+                       Offered on every row, including the two the column beside it has nothing to
+                       show for: a payload that will not read back and a type nothing uploaded
+                       describes are exactly the rows whose text is worth looking at. *@
+                    <td class="marked">
+                        <a class="icon-link" href="@JsonLink(stored.Position)"
+                           aria-label="View the stored JSON at position @stored.Position"
+                           title="View the stored JSON at position @stored.Position">
+                            <JsonMark/>
+                        </a>
+                    </td>
                 </tr>
             }
             </tbody>
@@ -267,6 +286,17 @@ else
                 </noscript>
             </form>
         </div>
+    }
+
+    @* One row's payload, opened over the page it was listed on. Last in the markup because it
+       covers the page rather than sitting anywhere in it, and drawn only when the address asks for
+       a row that is on the page under it — so the table behind it is the table a reader left. *@
+    @if (Opened is { } opened)
+    {
+        <JsonDialog Title="@DomainTypeDescriber.LabelOfKey(opened.Type)"
+                    IdLabel="Position" Id="@opened.Position.ToString()"
+                    Data="@opened.Data"
+                    CloseLink="@Link(Descending, Events.Page)"/>
     }
 }
 
@@ -412,6 +442,39 @@ else
             ? link
             : $"{link}&text={Uri.EscapeDataString(Text!)}";
     }
+
+    /// <summary>
+    /// Which row's payload is open over the page, by the position that names it in the log, or null
+    /// when none is.
+    /// </summary>
+    /// <remarks>
+    /// Named only when it is open, which is what makes every other link on the page close it: a
+    /// reader who pages, re-orders or narrows has left that row behind, and carrying it along would
+    /// leave a payload hanging over a table it is no longer in.
+    /// </remarks>
+    [SupplyParameterFromQuery(Name = "json")]
+    private string? RequestedJson { get; set; }
+
+    /// <summary>
+    /// The row that names, or null when the address names none, names one that is not on this page,
+    /// or names something that is not a position at all.
+    /// </summary>
+    /// <remarks>
+    /// Found among the rows already read rather than fetched on its own: the pop-up opens over the
+    /// page it was opened from, so the row is one of the ones drawn underneath it. A position that
+    /// is not there costs nothing and shows nothing, which is what a stale link should do.
+    /// </remarks>
+    private StoredEvent? Opened =>
+        long.TryParse(RequestedJson, out var position)
+            ? Events.Events.FirstOrDefault(row => row.Position == position)
+            : null;
+
+    /// <summary>
+    /// The page as it stands with one row's payload open over it, landing on the panel so a reader
+    /// far down the table is taken to what they just opened.
+    /// </summary>
+    private string JsonLink(long position) =>
+        $"{Link(Descending, Events.Page)}&json={position}#{JsonDialog.Anchor}";
 
     protected override async Task OnParametersSetAsync()
     {
