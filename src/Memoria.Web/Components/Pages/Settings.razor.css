@@ -49,7 +49,9 @@
 /* What each model registered, a table to a column. The widths are declared on the columns rather
    than taken from the first row, because the first row is the model's name spanning both of them
    and there is nothing there for a fixed layout to measure — and declared at all so the two tables
-   split their width identically and the rows can be read across from one to the other. */
+   split their width identically and the rows can be read across from one to the other. Each table
+   takes the whole of its column: what stops a count drifting away from the name it counts is the
+   width of the pair, set once on .models, and not a second measure here. */
 .grid.registered {
     table-layout: fixed;
 }
@@ -95,13 +97,16 @@
 /* This browser's own settings, in the card the other two tabs read their rows in. Painted here
    rather than borrowed from app.css: the run of pieces that draws a card there is a run of tables
    and the controls around them, joined by being adjacent, and this is one block that is none of
-   those. It is the same three tokens the tiles on the home page use to paint theirs. */
+   those. It is the same three tokens the tiles on the home page use to paint theirs.
+
+   Uncapped, like the tables it is standing in for: a card that stopped short of the ones in the
+   other two tabs would read as a different kind of thing rather than the same card holding a
+   different kind of row. The sentence under each setting keeps its own measure below. */
 .preferences {
     background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    max-width: 52rem;
 }
 
     /* A row, at the padding and under the rule .grid gives a table cell, so a setting and a stored

@@ -131,11 +131,15 @@
        edge into the page. */
     --sunk: #fafbfc;
 
-    /* How wide the sheet is allowed to grow. A limit rather than a width: the pages are narrower
-       than this until a table needs the room. Without it the events log runs the full width of
-       whatever monitor it is opened on, and a reader crosses a metre of empty space between a
-       stream id at one edge and its payload at the other. */
-    --page-width: 80rem;
+    /* How wide the sheet is allowed to grow. This is a tool rather than a document: the width is
+       the window's, so a table with many columns uses the monitor it was opened on instead of
+       scrolling inside a column narrower than the screen. Prose still keeps its own measure where
+       it is set — a lede or a notice caps itself — so nothing here sets a line a metre long.
+
+       The one knob: the bar above and the bar below centre themselves against this same value, so
+       putting a length back here (80rem was the previous cap) re-columns the whole layout without
+       touching anything else. */
+    --page-width: 100%;
 
     /* The edge of something you type into or pick from, which is darker than the rule between
        rows: a control has to announce itself, a table's rules only have to separate. */
@@ -544,7 +548,14 @@ h2:focus {
     }
 
 /* The two models set beside each other, so what belongs to one is read against the other rather
-   than as one long list. Shared by any page that has something to say about both. */
+   than as one long list. Shared by any page that has something to say about both.
+
+   The measure belongs to the block and not to the page. This is a pair of columns read against each
+   other, and the thing being read is how close the two are: a half that grows with the window puts
+   a metre between them and there is nothing to compare across. Held here rather than inside, where
+   it went wrong twice — the tiles auto-fit and started laying themselves out three across instead
+   of one under the next, and the registers, capped a column at a time, were pushed apart by the
+   half-page tracks they sat in. One number above them settles both. */
 .models {
     display: grid;
     gap: 1.5rem 2.5rem;

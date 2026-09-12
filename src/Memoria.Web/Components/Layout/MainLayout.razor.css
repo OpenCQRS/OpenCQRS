@@ -145,8 +145,9 @@ header {
    saying where you are, and they belong on the ground the way a heading belongs above a document.
    The stored data belongs on a surface, and takes one of its own further down.
 
-   Held to --page-width so a table stops growing once it has the room it needs, rather than
-   following the window out to whatever width the monitor happens to be. */
+   Runs to --page-width, which is the window itself: a table follows the monitor it was opened on
+   rather than scrolling inside a column narrower than the screen. Still written as a max-width
+   against that token so a length put back there re-columns the page and the two bars together. */
 main {
     /* So --page-width is the column's whole width, padding included. Otherwise the bar above,
        which centres itself against that same number, would line up against a different edge. */
