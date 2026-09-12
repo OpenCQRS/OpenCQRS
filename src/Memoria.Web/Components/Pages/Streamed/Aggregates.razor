@@ -1,0 +1,32 @@
+@page "/streamed/aggregates"
+
+<PageTitle>Streamed @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed">Streamed</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Aggregates</span>
+</nav>
+
+<h1>@Heading</h1>
+<p class="lede">
+    The streamed write models, and what has been stored of them.
+</p>
+
+<SectionTiles TypesHref="streamed/aggregates/types" DataHref="streamed/aggregates/data">
+    <TypesDetail>The write models the model declares, and the streams they are held in.</TypesDetail>
+    <DataDetail>The aggregates that have been stored, read one stream at a time.</DataDetail>
+</SectionTiles>
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Aggregates";
+
+}

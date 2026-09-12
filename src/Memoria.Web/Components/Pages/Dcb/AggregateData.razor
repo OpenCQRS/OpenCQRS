@@ -1,0 +1,575 @@
+@page "/dcb/aggregates/data"
+@using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IDcbDbContext StoreContext
+@inject NavigationManager Navigation
+
+<PageTitle>DCB @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb/aggregates">Aggregates</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Data</span>
+</nav>
+
+<h1>@Heading</h1>
+
+@if (Choice.Unknown)
+{
+    <p class="alert" role="alert">
+        That aggregate is not among the registered types. It may have been replaced by a later
+        upload — start again from <a href="dcb/aggregates/types">aggregates</a>.
+    </p>
+}
+else
+{
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. *@
+    <p class="lede">@Summary</p>
+
+    @* One GET form for all three, because narrowing is a link to a narrower list and the whole
+       narrowing belongs in the address bar together, where it can be bookmarked, shared and gone
+       back to. The order travels in a hidden field so narrowing does not silently reorder; the page
+       does not, because page four of one aggregate is not page four of another.
+
+       The two dropdowns submit on change and the box is typed into, so the button is the fallback
+       when scripting is off — it submits all three at once, which is what one form buys. *@
+    <form class="search" method="get" action="dcb/aggregates/data">
+        <label for="type">Aggregate</label>
+        <select id="type" name="type" onchange="this.form.submit()">
+            @* First and default, so a reader who has chosen nothing is looking at everything stored
+               rather than at whichever aggregate happened to be listed first. An empty value, which
+               is what the address carries when nothing is narrowed to. *@
+            <option value="" selected="@Choice.IsAllModels">All</option>
+            @foreach (var model in Models)
+            {
+                <option value="@model.FullName" selected="@(model == Choice.Model)">
+                    @DomainTypeDescriber.LabelOf(model)
+                </option>
+            }
+        </select>
+
+        @* An identifier addresses one aggregate, so there is nothing to offer until one is chosen —
+           and the control stays where it is, disabled, rather than appearing and disappearing as the
+           aggregate changes. A disabled control submits nothing, which is the same as choosing All.
+
+           Changing the aggregate submits whichever identifier was chosen for the one before it. That
+           is the ordinary way to arrive with a mismatched pair, so it widens to every identifier of
+           the new aggregate rather than being treated as a bad address. *@
+        <label for="id">Identifier</label>
+        <select id="id" name="id" onchange="this.form.submit()" disabled="@Choice.IsAllModels">
+            <option value="" selected="@Choice.IsAllIdentifiers">All</option>
+            @foreach (var identifier in Choice.Identifiers)
+            {
+                <option value="@identifier.FullName" selected="@(identifier == Choice.Identifier)">
+                    @identifier.Name
+                </option>
+            }
+        </select>
+
+        <label class="visually-hidden" for="text">@TextPlaceholder</label>
+        <input id="text" type="search" name="text" value="@Text" placeholder="@TextPlaceholder" autocomplete="off"/>
+        <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+        <input type="hidden" name="size" value="@PageSize"/>
+        <button type="submit" class="quiet">Filter</button>
+        @if (!Choice.IsAllModels || !Choice.IsAllIdentifiers || IsFiltered)
+        {
+            @* One way back to everything stored, because that is the one thing a reader wants from
+               here: dropping the aggregate but keeping the identifier or the text would be a second
+               narrowing to undo. *@
+            <a href="@Link(Sort, Descending, 1, clearText: true, clearModel: true)">Clear</a>
+        }
+    </form>
+    @if (Choice.Unbound)
+    {
+        @* Registered, listed, and impossible to have been stored: without an [AggregateType] there
+           is no key to write a snapshot under. An empty table would say the store holds none of
+           these, which is true but not the reason. *@
+        <p class="missing">
+            It carries no <code>[AggregateType]</code>, so the store has never written one of these.
+        </p>
+    }
+    else if (Choice.Shapeless)
+    {
+        <p class="alert" role="alert">
+            <code>@Choice.Identifier?.Name</code> takes a value its boundary never mentions, so which
+            of these exist cannot be worked out from the stored tags. Choose another identifier, or
+            <a href="@Link(Sort, Descending, 1, clearIdentifier: true)">all of them</a>.
+        </p>
+    }
+    else if (Rows.Count == 0)
+    {
+        <p class="empty">
+            @if (IsFiltered)
+            {
+                <text>No tag matches &ldquo;@Text&rdquo;.</text>
+            }
+            else
+            {
+                <text>Nothing has been written @Where yet.</text>
+            }
+        </p>
+    }
+    else
+    {
+        @* Everything here is read off the snapshot row. The aggregate itself is not folded to draw a
+           row — that is what the details page is for, one at a time. *@
+        <table class="instances">
+            <thead>
+            <tr>
+                @* The same columns however far the list has been narrowed, so narrowing moves
+                   nothing: it is the same table with fewer rows in it. The tags are what the row
+                   was stored under, whole — an identifier unfolds them into the values it was built
+                   from, but only its own, and a column that came and went with the choice would be
+                   a column a reader could not learn. *@
+                <th>Type</th>
+                <th>Identifier</th>
+                <th>Tags</th>
+                <th class="numeric">Version</th>
+                @foreach (var column in Columns)
+                {
+                    <th aria-sort="@AriaSort(column.Sort)">
+                        <a href="@SortLink(column.Sort)">
+                            @column.Label
+                            @if (Sort == column.Sort)
+                            {
+                                <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                            }
+                        </a>
+                    </th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Rows)
+            {
+                @* Which types a row names is only asked when the list spans several of them. With one
+                   identifier chosen the answer is the choice itself, already known for every row. *@
+                var address = Shape is null ? Stored.Of(row.ModelType, row.Boundary) : null;
+                var link = DetailLink(row, address);
+                var tags = StoredBoundary.Read(row.Boundary);
+
+                @* The whole row is the target when there is one, so every cell carries the same
+                   link. Only the first is reachable by keyboard or read out: the rest repeat it. A
+                   row naming types this application no longer has is drawn without one — it is still
+                   the store's own row, and worth seeing. *@
+                <tr class="@(link is null ? null : "clickable")">
+                    <td>@Cell((link, TypeOf(address, row), false))</td>
+                    <td>
+                        @if (IdentifierOf(address) is { } named)
+                        {
+                            @Cell((link, named, true))
+                        }
+                        else
+                        {
+                            @* No uploaded identifier renders this row's tags, so there is nothing to
+                               name it by — and nothing to open it with either, which is why the row
+                               carries no link. *@
+                            <span class="missing">—</span>
+                        }
+                    </td>
+                    <td>
+                        @* Both inside the one link, because the stylesheet gives a clickable row's
+                           padding to the anchor that fills the cell — anything beside it would sit
+                           flush against the edge. *@
+                        @if (link is null)
+                        {
+                            @TagsCell(tags)
+                        }
+                        else
+                        {
+                            <a href="@link" tabindex="-1" aria-hidden="true">@TagsCell(tags)</a>
+                        }
+                    </td>
+                    <td class="numeric">@Cell((link, row.Version.ToString(), true))</td>
+                    <td>@Cell((link, row.Created.ToLocalTime().ToString("g"), true))</td>
+                    <td>@Cell((link, row.Updated.ToLocalTime().ToString("g"), true))</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            @* The pages as links, ten at a time. Links rather than a control, like the order above
+               the table: a page is somewhere to go, and the address it is at is the one this page
+               is already read through — so the narrowing and the order travel with it without a
+               form having to carry a copy of each. *@
+            <Pager Page="CurrentPage" TotalPages="TotalPages"
+                   Href="@(page => Link(Sort, Descending, page))"/>
+
+            @* Its own GET form, so the choice lands in the address bar like the order and the
+               filter. Submitting on change saves a click; the button is the fallback when
+               scripting is off. *@
+            <form class="page-size" method="get" action="dcb/aggregates/data">
+                <label for="size">Rows per page</label>
+                <select id="size" name="size" onchange="this.form.submit()">
+                    @foreach (var option in InstanceQuery.PageSizes)
+                    {
+                        <option value="@option" selected="@(option == PageSize)">@option</option>
+                    }
+                </select>
+                @Narrowing
+                <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                <noscript>
+                    <button type="submit">Apply</button>
+                </noscript>
+            </form>
+        </div>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Which of the two DCB models this page lists, which is what tells the store's one snapshot
+    /// table which of its rows are this page's.
+    /// </summary>
+    private const DcbModelKind Kind = DcbModelKind.Aggregate;
+
+    /// <summary>
+    /// Which aggregates are being listed: all of them, one type of them, or one type addressed one
+    /// way.
+    /// </summary>
+    private ModelChoice Choice { get; set; } = new(Model: null, Unknown: false, Identifier: null, Identifiers: []);
+
+    /// <summary>
+    /// Reads a row's stored key and boundary back into the types that made it, for the list that
+    /// spans several of them. Built once for the page, because the rows on it name the same few
+    /// types over and over.
+    /// </summary>
+    private StoredModels Stored { get; set; } = new([], []);
+
+    private IReadOnlyList<Instance> Rows { get; set; } = [];
+
+    private int Total { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+
+    private int TotalPages { get; set; } = 1;
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    private string? Text { get; set; }
+
+    private InstanceSort Sort { get; set; } = InstanceSort.Updated;
+
+    private bool Descending { get; set; } = true;
+
+    /// <summary>The aggregates the uploaded assemblies declare, which is what the first dropdown offers.</summary>
+    private IReadOnlyList<Type> Models => Types.Current.Models(Kind);
+
+    /// <summary>
+    /// Which tags the chosen identifier's values live in, and so whether the table has a column per
+    /// value or the boundary whole.
+    /// </summary>
+    private IdentifierShape? Shape => Choice.Shape;
+
+    /// <summary>
+    /// The sortable columns and their query-string keys, in one place, so the header row and the
+    /// links cannot disagree about what can be sorted.
+    /// </summary>
+    private static readonly Column[] Columns =
+    [
+        new(InstanceSort.Created, "Created"),
+        new(InstanceSort.Updated, "Updated")
+    ];
+
+    private sealed record Column(InstanceSort Sort, string Label);
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
+
+    private string? AriaSort(InstanceSort column) =>
+        Sort != column ? null : Descending ? "descending" : "ascending";
+
+    /// <summary>
+    /// Clicking the column already sorted by turns it around; clicking another starts it newest
+    /// first, which is the way a date is usually wanted.
+    /// </summary>
+    private string SortLink(InstanceSort column) =>
+        Link(column, Sort == column ? !Descending : true, 1);
+
+    /// <summary>
+    /// What the page is, for the heading and the title.
+    /// </summary>
+    /// <remarks>
+    /// The page rather than the choice, and the same however far the list is narrowed. The
+    /// dropdowns above the table say what is being looked at and the line under it says how much of
+    /// it there is; a heading that changed with them would be a third voice saying the same thing,
+    /// and one that moved as the page was narrowed.
+    /// </remarks>
+    private const string Heading = "Aggregate Data";
+
+    /// <summary>
+    /// What the box asks for. The tag keys of a chosen identifier are worth naming, because a
+    /// boundary is written in a shape a reader would otherwise have to learn from the rows.
+    /// </summary>
+    private string TextPlaceholder =>
+        Shape?.TagKeys.FirstOrDefault() is { } key
+            ? $"Filter by tag, such as {key}:…"
+            : "Filter by tag";
+
+    /// <summary>
+    /// What one stored row says it is, named the way every list here names a type: what it is bound
+    /// as, and the version of that binding.
+    /// </summary>
+    /// <remarks>
+    /// The choice answers for every row when it names one aggregate, and only a list spanning
+    /// several has to read each row's own key back. Either way the column says the same thing, which
+    /// is why it is drawn whether or not the list is narrowed.
+    /// <para>
+    /// A row naming a type this application no longer has keeps the store's own key instead, whole
+    /// and unsplit. There is no binding left to read a name and a version off, and the key is the
+    /// only true thing left to say about it — reading as it does like nothing else in the column,
+    /// which is the point.
+    /// </para>
+    /// </remarks>
+    private string TypeOf(StoredModel? address, Instance row) =>
+        (address?.Model ?? Choice.Model) is { } model
+            ? DomainTypeDescriber.LabelOf(model)
+            : row.ModelType;
+
+    /// <summary>
+    /// What addresses one stored row, named by its class. There is no version to say beside it: an
+    /// identifier carries no binding of its own — it is a way in to a model that has one.
+    /// </summary>
+    /// <remarks>
+    /// The choice answers when it names one, and only a list spanning several reads each row's tags
+    /// back to find which identifier renders them. A row nothing here addresses has none to name,
+    /// which is the same thing that leaves it without a link.
+    /// </remarks>
+    private string? IdentifierOf(StoredModel? address) =>
+        (address?.Identifier ?? Choice.Identifier)?.Name;
+
+    /// <summary>
+    /// How far the list has been narrowed, said the way the narrowing was made: by an identifier,
+    /// by an aggregate, or not at all.
+    /// </summary>
+    private string Scope =>
+        Choice.Identifier is { } identifier
+            ? $", addressed by {identifier.Name}"
+            : Choice.Model is { } model
+                ? $" of {model.Name}"
+                : string.Empty;
+
+    /// <summary>
+    /// Where nothing has been written, said the way the narrowing was made. The whole store when
+    /// nothing narrows it, which is a place worth naming as much as the other two are.
+    /// </summary>
+    private string Where =>
+        Choice.Identifier is not null
+            ? "under this identifier"
+            : Choice.Model is { } narrowed
+                ? $"of {narrowed.Name}"
+                : "of any aggregate";
+
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// A filtered count counts what matched, which is not the same claim as how much is stored, so
+    /// it says which it is: the number alone reads as the whole store under the chosen aggregate,
+    /// and is short by however much the text excluded. Said as what the rows are rather than as
+    /// something they do, because the scope that follows reads as a place — "matches of Product"
+    /// is not a sentence, and every one of these has to end in one.
+    /// </remarks>
+    private string Summary => (Total, IsFiltered) switch
+    {
+        (0, false) => $"Nothing stored yet{Scope}.",
+        (1, false) => $"One aggregate{Scope}.",
+        (_, false) => $"{Total} aggregates{Scope}.",
+        (0, true) => $"No matching aggregates{Scope}.",
+        (1, true) => $"One matching aggregate{Scope}.",
+        (_, true) => $"{Total} matching aggregates{Scope}."
+    };
+
+    /// <summary>
+    /// One address for the whole table state, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="sort">Which date to order by.</param>
+    /// <param name="descending">Whether the newest come first.</param>
+    /// <param name="page">The page to land on, from one.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
+    /// <param name="clearIdentifier">Whether to widen back to every identifier.</param>
+    /// <param name="clearModel">Whether to widen back to every aggregate, which takes the
+    /// identifier with it: one addresses the aggregate it belongs to, so an identifier left behind
+    /// would name nothing.</param>
+    /// <remarks>
+    /// The three narrowings are named only when they are made. All is what the page opens as, so a
+    /// link to an unnarrowed list is a link with nothing to say about them.
+    /// </remarks>
+    private string Link(
+        InstanceSort sort,
+        bool descending,
+        int page,
+        bool clearText = false,
+        bool clearIdentifier = false,
+        bool clearModel = false)
+    {
+        var link = $"dcb/aggregates/data?sort={sort.ToString().ToLowerInvariant()}" +
+                   $"&dir={(descending ? "desc" : "asc")}" +
+                   $"&size={PageSize}" +
+                   $"&page={page}";
+
+        if (!clearModel && Choice.Model is { } model)
+        {
+            link += $"&type={Uri.EscapeDataString(model.FullName ?? model.Name)}";
+        }
+
+        if (!clearModel && !clearIdentifier && Choice.Identifier is { } identifier)
+        {
+            link += $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}";
+        }
+
+        return clearText || !IsFiltered ? link : $"{link}&text={Uri.EscapeDataString(Text!)}";
+    }
+
+    /// <summary>
+    /// Through to one aggregate's whole state, carrying the values its identifier is built from.
+    /// </summary>
+    /// <param name="row">The stored row.</param>
+    /// <param name="address">What its key and boundary turned out to name, when the list spans
+    /// several types, or null when the choice already says.</param>
+    /// <returns>The address of the page about it, or null when no uploaded identifier reaches it.</returns>
+    private string? DetailLink(Instance row, StoredModel? address)
+    {
+        var model = address?.Model ?? Choice.Model;
+        var identifier = address?.Identifier ?? Choice.Identifier;
+
+        if (model is null || identifier is null)
+        {
+            return null;
+        }
+
+        var values = address is null ? row.Values : address.Values;
+
+        var query = string.Join("&", values
+            .Select(value => $"{Uri.EscapeDataString(value.Key)}={Uri.EscapeDataString(value.Value)}"));
+
+        return $"dcb/aggregates/detail?type={Uri.EscapeDataString(model.FullName ?? model.Name)}" +
+               $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}" +
+               $"&{query}";
+    }
+
+    /// <summary>
+    /// The narrowing, as the hidden fields a form has to carry to keep it. A form replaces the whole
+    /// query, so what is being looked at travels with it or paging would quietly widen the table.
+    /// </summary>
+    private RenderFragment Narrowing => @<text>
+        @if (Choice.Model is { } model)
+        {
+            <input type="hidden" name="type" value="@model.FullName"/>
+        }
+        @if (Choice.Identifier is { } identifier)
+        {
+            <input type="hidden" name="id" value="@identifier.FullName"/>
+        }
+        @if (IsFiltered)
+        {
+            <input type="hidden" name="text" value="@Text"/>
+        }
+    </text>;
+
+    /// <summary>
+    /// The tags a row was stored under, listed the same way whichever way they combine, with the
+    /// word that tells the two apart beside them.
+    /// </summary>
+    /// <remarks>
+    /// The same shape the identifiers tab of the models page lists a boundary in, so a boundary met
+    /// as a type's and met as one stored row's is read the same way. What the store joins with a
+    /// comma and what it joins with an ampersand are two different boundaries, and a reader should
+    /// not have to catch that in a punctuation mark.
+    /// </remarks>
+    private RenderFragment<StoredBoundary> TagsCell => tags =>
+        @<text>
+            <code>@tags.Text</code>
+            @if (tags.Combination is { } combines)
+            {
+                <span class="hint">@combines</span>
+            }
+        </text>;
+
+    /// <summary>
+    /// One cell of a row, inside the row's link when it has one.
+    /// </summary>
+    /// <remarks>
+    /// A repeated cell is neither reachable by keyboard nor read out: the row is one target, and the
+    /// first cell is the one that carries it. A row with nothing to lead to is written as plain
+    /// text, which is also why the row is only marked clickable when it is — the stylesheet moves a
+    /// clickable row's padding onto the anchor that fills it, and there would be none.
+    /// </remarks>
+    private RenderFragment<(string? Link, string? Text, bool Repeat)> Cell => cell =>
+        @<text>
+            @if (cell.Link is null)
+            {
+                @cell.Text
+            }
+            else if (cell.Repeat)
+            {
+                <a href="@cell.Link" tabindex="-1" aria-hidden="true">@cell.Text</a>
+            }
+            else
+            {
+                <a href="@cell.Link">@cell.Text</a>
+            }
+        </text>;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        // Both names are matched against what is registered, so a name in the address can only ever
+        // reach a type this application already knows about.
+        Choice = ModelChoice.Of(Models, Types.Current.Identifiers(Kind), Value("type"), Value("id"));
+        Stored = new StoredModels(Models, Types.Current.Identifiers(Kind));
+
+        Text = Value("text");
+        Sort = InstanceQuery.SortOf(Value("sort"));
+        Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+
+        // A choice with nothing to look for is not asked about. A null key and a null shape narrow
+        // to everything rather than to nothing, so asking would answer the name of one aggregate
+        // with every aggregate's rows.
+        if (Choice.ShowsNothing)
+        {
+            Rows = [];
+            Total = 0;
+            CurrentPage = 1;
+            TotalPages = 1;
+
+            return;
+        }
+
+        var page = await IdentifierInstances.Page(
+            StoreContext,
+            Kind,
+            Choice.Key,
+            Shape,
+            Text,
+            Sort,
+            Descending,
+            int.TryParse(Value("page"), out var asked) ? asked : 1,
+            PageSize);
+
+        Rows = page.Rows;
+        Total = page.Total;
+        CurrentPage = page.Page;
+        TotalPages = page.TotalPages;
+    }
+
+}

@@ -1,0 +1,12 @@
+/* Only what is particular to this page: here each model's heading is the way into it. The
+   two-column layout, the palette tokens and the section-list furniture live in wwwroot/app.css,
+   because the settings page sets the two models beside each other too. */
+
+.model h2 a {
+    color: var(--ink);
+    text-decoration: none;
+}
+
+    .model h2 a:hover {
+        text-decoration: underline;
+    }

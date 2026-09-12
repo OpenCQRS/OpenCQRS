@@ -1,0 +1,121 @@
+@using Memoria.Web.Extensibility
+
+@* Nothing to page through, nothing to draw. A table that fits on one page says how much it holds in
+   the line above it, and a pager under it would be a row of controls that only ever pointed back at
+   the page it was already on. *@
+@if (TotalPages > 1)
+{
+    @* A landmark rather than a bare row of links: it is one of the few ways off the page, and a
+       reader who moves by landmarks should be able to reach it without running the table first. *@
+    <nav class="pagination" aria-label="Pages">
+        @* Arrows rather than words: two chevrons for the ends of the table and one for a step, which
+           is the shape a reader already knows from every other pager. The word each one replaces is
+           on the aria-label, because a chevron read out is "left-pointing double angle quotation
+           mark" — the label is what the glyph means, and it is the only thing a screen reader gets
+           of it. *@
+        @* Drawn only where there is somewhere to go. A greyed arrow is a control offering itself and
+           then refusing, and there is nothing behind the first page for it to lead to. *@
+        @if (Current > 1)
+        {
+            <a href="@Href(1)" aria-label="First page">&laquo;</a>
+            <a rel="prev" href="@Href(Current - 1)" aria-label="Previous page">&lsaquo;</a>
+        }
+
+        @* The numbers themselves, as links. An ordered list because that is what they are — a
+           sequence a reader is somewhere inside — which is also how a screen reader is told how
+           many there are before reading them out. *@
+        <ol class="pages">
+            @if (Window.Back is { } back)
+            {
+                @* The group before this one, reached at its last page: the groups meet rather than
+                   overlap, so stepping back and forward through them never repeats a number. The
+                   ellipsis is what a reader recognises here, and the label is what it means. *@
+                <li><a class="group" href="@Href(back)" aria-label="Previous pages">&hellip;</a></li>
+            }
+
+            @foreach (var number in Window.Pages)
+            {
+                <li>
+                    @if (number == Current)
+                    {
+                        @* Not a link, because it goes where the reader already is. Said out loud as
+                           the current page rather than left to the styling to convey. *@
+                        <span class="current" aria-current="page">@number</span>
+                    }
+                    else
+                    {
+                        @* A bare number is not much to hear on its own, so what it is a number of
+                           travels with it. *@
+                        <a href="@Href(number)" aria-label="Page @number">@number</a>
+                    }
+                </li>
+            }
+
+            @if (Window.Forward is { } forward)
+            {
+                <li><a class="group" href="@Href(forward)" aria-label="Next pages">&hellip;</a></li>
+            }
+        </ol>
+
+        @if (Current < TotalPages)
+        {
+            <a rel="next" href="@Href(Current + 1)" aria-label="Next page">&rsaquo;</a>
+            <a href="@Href(TotalPages)" aria-label="Last page">&raquo;</a>
+        }
+
+        @* How much table there is, once the strip has stopped being all of it. Past ten pages it
+           says which of these ten rather than which of how many, and the count is left in the last
+           link's address — so a reader deciding whether to follow an ellipsis is deciding about
+           pages they have not been told the number of. A table whose every page is on the line
+           already shows both halves of this, and saying it again there would be a second voice on
+           the same fact. The line above the table counts rows, which is a different question.
+
+           After the links rather than among them, because it is the one thing here that is not
+           somewhere to go. *@
+        @if (TotalPages > PageWindow.Most)
+        {
+            <span class="page-count">Page @Current of @TotalPages</span>
+        }
+    </nav>
+}
+
+@code {
+
+    // The pager every long table on the site is crossed by. One component rather than a copy under
+    // each table: the eight of them were the same markup around a different link builder, and the
+    // number of pages a store can hold has no ceiling — so how many of them are drawn at once is a
+    // decision that has to be made in one place.
+
+    /// <summary>The page being read, from one.</summary>
+    [Parameter]
+    [EditorRequired]
+    public int Page { get; set; }
+
+    /// <summary>How many pages there are in all.</summary>
+    [Parameter]
+    [EditorRequired]
+    public int TotalPages { get; set; }
+
+    /// <summary>
+    /// The address of a page number, which is the caller's to build.
+    /// </summary>
+    /// <remarks>
+    /// Every table here is looked at through some narrowing, order, fold or tab that has to survive
+    /// the move to another page, and no two pages carry the same set of them. The pager knows which
+    /// numbers to offer; only the page under it knows what a link to one has to say.
+    /// </remarks>
+    [Parameter]
+    [EditorRequired]
+    public Func<int, string> Href { get; set; } = _ => string.Empty;
+
+    /// <summary>
+    /// The page being read, brought back inside the table. It is clamped before it gets here, but
+    /// a pager is drawn from what it was handed, and an out-of-range number would otherwise be
+    /// drawn as a page no number in the strip matches.
+    /// </summary>
+    private int Current => Math.Clamp(Page, 1, Math.Max(1, TotalPages));
+
+    /// <summary>The group of numbers to draw, and where the two ellipses reach.</summary>
+    private PageWindow Window => PageWindow.Of(Page, TotalPages);
+
+}

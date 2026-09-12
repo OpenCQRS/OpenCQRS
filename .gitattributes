@@ -61,3 +61,16 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Font binaries
+#
+# The repository sets `* text=auto`, which leaves git to sniff each file. It
+# gets woff2 right today because the format carries NUL bytes, but a sniff is
+# not a guarantee, and a font normalised as text is a font that renders as
+# nothing. Said outright so it cannot be got wrong.
+###############################################################################
+*.woff2 binary
+*.woff  binary
+*.ttf   binary
+*.otf   binary

@@ -42,7 +42,7 @@ public class PostgreSqlSchemaTests(PostgreSqlFixture fixture)
     public async Task UnboundedStringKeysBecomeUnboundedText() =>
         await WithFreshSchema(async dbContext =>
         {
-            var events = await ColumnMetadata.ReadAsync(dbContext, "events");
+            var events = await ColumnMetadata.ReadAsync(dbContext, "DomainEvents");
 
             using (new AssertionScope())
             {

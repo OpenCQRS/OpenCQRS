@@ -12,6 +12,7 @@ Memoria is extremely flexible and expandable. It can be used as a simple mediato
 - 📣 _[Release Notes](https://lucabriguglia.github.io/Memoria/release-notes.html)_
 - 📚 _[Examples in repository](https://github.com/lucabriguglia/Memoria/tree/main/examples)_
 - 🛒 _[Ecommerce demo app using DCB](https://github.com/lucabriguglia/Memoria/tree/main/examples/Memoria.Examples.Ecommerce.Dcb)_
+- 🔎 _[Memoria Web — browse your store](https://lucabriguglia.github.io/Memoria/tools/memoria-web.html)_
 
 ## ⭐ Give a star
 
@@ -43,6 +44,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 ## 🗺️ Roadmap
 
 ### ✅ Recently Completed
+- Memoria Web, a browser tool that reads a store through domain assemblies uploaded to it
 - Ecommerce demo application using DCB
 - Dynamic consistency boundaries in their own packages, so a decision whose boundary spans more than one aggregate is expressible without serialising unrelated writes
 - New `Projection` read-model base class with `SaveProjection`/`GetProjection` snapshot persistence across all store providers (Entity Framework Core, Npgsql, Cosmos DB, and their in-memory variants)
@@ -53,6 +55,7 @@ If you're using this repository for your learning, samples, workshop, or your pr
 - Event property filtering across aggregates and stream queries
 
 ### 🕙 To Follow
+- Authentication and authorization in Memoria Web, so it no longer depends on a proxy in front of it
 - Option to automatically validate commands
 - Event Grid messaging provider
 - Kafka messaging provider
@@ -65,22 +68,22 @@ If you're using this repository for your learning, samples, workshop, or your pr
 
 | Package                                                                                                                                             | Latest Stable                                                                                                                                                  |
 |-----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Memoria](https://www.nuget.org/packages/Memoria)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria)                                                  |
-| [Memoria.EventSourcing](https://www.nuget.org/packages/Memoria.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing)                                    |
-| [Memoria.EventSourcing.Dcb](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb)                                                               | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb)                                |
-| [Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore)           | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore)      |
-| [Memoria.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos)                       |
-| [Memoria.EventSourcing.Store.Cosmos.InMemory](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos.InMemory)                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos.InMemory)              |
-| [Memoria.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore)          |
-| [Memoria.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Identity) |
-| [Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql)     | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql)   |
-| [Memoria.Messaging.RabbitMq](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq)                                                             | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq)                               |
-| [Memoria.Messaging.RabbitMq.InMemory](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq.InMemory)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq.InMemory)                      |
-| [Memoria.Messaging.ServiceBus](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus)                                                         | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus)                             |
-| [Memoria.Messaging.ServiceBus.InMemory](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus.InMemory)                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus.InMemory)                    |
-| [Memoria.Validation.FluentValidation](https://www.nuget.org/packages/Memoria.Validation.FluentValidation)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Validation.FluentValidation)                      |
-| [Memoria.Caching.Redis](https://www.nuget.org/packages/Memoria.Caching.Redis)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Caching.Redis)                                    |
-| [Memoria.Caching.Memory](https://www.nuget.org/packages/Memoria.Caching.Memory)                                                                     | [![Nuget Package](https://img.shields.io/badge/nuget-1.8.0-blue.svg)](https://www.nuget.org/packages/Memoria.Caching.Memory)                                   |
+| [Memoria](https://www.nuget.org/packages/Memoria)                                                                                                   | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria)                                                  |
+| [Memoria.EventSourcing](https://www.nuget.org/packages/Memoria.EventSourcing)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing)                                    |
+| [Memoria.EventSourcing.Dcb](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb)                                                               | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb)                                |
+| [Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore)           | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore)      |
+| [Memoria.EventSourcing.Store.Cosmos](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos)                                             | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos)                       |
+| [Memoria.EventSourcing.Store.Cosmos.InMemory](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos.InMemory)                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.Cosmos.InMemory)              |
+| [Memoria.EventSourcing.Store.EntityFrameworkCore](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore)                   | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore)          |
+| [Memoria.EventSourcing.Store.EntityFrameworkCore.Identity](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Identity) | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Identity) |
+| [Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql)     | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.EventSourcing.Store.EntityFrameworkCore.Npgsql)   |
+| [Memoria.Messaging.RabbitMq](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq)                                                             | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq)                               |
+| [Memoria.Messaging.RabbitMq.InMemory](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq.InMemory)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.RabbitMq.InMemory)                      |
+| [Memoria.Messaging.ServiceBus](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus)                                                         | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus)                             |
+| [Memoria.Messaging.ServiceBus.InMemory](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus.InMemory)                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Messaging.ServiceBus.InMemory)                    |
+| [Memoria.Validation.FluentValidation](https://www.nuget.org/packages/Memoria.Validation.FluentValidation)                                           | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Validation.FluentValidation)                      |
+| [Memoria.Caching.Redis](https://www.nuget.org/packages/Memoria.Caching.Redis)                                                                       | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Caching.Redis)                                    |
+| [Memoria.Caching.Memory](https://www.nuget.org/packages/Memoria.Caching.Memory)                                                                     | [![Nuget Package](https://img.shields.io/badge/nuget-1.9.0-blue.svg)](https://www.nuget.org/packages/Memoria.Caching.Memory)                                   |
 
 ## 🔄 A taste of the API
 
@@ -117,6 +120,45 @@ See the [Event Sourcing Quickstart](https://lucabriguglia.github.io/Memoria/gett
 
 📘 _[Full documentation](https://lucabriguglia.github.io/Memoria/)_
 
+## 🔎 Memoria Web
+
+A browser tool for reading a Memoria store. Point it at a database, upload a zip of **your own**
+domain assemblies, and it shows you the events that were appended, the aggregates and projections
+snapshotted from them, and the types both were written through — both consistency models, side by
+side.
+
+```bash
+dotnet run --project src/Memoria.Web
+```
+
+![The home page: the streamed model and the DCB model side by side](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/home.png)
+
+Every section has a **Types** page, listing what the uploaded assemblies declare, and a **Data**
+page, listing what the store actually holds — filtered, sorted and paged, with all of it in the
+query string so a view can be bookmarked and shared.
+
+![Aggregate data: rows narrowed by stream, aggregate and identifier](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/aggregate-data.png)
+
+Open a row and the aggregate is folded from its events, so you can see the state a snapshot stands
+at and how far behind its stream it is.
+
+![An aggregate folded from its events, on the State tab](https://raw.githubusercontent.com/lucabriguglia/Memoria/main/docs/images/memoria-web/aggregate-details.png)
+
+It is in the repository rather than on NuGet, so you build and run it yourself. It creates nothing
+and deletes nothing: the only write it offers is refreshing a snapshot that has fallen behind its
+stream or its boundary.
+
+> **It has no authentication or authorization yet, and uploading an assembly runs code in its
+> process.** Keep it on localhost or behind a proxy that authenticates every request. Both are
+> coming in the next release.
+
+To try it without a domain of your own, `src/Memoria.Web.Samples` carries a sample ecommerce domain
+modelled in both consistency models and fills a store with data written through it.
+
+- 🔎 _[Memoria Web](https://lucabriguglia.github.io/Memoria/tools/memoria-web.html)_ — what it is, and what each page shows
+- ⚙️ _[Configuration](https://lucabriguglia.github.io/Memoria/tools/memoria-web-configuration.html)_ · _[Deployment](https://lucabriguglia.github.io/Memoria/tools/memoria-web-deployment.html)_
+- 🌱 _[Try it with sample data](https://lucabriguglia.github.io/Memoria/tools/memoria-web-samples.html)_
+
 ## ✨ Custom Implementations and Project Support
 
 Memoria is designed to be extensible, supporting custom store, messaging, caching, and validation providers. 
@@ -125,3 +167,7 @@ Need a specific implementation for your existing code or a new provider (e.g., a
 I can also work directly on your projects to implement Memoria for your specific event sourcing or CQRS needs. 
 
 Please reach out to request custom integrations, new providers, or project assistance via [LinkedIn](https://www.linkedin.com/in/lucabriguglia).
+
+## 📄 License
+
+Memoria is licensed under the [Apache License 2.0](https://github.com/lucabriguglia/Memoria/blob/main/LICENSE).

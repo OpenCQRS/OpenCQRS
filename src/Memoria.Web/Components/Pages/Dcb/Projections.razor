@@ -1,0 +1,50 @@
+@page "/dcb/projections"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>DCB @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Projections</span>
+</nav>
+
+<h1>@Heading</h1>
+<p class="lede">
+    The DCB read models, and what has been stored of them.
+</p>
+
+<SectionTiles TypesHref="dcb/projections/types" DataHref="dcb/projections/data">
+    <TypesDetail>
+        @Count(Catalogue.DcbProjections.Count, "projection") the model declares, addressed by
+        @Count(Catalogue.DcbProjectionIds.Count, "identifier").
+    </TypesDetail>
+    <DataDetail>The projections that have been stored, read one identifier at a time.</DataDetail>
+</SectionTiles>
+
+@if (Catalogue.DcbProjections.Count == 0)
+{
+    <p class="lede">
+        No DCB projections are registered. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Projections";
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+}

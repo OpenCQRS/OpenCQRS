@@ -1,0 +1,57 @@
+@* The two ways into a section, each on its own tile: they are not steps in a sequence but a choice
+   between what the model declares and what has been stored of it, and a tile says that where a
+   stacked list said one came before the other. The mark in front carries the same distinction
+   without the words — braces for what is declared, a store for what is kept. *@
+<ul class="tiles">
+    <li>
+        <a href="@TypesHref">
+            <SectionMark Kind="SectionKind.Types"/>
+            <span class="body">
+                <span class="name">Types</span>
+                <span class="detail">@TypesDetail</span>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="@DataHref">
+            <SectionMark Kind="SectionKind.Data"/>
+            <span class="body">
+                <span class="name">Data</span>
+                <span class="detail">@DataDetail</span>
+            </span>
+        </a>
+    </li>
+</ul>
+
+@code {
+
+    // The pair of tiles every section page is entered through. One component rather than a copy on
+    // each of the six: the pages differ only in where the two links go and what they say is behind
+    // them, and the marks in front of them are the same two marks on all of them — so a mark
+    // changing is one edit, and cannot leave four sections drawn one way and two the other.
+
+    /// <summary>Where the types the model declares are read.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string TypesHref { get; set; } = string.Empty;
+
+    /// <summary>What is behind that link, in the words of the section it belongs to.</summary>
+    /// <remarks>
+    /// A fragment rather than a string: some of these sections count what they hold before saying
+    /// what it is, and a count is written where the sentence needs it.
+    /// </remarks>
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment? TypesDetail { get; set; }
+
+    /// <summary>Where what has been stored of them is read.</summary>
+    [Parameter]
+    [EditorRequired]
+    public string DataHref { get; set; } = string.Empty;
+
+    /// <summary>What is behind that link, in the words of the section it belongs to.</summary>
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment? DataDetail { get; set; }
+
+}

@@ -1,0 +1,486 @@
+﻿@page "/dcb/events/data"
+@using Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IDcbDbContext StoreContext
+@inject NavigationManager Navigation
+
+<PageTitle>DCB @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb">DCB</a>
+    <span aria-hidden="true">/</span>
+    <a href="dcb/events">Events</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Data</span>
+</nav>
+
+<h1>@Heading</h1>
+
+@if (Choice.Unknown)
+{
+    <p class="alert" role="alert">
+        That event is not among the registered types. It may have been replaced by a later upload —
+        start again from <a href="dcb/events/types">events</a>.
+    </p>
+}
+else
+{
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. HasRows repeats what the branches below already
+       decide; if a branch is added there, add it there too. *@
+    @if (HasRows)
+    {
+        <p class="lede">@Summary</p>
+    }
+
+    @* Above the table, because it says what the table holds. Its own GET form, like the pickers
+       under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
+       where it can be bookmarked, shared and gone back to. The order travels in a hidden field so
+       narrowing does not silently reorder; the page deliberately does not, because page four of one
+       type is not page four of another.
+
+       The dropdown submits on change and the box is typed into, so the button is not only the
+       fallback when scripting is off — it submits both at once, which is what one form buys. *@
+    <form class="search" method="get" action="dcb/events/data">
+        <label for="type">Event type</label>
+        <select id="type" name="type" onchange="this.form.submit()">
+            @* First and default, so a reader who has chosen nothing is looking at the whole log
+               rather than at whichever type happened to be listed first. An empty value, which is
+               what the address carries when nothing is narrowed to. *@
+            <option value="" selected="@Choice.IsAll">All</option>
+            @foreach (var @event in EventTypes)
+            {
+                <option value="@(@event.FullName)" selected="@(@event == Choice.Chosen)">
+                    @BoundAs(@event)
+                </option>
+            }
+        </select>
+
+        @* Beside the type rather than under it, because the two narrow the same list: a type is
+           what the log wrote a row under, and this is what the row itself carries. Two columns, the
+           payload and the tags, because those are the two things a row is written with and a reader
+           arrives knowing either — a DCB event belongs to no stream, so a tag is the only handle a
+           boundary has on it. Either side is enough, so what comes back is the rows carrying what
+           was typed in one or the other — a number included, which narrows to the rows holding it
+           rather than to the row that happens to sit at that position. *@
+        <label class="visually-hidden" for="text">Filter by payload or tag</label>
+        <input id="text" type="search" name="text" value="@Text"
+               placeholder="Filter by payload or tag" autocomplete="off"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+        <input type="hidden" name="size" value="@PageSize"/>
+        @if (PayloadsOpen)
+        {
+            <input type="hidden" name="payloads" value="@Open"/>
+        }
+        <button type="submit" class="quiet">Filter</button>
+        @if (!Choice.IsAll || IsFiltered)
+        {
+            @* One way back to the whole log, because that is the one thing a reader wants from
+               here: dropping the type but keeping the text would be a second narrowing to undo. *@
+            <a href="@Link(Descending, 1, clearType: true, clearText: true)">Clear</a>
+        }
+
+        @* Held to the right-hand end of the filter row. It belongs with the controls that act on
+           the whole table rather than in a strip of its own between the filter and the data, which
+           is all that strip had left in it once the count moved up under the title. *@
+
+        @* Opens or closes every payload on the page at once. A link rather than a control with
+           script behind it, like the order and the page beside it: the state lives in the
+           address, so a page opened out can be linked to and gone back to, and the rows stay
+           foldable one at a time either way. It stays on this page — this is a way of looking
+           at the rows, not a way of moving between them. *@
+        <a class="fold-all" href="@Link(Descending, Events.Page, open: !PayloadsOpen)">
+            @(PayloadsOpen ? "Collapse all" : "Expand all")
+            <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+        </a>
+    </form>
+
+    @if (Choice.Unbound)
+    {
+        @* Registered, listed, and impossible to have stored: without an [EventType] there is no key
+           to write it under. An empty table would say the log holds none of these, which is true
+           but not the reason. *@
+        <p class="missing">
+            It carries no <code>[EventType]</code>, so the log has never written one of these.
+        </p>
+    }
+    else if (Events.Error is not null)
+    {
+        <p class="alert" role="alert">@Events.Error</p>
+    }
+    else if (Events.Total == 0)
+    {
+        <p class="empty">
+            @* Nothing found and nothing there are two different answers, and the text asked for is
+               the difference: an empty log has none of these to match, and a log that holds plenty
+               of them has none carrying this. *@
+            @if (IsFiltered)
+            {
+                <text>No payload or tag matches &ldquo;@Text&rdquo;.</text>
+            }
+            else if (Choice.IsAll)
+            {
+                <text>Nothing has been appended yet.</text>
+            }
+            else
+            {
+                <text>Nothing of this type has been appended yet.</text>
+            }
+        </p>
+    }
+    else
+    {
+        @* The lede and the fold, at the two ends of the line above the table, in the same shape as
+           the pager and the rows-per-page picker at the two ends of the line below it. *@
+
+        @* The columns a boundary's events are read in, so an event met in the log and the same event
+           met inside the model that folds it are read the same way. The position is where the row
+           sits and what makes it unique — a DCB event is written into one log rather than into a
+           stream of its own, so it has one number and no id beside it. *@
+        <table class="grid events tagged">
+            <thead>
+            <tr>
+                <th scope="col" class="col-position">Position</th>
+                <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
+                    @* The only date these have, so the only thing there is to order them by. *@
+                    <a href="@Link(!Descending, 1)">
+                        Appended
+                        <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                    </a>
+                </th>
+                @* What the log wrote the row under, as one name: the version is part of what a type
+                   is called rather than a fact beside it, and it is said only from the second
+                   version on — a first is what a name means until a second exists, and a column
+                   whose every row ended in v1 would teach its reader to skip it. *@
+                <th scope="col" class="col-type">Type</th>
+                @* What the row was appended under, and the only thing it can be reached by: a DCB
+                   event belongs to no stream, so its tags are what a boundary finds it through. Next
+                   to the type because the two together are what a row is — this kind of thing, about
+                   these — and before the payload, which is read only once a row is worth opening.
+                   Listed the same way the instances tables list a boundary's tags, so a tag met on a
+                   stored row and met on the model that folds it are read alike. *@
+                <th scope="col" class="col-tags">Tags</th>
+                <th scope="col" class="col-payload">Payload</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var stored in Events.Events)
+            {
+                <tr>
+                    <td>@stored.Position</td>
+                    <td>@stored.Written.ToLocalTime().ToString("g")</td>
+                    @* Name and version as one, the way every list here names a type, so a type met
+                       in the log and the same type met on its own page read alike. A key the store
+                       wrote that cannot be taken apart is left whole rather than half-read. *@
+                    <td><code>@DomainTypeDescriber.LabelOfKey(stored.Type)</code></td>
+                    <td>
+                        @* Every tag on the row, joined the way a boundary's are. A row with none is
+                           said to have none rather than left blank: the log allows it — an append
+                           carries whatever tags it was given — and a blank cell reads as a column
+                           that failed to fill rather than as an event nothing can reach. *@
+                        @if (stored.Tags.Count == 0)
+                        {
+                            <span class="missing">—</span>
+                        }
+                        else
+                        {
+                            <code>@string.Join(", ", stored.Tags)</code>
+                        }
+                    </td>
+                    <td>
+                        @if (stored.Error is not null)
+                        {
+                            <span class="missing">@stored.Error</span>
+                        }
+                        else if (stored.State.Count == 0)
+                        {
+                            <span class="missing">It carries nothing of its own.</span>
+                        }
+                        else
+                        {
+                            @* Folded away, and closed to begin with: a payload is the only cell tall
+                               enough to push the row about the event off its own line, and a page of
+                               the log is read by running down the positions and the types first.
+                               A <details> rather than script, like the rows on the events page,
+                               because these pages render statically. *@
+                            <details class="payload" open="@PayloadsOpen">
+                                @* How much is under it, so a closed row still says whether opening
+                                   it is worth it. What it holds is the pairs' to say. *@
+                                <summary>@Held(stored.State.Count)</summary>
+
+                                @* A list, because that is what it is: one name and value per item.
+                                   The name is set apart from the value it names, so a cell of
+                                   several pairs is scanned rather than read through — and a value
+                                   with a shape inside it is opened under its own name. *@
+                                @Pairs(stored.State)
+                            </details>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            @* The pages as links, ten at a time. Links rather than a control, like the order and
+               the fold: a page is somewhere to go, and the address it is at is the one this page
+               is already read through — so the narrowing, the order and the fold travel with it
+               without a form having to carry a copy of each. *@
+            <Pager Page="Events.Page" TotalPages="Events.TotalPages"
+                   Href="@(page => Link(Descending, page))"/>
+
+            @* Its own GET form, so the choice lands in the address bar like the order and the type.
+               Submitting on change saves a click; the button is the fallback when scripting is off.
+               No page travels with it: a page number from a narrower page size would land somewhere
+               a reader did not ask for, and the first page is what they can see they are getting. *@
+            <form class="page-size" method="get" action="dcb/events/data">
+                <label for="size">Rows per page</label>
+                <select id="size" name="size" onchange="this.form.submit()">
+                    @foreach (var option in InstanceQuery.PageSizes)
+                    {
+                        <option value="@option" selected="@(option == PageSize)">@option</option>
+                    }
+                </select>
+                @if (!Choice.IsAll)
+                {
+                    <input type="hidden" name="type" value="@Choice.Chosen?.FullName"/>
+                }
+                @if (IsFiltered)
+                {
+                    <input type="hidden" name="text" value="@Text"/>
+                }
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                @if (PayloadsOpen)
+                {
+                    <input type="hidden" name="payloads" value="@Open"/>
+                }
+                <noscript>
+                    <button type="submit">Apply</button>
+                </noscript>
+            </form>
+        </div>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Which of the log's events are being looked at: all of them, one type, or neither because the
+    /// name in the address reaches nothing that could have been written.
+    /// </summary>
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
+
+    private StoredEvents Events { get; set; } = new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+    private bool Descending { get; set; } = true;
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// The text a row's payload or one of its tags has to carry, or null when the log is read whole.
+    /// </summary>
+    private string? Text { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
+
+    /// <summary>
+    /// Whether every payload on the page starts open. Folded unless the address says otherwise: a
+    /// page of the log is read by running down the positions and the types, and the payloads are
+    /// what is opened once something on a row is worth following.
+    /// </summary>
+    /// <remarks>
+    /// The state of the page rather than of any row. A reader still folds one row at a time, and
+    /// this only says what they are all folded to on arrival — which is why it travels with every
+    /// link and every form here: paging or narrowing with the payloads out should not quietly shut
+    /// them.
+    /// <para>
+    /// Filtering does not open them. What was typed may well be in a payload — the tags are read
+    /// off the row without opening anything — but a reader who narrows the log has narrowed it to
+    /// read the rows, and answering with a wall of pairs takes the page they asked for away from
+    /// them. The fold above the table is one click when they want it.
+    /// </para>
+    /// </remarks>
+    private bool PayloadsOpen { get; set; }
+
+    /// <summary>What the address says when the payloads are out. Silence is what folds them.</summary>
+    private const string Open = "open";
+
+    /// <summary>
+    /// How much a folded payload has under it, so a closed row still says whether opening it is
+    /// worth it. The properties it declares, not the ones nested inside them: the count belongs to
+    /// what the fold hides at its first line.
+    /// </summary>
+    private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
+
+    /// <summary>
+    /// What the page is, for the heading and the title.
+    /// </summary>
+    /// <remarks>
+    /// The page rather than the choice, and the same however far the log is narrowed. The dropdown
+    /// above the table says what is being looked at and the line under it says how much of it there
+    /// is; a heading that changed with them would be a third voice saying the same thing, and one
+    /// that moved as the page was narrowed.
+    /// </remarks>
+    private const string Heading = "Event Data";
+
+    /// <summary>
+    /// The events some DCB aggregate or projection applies, which is what the dropdown offers and
+    /// what a name in the address is matched against.
+    /// </summary>
+    /// <remarks>
+    /// The same list the events page lists, for the same reason: an event nothing here folds would
+    /// be a choice narrowing to rows no DCB model is made of.
+    /// </remarks>
+    private IReadOnlyList<Type> EventTypes => Types.Current.DcbEvents;
+
+    /// <summary>
+    /// What an event is written into the log as, falling back to the class when it carries no
+    /// attribute — the same name the events page lists it under, so one row means one thing across
+    /// the two pages.
+    /// </summary>
+    private static string BoundAs(Type @event) => DomainTypeDescriber.LabelOf(@event);
+
+    /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $", of {Choice.Name}";
+
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// Appended is the whole log's word for it; a filtered table counts what matched, which is not
+    /// the same claim about what was written. Said the way the two model pages say it, so a count
+    /// means one thing across the three of them.
+    /// </remarks>
+    /// <summary>
+    /// Whether the page is showing a table at all, and so whether there is a count to put under
+    /// the title. Mirrors the branches above the table: anything they answer instead is a page
+    /// with no rows on it.
+    /// </summary>
+    private bool HasRows =>
+        !Choice.Unbound && Events.Error is null && Events.Total > 0;
+
+    private string Summary => (Events.Total, IsFiltered) switch
+    {
+        (1, false) => $"One event appended{Of}.",
+        (_, false) => $"{Events.Total} events appended{Of}.",
+        (1, true) => $"One matching event{Of}.",
+        (_, true) => $"{Events.Total} matching events{Of}."
+    };
+
+    /// <summary>
+    /// One address for the whole table state, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="descending">Whether the newest come first.</param>
+    /// <param name="page">The page to land on, from one.</param>
+    /// <param name="clearType">Whether to widen back to every type.</param>
+    /// <param name="clearText">Whether to drop the text a row's payload or tag had to carry.</param>
+    /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
+    /// <remarks>
+    /// The two narrowings and the fold are named only when they are made. Folded is what a page
+    /// opens as, so a link to a folded one is a link with nothing to say about it.
+    /// </remarks>
+    private string Link(
+        bool descending,
+        int page,
+        bool clearType = false,
+        bool clearText = false,
+        bool? open = null)
+    {
+        var link = $"dcb/events/data?dir={(descending ? "desc" : "asc")}" +
+                   $"&size={PageSize}" +
+                   $"&page={page}";
+
+        if (open ?? PayloadsOpen)
+        {
+            link += $"&payloads={Open}";
+        }
+
+        if (!clearType && Choice.Chosen is { } chosen)
+        {
+            link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
+        }
+
+        return clearText || !IsFiltered
+            ? link
+            : $"{link}&text={Uri.EscapeDataString(Text!)}";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        Choice = TypeChoice.Of(EventTypes, Value("type"));
+        Text = Value("text");
+        Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+
+        // Only one word opens them, so anything else the address might say — including the word an
+        // older link used for folded — leaves the page as it opens, which is folded.
+        PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
+
+        // A choice with nothing to look for is not asked about. Its key is null, and null narrows
+        // to everything rather than to nothing — so asking would answer the name of one type with
+        // the whole log.
+        if (Choice.ShowsNothing)
+        {
+            Events = new StoredEvents([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+            return;
+        }
+
+        Events = await AppendedEvents.Page(
+            StoreContext,
+            Choice.Key,
+            Text,
+            Descending,
+            int.TryParse(Value("page"), out var asked) ? asked : 1,
+            PageSize);
+    }
+
+    /// <summary>
+    /// The properties of one payload, a name and a value each, with the properties of any value one
+    /// holds nested under it.
+    /// </summary>
+    /// <remarks>
+    /// Draws itself, because a payload nests as deep as the describer read it. Inside a cell rather
+    /// than as rows: the whole payload is one column of a row about the event, so there are no
+    /// columns of its own to keep anything lined up with.
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
+        @<ul class="pairs">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <span class="pair-name">@property.Name</span>
+
+                    @if (property.Children.Count == 0)
+                    {
+                        <span class="pair-value">@(property.Value ?? "—")</span>
+                    }
+                    else
+                    {
+                        @* How many there are, when it is a list. A single shape says nothing here
+                           that the pairs under it do not say better. *@
+                        @if (property.Value is not null)
+                        {
+                            <span class="pair-value">@property.Value</span>
+                        }
+
+                        @Pairs(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
+
+}

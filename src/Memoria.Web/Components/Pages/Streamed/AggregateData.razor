@@ -1,0 +1,688 @@
+@page "/streamed/aggregates/data"
+@using Memoria.Web.Data
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IStreamedReads Store
+@inject NavigationManager Navigation
+
+<PageTitle>Streamed @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed">Streamed</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed/aggregates">Aggregates</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Data</span>
+</nav>
+
+<h1>@Heading</h1>
+
+@if (Choice.Unknown)
+{
+    <p class="alert" role="alert">
+        That aggregate is not among the registered types. It may have been replaced by a later
+        upload — start again from <a href="streamed/aggregates/types">aggregates</a>.
+    </p>
+}
+else if (Stream.Unknown)
+{
+    <p class="alert" role="alert">
+        That stream is not among the registered types. It may have been replaced by a later upload —
+        start again from <a href="streamed/streams">streams</a>.
+    </p>
+}
+else
+{
+    @* The whole count, not this page's worth: the pager says which page, and what a reader wants
+       beside it is how much there is to page through.
+
+       Under the title and outside the card, because it is the page saying what it found rather than
+       part of the table it found it in — and because the filter row below has to sit against the
+       table for the two to read as one object. HasRows repeats what the branches below already
+       decide; if a branch is added there, add it there too. *@
+    @if (HasRows)
+    {
+        <p class="lede">@Summary</p>
+    }
+
+    @* Above the table, because it says what the table holds. Its own GET form, like the pickers
+       under the table: the narrowing is a link to a narrower list, so it belongs in the address bar
+       where it can be bookmarked, shared and gone back to. The order travels in hidden fields so
+       narrowing does not silently reorder; the page deliberately does not, because page four of one
+       stream is not page four of another.
+
+       The dropdowns submit on change and the box is typed into, so the button is not only the
+       fallback when scripting is off — it submits all three at once, which is what one form buys. *@
+    <form class="search" method="get" action="streamed/aggregates/data">
+        @* The stream comes first, as it does in the table: it is where an aggregate's events were
+           appended, and the type is what was folded from them. *@
+        <label for="stream">Stream</label>
+        <select id="stream" name="stream" onchange="this.form.submit()">
+            @* First and default, so a reader who has chosen nothing is looking at everything stored
+               rather than at whichever stream happened to be listed first. An empty value, which is
+               what the address carries when nothing is narrowed to. *@
+            <option value="" selected="@Stream.IsAll">All</option>
+            @foreach (var streamId in StreamTypes)
+            {
+                @* Named by the type, not by the pattern it matches: a reader picks the kind of
+                   stream they mean, and customer:% is how the store is asked rather than a thing to
+                   choose. *@
+                <option value="@streamId.FullName" selected="@(streamId == Stream.Chosen)">
+                    @BoundAs(streamId)
+                </option>
+            }
+        </select>
+
+        <label for="type">Aggregate</label>
+        <select id="type" name="type" onchange="this.form.submit()">
+            <option value="" selected="@Choice.IsAll">All</option>
+            @foreach (var aggregate in AggregateTypes)
+            {
+                <option value="@aggregate.FullName" selected="@(aggregate == Choice.Chosen)">
+                    @BoundAs(aggregate)
+                </option>
+            }
+        </select>
+
+        @* An identifier addresses one aggregate, so there is nothing to offer until one is chosen —
+           and the control stays where it is, disabled, rather than appearing and disappearing as the
+           aggregate changes. A disabled control submits nothing, which is the same as choosing All.
+
+           Changing the aggregate submits whichever identifier was chosen for the one before it. That
+           is the ordinary way to arrive with a mismatched pair, so it widens to every identifier of
+           the new aggregate rather than being treated as a bad address. *@
+        <label for="id">Identifier</label>
+        <select id="id" name="id" onchange="this.form.submit()" disabled="@Choice.IsAll">
+            <option value="" selected="@Identifier.IsAll">All</option>
+            @foreach (var identifier in Identifiers)
+            {
+                <option value="@identifier.FullName" selected="@(identifier == Identifier.Chosen)">
+                    @identifier.Name
+                </option>
+            }
+        </select>
+
+        @* Beside the three rather than under them, because all four narrow the same list: a stream
+           type is the kind of stream a row was folded out of, an aggregate type is what it was
+           folded into, an identifier is what addressed it, and this is what the row itself says —
+           its stream and its id, either of which matching is enough. The state is not among them
+           because this page does not show it: a row matching on something invisible would be a
+           result with nothing on it carrying what was typed. *@
+        <label class="visually-hidden" for="text">Filter by stream or id</label>
+        <input id="text" type="search" name="text" value="@Text"
+               placeholder="Filter by stream or id" autocomplete="off"/>
+        <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+        <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+        <input type="hidden" name="size" value="@PageSize"/>
+        <button type="submit" class="quiet">Filter</button>
+        @if (!Choice.IsAll || !Stream.IsAll || !Identifier.IsAll || IsFiltered)
+        {
+            @* One way back to everything stored, because that is the one thing a reader wants from
+               here: dropping one narrowing and keeping the others would leave them still to undo.
+               The aggregate takes the identifier with it, because one addresses the aggregate it
+               belongs to and an identifier left behind would name nothing. *@
+            <a href="@Link(Sort, Descending, 1, clearStream: true, clearType: true, clearText: true)">Clear</a>
+        }
+    </form>
+
+    @* Beside the rows rather than instead of them, and ahead of the chain below because every one
+       of those is a reason there is no table and this is not. See wwwroot/preferences.js for how a
+       reader takes it away. *@
+    @if (Aggregates.OrderingNotice is not null)
+    {
+        <div class="caution" role="status" data-notice="ordering">
+            <p>@Aggregates.OrderingNotice</p>
+            <p class="caution-actions">
+                <button type="button" data-notice-close>Close</button>
+                <button type="button" data-notice-hide>Don't show this again</button>
+            </p>
+        </div>
+    }
+
+    @if (Choice.Unbound)
+    {
+        @* Registered, listed, and impossible to have been stored: without an [AggregateType] there
+           is no key to write a snapshot under. An empty table would say the store holds none of
+           these, which is true but not the reason. *@
+        <p class="missing">
+            It carries no <code>[AggregateType]</code>, so the store has never written one of these.
+        </p>
+    }
+    else if (Stream.Unshaped)
+    {
+        @* Registered, listed, and impossible to narrow by. A stream is found by the shape of the ids
+           it writes, and that shape is worked out by building one from values that can be recognised
+           again — which this stream takes none of. *@
+        <p class="missing">
+            Its ids cannot be recognised, so the store cannot be narrowed to it: it is named from a
+            value nothing can stand in for.
+        </p>
+    }
+    else if (Identifier.Unshaped)
+    {
+        @* The same again for the identifier, which is found the same way: by the shape of the ids it
+           writes. Said separately because it is a different choice to change. *@
+        <p class="missing">
+            Its ids cannot be recognised, so the store cannot be narrowed to it: it is named from a
+            value nothing can stand in for. Choose another identifier, or
+            <a href="@Link(Sort, Descending, 1, clearIdentifier: true)">all of them</a>.
+        </p>
+    }
+    else if (Aggregates.Error is not null)
+    {
+        <p class="alert" role="alert">@Aggregates.Error</p>
+    }
+    else if (Aggregates.Total == 0)
+    {
+        <p class="empty">
+            @* Nothing found and nothing there are two different answers, and what was asked for is
+               the difference: an empty store has none of these to match, and a store that holds
+               plenty of them has none carrying this, or none of them in this stream. *@
+            @if (IsFiltered)
+            {
+                <text>No stream or id matches &ldquo;@Text&rdquo;.</text>
+            }
+            else if (Choice.IsAll && Stream.IsAll)
+            {
+                <text>Nothing has been written yet.</text>
+            }
+            else if (Choice.IsAll)
+            {
+                <text>Nothing has been written from this stream yet.</text>
+            }
+            else if (Stream.IsAll)
+            {
+                <text>Nothing of this type has been written yet.</text>
+            }
+            else
+            {
+                <text>Nothing of this type has been written from this stream yet.</text>
+            }
+        </p>
+    }
+    else
+    {
+
+        @* The stream first, as on the events page, because it is where the row came from. Then what
+           the row is — the id it was addressed by and what it was folded into — with the identifier
+           after the type it names, because which identifiers there are to name is the type's answer.
+           Last, what the store says about the fold: the version it reached and when it was
+           written. *@
+        <table class="grid snapshots">
+            <thead>
+            <tr>
+                <th scope="col" class="col-stream">Stream</th>
+                <th scope="col" class="col-id">Id</th>
+                <th scope="col" class="col-type">Type</th>
+                <th scope="col" class="col-identifier">Identifier</th>
+                @* Marked here as well as on the cells under it, the way the DCB lists mark theirs:
+                   a count is set against the column's right edge, and a heading left on the left
+                   would be a label standing over nothing. *@
+                <th scope="col" class="col-version numeric">Version</th>
+                @foreach (var column in Columns)
+                {
+                    <th scope="col" class="col-date" aria-sort="@AriaSort(column.Sort)">
+                        <a href="@SortLink(column.Sort)">
+                            @column.Label
+                            @if (Sort == column.Sort)
+                            {
+                                <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                            }
+                        </a>
+                    </th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var stored in Aggregates.Snapshots)
+            {
+                var link = DetailLink(stored);
+
+                @* The whole row is the target when there is one, so every cell carries the same
+                   link. Only the first is reachable by keyboard or read out: the rest repeat it. A
+                   row folded into a type this application no longer has is drawn without one —
+                   there would be nothing to read its payload back with — and it is still the
+                   store's own row, worth seeing. *@
+                <tr class="@(link is null ? null : "clickable")">
+                    <td>@Cell((link, stored.StreamId, false))</td>
+                    <td>@Cell((link, stored.StoreId, true))</td>
+                    <td>@Cell((link, stored.Name, true))</td>
+                    <td>
+                        @* What addressed the row, worked out rather than read: the store keeps the
+                           id a model was written under and not the identifier that made it, so the
+                           answer is whichever identifier of this aggregate makes ids of this shape.
+                           Two that both could leaves it unanswered — naming one would be a guess,
+                           and the row is the store's own either way. *@
+                        @if (IdentifierOf(stored) is { } named)
+                        {
+                            @Cell((link, named, true))
+                        }
+                        else
+                        {
+                            <span class="missing">—</span>
+                        }
+                    </td>
+                    <td class="numeric">@Cell((link, stored.Version.ToString(), true))</td>
+                    <td>@Cell((link, stored.Created.ToLocalTime().ToString("g"), true))</td>
+                    <td>@Cell((link, stored.Updated.ToLocalTime().ToString("g"), true))</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            @* The pages as links, ten at a time. Links rather than a control, like the order above
+               the table: a page is somewhere to go, and the address it is at is the one this page
+               is already read through — so the narrowing and the order travel with it without a
+               form having to carry a copy of each. *@
+            <Pager Page="Aggregates.Page" TotalPages="Aggregates.TotalPages"
+                   Href="@(page => Link(Sort, Descending, page))"/>
+
+            @* Its own GET form, so the choice lands in the address bar like the order and the
+               filter. Submitting on change saves a click; the button is the fallback when scripting
+               is off. No page travels with it: a page number from a narrower page size would land
+               somewhere a reader did not ask for, and the first page is what they can see they are
+               getting. *@
+            <form class="page-size" method="get" action="streamed/aggregates/data">
+                <label for="size">Rows per page</label>
+                <select id="size" name="size" onchange="this.form.submit()">
+                    @foreach (var option in InstanceQuery.PageSizes)
+                    {
+                        <option value="@option" selected="@(option == PageSize)">@option</option>
+                    }
+                </select>
+                @Narrowing
+                <input type="hidden" name="sort" value="@Sort.ToString().ToLowerInvariant()"/>
+                <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                <noscript>
+                    <button type="submit">Apply</button>
+                </noscript>
+            </form>
+        </div>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Which aggregates are being looked at: all of them, one type, or neither because the name in
+    /// the address reaches nothing that could have been written.
+    /// </summary>
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
+
+    /// <summary>
+    /// Which kind of stream they were folded out of, or all of them.
+    /// </summary>
+    private IdChoice Stream { get; set; } = IdChoice.All;
+
+    /// <summary>
+    /// The stream types the uploaded assemblies declare, which is what the first dropdown offers and
+    /// what a name in the address is matched against.
+    /// </summary>
+    private IReadOnlyList<Type> StreamTypes => Types.Current.StreamedStreamIds;
+
+    /// <summary>
+    /// Which of the two streamed models this page lists, which is what tells the reader shared with
+    /// the projections page which of the store's two snapshot tables holds this page's rows.
+    /// </summary>
+    private const StreamedModelKind Kind = StreamedModelKind.Aggregate;
+
+    /// <summary>The aggregates they declare, which is what the second offers.</summary>
+    private IReadOnlyList<Type> AggregateTypes => Types.Current.Streamed(Kind);
+
+    /// <summary>
+    /// Which identifier addressed the rows being looked at, or all of them.
+    /// </summary>
+    /// <remarks>
+    /// Read the same way a stream is, because it is the same question: the store keeps the id a
+    /// model was written under and not the identifier that produced it, so an identifier is found by
+    /// the shape of the ids it makes.
+    /// </remarks>
+    private IdChoice Identifier { get; set; } = IdChoice.All;
+
+    /// <summary>
+    /// The identifiers that address the chosen aggregate, which is what the third dropdown offers.
+    /// Empty while no aggregate is chosen, because an identifier addresses one aggregate and there
+    /// is nothing yet for it to belong to.
+    /// </summary>
+    private IReadOnlyList<Type> Identifiers =>
+        Choice.Chosen is { } aggregate
+            ? DomainTypeDescriber.IdentifiersOf(aggregate, Types.Current.Identifiers(Kind))
+            : [];
+
+    /// <summary>
+    /// What addressed one stored row, or null when that cannot be said.
+    /// </summary>
+    /// <remarks>
+    /// Worked out rather than read: the store keeps the id and not the identifier that made it, so
+    /// the answer is whichever identifier of this row's aggregate makes ids of this shape. Exactly
+    /// one is an answer; two that both could is not, and naming one of them would be a guess. The
+    /// row is worth listing either way — its stream, its id and its counts are the store's own.
+    /// <para>
+    /// The choice answers for every row when it names one identifier, and only a list spanning
+    /// several has to hold each row's id against the shapes.
+    /// </para>
+    /// </remarks>
+    private string? IdentifierOf(StoredStreamSnapshot row)
+    {
+        if (Identifier.Chosen is { } chosen)
+        {
+            return chosen.Name;
+        }
+
+        var addressing = Addressing(row.Type)
+            .Where(identifier => IdShape.Of(identifier)?.Matches(row.AddressedId) == true)
+            .ToList();
+
+        return addressing.Count == 1 ? addressing[0].Name : null;
+    }
+
+    /// <summary>
+    /// The identifiers that could have addressed a row stored under one key, kept for the length of
+    /// the page: the rows on it name the same few types over and over, and answering means reading
+    /// the attributes of every aggregate registered.
+    /// </summary>
+    private IReadOnlyList<Type> Addressing(string modelType)
+    {
+        if (_addressing.TryGetValue(modelType, out var known))
+        {
+            return known;
+        }
+
+        var model = AggregateTypes.FirstOrDefault(aggregate =>
+            DomainTypeDescriber.BindingOf(aggregate)?.Key == modelType);
+
+        var found = model is null
+            ? []
+            : DomainTypeDescriber.IdentifiersOf(model, Types.Current.Identifiers(Kind));
+
+        _addressing[modelType] = found;
+
+        return found;
+    }
+
+    private readonly Dictionary<string, IReadOnlyList<Type>> _addressing = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Through to one row on its own: the type it was folded into, and the two ids the store keys it
+    /// by.
+    /// </summary>
+    /// <param name="row">The stored row.</param>
+    /// <returns>
+    /// The address of the page about it, or null when the uploaded assemblies no longer describe
+    /// what it was folded into — the page there reads the payload back into that type, and without
+    /// it there would be nothing to open.
+    /// </returns>
+    /// <remarks>
+    /// The ids as the store wrote them rather than the types behind them. A row whose stream or
+    /// identifier no registered type claims still opens: what it is addressed by is worked out
+    /// there, and not knowing costs the events tab its narrowing rather than the whole page.
+    /// </remarks>
+    private string? DetailLink(StoredStreamSnapshot row)
+    {
+        if (Folded(row.Type) is not { } model)
+        {
+            return null;
+        }
+
+        return "streamed/aggregates/detail" +
+               $"?type={Uri.EscapeDataString(model.FullName ?? model.Name)}" +
+               $"&stream={Uri.EscapeDataString(row.StreamId)}" +
+               $"&id={Uri.EscapeDataString(row.StoreId)}";
+    }
+
+    /// <summary>
+    /// The type a row was folded into, by the key the store wrote it under, kept for the length of
+    /// the page like the identifiers beside it: the rows name the same few types over and over.
+    /// </summary>
+    private Type? Folded(string modelType)
+    {
+        if (_folded.TryGetValue(modelType, out var known))
+        {
+            return known;
+        }
+
+        var model = AggregateTypes.FirstOrDefault(aggregate =>
+            DomainTypeDescriber.BindingOf(aggregate)?.Key == modelType);
+
+        _folded[modelType] = model;
+
+        return model;
+    }
+
+    private readonly Dictionary<string, Type?> _folded = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// One cell of a row, inside the row's link when it has one.
+    /// </summary>
+    /// <remarks>
+    /// A repeated cell is neither reachable by keyboard nor read out: the row is one target, and the
+    /// first cell is the one that carries it. A row with nothing to lead to is written as plain
+    /// text, which is also why the row is only marked clickable when it is — the stylesheet moves a
+    /// clickable row's padding onto the anchor that fills it, and there would be none.
+    /// </remarks>
+    private RenderFragment<(string? Link, string? Text, bool Repeat)> Cell => cell =>
+        @<text>
+            @if (cell.Link is null)
+            {
+                @cell.Text
+            }
+            else if (cell.Repeat)
+            {
+                <a href="@cell.Link" tabindex="-1" aria-hidden="true">@cell.Text</a>
+            }
+            else
+            {
+                <a href="@cell.Link">@cell.Text</a>
+            }
+        </text>;
+
+    private StoredStreamSnapshots Aggregates { get; set; } =
+        new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+    private InstanceSort Sort { get; set; } = InstanceSort.Updated;
+
+    private bool Descending { get; set; } = true;
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// The text a row has to carry, in its stream id, its own id or its stored state, or null when
+    /// the store is read whole.
+    /// </summary>
+    private string? Text { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
+
+    /// <summary>
+    /// The two dates a snapshot has and the order they are offered in: when it was first written,
+    /// then when it last was. Kept in one place so the header row and the links cannot disagree
+    /// about what can be sorted.
+    /// </summary>
+    private static readonly Column[] Columns =
+    [
+        new(InstanceSort.Created, "Created"),
+        new(InstanceSort.Updated, "Updated")
+    ];
+
+    private sealed record Column(InstanceSort Sort, string Label);
+
+    private string? AriaSort(InstanceSort column) =>
+        Sort != column ? null : Descending ? "descending" : "ascending";
+
+    /// <summary>
+    /// Clicking the column already sorted by turns it around; clicking the other starts it newest
+    /// first, which is the way a date is usually wanted.
+    /// </summary>
+    private string SortLink(InstanceSort column) =>
+        Link(column, Sort != column || !Descending, 1);
+
+    /// <summary>
+    /// What the page is, for the heading.
+    /// </summary>
+    /// <remarks>
+    /// The page rather than the choices, and the same however far the list is narrowed. The
+    /// dropdowns above the table say what is being looked at and the line under them says how much
+    /// of it there is; a heading that changed with them would be a third voice saying the same
+    /// thing.
+    /// </remarks>
+    private const string Heading = "Aggregate Data";
+
+    /// <summary>
+    /// What a type is stored as, falling back to the class when it carries no attribute — the same
+    /// name the types pages list it under, so one row means one thing across them.
+    /// </summary>
+    private static string BoundAs(Type type) => DomainTypeDescriber.LabelOf(type);
+
+    /// <summary>How far the list is narrowed to one aggregate, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $", of {Choice.Name}";
+
+    /// <summary>And to one kind of stream, said after it: what was folded, then where from.</summary>
+    private string In => Stream.IsAll ? string.Empty : $", in {Stream.Name}";
+
+    /// <summary>
+    /// How much there is, and of what.
+    /// </summary>
+    /// <remarks>
+    /// A filtered count counts what matched, which is not the same claim as how much is stored. Said
+    /// the way the events page says it, so a count means one thing across the two.
+    /// </remarks>
+    /// <summary>
+    /// Whether the page is showing a table at all, and so whether there is a count to put under
+    /// the title. Mirrors the branches above the table: anything they answer instead is a page
+    /// with no rows on it.
+    /// </summary>
+    private bool HasRows =>
+        !Choice.Unbound && !Stream.Unshaped && !Identifier.Unshaped
+        && Aggregates.Error is null && Aggregates.Total > 0;
+
+    private string Summary => (Aggregates.Total, IsFiltered) switch
+    {
+        (1, false) => $"One aggregate stored{Of}{In}.",
+        (_, false) => $"{Aggregates.Total} aggregates stored{Of}{In}.",
+        (1, true) => $"One matching aggregate{Of}{In}.",
+        (_, true) => $"{Aggregates.Total} matching aggregates{Of}{In}."
+    };
+
+    /// <summary>
+    /// One address for the whole table state, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="sort">Which date to order by.</param>
+    /// <param name="descending">Whether the newest come first.</param>
+    /// <param name="page">The page to land on, from one.</param>
+    /// <param name="clearStream">Whether to widen back to every stream.</param>
+    /// <param name="clearType">Whether to widen back to every aggregate.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
+    /// <param name="clearIdentifier">Whether to widen back to every identifier.</param>
+    private string Link(
+        InstanceSort sort,
+        bool descending,
+        int page,
+        bool clearStream = false,
+        bool clearType = false,
+        bool clearText = false,
+        bool clearIdentifier = false)
+    {
+        var link = $"streamed/aggregates/data?sort={sort.ToString().ToLowerInvariant()}" +
+                   $"&dir={(descending ? "desc" : "asc")}" +
+                   $"&size={PageSize}" +
+                   $"&page={page}";
+
+        if (!clearStream && Stream.Chosen is { } stream)
+        {
+            link += $"&stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
+        }
+
+        if (!clearType && Choice.Chosen is { } chosen)
+        {
+            link += $"&type={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}";
+        }
+
+        // Dropped with the aggregate as well as on its own: one addresses the aggregate it belongs
+        // to, so an identifier left behind would name nothing.
+        if (!clearType && !clearIdentifier && Identifier.Chosen is { } addressed)
+        {
+            link += $"&id={Uri.EscapeDataString(addressed.FullName ?? addressed.Name)}";
+        }
+
+        return clearText || !IsFiltered
+            ? link
+            : $"{link}&text={Uri.EscapeDataString(Text!)}";
+    }
+
+    /// <summary>
+    /// The narrowing, as the hidden fields a form has to carry to keep it. A form replaces the whole
+    /// query, so what is being looked at travels with it or paging would quietly widen the table.
+    /// </summary>
+    private RenderFragment Narrowing => @<text>
+        @if (Stream.Chosen is { } stream)
+        {
+            <input type="hidden" name="stream" value="@stream.FullName"/>
+        }
+        @if (Choice.Chosen is { } chosen)
+        {
+            <input type="hidden" name="type" value="@chosen.FullName"/>
+        }
+        @if (Identifier.Chosen is { } addressed)
+        {
+            <input type="hidden" name="id" value="@addressed.FullName"/>
+        }
+        @if (IsFiltered)
+        {
+            <input type="hidden" name="text" value="@Text"/>
+        }
+    </text>;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        Stream = IdChoice.Of(StreamTypes, Value("stream"));
+        Choice = TypeChoice.Of(AggregateTypes, Value("type"));
+
+        // Read against the identifiers of the aggregate that was chosen, so an identifier can only
+        // ever be one that addresses it. An identifier held over from the aggregate before is not a
+        // bad address but the ordinary way to arrive with a mismatched pair, and widening to every
+        // identifier of the new aggregate is what a reader meant by changing the aggregate.
+        Identifier = Choice.Chosen is null
+            ? IdChoice.All
+            : IdChoice.Of(Identifiers, Value("id")) switch
+            {
+                { Unknown: true } => IdChoice.All,
+                var addressed => addressed
+            };
+
+        Text = Value("text");
+        Sort = InstanceQuery.SortOf(Value("sort"));
+        Descending = !string.Equals(Value("dir"), "asc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+
+        // A choice with nothing to look for is not asked about. A null key and a null pattern narrow
+        // to everything rather than to nothing, so asking would answer the name of one aggregate, or
+        // of one stream, with the whole store.
+        if (Choice.ShowsNothing || Stream.ShowsNothing || Identifier.ShowsNothing)
+        {
+            Aggregates = new StoredStreamSnapshots([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+            return;
+        }
+
+        Aggregates = await Store.Snapshots(new StreamedSnapshotFilter(
+            Kind,
+            Stream.Pattern,
+            Choice.Key,
+            Identifier.Pattern,
+            Text,
+            Sort,
+            Descending,
+            int.TryParse(Value("page"), out var asked) ? asked : 1,
+            PageSize));
+    }
+
+}

@@ -1,0 +1,339 @@
+@page "/streamed/streams"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>Streamed @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed">Streamed</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Streams</span>
+</nav>
+
+<h1>@Heading</h1>
+
+@if (StreamTypes.Count == 0)
+{
+    <p class="lede">
+        No streams are registered. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+else
+{
+    <div class="panels">
+        <nav class="panel panel-index" aria-label="Streams">
+            @* What the card holds, in the voice the tables cap their columns in — the card beside
+               this one is capped by the name of what is being read, and this one by what there is
+               to read. It is also the only place on the page the count appears. *@
+            <p class="index-cap">@Counted(StreamTypes.Count, "stream")</p>
+
+            <ul>
+                @foreach (var stream in StreamTypes)
+                {
+                    @* The whole group is marked as the current one, not just its first row, so an
+                       open row and what is folded under it read as one selected block. *@
+                    <li class="@CurrentClass(stream)">
+                        @* Three rows fold under a stream, where an aggregate folds the identifiers
+                           that address it: the three things a stream holds an account of, each in
+                           the page that lists what has been stored of it. A <details> rather than
+                           script, like the header menu, because these pages render statically —
+                           and open for the stream being read, so choosing one is what opens it
+                           while any other can still be peeked into without leaving the one on the
+                           right. *@
+                        <details open="@IsCurrent(stream)">
+                            @* The name is a link inside the summary rather than the summary itself:
+                               a click on it selects the stream, and a click beside it only opens
+                               the row. *@
+                            <summary>@NameRow(stream)</summary>
+
+                            <ul class="index-links">
+                                @foreach (var (label, page, mark) in DataPages)
+                                {
+                                    <li>
+                                        @* The stream travels in the address rather than the row
+                                           being a bare link to the page: what is folded under a
+                                           stream is that stream's events, aggregates and
+                                           projections, and three links the same for every row
+                                           would say nothing about the row they are under. The data
+                                           page narrows by the type, matching the ids it writes, so
+                                           this is the same choice its own dropdown offers. *@
+                                        <a href="@DataLink(stream, page)">
+                                            @* The mark the section it leads to is entered by
+                                               everywhere else, in front of the word rather than
+                                               opposite it: the whole row is the one link, and the
+                                               mark says which of the three it leads to without
+                                               repeating one lens down all of them. *@
+                                            <SectionMark Kind="mark"/>
+                                            @label
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+        <section class="panel panel-detail">
+            @* Selected is only null when the list is empty, which the branch above already covers. *@
+            @if (Selected is not null)
+            {
+                @* The same name the row in the list carries, so the heading answers the click that
+                   reached it. A stream carries no attribute to be bound by, so that name is the
+                   class — which is why the info tab leads with the full one. *@
+                <h2>@BoundAs(Selected)</h2>
+
+                @* Two views, switched by the address rather than by script: each tab is a link, so a
+                   view can be linked to and gone back to, and the page stays statically rendered
+                   like the rest of them. What the stream is, then what its name is made of. What
+                   has been appended to one is a third view this page does not have yet. *@
+                <nav class="tabs" aria-label="Stream views">
+                    <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
+                       aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
+                    <a id="tab-@StateTab" href="@TabLink(StateTab)"
+                       aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+                </nav>
+
+                @* Each panel is named by the tab that reaches it, so the label is written once
+                   rather than repeated as a heading under the row that already says it. *@
+                @if (Tab == StateTab)
+                {
+                    <section class="tab-panel" aria-labelledby="tab-@StateTab">
+                        <p class="lede">
+                            The properties the stream declares. Nothing is folded into a stream — it
+                            is a place to append events, not a model built from them — so what it
+                            declares is the identity it hands the store.
+                        </p>
+
+                        @if (Properties.Count == 0)
+                        {
+                            <p class="missing">It declares nothing of its own.</p>
+                        }
+                        else
+                        {
+                            @* The same two columns the models and the events list their shape in,
+                               so every declared shape on these pages is read the same way. *@
+                            <table class="grid">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Property</th>
+                                    <th scope="col">Type</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @StateRows((Properties, 0))
+                                </tbody>
+                            </table>
+                        }
+                    </section>
+                }
+                else
+                {
+                    <section class="tab-panel" aria-labelledby="tab-@InfoTab">
+                        <dl class="facts">
+                            @* No name and no version, unlike an event or a model: nothing binds a
+                               stream. The events written into it carry their own bindings and the
+                               stream is only where they were put, so the class is all there is to
+                               call it by — and a rename of it is a rename of nothing stored. *@
+                            <dt>Class</dt>
+                            <dd><code>@Selected.FullName</code></dd>
+
+                            <dt>Assembly</dt>
+                            <dd>@(Selected.Assembly.GetName().Name ?? "unknown")</dd>
+
+                            @* What one has to be given to be named — the id of the customer whose
+                               stream it is, the code of the warehouse. Read off the constructor,
+                               the same way the pages that build an identifier read what to ask
+                               for, because that is what a stream is: values, and the one id they
+                               make. *@
+                            <dt>Values</dt>
+                            <dd>
+                                @if (Values.Count == 0)
+                                {
+                                    <span class="missing">
+                                        none — it takes nothing, so there is one stream of this kind
+                                    </span>
+                                }
+                                else
+                                {
+                                    <code>@Signature</code>
+                                }
+                            </dd>
+                        </dl>
+                    </section>
+                }
+            }
+        </section>
+    </div>
+}
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Streams";
+
+    [SupplyParameterFromQuery(Name = "type")]
+    private string? SelectedName { get; set; }
+
+    /// <summary>
+    /// The two views the panel offers, named as they appear in the address. Which one is showing is
+    /// the address's to say, so a view can be linked to, bookmarked, and gone back to.
+    /// </summary>
+    private const string InfoTab = "info";
+
+    private const string StateTab = "state";
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? RequestedTab { get; set; }
+
+    /// <summary>
+    /// Matched against the two the page has, so an unknown name in the address opens the one it
+    /// opens with rather than an empty panel.
+    /// </summary>
+    private string Tab =>
+        string.Equals(RequestedTab, StateTab, StringComparison.OrdinalIgnoreCase) ? StateTab : InfoTab;
+
+    /// <summary>
+    /// The streams found in the uploaded assemblies.
+    /// </summary>
+    /// <remarks>
+    /// Only the streamed model has them: a DCB boundary is a query over the tags an event carries,
+    /// not a place events are put, so there is no page like this one under DCB.
+    /// </remarks>
+    private IReadOnlyList<Type> StreamTypes => Types.Current.StreamedStreamIds;
+
+    /// <summary>
+    /// The stream being shown: the one asked for, or the first in the list. Arriving with nothing
+    /// chosen shows the first rather than an empty panel, because there is nothing to decide before
+    /// something can be read.
+    /// </summary>
+    private Type? Selected =>
+        DomainTypeDescriber.Select(StreamTypes, SelectedName) ?? StreamTypes.FirstOrDefault();
+
+    private IReadOnlyList<DomainProperty> Properties =>
+        Selected is null ? [] : DomainTypeDescriber.PropertiesOf(Selected);
+
+    /// <summary>
+    /// The values the stream is built from, in the order its constructor asks for them.
+    /// </summary>
+    private IReadOnlyList<IdentifierParameter> Values =>
+        Selected is null ? [] : IdentifierFactory.Parameters(Selected);
+
+    /// <summary>
+    /// Those values on one line, each named with the type it has to be given as.
+    /// </summary>
+    /// <remarks>
+    /// One line rather than a row each: they are read together — a stream is the whole set of them,
+    /// not a fact per value — and a row each would make a stream taking two look like two facts
+    /// about it.
+    /// </remarks>
+    private string Signature =>
+        string.Join(", ", Values.Select(value => $"{value.Name}: {value.TypeName}"));
+
+    /// <summary>
+    /// How a stream is named wherever it is listed. It carries no attribute, so this is its class —
+    /// but it is asked for the same way as an event's bound name, so one rule names every row on
+    /// these pages.
+    /// </summary>
+    private static string BoundAs(Type stream) => DomainTypeDescriber.LabelOf(stream);
+
+    /// <summary>
+    /// Another stream, read the same way as the one being left: the tab travels with the choice, so
+    /// a facet compared across two of them is one click each rather than two.
+    /// </summary>
+    private string Link(Type stream) =>
+        $"streamed/streams?type={Uri.EscapeDataString(stream.FullName ?? stream.Name)}&tab={Tab}";
+
+    /// <summary>
+    /// What is stored of a stream, and the page listing each of them. Named the way the menu and
+    /// the home page name the same three, so a reader meets one set of words for them — and marked
+    /// the way those pages are entered everywhere else, so the three rows are told apart by their
+    /// marks as well as by their words.
+    /// </summary>
+    private static readonly IReadOnlyList<(string Label, string Page, SectionKind Mark)> DataPages =
+    [
+        ("Events", "streamed/events/data", SectionKind.Events),
+        ("Aggregates", "streamed/aggregates/data", SectionKind.Aggregates),
+        ("Projections", "streamed/projections/data", SectionKind.Projections)
+    ];
+
+    /// <summary>
+    /// Through to what has been stored under one stream. The stream is passed in rather than taken
+    /// from the selection, because the list links rows that are not selected.
+    /// </summary>
+    private static string DataLink(Type stream, string page) =>
+        $"{page}?stream={Uri.EscapeDataString(stream.FullName ?? stream.Name)}";
+
+    /// <summary>
+    /// A tab of the stream already chosen.
+    /// </summary>
+    private string TabLink(string tab) =>
+        $"streamed/streams?type={Uri.EscapeDataString(Selected?.FullName ?? string.Empty)}&tab={tab}";
+
+    private bool IsCurrent(Type stream) => stream == Selected;
+
+    private string? CurrentClass(Type stream) => IsCurrent(stream) ? "current" : null;
+
+    private string? CurrentFlag(Type stream) => IsCurrent(stream) ? "true" : null;
+
+    /// <summary>
+    /// The row that names one stream and selects it. A link rather than a click handler: the page
+    /// renders statically like the rest, and the choice stays in the address so it can be shared.
+    /// </summary>
+    private RenderFragment<Type> NameRow => stream =>
+        @<a class="index-row" href="@Link(stream)" aria-current="@CurrentFlag(stream)">
+            @* Named by the class, which is the only name a stream has. The namespace it came from
+               is on the info tab, with the rest of what is true of the class. *@
+            <span class="index-name">@BoundAs(stream)</span>
+        </a>;
+
+    /// <summary>
+    /// The properties a type declares, a row each, with the properties of any value one holds in
+    /// rows under it.
+    /// </summary>
+    /// <remarks>
+    /// Draws itself and carries how deep it has got, because the depth is what the indent is made
+    /// of. How far there is to go is the describer's to decide, not this.
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DomainProperty> Properties, int Depth)> StateRows => rows =>
+        @<text>
+            @foreach (var property in rows.Properties)
+            {
+                <tr class="@Under(rows.Depth)">
+                    <td>@property.Name</td>
+                    <td><code>@property.TypeName</code></td>
+                </tr>
+
+                @if (property.Children.Count > 0)
+                {
+                    @StateRows((property.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// How many of something, written so one of it is not one of them.
+    /// </summary>
+    private static string Counted(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
+    /// is stays the stylesheet's to say.
+    /// </summary>
+    /// <remarks>
+    /// A row at the top is not under anything and carries no class at all. Past the third step the
+    /// class stops changing: the describer stops unfolding before then, and a table that keeps
+    /// stepping in stops being a table.
+    /// </remarks>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
+
+}

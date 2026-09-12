@@ -1,0 +1,2059 @@
+/* The application's two faces, carried in wwwroot/fonts rather than fetched from a font host.
+   This tool is regularly pointed at a store on a machine with no route out, and a stylesheet that
+   reaches for Google there leaves every page in the fallback face — so the files travel with the
+   application. IBM Plex, under the SIL Open Font Licence; the terms are in fonts/OFL.txt.
+
+   Sans is the variable cut: one file covers the whole 400–600 range this application asks for,
+   which is both smaller than the two static weights and the reason no 600 file sits beside it.
+   Each face is split latin / latin-ext by unicode-range, so a page holding nothing but ASCII ids
+   never pays for the accented block it does not draw. */
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    src: url("fonts/ibm-plex-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    src: url("fonts/ibm-plex-sans-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* One note on the settings page is set in italic, and a true italic is a different set of
+   letterforms rather than the upright leant over — which is what the browser draws if this is
+   missing. Claimed at 400 only, because 400 is the one weight it is ever asked for. */
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: italic;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-sans-italic-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Sans";
+    font-style: italic;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-sans-italic-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-display: swap;
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url("fonts/ibm-plex-mono-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Site palette. Defined globally so scoped component styles can use them: a scoped
+   selector only matches elements this component rendered, so tokens declared there
+   never reach markup a child component (EditForm, InputText) emits. */
+:root {
+    /* The three hues the application actually has, held as channels rather than as hex. Every
+       translucent tint of one — a focus ring, a dialog's backdrop, the shadow under it — is then
+       written against those channels at an alpha, and cannot drift from the solid colour it is a
+       tint of.
+       Written as hex, the eight focus rings each carried their own copy of the accent, and
+       changing the accent would have left every one of them the colour it used to be. */
+    --accent-rgb: 91 75 214;
+    --danger-rgb: 179 33 33;
+    --ink-rgb: 28 32 36;
+
+    /* What a shadow and a dialog's backdrop are made of. The same channels as the ink today, but
+       its own token because the two part company in the dark theme: ink turns light there and a
+       backdrop must not — a veil of light ink over a dark page is a white sheet drawn across it. */
+    --shadow-rgb: 28 32 36;
+
+    /* Text, from the page's own voice down to a placeholder nobody has typed over. */
+    --ink: rgb(var(--ink-rgb));
+    --ink-soft: #5b6570;
+    --ink-faint: #9aa3ad;
+
+    --accent: rgb(var(--accent-rgb));
+
+    /* Where a filled control goes under the pointer. Each channel at 84% of the accent's, which is
+       the step the blue this replaced already used between its two tones — so the pair keeps the
+       relationship the pages were built against and only the hue moves. */
+    --accent-strong: #4c3fb4;
+
+    /* What stays legible on top of a filled control, whichever fill it is. Its own token rather
+       than --surface, though both are white today: a surface is a thing the page is written on
+       and follows the page, and this is written on a colour and follows that colour instead. */
+    --on-fill: #fff;
+
+    --danger: rgb(var(--danger-rgb));
+    --danger-strong: #8f1a1a;
+    --danger-ground: #fdf3f3;
+    --danger-rule: #f0d5d5;
+
+    /* The page worked, but not quite as asked. */
+    --caution-ground: #fdf8ef;
+    --caution-rule: #b8791a;
+    --caution-ink: #7a4f0c;
+
+    /* The page worked. */
+    --notice-ground: #f2f8f3;
+    --notice-rule: #2f7d40;
+    --notice-ink: #235f30;
+
+    /* The page itself, and the sheet the reading happens on. Two tones rather than one: without a
+       ground behind it a white sheet has no edge, and the application had been drawing every page
+       straight onto the browser's own white. Held slightly cooler than a neutral grey so it sits
+       under the accent rather than beside it. */
+    --ground: #f5f6f8;
+    --surface: #fff;
+    --rule: #dfe3e8;
+
+    /* The bars that frame content rather than hold it: the application's own top bar, the filter
+       row, and a table's column headings. A third step between the ground and the surface — set
+       just off the sheet's white so a bar reads as chrome, and just off the page's ground so it
+       does not sink into it. Held apart from --ground, which these used to borrow: sharing that
+       value made a filter row and the page behind it the same colour, and the card lost its top
+       edge into the page. */
+    --sunk: #fafbfc;
+
+    /* How wide the sheet is allowed to grow. This is a tool rather than a document: the width is
+       the window's, so a table with many columns uses the monitor it was opened on instead of
+       scrolling inside a column narrower than the screen. Prose still keeps its own measure where
+       it is set — a lede or a notice caps itself — so nothing here sets a line a metre long.
+
+       The one knob: the bar above and the bar below centre themselves against this same value, so
+       putting a length back here (80rem was the previous cap) re-columns the whole layout without
+       touching anything else. */
+    --page-width: 100%;
+
+    /* The edge of something you type into or pick from, which is darker than the rule between
+       rows: a control has to announce itself, a table's rules only have to separate. */
+    --field-rule: #c6ccd4;
+
+    /* The sizes the application is allowed to set, and the whole of them. This grew to ten ad-hoc
+       values — 0.875, 0.9 and 0.9375rem were three names for the same size, and 1.0625, 1.1 and
+       1.2rem three for another — which is why headings a reader met on different pages were never
+       quite the same heading. Seven steps, each far enough from the next to be a decision.
+
+       --text-md is the size stored data is read at. It is below the prose size on purpose: a table
+       is scanned down a column rather than read along a line, and the rows want to be closer
+       together than a paragraph's. */
+    /* Below the six because it is not prose at all: a column heading set in small capitals with
+       space between the letters reads larger than its nominal size, and at --text-xs it shouted
+       over the values under it. */
+    --text-2xs: 0.6875rem;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-md: 0.875rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.5rem;
+
+    /* The page's own voice, as a token because a place that sets monospace sometimes has to set it
+       back for the prose inside. */
+    --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    /* Ids, tags, sequence numbers, payloads: the substance of every table here. One stack rather
+       than the two near-copies this grew, which named the same face on each platform by different
+       names and could have drifted apart at the next edit. */
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono", Menlo,
+            Consolas, monospace;
+
+    /* The theme the browser draws its own controls in. Stated here as the light default and
+       overridden by each dark block below. */
+    color-scheme: light;
+}
+
+/* The dark theme, as token values and nothing else. Every rule in this stylesheet already draws
+   through the tokens above, so none of them is repeated here — which is what the tokenising was
+   for, and the reason the whole theme is one block rather than a second copy of the application.
+
+   Three states, not two. An explicit choice stamps data-theme on the root; the default is no stamp
+   at all, and there only prefers-color-scheme separates one theme from the other. So the values are
+   written twice: once behind the media query, guarded so an explicit light choice still beats a
+   dark operating system, and once behind the stamp so the toggle wins in the other direction.
+
+   Two tokens inverted rather than darkened, and both were given their own name in earlier work for
+   exactly this moment. --on-fill flips to the ground: a filled control is a light violet here, and
+   white text on it is unreadable at 2.8:1 where dark text is 6.5:1. --shadow-rgb stays black while
+   the ink turns light, because a backdrop is not made of text. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --accent-rgb: 155 140 255;
+        --danger-rgb: 239 107 107;
+        --ink-rgb: 228 231 235;
+        --shadow-rgb: 0 0 0;
+
+        --ink-soft: #98a1ac;
+        --ink-faint: #828b96;
+
+        --accent-strong: #b3a6ff;
+        --on-fill: #14171c;
+
+        --danger-strong: #f58b8b;
+        --danger-ground: #2a1719;
+        --danger-rule: #4a2327;
+
+        --caution-ground: #2a2114;
+        --caution-rule: #d9a441;
+        --caution-ink: #e8c98a;
+
+        --notice-ground: #14261a;
+        --notice-rule: #4fa96a;
+        --notice-ink: #9ad3ab;
+
+        --ground: #14171c;
+        --surface: #1a1e24;
+        --sunk: #171b21;
+        --rule: #282e36;
+        --field-rule: #3a424d;
+
+        color-scheme: dark;
+    }
+}
+
+:root[data-theme="dark"] {
+    --accent-rgb: 155 140 255;
+    --danger-rgb: 239 107 107;
+    --ink-rgb: 228 231 235;
+    --shadow-rgb: 0 0 0;
+
+    --ink-soft: #98a1ac;
+    --ink-faint: #828b96;
+
+    --accent-strong: #b3a6ff;
+    --on-fill: #14171c;
+
+    --danger-strong: #f58b8b;
+    --danger-ground: #2a1719;
+    --danger-rule: #4a2327;
+
+    --caution-ground: #2a2114;
+    --caution-rule: #d9a441;
+    --caution-ink: #e8c98a;
+
+    --notice-ground: #14261a;
+    --notice-rule: #4fa96a;
+    --notice-ink: #9ad3ab;
+
+    --ground: #14171c;
+    --surface: #1a1e24;
+    --sunk: #171b21;
+    --rule: #282e36;
+    --field-rule: #3a424d;
+
+    color-scheme: dark;
+}
+
+/* Named outright so a select, a search field and the scrollbar are drawn by the browser in the
+   theme the page is in. Without it the application goes dark around native controls that stay
+   white, which is worse than not having a dark theme at all. */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+/* No room reserved for the scrollbar, which is a reversal of what stood here before and worth
+   saying why.
+
+   This page used to carry scrollbar-gutter: stable, so that a page growing past the window did not
+   narrow itself by the width of the bar as it appeared. That reserves a strip at the right whether
+   or not anything is in it, and the strip is painted with the page's own ground. While the bar at
+   the top of the page had no colour of its own nobody could see it. Giving that bar a white
+   background turned the reserved strip into a grey notch bitten out of the top right corner, on
+   every page short enough not to scroll.
+
+   Filling the strip with a permanent scrollbar hid the notch and cost a scrollbar on every page,
+   which is worse. Reserving nothing costs neither: with no scrollbar the root fills the window and
+   the bar reaches the corner, and with one the scrollbar sits where the notch used to be, which is
+   where a reader expects a scrollbar. What it does cost is the shift the original rule bought off —
+   a page that grows past the window still steps sideways by the width of the bar. */
+html {
+    scrollbar-gutter: auto;
+}
+
+body {
+    background: var(--ground);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font);
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Shared page furniture. Global rather than scoped per page, so every section stays
+   one visual system instead of several that drift apart. */
+
+/* One colour whether or not the address has been opened before. Without this the browser's own
+   visited purple shows through on every link no rule below names a colour for, and a row would
+   read as a different kind of thing for having been looked at once.
+
+   Held in :where() so it counts for nothing when specificity is weighed: it is the colour a link
+   has when nothing else has an opinion. Written plainly, a:visited would outweigh a single class
+   and take the white out of a .button the moment someone had followed it. */
+:where(a, a:visited) {
+    color: var(--accent);
+}
+
+/* Every value the store wrote, wherever it is written. Left to itself a <code> takes the browser's
+   own monospace at the browser's own smaller size, so the ids in a table came out in Consolas a
+   size down from the cells beside them — two faces and two sizes in one row, and none of the Plex
+   Mono the application actually loads. */
+code {
+    font-family: var(--mono);
+    font-size: inherit;
+}
+
+h1 {
+    color: var(--ink);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.25rem;
+}
+
+.lede {
+    color: var(--ink-soft);
+    margin: 1.5rem 0 1.5rem;
+    max-width: 34rem;
+}
+
+.breadcrumb {
+    color: var(--ink-soft);
+    display: flex;
+    font-size: var(--text-sm);
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+    /* No underline at rest. A breadcrumb is a trail of where you are rather than prose with links
+       in it, and four underlined words above the page title read as louder than the title. The
+       underline comes back on hover, so what is clickable is still answerable. */
+    .breadcrumb a {
+        color: var(--ink-soft);
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        color: var(--accent);
+        text-decoration: underline;
+    }
+
+.page-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+    .page-header .lede {
+        margin-bottom: 0;
+    }
+
+/* The boundary a page is a view of, under the title and above the tabs, so it stays put as they
+   change: each tab is a view of what it selects, and a reader checking one against it should not
+   have to leave for another tab to see it. */
+.boundary {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: -0.5rem 0 1.5rem;
+}
+
+    /* Set back like a pair's name, because that is what this is: one label and the one value it
+       names. */
+    .boundary .boundary-label {
+        color: var(--ink-soft);
+        font-size: var(--text-sm);
+    }
+
+    /* As long as its tags are, and broken mid-word rather than pushing the page wider. */
+    .boundary code {
+        overflow-wrap: anywhere;
+    }
+
+    /* How the tags combine. A note beside the value rather than part of it, spaced by the row's own
+       gap — the .grid rule that indents a hint belongs to a table cell, and this is not one. */
+    .boundary .hint {
+        color: var(--ink-soft);
+    }
+
+/* The two buttons the application has, and one padding between them. Both are written to sit on an
+   <a> or a <button> without either giving itself away: a button does not inherit the page's font,
+   and a link does not lose its underline, unless it is said here. Kept together and global so a new
+   page picks the pair up rather than growing a third size of its own. The pager has smaller ones,
+   below, because they belong to a row of controls at the table's own size. */
+.button,
+.quiet {
+    border-radius: 4px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* What the page wants you to do. */
+.button {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--on-fill);
+}
+
+    .button:hover {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+    }
+
+    .button:focus-visible {
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
+        outline: none;
+    }
+
+/* The same shape, stepping back: a way out of a dialog, or a control beside a field. */
+.quiet {
+    background: var(--surface);
+    border: 1px solid var(--field-rule);
+    color: var(--ink);
+}
+
+    .quiet:hover {
+        border-color: var(--ink-soft);
+    }
+
+    .quiet:focus-visible {
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
+        outline: none;
+    }
+
+/* A heading given focus so a jump lands on it, rather than because anyone tabbed to it — the ring
+   would be pointing at something the reader did not choose. */
+h1:focus,
+h2:focus {
+    outline: none;
+}
+
+/* Present for screen readers, absent on screen. */
+.visually-hidden {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+/* A small set of ways in, set side by side as cards rather than stacked as rows: the sections of a
+   model, or the two readings of one of them — the types it declares and the data stored of them —
+   none of which a list running down the page can hold without stating an order they do not have.
+   Every page from an overview down is entered through the same tile, so the way in looks the same
+   wherever a reader meets it.
+
+   Auto-fit against the same 40rem the lists keep, so a pair or a row of them divides the width
+   evenly and drops to one column when the room is no longer there. */
+.tiles {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    list-style: none;
+    margin: 0;
+    max-width: 40rem;
+    padding: 0;
+}
+
+    /* The whole card is the link, so the target is the tile a reader is already pointing at rather
+       than the two words at the top of it. The sheet's white over the page's ground and carried by
+       its rule, the way every other card here is drawn. */
+    .tiles > li > a {
+        align-items: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        /* The row is as tall as the wordiest tile in it and each card fills it, so a pair of them
+           keeps one bottom edge however unevenly the detail lines wrap. Counted with the padding
+           and the rule inside it: this stylesheet has no border-box reset, and without saying so
+           the 100% is the row's height with a card's own padding added on top of it. */
+        box-sizing: border-box;
+        display: flex;
+        gap: 0.75rem;
+        height: 100%;
+        padding: 0.9rem 1rem;
+        text-decoration: none;
+    }
+
+        .tiles > li > a:hover {
+            border-color: var(--accent);
+        }
+
+        .tiles > li > a:hover .name {
+            text-decoration: underline;
+        }
+
+        .tiles > li > a:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+    /* The mark, held to the left of the words and kept off the ink's weight: it says which tile
+       this is at a glance and then gets out of the way of the sentence beside it. Sized against the
+       prose rather than in pixels, and stopped from shrinking when the detail wraps. */
+    .tiles .glyph {
+        color: var(--ink-faint);
+        flex: none;
+        height: 1.35rem;
+        margin-top: 0.05rem;
+        width: 1.35rem;
+    }
+
+    .tiles > li > a:hover .glyph {
+        color: var(--accent);
+    }
+
+    /* Everything that is not the mark: the link's own words, and the line under them saying what
+       is on the other side of it. */
+    .tiles .body {
+        display: block;
+        min-width: 0;
+    }
+
+    .tiles .name {
+        color: var(--accent);
+        display: block;
+        font-weight: 600;
+    }
+
+    .tiles .detail {
+        color: var(--ink-soft);
+        display: block;
+        font-size: var(--text-md);
+        margin-top: 0.15rem;
+    }
+
+/* The two models set beside each other, so what belongs to one is read against the other rather
+   than as one long list. Shared by any page that has something to say about both.
+
+   The measure belongs to the block and not to the page. This is a pair of columns read against each
+   other, and the thing being read is how close the two are: a half that grows with the window puts
+   a metre between them and there is nothing to compare across. Held here rather than inside, where
+   it went wrong twice — the tiles auto-fit and started laying themselves out three across instead
+   of one under the next, and the registers, capped a column at a time, were pushed apart by the
+   half-page tracks they sat in. One number above them settles both. */
+.models {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 52rem;
+}
+
+/* One column below the width where two stop being readable. */
+@media (max-width: 40rem) {
+    .models {
+        grid-template-columns: 1fr;
+    }
+}
+
+.model h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+/* Something went wrong and the page is saying what. */
+.alert {
+    background: var(--danger-ground);
+    border-left: 3px solid var(--danger);
+    border-radius: 2px;
+    color: var(--danger);
+    margin: 0 0 1.5rem;
+    max-width: 34rem;
+    padding: 0.6rem 0.75rem;
+}
+
+/* The one form on the settings page: a file picker and the button that sends it. */
+.upload {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0 0 2rem;
+    max-width: 34rem;
+    padding: 1rem;
+}
+
+    .upload label {
+        font-weight: 600;
+    }
+
+    .upload button {
+        align-self: flex-start;
+    }
+
+/* The line under or beside a control saying what it will do. Not scoped to the upload form it
+   started in: the refresh buttons carry one too, and they should read the same. */
+.hint {
+    color: var(--ink-soft);
+    font-size: var(--text-md);
+    margin: 0;
+}
+
+/* The refresh button and the line explaining what it does, on one row. Set apart from the block
+   above it, which it acts on rather than belongs to. */
+.refresh {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1.5rem;
+}
+
+/* The page worked, but not quite as asked. Neither an alert nor a notice: nothing failed and
+   nothing succeeded — the rows are real and one property of them is weaker than usual, which is
+   worth saying once and then getting out of the way. Hence the two buttons. */
+.caution {
+    background: var(--caution-ground);
+    border-left: 3px solid var(--caution-rule);
+    border-radius: 2px;
+    color: var(--caution-ink);
+    margin: 0 0 1.5rem;
+    max-width: 42rem;
+    padding: 0.6rem 0.75rem;
+}
+
+.caution p {
+    margin: 0;
+}
+
+/* Under the sentence rather than beside it, so a long explanation does not squeeze them. */
+.caution-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem !important;
+}
+
+/* Written as links rather than buttons: dismissing a note is not an action on the store, and a
+   pair of buttons here would carry the weight of the ones that upload and delete. */
+.caution-actions button {
+    background: none;
+    border: 0;
+    color: var(--caution-ink);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.caution-actions button:hover {
+    text-decoration: none;
+}
+
+/* Something went right and the page is saying so. */
+.notice {
+    background: var(--notice-ground);
+    border-left: 3px solid var(--notice-rule);
+    border-radius: 2px;
+    color: var(--notice-ink);
+    margin: 0 0 1.5rem;
+    max-width: 34rem;
+    padding: 0.6rem 0.75rem;
+}
+
+/* A narrow index beside the detail of whatever is picked out of it. Stacks below the width where
+   two columns stop being readable. */
+.panels {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+}
+
+@media (max-width: 40rem) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+.panel {
+    min-width: 0;
+}
+
+/* The index as a card, the same object every other surface on these pages is: the sheet's white
+   over the page's ground, carried by its rule and rounded to the same corner. It used to be a
+   bordered group with nothing behind it, so the page's grey showed through — a hole in the page
+   beside the white card of facts it drives, which was the one thing on these pages that did not
+   look like the rest of them.
+
+   The card is drawn on the panel rather than on the list inside it, because the list is no longer
+   the whole of it: a cap row names what is in the card the way a table's column headings name what
+   is under them, and the two have to sit inside one edge. */
+.panel-index {
+    /* As tall as the rows in it, rather than as tall as the panel beside it. A grid item stretches
+       to its row by default, which cost nothing while this column had no fill — and once it had
+       one, a list of three types beside a long panel of facts was a card with a hand's width of
+       empty sheet under its last row. */
+    align-self: start;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    /* The cap and the last row take the card's corners; without this their own backgrounds square
+       them off again. */
+    overflow: hidden;
+}
+
+    /* What the card holds and how much of it, in the voice a table's column headings are set in:
+       the same ground, size, weight and letter-spacing, so a reader meets one kind of caption
+       across these pages. It also gives the column a top edge to line up with the heading of the
+       panel beside it, which a list starting straight into its first row had nothing to align. */
+    .panel-index .index-cap {
+        background: var(--sunk);
+        border-bottom: 1px solid var(--rule);
+        color: var(--ink-soft);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        margin: 0;
+        padding: 0.5rem 1rem;
+        text-transform: uppercase;
+    }
+
+/* One type to a row, divided by rules, with what addresses it folded under its own row. The border
+   and the radius belong to the card now; the list only has to be a list. */
+.panel-index > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .panel-index > ul > li + li {
+        border-top: 1px solid var(--rule);
+    }
+
+    /* The whole group of the type being shown on the right, so an open row and what is folded under
+       it are marked as one block rather than only its first line.
+
+       A tint of the accent rather than the page's ground, which is what this used to take: on a
+       card that is now white, the page's grey made the row the reader had chosen the dullest one in
+       the list — the selection read as a dent rather than as a choice. Written against the accent's
+       channels so it is the same colour as the bar beside it at every strength, and so the dark
+       theme gets a light veil over a dark card rather than a colour that has to be picked twice. */
+    .panel-index > ul > li.current {
+        background: rgb(var(--accent-rgb) / 0.07);
+        box-shadow: inset 0.2rem 0 0 var(--accent);
+    }
+
+    /* The row that names a type, whether it stands alone or opens what is under it. The padding a
+       table's outermost cells take, so a name here starts on the same line a value in the card
+       beside it does. */
+    .panel-index .index-row {
+        display: block;
+        min-width: 0;
+        padding: 0.5rem 0.75rem 0.5rem 1rem;
+        text-decoration: none;
+    }
+
+    /* A veil of the page's own ink rather than a fixed grey: the dark theme turns the ink light,
+       and a row lifts off a dark card there for the same reason it settles into a light one. It
+       used to be the page's ground, which on a white card is the hole this stopped being. */
+    .panel-index summary:hover,
+    .panel-index .index-row:hover {
+        background: rgb(var(--ink-rgb) / 0.045);
+    }
+
+    .panel-index summary {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        /* Both defaults off: Firefox draws its marker through list-style, Safari through its own
+           pseudo-element, and the caret below is drawn where the row can spare the room. */
+        list-style: none;
+    }
+
+    .panel-index summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .panel-index summary .index-row {
+        flex: 1;
+    }
+
+    /* The disclosure caret, on the far side of the row from the name and outside the link: what is
+       under the row is opened here, and the name beside it still selects the type. Drawn the same
+       way the header menu's is, so a caret means one thing across the site. Set to finish on the
+       card's own padding, so the carets run down a line the values in the card opposite are set
+       against, and in the faint ink rather than the soft: it is the quietest thing on the row. */
+    .panel-index summary::after {
+        border-left: 0.3rem solid transparent;
+        border-right: 0.3rem solid transparent;
+        border-top: 0.3rem solid var(--ink-faint);
+        content: "";
+        flex: none;
+        height: 0;
+        margin: 0 1rem 0 0.25rem;
+        width: 0;
+    }
+
+    .panel-index details[open] > summary::after {
+        transform: rotate(180deg);
+    }
+
+    /* Broken mid-word if it has to be: the column is narrow, a bound name is as long as it is, and
+       it is the only thing on the row to give the width to.
+
+       Set in the page's ink rather than the accent. A column of nine bold violet names was the
+       loudest thing on a page whose tables set every value in plain ink, and it is the navigation
+       rather than the reading — so the list now says which one is being read the way the tabs above
+       the panel do, by marking the current one and leaving the rest alone. */
+    .panel-index .index-name {
+        color: var(--ink);
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    /* The one being read: the accent it is marked by, at the weight that used to be on all of
+       them. It is the brightest row in the card, which is what a selection should be. */
+    .panel-index > ul > li.current .index-name {
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    /* The promise a link makes on the way to being clicked. The current row is already this
+       colour, so nothing about it changes under the pointer. */
+    .panel-index .index-row:hover .index-name {
+        color: var(--accent);
+    }
+
+    /* What a row can be loaded by, as rows of the same group, set quieter than the name above them
+       because they are what one row leads to and not another thing to pick from the list. Divided
+       off from that name by a rule held back from both edges: it separates the two halves of one
+       type, and a full-width rule here would be read as the end of the type itself. */
+    .panel-index .index-links {
+        border-top: 1px solid var(--rule);
+        list-style: none;
+        margin: 0 0.75rem 0 1rem;
+        padding: 0.25rem 0 0.35rem;
+    }
+
+        /* Stepped in from the name above it, so what is folded under a row reads as being under
+           that row rather than as more rows of the list. */
+        .panel-index .index-links a {
+            align-items: center;
+            color: var(--ink-soft);
+            display: flex;
+            font-size: var(--text-sm);
+            gap: 0.4rem;
+            overflow-wrap: anywhere;
+            padding: 0.3rem 0.25rem 0.3rem 0.5rem;
+            text-decoration: none;
+        }
+
+        /* Not a background, which the current group already has: it would be the row's only mark
+           there and would say nothing. */
+        .panel-index .index-links a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        /* The mark that says what kind of place the row leads to — the same one drawn on the tile
+           that enters it from the section page, so a store's mark met once is met again here. It
+           replaced a magnifier that stood for looking at data and was drawn nowhere else on the
+           site; the six section marks are the set the application has, and this is one of them.
+
+           Sized against the small text it sits in rather than against a tile's prose, and held off
+           the ink's weight so the mark stays behind the name it fronts. */
+        .panel-index .index-links .glyph {
+            color: var(--ink-faint);
+            flex: none;
+            height: 0.95rem;
+            width: 0.95rem;
+        }
+
+        .panel-index .index-links a:hover .glyph {
+            color: var(--accent);
+        }
+
+.panel-detail h2 {
+    font-size: var(--text-xl);
+    margin: 0 0 1rem;
+}
+
+/* One subject read several ways, with the row of names on top and one of them showing. Every tab is
+   an ordinary link and the view is carried in the address, so the set works with no script, each
+   view can be linked to, and the browser's back button steps between them. Global rather than
+   scoped to the page that first grew them, because a second page wants the same row. */
+.tabs {
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 1.5rem 0;
+}
+
+    .tabs a {
+        /* Drawn on every tab, transparent until one is current, so the row does not shift by two
+           pixels as the underline moves along it. The negative margin sits it on the rule below
+           rather than under it. */
+        border-bottom: 2px solid transparent;
+        color: var(--ink-soft);
+        display: block;
+        font-size: var(--text-md);
+        font-weight: 600;
+        margin-bottom: -1px;
+        padding: 0.5rem 0.875rem;
+        text-decoration: none;
+    }
+
+    .tabs a:hover {
+        color: var(--accent);
+    }
+
+    .tabs a:focus-visible {
+        border-radius: 2px 2px 0 0;
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+    }
+
+    /* The one being read, marked by the attribute that says so — the same one the breadcrumb ends
+       on, because a tab here is a place the reader is rather than a control they toggled. */
+    .tabs a[aria-current] {
+        border-bottom-color: var(--accent);
+        color: var(--ink);
+    }
+
+/* Given focus so a jump from the pager lands in it, rather than because anyone tabbed to it — the
+   ring would be pointing at a whole panel the reader did not choose. */
+.tab-panel:focus {
+    outline: none;
+}
+
+    /* A panel's opening line is a caption for what is under it, so it runs to the same width rather
+       than to the narrower measure prose is set in elsewhere: a description ending short of a table
+       it describes reads as a different column. */
+    .tab-panel .lede {
+        max-width: none;
+    }
+
+    /* Name beside value rather than above it: the facts about a stored model are read by scanning
+       the labels for one of them, and a column of labels is quicker to run down than a list that
+       alternates. The label column takes the width of its longest label and the value column the
+       rest, so the values line up whatever they are.
+
+       Set on the card the tables are set on, and out of the same two tones: the label takes the
+       ground a column heading takes, the value the ground a data row takes. The tab beside this
+       one holds a table, and a reader stepping between them should be reading one kind of surface
+       rather than two — what changes is that the headings run down the side rather than across the
+       top, because each row here is one fact rather than one record.
+
+       The cell grounds are clipped to the corners rather than each outer cell carrying a radius of
+       its own: this is a grid, not a table, so the container can do it in one line. */
+    .tab-panel .facts {
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+        /* The padding a table's cells carry, including the extra the outermost ones take for the
+           card's own edge — the label column is the first and the value column the last. */
+        .tab-panel .facts dt,
+        .tab-panel .facts dd {
+            border-bottom: 1px solid var(--rule);
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .tab-panel .facts dt {
+            background: var(--sunk);
+            color: var(--ink-soft);
+            font-size: var(--text-2xs);
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            padding-left: 1rem;
+            text-transform: uppercase;
+        }
+
+        .tab-panel .facts dd {
+            font-size: var(--text-md);
+            padding-right: 1rem;
+        }
+
+            /* Still prose rather than a stored value, but at the size of the cell it sits in: the
+               larger size the stacked layout gave it read as a heading once the value had a ground
+               of its own. */
+            .tab-panel .facts dd .missing {
+                font-size: inherit;
+            }
+
+            /* A note set beside a value — how a boundary's tags combine, beside the tags — the same
+               way the tables that list stored rows set one. Spaced here rather than by a space in
+               the markup, which a conditional block swallows. */
+            .tab-panel .facts dd .hint {
+                font-size: inherit;
+                margin-left: 0.5rem;
+            }
+
+        /* The last row's rule and the card's bottom edge are the same line drawn twice. */
+        .tab-panel .facts dt:last-of-type,
+        .tab-panel .facts dd:last-of-type {
+            border-bottom: 0;
+        }
+
+    /* Too narrow for two: a boundary naming several tags would be left wrapping in a few
+       characters' worth of column. Back to the label above its value, at the same width the page
+       already decides two columns have stopped being readable. The banding stays — a full-width
+       tinted label with its value under it still says where one fact ends and the next begins. */
+    @media (max-width: 40rem) {
+        .tab-panel .facts {
+            display: block;
+        }
+
+            .tab-panel .facts dt {
+                padding-right: 1rem;
+            }
+
+            .tab-panel .facts dd {
+                padding-left: 1rem;
+            }
+    }
+
+    /* A second section inside a panel. The tab names the first, so only what follows it needs a
+       name of its own. */
+    .tab-panel h3 {
+        font-size: var(--text-md);
+        letter-spacing: 0.02em;
+        margin: 2rem 0 0.5rem;
+        text-transform: uppercase;
+    }
+
+    /* The line under a heading belongs to it, so it keeps the heading's own spacing rather than
+       opening a gap of its own. */
+    .tab-panel h3 + .lede {
+        margin-top: 0;
+    }
+
+/* Label above value, so a long type name has the width to itself. */
+.facts {
+    margin: 0;
+}
+
+    .facts dt {
+        color: var(--ink-soft);
+        font-size: var(--text-sm);
+    }
+
+    /* Every value read the same way, whatever it happens to be. A boundary, a date and a count are
+       all things the store said, and setting only some of them in monospace made those look like a
+       different kind of fact from the rest. */
+    .facts dd {
+        font-family: var(--mono);
+        font-size: var(--text-sm);
+        margin: 0.1rem 0 0.75rem;
+        overflow-wrap: anywhere;
+    }
+
+        /* The <code> wrappers stay where a value really is code. They just no longer set a size of
+           their own, which is what made those values smaller than their neighbours. */
+        .facts dd code {
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* Not a value but a note saying there is none, so it reads as prose rather than as
+           something the store wrote. */
+        .facts dd .missing {
+            font-family: var(--font);
+            font-size: var(--text-lg);
+        }
+
+.plain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .plain li {
+        padding: 0.2rem 0;
+    }
+
+/* What an event carries, in the cell that lists it: one property to a line, and the shape of a
+   value of the domain's own under the line that holds it. No markers, because these are the parts
+   of a type rather than points in an argument. */
+.carried {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .carried li {
+        padding: 0.1rem 0;
+    }
+
+    /* A level under a property steps in and hangs off a rule. Nothing here discloses — there is no
+       caret and nothing to click — so the indent is doing all the work of saying what belongs to
+       what, and the rule is what keeps it readable once a name is long enough to wrap. */
+    .carried .carried {
+        border-left: 1px solid var(--rule);
+        margin: 0.1rem 0 0.2rem 0.15rem;
+        padding-left: 0.6rem;
+    }
+
+        /* Softer the further in it goes, so the event's own properties stay the ones the eye lands
+           on and what is inside them reads as detail rather than as more of the same list. */
+        .carried .carried > li {
+            color: var(--ink-soft);
+        }
+
+
+/* Nothing to show, and the page saying why rather than leaving a gap. */
+.missing {
+    color: var(--ink-soft);
+    margin: 0;
+}
+
+/* Values read back out of the store, one row each. */
+/* The card the stored data is read on.
+   ----------------------------------------------------------------------------------------------
+   The filter row, the table and the pager are three pieces of one object, and on every page that
+   has them they are already what they need to be: adjacent children of <main>. So the card is
+   drawn from that run rather than by wrapping fourteen pages in a div — each piece paints the
+   surface and its own left and right edge, the first of the run adds the top and the last adds the
+   bottom, and whichever pieces a page happens to have close up into one shape.
+
+   Two of the shared edges are kept rather than dropped, because they are dividers a reader wants:
+   under the filter row, and above the pager. Controls and the data they act on are different
+   things sharing a card. They are kept by never taking those borders off in the first place — an
+   earlier attempt put them back afterwards and lost, because naming the filter row as form.search
+   inside these lists raised every rule here by a type selector and quietly outranked the rules
+   meant to override them. Hence .search rather than form.search below: every member is one class,
+   so the weights here stay flat and predictable.
+
+   No member of this run may need a :has() to identify it, either — a :has() inside a :has() is
+   invalid and fails by silently matching nothing. */
+:is(.search, .table-header, .grid, .instances, .table-footer) {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    margin: 0;
+}
+
+    /* Not the first of the run, so the corners go. The top border goes with them for every piece
+       except the pager, which keeps it as the line under the data. */
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.search, .table-header, .grid, .instances, .table-footer) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.search, .table-header, .grid, .instances) {
+        border-top: 0;
+    }
+
+    /* Not the last of the run, so those corners go. The bottom border goes with them for every
+       piece except the filter row, which keeps it as the line above the data. */
+    :is(.search, .table-header, .grid, .instances, .table-footer):has(+ :is(.search, .table-header, .grid, .instances, .table-footer)) {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    :is(.table-header, .grid, .instances, .table-footer):has(+ :is(.search, .table-header, .grid, .instances, .table-footer)) {
+        border-bottom: 0;
+    }
+
+    /* A header cell paints its own ground, and a background is a rectangle. Where a table is the
+       first piece of the run it has the card's rounded top corners, and the outermost heading
+       covered them: the border was still being drawn, with the tint sitting square over it. So the
+       outer heading cells carry the same corners. 7px rather than 8 because a cell reaches the
+       table's padding box, one border in from the outside. */
+    :is(.grid, .instances) thead tr:first-child > :first-child {
+        border-top-left-radius: 7px;
+    }
+
+    :is(.grid, .instances) thead tr:first-child > :last-child {
+        border-top-right-radius: 7px;
+    }
+
+    /* Not the first of the run, so the table's own top corners are already square and the cells
+       follow them back. */
+    :is(.search, .table-header, .grid, .instances, .table-footer) + :is(.grid, .instances) thead tr:first-child > * {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+/* The pieces that are not tables carry their own padding; a table's belongs to its cells, below. */
+:is(.search, .table-header, .table-footer) {
+    padding: 0.75rem 1rem;
+}
+
+/* The filter row is where the table is acted on rather than part of what it holds, so it is set
+   back onto the chrome tone. The tint does the separating a single rule cannot: a line says
+   "next section", a change of ground says "different kind of thing".
+
+   Declared here rather than beside the rest of .search below, because it has to come after the
+   card's own background: the run paints every piece --surface, and this is the one piece that is
+   not. Its margin was removed down there for the mirror-image reason — the run sets margin: 0 and
+   the later rule was quietly putting a 1.25rem gap back, prising the card in two. */
+.search {
+    background: var(--sunk);
+}
+
+/* Space under the card, since the pieces themselves no longer carry margins. */
+:is(.search, .table-header, .grid, .instances, .table-footer):not(:has(+ :is(.search, .table-header, .grid, .instances, .table-footer))) {
+    margin-bottom: 1.5rem;
+}
+
+.grid {
+    /* Separate rather than collapse so the card's corners can be rounded — a collapsed table draws
+       its cell borders straight through a radius. The cells set only a bottom border, so nothing
+       doubles up for having stopped collapsing. */
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+    .grid th,
+    .grid td {
+        border-bottom: 1px solid var(--rule);
+        /* Even on both sides. It used to be 0.75rem right and nothing left, which put the whole
+           gap between two columns on one side of it and left every value flush against its own
+           edge — and made this table's spacing disagree with the other one's. */
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    /* The card's own padding, carried by the outermost cells: a table fills its container edge to
+       edge, so without this the first column sat against the left border and the last against the
+       right. */
+    .grid tr > :first-child {
+        padding-left: 1rem;
+    }
+
+    .grid tr > :last-child {
+        padding-right: 1rem;
+    }
+
+    /* The last row's rule and the card's bottom edge are the same line drawn twice. */
+    .grid tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    .grid th {
+        background: var(--sunk);
+        color: var(--ink-soft);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    /* Stored data, at the size and in the face stored data is read at. Left unset, a cell
+       inherited the page's prose size and every table was built of 16px rows under 13px headings.
+       The face is set on the cell rather than on the few values wrapped in <code>, because a row
+       held an id in one face and the date beside it in another, and a reader scanning down a table
+       should not be told that a position and a timestamp are different kinds of thing. */
+    .grid td {
+        font-family: var(--mono);
+        font-size: var(--text-md);
+        overflow-wrap: anywhere;
+    }
+
+    /* A note set beside a value in a cell — how a boundary's tags combine, beside the tags. Spaced
+       here rather than by a space in the markup, which a conditional block swallows. Both tables
+       that list stored rows want it, so both name it. */
+    .grid .hint,
+    .instances .hint {
+        margin-left: 0.5rem;
+    }
+
+    /* A property of a value another property holds, on its own row under the row that holds it.
+       Stepped in rather than set apart: the type column has to stay where the eye is already
+       running down it, and a rule across the row or a table of its own would read as a second
+       table starting. Softer as well, so the type's own properties stay the ones being listed and
+       these read as what is inside one of them.
+
+       Three steps because the describer unfolds three deep. Anything deeper shares the last step
+       rather than marching off the page. */
+    .grid .under-1 td,
+    .grid .under-2 td,
+    .grid .under-3 td {
+        color: var(--ink-soft);
+    }
+
+        .grid .under-1 td:first-child {
+            padding-left: 2rem;
+        }
+
+        .grid .under-2 td:first-child {
+            padding-left: 3rem;
+        }
+
+        .grid .under-3 td:first-child {
+            padding-left: 4rem;
+        }
+
+    /* A column whose cells are one mark each rather than values read along a line. Centred heading
+       and all: there is no left edge for the eye to run down, so a mark left-aligned under a word
+       sat off to one side of its own column. The left padding is named because the right is the
+       card's own, which the last column already takes — without it the marks would be centred in a
+       box that is a quarter of a rem wider on one side than the other. */
+    .grid .marked {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        text-align: center;
+    }
+
+    /* A row's one link, drawn as a glyph, padded so the target stays bigger than the mark inside
+       it. */
+    .grid .icon-link {
+        align-items: center;
+        border-radius: 3px;
+        color: var(--ink-soft);
+        display: inline-flex;
+        justify-content: center;
+        margin: -0.25rem 0;
+        padding: 0.25rem;
+    }
+
+        .grid .icon-link:hover {
+            color: var(--accent);
+        }
+
+        .grid .icon-link:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        /* The section mark standing alone as a row's whole link. Sized in ems so it follows the
+           row's own text rather than a fixed pixel, and larger than the em it replaces: the marks
+           are drawn inset in a 20-unit box where the magnifier filled a 16-unit one, so at the same
+           box size this would have come out a third smaller than the mark it took over from. */
+        .grid .icon-link .glyph {
+            flex: none;
+            height: 1.2em;
+            width: 1.2em;
+        }
+
+/* What one event carries, as the pairs it is made of: a name and the value it names, one to a line.
+   Global rather than scoped to the page that first grew it, because a payload is a payload. */
+.pairs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .pairs li {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.1rem 0;
+    }
+
+    /* The name, set back so the values it labels are what the eye lands on. */
+    .pairs .pair-name {
+        color: var(--ink-soft);
+    }
+
+        /* The colon belongs to the pair, not to the name, so it is drawn rather than typed — a
+           value copied out of the cell then comes away without it. */
+        .pairs .pair-name::after {
+            content: ":";
+        }
+
+    .pairs .pair-value {
+        overflow-wrap: anywhere;
+    }
+
+    /* A value with a shape inside it: what is inside goes under the name holding it rather than
+       beside it, so a payload of several shapes is still scanned a name at a time. Given the whole
+       width of the line it sits on, because the line is a flex row and a list left to sit in it
+       would be squeezed in beside the name it belongs under. Stepped in behind the same hairline
+       the events tab of the aggregates page uses, so nesting looks the same wherever it is drawn. */
+    .pairs .pairs {
+        border-left: 1px solid var(--rule);
+        flex-basis: 100%;
+        margin: 0.1rem 0 0.2rem 0.15rem;
+        padding-left: 0.6rem;
+    }
+
+/* The table of stored events, wherever it is drawn: on its own page, or on the events tab of a
+   model folded from them. Its columns are declared rather than measured, because a folded payload
+   is the width of "3 values" and an opened one is the width of what it holds — left to size itself,
+   the table would step sideways every time a row was opened, and the columns a reader was running
+   down would move out from under them. Declared, a payload opens downwards and nothing else moves.
+
+   In parts of the width rather than in ems, so the columns keep their proportions at any width and
+   the sum cannot overflow the page. The three to the left are as wide as what they hold: a
+   position, a date, and a bound name carrying its own version. What is left over is the payload's,
+   because it is the column with something to open. */
+.grid.events {
+    table-layout: fixed;
+}
+
+    /* Where in the log a row sits, counted across the whole of it on the DCB side and within one
+       stream on the streamed side. One width for both, because it is one column under two names:
+       left unnamed, the streamed one collapsed to the width of a digit and its heading ran out
+       under the column beside it. */
+    .grid.events .col-position,
+    .grid.events .col-sequence {
+        width: 10%;
+    }
+
+    .grid.events .col-appended {
+        width: 17%;
+    }
+
+    .grid.events .col-type {
+        width: 24%;
+    }
+
+    .grid.events .col-payload {
+        width: 49%;
+    }
+
+/* The same table with the tags the log wrote each row under, which only the log's own page has: a
+   model's events tab is already inside one boundary, so a tag column there would repeat the heading
+   above it on every row. Its own modifier for that reason — the proportions above are the four
+   columns' and stay theirs, rather than being re-split for a column three of the four tables that
+   use them do not draw. What the tags need is taken from the type and the payload in roughly equal
+   measure: a bound name is the width of a name, and the payload is still the column with the room. */
+.grid.events.tagged .col-position {
+    width: 9%;
+}
+
+.grid.events.tagged .col-appended {
+    width: 15%;
+}
+
+.grid.events.tagged .col-type {
+    width: 20%;
+}
+
+.grid.events.tagged .col-tags {
+    width: 21%;
+}
+
+.grid.events.tagged .col-payload {
+    width: 35%;
+}
+
+/* The same table with the stream and the store's own key in front of it, so the columns above keep
+   the proportions the DCB log is read in and this one is not made to share them. What the extra
+   columns need comes mostly out of the payload: that is the column with room to spare, being the
+   one that opens downwards. The version is not among them — it is said inside the type's name. */
+.grid.events.streamed .col-stream {
+    width: 15%;
+}
+
+.grid.events.streamed .col-id {
+    width: 17%;
+}
+
+.grid.events.streamed .col-sequence {
+    width: 9%;
+}
+
+.grid.events.streamed .col-appended {
+    width: 14%;
+}
+
+.grid.events.streamed .col-type {
+    width: 14%;
+}
+
+.grid.events.streamed .col-payload {
+    width: 31%;
+}
+
+/* The snapshots table, declared the same way the log's is and for a different reason: nothing here
+   opens, so the columns are declared to keep the two pages that use it — aggregates and projections
+   — reading identically however wide or narrow the ids in them happen to be.
+
+   Divided by what each column holds rather than into seven roughly equal parts, which is how it
+   started and what made a row a row and a half tall: a timestamp is a fixed width and broke over
+   two lines at a twelfth of the table, and a bound name is the longest thing here — the projections
+   page lists a CustomerOrderHistory addressed by a CustomerOrderHistoryId, and both wrapped where
+   an aggregate's shorter names had not. The two names get the most, the dates get what a timestamp
+   measures, and the ids and the count get what is left. */
+.grid.snapshots {
+    table-layout: fixed;
+}
+
+    .grid.snapshots .col-stream {
+        width: 13%;
+    }
+
+    .grid.snapshots .col-id {
+        width: 11%;
+    }
+
+    /* What a row was folded into and what addressed it: bound names, and the longest values on the
+       page. */
+    .grid.snapshots .col-type,
+    .grid.snapshots .col-identifier {
+        width: 19%;
+    }
+
+    /* A count of a few digits, and the narrowest column here for it. */
+    .grid.snapshots .col-version {
+        width: 6%;
+    }
+
+    .grid.snapshots .col-date {
+        width: 16%;
+    }
+
+/* A payload folded into its cell, so a page of the log is a page of rows rather than a wall of
+   pairs. Closed unless the address says otherwise, and opened one row at a time or all at once from
+   the control above the table. */
+.payload > summary {
+    align-items: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    gap: 0.35rem;
+    /* Both defaults off: Firefox draws its marker through list-style, Safari through its own
+       pseudo-element, and the caret below is drawn where the cell wants it. */
+    list-style: none;
+}
+
+    .payload > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .payload > summary:hover {
+        color: var(--accent);
+    }
+
+    .payload > summary:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* The disclosure caret, in front of what it opens rather than across the cell from it: a table
+       cell is as wide as its column and the far side of it is nowhere in particular. Drawn the same
+       way the index list's and the header menu's are, so a caret means one thing across the site. */
+    .payload > summary::before {
+        border-left: 0.3rem solid transparent;
+        border-right: 0.3rem solid transparent;
+        border-top: 0.3rem solid currentColor;
+        content: "";
+        flex: none;
+        height: 0;
+        width: 0;
+    }
+
+.payload[open] > summary::before {
+    transform: rotate(180deg);
+}
+
+/* Set under the line that opened it rather than tight against it, so the pairs read as what is
+   inside the fold. */
+.payload > .pairs {
+    margin-top: 0.25rem;
+}
+
+    /* A sortable heading: the whole label is the control, so the target is the width of the word. */
+    .grid th a {
+        align-items: center;
+        color: var(--ink-soft);
+        display: inline-flex;
+        gap: 0.35rem;
+        text-decoration: none;
+    }
+
+    .grid th a:hover {
+        color: var(--accent);
+    }
+
+    .grid th a:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    .grid th[aria-sort] a {
+        color: var(--ink);
+    }
+
+/* The pager and the pickers around a table. Global rather than scoped to the page that first grew
+   them, because a second table wants the same ones and two copies would drift apart. */
+
+/* Which way the rows run, in the same shape as the menu caret. */
+.arrow {
+    border-left: 0.25rem solid transparent;
+    border-right: 0.25rem solid transparent;
+    height: 0;
+    width: 0;
+}
+
+.arrow.up {
+    border-bottom: 0.28rem solid currentColor;
+}
+
+.arrow.down {
+    border-top: 0.28rem solid currentColor;
+}
+
+/* The line under the table, at the end the reader leaves from. No margin of its own: it sits inside
+   the footer, which already holds itself off the table, and a second one would both double that gap
+   and drop the pager below the picker it shares the line with. */
+.pagination {
+    align-items: center;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--text-md);
+    /* Tight, so the whole strip reads as one control rather than as three groups of words with
+       room between them. The numbers inside carry the same gap. */
+    gap: 0.25rem;
+}
+
+    /* A pager is a row of controls, not a sentence with links in it, so the underline a link
+       carries by default comes off. The border and the fill are what say these are pressable. */
+    .pagination a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    /* The words at either end, given the same edge as the numbers between them. Left bare they
+       were a sentence with a row of buttons in the middle of it. Only the direct children, so the
+       numbers inside .pages are not caught twice. */
+    .pagination > a {
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        line-height: 1;
+        /* The same width the numbers are held to, so a chevron and a page number are the same box.
+           A chevron is narrower than a digit, and left to fit its glyph the ends of the strip came
+           out visibly smaller than everything between them. Flex items, so a min-width lands
+           without a display of their own. */
+        min-width: 1.75rem;
+        /* One value, so the space inside a control is the same on every side of it. */
+        padding: 0.4rem;
+        text-align: center;
+    }
+
+    .pagination > a:hover {
+        background: var(--ground);
+        border-color: var(--field-rule);
+    }
+
+    .pagination > a:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+    /* Not one of the controls, so it keeps the room the strip gave up. */
+    .pagination .page-count {
+        margin-left: 0.75rem;
+    }
+
+/* The numbers between the ends. A list, marked up as the sequence it is and stripped of the marker
+   and indent a list carries by default; the gap between the numbers is smaller than the one between
+   the words either side of them, so the strip reads as one thing rather than as ten. */
+.pages {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    /* Every number the same width whatever it is, so the strip does not breathe in and out as a
+       reader crosses from single digits into double and the page under it stays where it was. */
+    .pages a,
+    .pages .current {
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        display: block;
+        line-height: 1;
+        /* The width the box is held to whatever digits are in it — a separate question from the
+           padding, which is one value so the space inside is even on all four sides. */
+        min-width: 1.75rem;
+        padding: 0.4rem;
+        text-align: center;
+    }
+
+    .pages a:hover {
+        background: var(--ground);
+        border-color: var(--field-rule);
+    }
+
+    .pages a:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+    /* Where the reader is. Filled rather than merely bolder: it is the one thing in the strip that
+       is not somewhere to go, and it has to be findable at a glance from across the row. */
+    .pages .current {
+        background: var(--accent);
+        color: var(--on-fill);
+        font-weight: 600;
+    }
+
+    /* The way out of this group of ten. Quieter than the numbers beside it — it is not a page, it
+       is the rest of them — and set in the soft ink the ends of the pager are written in. */
+    .pages .group {
+        color: var(--ink-soft);
+        letter-spacing: 0.05em;
+    }
+
+/* How far through the table this is. One phrase, so a narrow footer wraps the pager around it
+   rather than breaking it after the word "of". */
+.page-count {
+    white-space: nowrap;
+}
+
+.table-footer {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* What is above a table, in the same shape as what is below it: something said about the whole
+   table at one end, and a control over it at the other. Aligned on the first line rather than the
+   middle, because the count beside it is a sentence and may wrap to two. */
+/* The strip above the table holding whatever acts on the whole of it — today just the fold
+   control. It was two things at opposite ends, the count on the left and the fold on the right,
+   and space-between put them there. The count has gone up under the page title, so the one thing
+   left is held to the end it was already at rather than sliding across to fill the gap. */
+.table-header {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+    /* Whatever this line follows — a row of tabs, a filter form — has already set how far below it
+       the table's opening line sits, so the line adds nothing of its own on top. It is a flex row,
+       so the margin the lede carries everywhere else cannot collapse into that spacing and stacked
+       on it instead. Only the top goes: the space under still holds the line off the table. */
+    .table-header .lede {
+        margin-top: 0;
+    }
+
+/* Opens or closes every folded cell in the table at once. Quiet, because it acts on how the table
+   is looked at rather than on what is in it, and the rows are still folded one at a time. */
+.fold-all {
+    align-items: center;
+    color: var(--ink-soft);
+    display: inline-flex;
+    flex: none;
+    font-size: var(--text-md);
+    gap: 0.35rem;
+    text-decoration: none;
+}
+
+    /* Pushed to the far end of the filter row. It is the one control there that does not narrow the
+       table — everything to its left says which rows, and this says how much of each to show — so
+       it sits apart from them rather than in the queue. */
+    .search .fold-all {
+        margin-left: auto;
+    }
+
+    .fold-all:hover {
+        color: var(--accent);
+    }
+
+    .fold-all:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+/* How many rows a table is read at: a label and a select, wherever the choice is offered. Under a
+   table it is a small GET form putting the size in the address; on the settings page it is the
+   stored preference itself, with no form around it. The same choice either way, so it is drawn the
+   same way either way and written here once. */
+.page-size {
+    align-items: center;
+    color: var(--ink-soft);
+    display: flex;
+    font-size: var(--text-md);
+    gap: 0.5rem;
+}
+
+    /* The two ends of the footer, and which is which. The picker leads and the pager is held to the
+       far end — reversed from the markup's own order, which puts the pager first because that is
+       what a reader tabs to first. Ordered here rather than reordered in the markup so the reading
+       order stays the useful one. Written as order and an auto margin rather than space-between: a
+       table of one page draws no pager at all, and space-between would slide the picker across to
+       where the reader has learnt to look for one. */
+    .table-footer .page-size {
+        margin-left: 0;
+        order: -1;
+    }
+
+    .table-footer .pagination {
+        margin-left: auto;
+    }
+
+    .page-size select {
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .page-size select:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+    /* The submit button the picker falls back to without scripting. Sized to the select it
+       stands next to rather than to the page's buttons, so the row keeps one height. */
+    .page-size button {
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
+        border-radius: 4px;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .page-size button:hover {
+        border-color: var(--ink-soft);
+    }
+
+    .page-size button:focus-visible {
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
+        outline: none;
+    }
+
+/* The table of stored instances a list page shows, and the filter box above it. Taken from the
+   Ecommerce DCB example's products table so the two read as one system, and global rather than
+   scoped to the page that first grew it: aggregates and projections are listed the same way, and
+   two copies of this would drift apart. Named rather than left as a bare `table`, so the .grid
+   tables on the other pages are not caught by it.
+
+   The sort arrows, the pager and the rows-per-page picker are above, with the rest of the furniture
+   the detail pages share. */
+.instances {
+    /* Separate, for the same reason .grid is: the card around it has rounded corners. */
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+    .instances th {
+        background: var(--sunk);
+        border-bottom: 1px solid var(--rule);
+        font-size: var(--text-2xs);
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        /* Even top and bottom now the row is a filled band rather than a line of text over a rule;
+           with no padding above it the labels sat against the top of their own tint. */
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+    }
+
+    /* The whole heading is the control, so the target is the width of the label. */
+    .instances th a {
+        align-items: center;
+        color: var(--ink-soft);
+        display: inline-flex;
+        gap: 0.35rem;
+        text-decoration: none;
+    }
+
+    .instances th a:hover {
+        color: var(--accent);
+    }
+
+    .instances th a:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    .instances th[aria-sort="ascending"] a,
+    .instances th[aria-sort="descending"] a {
+        color: var(--ink);
+    }
+
+    .instances th.numeric a {
+        flex-direction: row-reverse;
+    }
+
+    /* The same size and face the other table reads at, so the two list pages match. */
+    /* The same cell as .grid's: same face, same size, same padding, so the two list pages are one
+       table in two places rather than two tables that look nearly alike. */
+    .instances td {
+        border-bottom: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: var(--text-md);
+        padding: 0.5rem 0.75rem;
+    }
+
+    .instances tr > :first-child {
+        padding-left: 1rem;
+    }
+
+    .instances tr > :last-child {
+        padding-right: 1rem;
+    }
+
+    /* As in .grid: the last rule and the card's bottom edge would otherwise be drawn twice. */
+    .instances tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    /* A name a person wrote, not something the store generated, so it keeps the page's voice. */
+    .instances .name {
+        font-family: var(--font);
+        font-weight: 600;
+    }
+
+    /* A count rather than a value read along a line, so it is set against the column's right edge
+       and its digits are held to one width. Both tables name it, like .hint above: a version means
+       the same thing on the DCB pages and the streamed ones, and was left-aligned on one of them
+       for want of this. */
+    .instances .numeric,
+    .grid .numeric {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
+/* Nothing stored yet, said in the space the table would have filled. */
+.empty {
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    color: var(--ink-soft);
+    margin: 0;
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+/* The filter field and the button that submits it. The button is the shared .quiet, so it is the
+   size of every other button on a form rather than one this page invented; the field's padding is
+   set to match it, so the two are the same height. */
+.search {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+}
+
+    .search input[type="search"] {
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        font-size: var(--text-md);
+        padding: 0.5rem 0.625rem;
+        width: 18rem;
+    }
+
+    .search input[type="search"]:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+    .search input[type="search"]::placeholder {
+        color: var(--ink-faint);
+    }
+
+    .search a {
+        color: var(--ink-soft);
+        font-size: var(--text-md);
+    }
+
+    /* Narrowing by choosing from a list rather than by typing. Cut to the same height as the field
+       beside it in the other filter rows, so a page that narrows one way and a page that narrows
+       the other put their tables at the same place. */
+    .search label {
+        color: var(--ink-soft);
+        font-size: var(--text-md);
+    }
+
+    .search select {
+        background: var(--surface);
+        border: 1px solid var(--field-rule);
+        border-radius: 4px;
+        color: var(--ink);
+        font: inherit;
+        font-size: var(--text-md);
+        padding: 0.5rem 0.625rem;
+    }
+
+    .search select:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+        outline: none;
+    }
+
+/* The whole row is the link. The anchor fills its cell so there is no dead space between the
+   text and the cell edge, and the padding moves off the cell onto the anchor to make that so.
+
+   Both tables that list stored rows, because both of them open one: the DCB pages list into
+   .instances and the streamed pages into .grid, and a row that leads somewhere should not look like
+   a row of links in one and a row of text in the other. Named rather than left to the first table
+   that grew it — without this a linked cell fell back to the page's own anchor, and a table came
+   out as a block of underlined accent-coloured values. */
+:is(.instances, .grid) tr.clickable td {
+    padding: 0;
+}
+
+    /* The anchor carries the cell's padding, so it has to carry exactly the cell's padding — the
+       same 0.5rem/0.75rem an ordinary row uses, or a table of links and a table of plain values
+       would sit at different heights. */
+    :is(.instances, .grid) tr.clickable td a {
+        color: inherit;
+        display: block;
+        padding: 0.5rem 0.75rem;
+        text-decoration: none;
+    }
+
+:is(.instances, .grid) tr.clickable:hover td {
+    background: var(--ground);
+}
+
+    :is(.instances, .grid) tr.clickable:hover td:first-child a {
+        color: var(--accent);
+    }
+
+    /* Only the first cell's link is focusable, so it carries the focus ring for the row. */
+    .instances tr.clickable td a:focus-visible {
+        box-shadow: inset 0 0 0 2px var(--accent);
+        outline: none;
+    }
+
+/* And the card's own edge on the outermost columns, for the same reason: these were zero from when
+   the table ran to the page's edge and had no card around it to stand clear of. Left at zero the
+   first column's text sat against the card's left border while every other row's cleared it. */
+.instances tr.clickable > :first-child a {
+    padding-left: 1rem;
+}
+
+.instances tr.clickable > :last-child a {
+    padding-right: 1rem;
+}

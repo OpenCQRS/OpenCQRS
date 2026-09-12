@@ -1,7 +1,11 @@
 # Install the store schema
 
-The Entity Framework Core store needs three tables: `events`, `DomainAggregates`, and
+The Entity Framework Core store needs three tables: `DomainEvents`, `DomainAggregates`, and
 `DomainProjections`. This guide covers getting them into a database, whichever way you manage schema.
+
+> **`DomainEvents` is new in 1.9.0.** Before that the event table was called `events`. A database
+> created by an earlier version needs the rename applied before an upgraded application runs against
+> it — see [Upgrade to 1.9.0](upgrade-1.9.0.md).
 
 You do not need to write a migration by hand either way.
 
@@ -26,8 +30,8 @@ If your context adds entities of its own, they appear in the same migration — 
 For databases managed with DbUp, Flyway, by a DBA, or by hand, run the install script for your
 engine:
 
-- [`scripts/install/1.7.0-install-sqlserver.sql`](../../scripts/install/1.7.0-install-sqlserver.sql)
-- [`scripts/install/1.7.0-install-postgresql.sql`](../../scripts/install/1.7.0-install-postgresql.sql)
+- [`scripts/install/1.9.0-install-sqlserver.sql`](../../scripts/install/1.9.0-install-sqlserver.sql)
+- [`scripts/install/1.9.0-install-postgresql.sql`](../../scripts/install/1.9.0-install-postgresql.sql)
 
 Both are safe to run more than once: every object is guarded, so a re-run adds only what is missing.
 Both assume the default table names and the default schema (`dbo` on SQL Server, `public` on
@@ -77,5 +81,6 @@ same comparison, plus the collation of their two `Tag` columns.
 ## Related
 
 - [Entity Framework Core configuration](../reference/configuration/ef-core.md)
+- [Upgrade to 1.9.0](upgrade-1.9.0.md)
 - [Upgrade to 1.7.0](upgrade-1.7.0.md)
 - [Upgrade to 1.5.0](upgrade-1.5.0.md)

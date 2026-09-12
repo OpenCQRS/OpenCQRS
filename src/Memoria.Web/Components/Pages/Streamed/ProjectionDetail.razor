@@ -1,0 +1,1049 @@
+@page "/streamed/projections/detail"
+@using Memoria.Web.Extensibility
+@using Microsoft.AspNetCore.WebUtilities
+@inject DomainTypeRegistry Types
+@inject IStreamedReads Store
+@inject Memoria.Web.Data.StoreCapabilities Capabilities
+@inject NavigationManager Navigation
+
+<PageTitle>@Heading @Title</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed">Streamed</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed/projections">Projections</a>
+    <span aria-hidden="true">/</span>
+    @* The list this row was opened from, narrowed to the projection and the identifier that address
+       it, so the step back arrives where the click came from. Neither of those is a crumb of its
+       own: they are what the list is filtered by rather than places above this one. *@
+    <a href="@BackToList">Data</a>
+    <span aria-hidden="true">/</span>
+    @* What the page is, rather than which row reached it. The trail says where this sits; the
+       heading and the stream below it say which one is open, and the browser tab still carries the
+       id so two of these are told apart where they have to be. *@
+    <span aria-current="page">Detail</span>
+</nav>
+
+@if (Projection is null || StreamId is null || StoreId is null)
+{
+    <h1>@Heading</h1>
+    <p class="alert" role="alert">
+        That address names no projection this application knows about. It may have been replaced by a
+        later upload — start again from <a href="streamed/projections/data">projections</a>.
+    </p>
+}
+else
+{
+    @* Named as every list here names a type: what it is bound as, and the version of that
+       binding. Two versions of one name are two projections, and the heading has to say which. *@
+    <h1>@Heading</h1>
+
+    @* The store failing to answer for the projection at all, which leaves both the facts and the
+       state without their values — so it is said once, above the tabs, rather than in each. *@
+    @if (Error is not null)
+    {
+        <p class="alert" role="alert">@Error</p>
+    }
+
+    @* Views of one projection, switched by the address rather than by script: each tab is a link,
+       so a view can be linked to and gone back to, and the page stays statically rendered like the
+       rest of them. Marked with aria-current for the same reason the breadcrumb is — these are
+       places to go, not scripted tabs, so they say so in the language of navigation. The three that
+       read come first and the one that writes comes last, and it is only there when the store the
+       tool was pointed at can be written to. *@
+    <nav class="tabs" aria-label="Projection views">
+        <a id="tab-@InfoTab" href="@TabLink(InfoTab)"
+           aria-current="@(Tab == InfoTab ? "page" : null)">Info</a>
+        <a id="tab-@StateTab" href="@TabLink(StateTab)"
+           aria-current="@(Tab == StateTab ? "page" : null)">State</a>
+        <a id="tab-@EventsTab" href="@TabLink(EventsTab)"
+           aria-current="@(Tab == EventsTab ? "page" : null)">Events</a>
+        @if (Capabilities.CanUpdate)
+        {
+            <a id="tab-@UpdateTab" href="@TabLink(UpdateTab)"
+               aria-current="@(Tab == UpdateTab ? "page" : null)">Update</a>
+        }
+    </nav>
+
+    @* Each panel is named by the tab that reaches it, so the label is written once and a reader
+       arriving by fragment is told which of them they landed in. *@
+    @if (Tab == InfoTab)
+    {
+        <section class="tab-panel" aria-labelledby="tab-@InfoTab">
+            @if (Stored is null)
+            {
+                <p class="empty">
+                    No snapshot is stored at that address. Nothing has been written for this
+                    projection in this stream, or it was written under another id.
+                </p>
+            }
+            else
+            {
+                <dl class="facts">
+                                        @* Which identifier writes ids of that shape, if any of the registered ones do.
+                       A fact about the types rather than about the row — the store keeps the id an
+                       identifier produced and not the identifier — which is why it is said here
+                       rather than left to look like something the row carries. *@
+                    <dt>Identifier</dt>
+                    <dd>
+                        @if (Identifier is { } identifier)
+                        {
+                            <code>@identifier.Name</code>
+                        }
+                        else
+                        {
+                            <span class="missing">nothing registered writes ids of this shape</span>
+                        }
+                    </dd>
+
+                    @* The values behind that id, listed the way the DCB pages list the tags a
+                       boundary was stored under: what addresses this one instance rather than what
+                       names its type. The store keeps the id an identifier produced and not what it
+                       was given, so these are read back out of the id rather than off the row. *@
+                    <dt>Filter</dt>
+                    <dd>
+                        @if (Values is { Count: > 0 })
+                        {
+                            <code>@ValueText</code>
+                        }
+                        else if (Values is not null)
+                        {
+                            @* An identifier taking nothing names one thing, and its id is the same
+                               id every time. Nothing was recovered because nothing went in. *@
+                            <span class="missing">that identifier takes none</span>
+                        }
+                        else
+                        {
+                            <span class="missing">could not be read back out of that id</span>
+                        }
+                    </dd>
+                    
+                    <dt>Stream Id</dt>
+                    <dd><code>@Stored.StreamId</code></dd>
+
+                    @* What the store filed it under, then the id inside that key: the version the
+                       store joins on is the type's, not the model's, and a reader matching this
+                       page against the row they clicked wants the whole key. *@
+                    <dt>Id</dt>
+                    <dd><code>@Stored.StoreId</code></dd>
+
+                    <dt>Model type</dt>
+                    @* The key the row was written under, said the way a version is said rather than
+                       as the store joins it. Read off the row rather than off the type: this block
+                       is the store's account of the write. *@
+                    <dd><code>@DomainTypeDescriber.LabelOfKey(Stored.Type)</code></dd>
+
+                    @* Both off the row rather than out of the payload: the store's account of the
+                       write, not the model's own state. The version is the stored one, so a
+                       snapshot left behind while later events accumulate reads lower here than
+                       folding the stream would give — and the sequence below says how far along the
+                       stream that fold stopped. *@
+                    <dt>Version</dt>
+                    <dd>@Stored.Version</dd>
+
+                    <dt>Latest event sequence</dt>
+                    <dd>@Stored.Sequence</dd>
+
+                    <dt>Created</dt>
+                    <dd>@Stored.Created.ToLocalTime().ToString("g")</dd>
+
+                    @* Audit is a store concern the application may leave switched off, so a row
+                       nobody is named against is an ordinary row rather than a broken one. *@
+                    <dt>Created by</dt>
+                    <dd>
+                        @if (Stored.CreatedBy is {Length: > 0} createdBy)
+                        {
+                            @createdBy
+                        }
+                        else
+                        {
+                            <span class="missing">not attributed</span>
+                        }
+                    </dd>
+
+                    <dt>Updated</dt>
+                    <dd>@Stored.Updated.ToLocalTime().ToString("g")</dd>
+
+                    <dt>Updated by</dt>
+                    <dd>
+                        @if (Stored.UpdatedBy is {Length: > 0} updatedBy)
+                        {
+                            @updatedBy
+                        }
+                        else
+                        {
+                            <span class="missing">not attributed</span>
+                        }
+                    </dd>
+                </dl>
+            }
+        </section>
+    }
+    else if (Tab == StateTab)
+    {
+        <section class="tab-panel" aria-labelledby="tab-@StateTab">
+            @if (Error is not null)
+            {
+                @* Said above the tabs already; nothing to add here but the absence. *@
+                <p class="missing">There is no state to show.</p>
+            }
+            else if (Stored is null)
+            {
+                @* Only the snapshots table is read, so this says nothing about the events: a stream
+                   can hold events that have never been folded into a row, and there would still be
+                   nothing to show here. *@
+                <p class="empty">
+                    No snapshot is stored at that address. Nothing has been written for this
+                    projection in this stream, or it was written under another id.
+                </p>
+            }
+            else if (Unreadable is not null)
+            {
+                @* The row is there and its payload will not open. Its own line rather than the page
+                   alert above, which is the store failing to answer at all. *@
+                <p class="alert" role="alert">@Unreadable</p>
+            }
+            else if (State.Count == 0)
+            {
+                <p class="missing">It declares no properties of its own.</p>
+            }
+            else
+            {
+                @* The same rows the types page lists the projection's shape in, with the column this
+                   page has something to put in. *@
+                <table class="grid">
+                    <thead>
+                    <tr>
+                        <th scope="col">Property</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @StateRows((State, 0))
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+    else if (Tab == EventsTab)
+    {
+        @* Narrowed to what this projection applies and to what its identifier claims, which is the
+           pair the store itself folds through — so the count here agrees with the version on the
+           info tab. Shown whether or not a snapshot was found: the events are in the stream either
+           way, and a stream holding events with no snapshot written over them is worth seeing.
+
+           Focusable as well as linkable: a fragment scrolls the panel into view, and the negative
+           tabindex means the browser moves focus to it too, so tabbing on from a pager link carries
+           on inside the table rather than from the top of the document. *@
+        <section class="tab-panel" id="@EventsAnchor" tabindex="-1" aria-labelledby="tab-@EventsTab">
+            @* What the rows below are, and are not. An identifier that could not be rebuilt leaves
+               the stream narrowed by type alone, which on a stream several models share is a wider
+               history than this one's — said here rather than left to be inferred from a count that
+               does not match the version. *@
+            @if (Identifier is null)
+            {
+                <p class="caution" role="status">
+                    Nothing registered writes ids of this shape, so these are every event of the
+                    types this projection applies. If other models share this stream, some of these
+                    are theirs.
+                </p>
+            }
+            else if (Claim is null)
+            {
+                <p class="caution" role="status">
+                    <code>@Identifier.Name</code> could not be rebuilt from this id, so these are
+                    every event of the types this projection applies rather than only the ones it
+                    claims.
+                </p>
+            }
+
+            @if (Events.Error is not null)
+            {
+                <p class="alert" role="alert">@Events.Error</p>
+            }
+            else if (Events.Total == 0 && !IsNarrowed)
+            {
+                @* Nothing found and nothing there are two different answers. This is the second:
+                   the history is empty, so there is nothing for a filter row to narrow and none is
+                   drawn. A narrowed table that matched nothing is answered below, where the row
+                   that narrowed it is still there to undo. *@
+                <p class="missing">This projection applies none of the events in this stream.</p>
+            }
+            else
+            {
+                @* The whole count, not this page's worth: the pager says which page, and what a
+                   reader wants beside it is how much there is to page through. *@
+                @if (Events.Total > 0)
+                {
+                    <p class="lede">@EventSummary</p>
+                }
+
+                @* Above the table, because it says what the table holds. Its own GET form, like the
+                   rows-per-page picker under the table: the narrowing is a link to a narrower
+                   history, so it belongs in the address bar where it can be bookmarked, shared and
+                   gone back to. Everything that addresses the projection travels in hidden fields,
+                   along with the order and the fold, so narrowing does not silently reorder the
+                   table or shut its payloads. *@
+                <form class="search" method="get" action="streamed/projections/detail#@EventsAnchor">
+                    <label for="event">Event type</label>
+                    <select id="event" name="event" onchange="this.form.submit()">
+                        @* First and default, so a reader who has chosen nothing is looking at the
+                           whole history rather than at whichever type happened to be listed
+                           first. An empty value, which is what the address carries when nothing is
+                           narrowed to. *@
+                        <option value="" selected="@Choice.IsAll">All</option>
+                        @foreach (var applied in EventTypes)
+                        {
+                            <option value="@(applied.FullName)" selected="@(applied == Choice.Chosen)">
+                                @DomainTypeDescriber.LabelOf(applied)
+                            </option>
+                        }
+                    </select>
+
+                    @* Beside the type rather than under it, because the two narrow the same list: a
+                       type is what the log wrote a row under, and this is what the row itself
+                       carries. The payload and nothing else — a history is short enough to run an
+                       eye down the sequences of, so the box is left to the thing a reader only half
+                       remembers. *@
+                    <label class="visually-hidden" for="text">Filter by payload</label>
+                    <input id="text" type="search" name="text" value="@Text"
+                           placeholder="Filter by payload" autocomplete="off"/>
+
+                    @Addressing
+                    <input type="hidden" name="tab" value="@EventsTab"/>
+                    <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                    <input type="hidden" name="size" value="@PageSize"/>
+                    @if (PayloadsOpen)
+                    {
+                        <input type="hidden" name="payloads" value="@Open"/>
+                    }
+                    <button type="submit" class="quiet">Filter</button>
+                    @if (IsNarrowed)
+                    {
+                        <a href="@ClearLink">Clear</a>
+                    }
+
+                    @* Held to the right-hand end of the filter row, with the other controls that
+                       act on the whole table. Opens or closes every payload on the page at once. A
+                       link rather than a control with script behind it, like the order and the page
+                       beside it: the state lives in the address, so a page opened out can be linked
+                       to and gone back to, and the rows stay foldable one at a time either way. *@
+                    <a class="fold-all" href="@FoldLink">
+                        @(PayloadsOpen ? "Collapse all" : "Expand all")
+                        <span class="arrow @(PayloadsOpen ? "up" : "down")" aria-hidden="true"></span>
+                    </a>
+                </form>
+
+                @if (Events.OrderingNotice is not null)
+                {
+                    @* Beside the rows rather than instead of them: the page worked, and this says
+                       how well it could be ordered. Rendered for everyone and taken away afterwards
+                       by the browser that was told to. See wwwroot/preferences.js. *@
+                    <div class="caution" role="status" data-notice="ordering">
+                        <p>@Events.OrderingNotice</p>
+                        <p class="caution-actions">
+                            <button type="button" data-notice-close>Close</button>
+                            <button type="button" data-notice-hide>Don't show this again</button>
+                        </p>
+                    </div>
+                }
+
+                @if (Events.Total == 0)
+                {
+                    <p class="empty">
+                        @* Nothing matched, and why is worth saying: a name in the address that
+                           reaches nothing, a type the log could never have written, text that is
+                           there to retype, or a type this history simply holds none of. The two
+                           about the type come first — with either of them the text was never asked
+                           about, so blaming it would send a reader to retype something that was not
+                           the problem. *@
+                        @if (Choice.Unknown)
+                        {
+                            <text>That event is not among the types this projection applies.</text>
+                        }
+                        else if (Choice.Unbound)
+                        {
+                            @* Applied, offered, and impossible to have stored: without an
+                               [EventType] there is no key to write it under. *@
+                            <text>
+                                It carries no <code>[EventType]</code>, so the log has never
+                                written one of these.
+                            </text>
+                        }
+                        else if (IsFiltered)
+                        {
+                            <text>No payload matches &ldquo;@Text&rdquo;.</text>
+                        }
+                        else
+                        {
+                            <text>This projection has folded no events of this type.</text>
+                        }
+                    </p>
+                }
+                else
+                {
+                    @* The stream is not a column: every row here is of the one stream named above
+                       the tabs. What is left is where the row sits in it, when it was appended,
+                       what it was written as and what it carried. *@
+                    <table class="grid events">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="col-sequence">Sequence</th>
+                            <th scope="col" class="col-appended" aria-sort="@(Descending ? "descending" : "ascending")">
+                                @* The only date these have, so the only thing there is to order them by. *@
+                                <a href="@EventsLink(!Descending, 1)">
+                                    Appended
+                                    <span class="arrow @(Descending ? "down" : "up")" aria-hidden="true"></span>
+                                </a>
+                            </th>
+                            @* What the log wrote the row under, as one name: the version is part of
+                               what a type is called rather than a fact beside it, and it is said
+                               only from the second version on. *@
+                            <th scope="col" class="col-type">Type</th>
+                            <th scope="col" class="col-payload">Payload</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var stored in Events.Events)
+                        {
+                            <tr>
+                                <td>@stored.Event.Position</td>
+                                <td>@stored.Event.Written.ToLocalTime().ToString("g")</td>
+                                @* Name and version as one, the way every list here names a type, so
+                                   a type met in a history and the same type met on its own page
+                                   read alike. A key the store wrote that cannot be taken apart is
+                                   left whole rather than half-read. *@
+                                <td><code>@DomainTypeDescriber.LabelOfKey(stored.Event.Type)</code></td>
+                                <td>
+                                    @if (stored.Event.Error is not null)
+                                    {
+                                        <span class="missing">@stored.Event.Error</span>
+                                    }
+                                    else if (stored.Event.State.Count == 0)
+                                    {
+                                        <span class="missing">It carries nothing of its own.</span>
+                                    }
+                                    else
+                                    {
+                                        @* Folded away, and closed to begin with: a payload is the
+                                           only cell tall enough to push the row about the event off
+                                           its own line, and a history is read by running down the
+                                           sequences and the types first. *@
+                                        <details class="payload" open="@PayloadsOpen">
+                                            @* How much is under it, so a closed row still says
+                                               whether opening it is worth it. *@
+                                            <summary>@Held(stored.Event.State.Count)</summary>
+
+                                            @Pairs(stored.Event.State)
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+
+                    <div class="table-footer">
+                        @* The pages as links, ten at a time. Links rather than a control, like the
+                           order and the fold: what the page is being read through is already in the
+                           address, so a link to another page carries all of it without a form
+                           having to hold a copy of each. *@
+                        <Pager Page="Events.Page" TotalPages="Events.TotalPages"
+                               Href="@(page => EventsLink(Descending, page))"/>
+
+                        <form class="page-size" method="get" action="streamed/projections/detail#@EventsAnchor">
+                            <label for="size">Rows per page</label>
+                            <select id="size" name="size" onchange="this.form.submit()">
+                                @foreach (var option in InstanceQuery.PageSizes)
+                                {
+                                    <option value="@option" selected="@(option == PageSize)">@option</option>
+                                }
+                            </select>
+                            @Addressing
+                            <input type="hidden" name="tab" value="@EventsTab"/>
+                            <input type="hidden" name="dir" value="@(Descending ? "desc" : "asc")"/>
+                            @* The narrowing travels too: how many rows a table is read at is not a
+                               reason to widen it back to the whole history. *@
+                            @if (Choice.Chosen is { } chosen)
+                            {
+                                <input type="hidden" name="event" value="@chosen.FullName"/>
+                            }
+                            @if (IsFiltered)
+                            {
+                                <input type="hidden" name="text" value="@Text"/>
+                            }
+                            @if (PayloadsOpen)
+                            {
+                                <input type="hidden" name="payloads" value="@Open"/>
+                            }
+                            <noscript>
+                                <button type="submit">Apply</button>
+                            </noscript>
+                        </form>
+                    </div>
+                }
+            }
+        </section>
+    }
+
+    else if (Tab == UpdateTab)
+    {
+        @* The one write these pages offer, given a tab of its own so the three that read stay
+           reading. It is the seam the other three meet at: it takes what the events tab lists and
+           writes it into what the info and state tabs show. *@
+        <section class="tab-panel" aria-labelledby="tab-@UpdateTab">
+            @* The store folds a stream through an identifier and takes the things rather than the
+               ids they produced, so both have to be worked back out of this row before it can be
+               asked. Each half that could not be is its own answer: the ids are the store's, and a
+               row addressed by something no uploaded type describes is still the store's own row. *@
+            @if (Identity.Stream is null)
+            {
+                <p class="missing">
+                    Nothing registered writes stream ids of this shape, so there is nowhere to fold
+                    a snapshot from.
+                </p>
+            }
+            else if (Identifier is null)
+            {
+                <p class="missing">
+                    Nothing registered writes ids of this shape, so there is nothing to address a
+                    snapshot with.
+                </p>
+            }
+            else if (Identity.Identifier is null)
+            {
+                <p class="missing">
+                    <code>@Identifier.Name</code> could not be rebuilt from this id, so there is
+                    nothing to address a snapshot with.
+                </p>
+            }
+            else
+            {
+                @* Above the button rather than beside it: on a tab of its own there is the width to
+                   read it as prose, and it says what pressing the button will do, so it comes
+                   first. *@
+                <p class="lede">
+                    Refreshes the stored snapshot: any events on the events tab that it has not
+                    applied yet are applied to it and the result is written back. A read model
+                    produces no events of its own, so the snapshot is the only thing this writes.
+                </p>
+
+                <form method="post" action="streamed/projections/update" class="refresh">
+                    <AntiforgeryToken/>
+                    @* The same three the reading forms carry, because they are what addresses the
+                       row: the type it was folded into, and the two ids the store keys it by. *@
+                    @Addressing
+                    @* Back to this tab, which is where the button was pressed and where the notice
+                       saying what it did is written. *@
+                    <input type="hidden" name="returnUrl" value="/@TabLink(UpdateTab)"/>
+                    <button type="submit" class="button">Update</button>
+                </form>
+
+                @* What the last press did, carried back on the address so it survives the redirect.
+                   Below the button rather than at the top of the page, so the answer is read where
+                   the question was asked. *@
+                @if (Message is not null)
+                {
+                    <p class="notice" role="status">@Message</p>
+                }
+                else if (RefreshError is not null)
+                {
+                    <p class="alert" role="alert">@RefreshError</p>
+                }
+            }
+        </section>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Which of the two streamed models this page reads, which is what tells the store which of its
+    /// two tables the row is in.
+    /// </summary>
+    private const StreamedModelKind Kind = StreamedModelKind.Projection;
+
+    private Type? Projection { get; set; }
+
+    /// <summary>
+    /// The stream the row was folded from, as the store holds it rather than as a type and the
+    /// values behind it.
+    /// </summary>
+    /// <remarks>
+    /// A page here is reached from a row that was shown, and that row carries the id. Asking for the
+    /// stream type and its values instead would be asking this page to work back to what it was
+    /// already told — and would leave a row whose stream no registered type claims unreachable,
+    /// which is exactly the row worth opening.
+    /// </remarks>
+    private string? StreamId { get; set; }
+
+    /// <summary>The key the row was written under, as <c>id:version</c>.</summary>
+    private string? StoreId { get; set; }
+
+    /// <summary>
+    /// The id an identifier produced inside that key, which is the half a pattern is held against.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the address rather than from the row, because the events tab wants it whether or
+    /// not a row was found: a stream can hold events no snapshot has been written over, and which
+    /// of them are this model's is still the identifier's answer.
+    /// </remarks>
+    private string? AddressedId =>
+        StoreId is null ? null : DomainTypeDescriber.SplitKey(StoreId).Name;
+
+    /// <summary>
+    /// The stream and the identifier this row came out of, worked back out of the two ids the store
+    /// keeps rather than read off it.
+    /// </summary>
+    /// <remarks>
+    /// Two tabs want it and each wants a different half: the events tab narrows the history by what
+    /// the identifier claims, and the update tab hands the pair to the store, which folds a stream
+    /// through an identifier and takes the things rather than the strings.
+    /// </remarks>
+    private StreamedIdentity Identity { get; set; } = StreamedIdentity.Unknown;
+
+    /// <summary>Which registered identifier writes ids of this row's shape, if any does.</summary>
+    private Type? Identifier => Identity.IdentifierType;
+
+    /// <summary>
+    /// What the identifier claims of its stream: the properties an event must carry to be this
+    /// model's, or null when there is no identifier to ask or it could not be rebuilt.
+    /// </summary>
+    /// <remarks>
+    /// Null and empty are different answers. Empty is an identifier that folds the whole stream,
+    /// which is how a model is written when it is the only one in there; null is not knowing, and
+    /// the events tab says so rather than passing a wider history off as this model's.
+    /// </remarks>
+    private IReadOnlyDictionary<string, string>? Claim => Identity.Claim;
+
+    /// <summary>
+    /// The values the identifier was built from, by the parameter that supplied each, or null when
+    /// they could not be read back out of the id.
+    /// </summary>
+    /// <remarks>
+    /// The streamed counterpart of the tags a DCB row is stored under, and shown the way they are:
+    /// the pair of ids on the rows above says where the row is, and these say what it was addressed
+    /// with. Null and empty are different answers — empty is an identifier that takes nothing to
+    /// name what it addresses, and null is an id nothing registered could read back.
+    /// </remarks>
+    private IReadOnlyDictionary<string, string>? Values => Identity.Values;
+
+    /// <summary>
+    /// Those values on one line, each named by the parameter that filled it.
+    /// </summary>
+    /// <remarks>
+    /// One line rather than a row each, the way a stream lists the values it is built from and a
+    /// boundary lists its tags: they are read together, because what addresses the row is the whole
+    /// set of them rather than a fact per value.
+    /// </remarks>
+    private string ValueText => Values is null
+        ? string.Empty
+        : string.Join(", ", Values.Select(value => $"{value.Key}: {value.Value}"));
+
+    private StoredStreamModel? Stored { get; set; }
+
+    private object? Loaded { get; set; }
+
+    /// <summary>Why the stored payload would not open, or null when it did.</summary>
+    private string? Unreadable { get; set; }
+
+    /// <summary>The store failing to answer at all, which is not the same as a payload it cannot read.</summary>
+    private string? Error { get; set; }
+
+    private IReadOnlyList<DomainPropertyValue> State { get; set; } = [];
+
+    private StoredStreamEvents Events { get; set; } =
+        new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+    /// <summary>
+    /// The event types this projection applies, or null when it applies everything in its stream.
+    /// What the store narrows the history by, and what the dropdown above the table offers.
+    /// </summary>
+    private Type[]? Applies { get; set; }
+
+    /// <summary>
+    /// The types the dropdown offers, which is what a name in the address is matched against.
+    /// </summary>
+    /// <remarks>
+    /// What the projection applies, because that is what its history is made of: offering a type it
+    /// folds none of would be a choice narrowing to an empty table every time. A projection that
+    /// applies everything has no such list of its own, so it offers every registered streamed
+    /// event — the same list the log's own page offers, and the widest thing its stream could hold.
+    /// </remarks>
+    private IReadOnlyList<Type> EventTypes => Applies ?? Types.Current.StreamedEvents;
+
+    /// <summary>
+    /// Which of the history's events are being looked at: all of them, one type, or neither because
+    /// the name in the address reaches nothing this projection applies.
+    /// </summary>
+    private TypeChoice Choice { get; set; } = new(Chosen: null, Unknown: false);
+
+    private string? Text { get; set; }
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(Text);
+
+    /// <summary>
+    /// Whether the table is narrowed at all, either way. What tells an empty table apart from an
+    /// empty history — and what says whether there is anything for a Clear link to undo.
+    /// </summary>
+    private bool IsNarrowed => !Choice.IsAll || IsFiltered;
+
+    /// <summary>
+    /// A stream reads as a history, so it starts at the beginning until the column is clicked. The
+    /// list of projections starts newest first instead, because a list is scanned rather than read
+    /// through.
+    /// </summary>
+    private bool Descending { get; set; }
+
+    private int PageSize { get; set; } = InstanceQuery.DefaultPageSize;
+
+    /// <summary>
+    /// The page the address asks for, which the events tab may not have read — kept apart from
+    /// <see cref="StoredStreamEvents.Page"/>, the page actually landed on once the total is known.
+    /// </summary>
+    private int Page { get; set; } = 1;
+
+    /// <summary>
+    /// Whether every payload on the events tab starts open. Closed unless the address says
+    /// otherwise: a history is read by running down the sequences and the types, and the payloads
+    /// are what is opened once something on a row is worth following.
+    /// </summary>
+    private bool PayloadsOpen { get; set; }
+
+    /// <summary>What the address says when the payloads are out.</summary>
+    private const string Open = "open";
+
+    /// <summary>
+    /// How much a folded payload has under it, so a closed row still says whether opening it is
+    /// worth it.
+    /// </summary>
+    private static string Held(int values) => values == 1 ? "1 value" : $"{values} values";
+
+    /// <summary>
+    /// The views the page offers, named as they appear in the address. Which one is showing is the
+    /// address's to say, so a view can be linked to, bookmarked, and gone back to.
+    /// </summary>
+    private const string InfoTab = "info";
+
+    private const string StateTab = "state";
+
+    private const string EventsTab = "events";
+
+    private const string UpdateTab = "update";
+
+    private string Tab { get; set; } = InfoTab;
+
+    /// <summary>
+    /// What the last refresh did. Named apart from <see cref="Error"/>, which is the store failing
+    /// to answer for the projection at all rather than a button failing to do its job.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "message")]
+    private string? Message { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? RefreshError { get; set; }
+
+    /// <summary>How far the table is narrowed to one type, in the words the count is counted in.</summary>
+    private string Of => Choice.IsAll ? string.Empty : $" of {Choice.Name}";
+
+    /// <summary>
+    /// How many events there are in all.
+    /// </summary>
+    /// <remarks>
+    /// Whose they are is not said. The heading, the stream and the tab above have already answered
+    /// that three times over. A table narrowed by what a row carries counts what matched, which is
+    /// not the same claim about what the projection is folded from — said the way the log's own page
+    /// says it, so a count means one thing across the two.
+    /// </remarks>
+    private string EventSummary => (Events.Total, IsFiltered) switch
+    {
+        (1, false) => $"One event{Of}.",
+        (_, false) => $"{Events.Total} events{Of}.",
+        (1, true) => $"One matching event{Of}.",
+        (_, true) => $"{Events.Total} matching events{Of}."
+    };
+
+    /// <summary>
+    /// The anchor the events panel starts at, so paging and re-ordering land on the rows that
+    /// changed rather than at the top of a page whose first screen did not.
+    /// </summary>
+    private const string EventsAnchor = "events";
+
+    /// <summary>
+    /// Everything that addresses the row itself: the type it was folded into, and the two ids the
+    /// store keys it by. The view and the table's own state are appended by whatever varies them.
+    /// </summary>
+    private string Address =>
+        $"streamed/projections/detail?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
+        $"&stream={Uri.EscapeDataString(StreamId ?? string.Empty)}" +
+        $"&id={Uri.EscapeDataString(StoreId ?? string.Empty)}";
+
+    /// <summary>
+    /// The same three as the hidden fields a form has to carry to keep them. A form replaces the
+    /// whole query, so what is being read travels with it or filtering would land on no row at all.
+    /// </summary>
+    private RenderFragment Addressing => @<text>
+        <input type="hidden" name="type" value="@Projection?.FullName"/>
+        <input type="hidden" name="stream" value="@StreamId"/>
+        <input type="hidden" name="id" value="@StoreId"/>
+    </text>;
+
+    /// <summary>
+    /// One address for the whole page, carrying everything that addresses the row as well as the
+    /// state of the events table, so a link only changes what it means to change.
+    /// </summary>
+    /// <param name="tab">Which of the three views to show.</param>
+    /// <param name="descending">Whether the newest events come first.</param>
+    /// <param name="page">The events page to land on, from one.</param>
+    /// <param name="toTable">Whether to land at the events panel rather than at the top.</param>
+    /// <param name="open">Whether the payloads are out, or null to carry on as they are.</param>
+    /// <param name="clearEvent">Whether to widen back to every type the projection applies.</param>
+    /// <param name="clearText">Whether to drop the text a row had to carry.</param>
+    /// <remarks>
+    /// The payloads and the two narrowings are named only when they are made. Folded and unnarrowed
+    /// are what the table opens as, so a link to one is a link with nothing to say about them.
+    /// </remarks>
+    private string DetailLink(
+        string tab,
+        bool descending,
+        int page,
+        bool toTable = false,
+        bool? open = null,
+        bool clearEvent = false,
+        bool clearText = false) =>
+        $"{Address}&tab={tab}" +
+        $"&dir={(descending ? "desc" : "asc")}" +
+        $"&size={PageSize}" +
+        $"&page={page}" +
+        ((open ?? PayloadsOpen) ? $"&payloads={Open}" : string.Empty) +
+        (!clearEvent && Choice.Chosen is { } chosen
+            ? $"&event={Uri.EscapeDataString(chosen.FullName ?? chosen.Name)}"
+            : string.Empty) +
+        (!clearText && IsFiltered ? $"&text={Uri.EscapeDataString(Text!)}" : string.Empty) +
+        // Last, because everything after a fragment is part of it.
+        (toTable ? $"#{EventsAnchor}" : string.Empty);
+
+    /// <summary>
+    /// A tab, keeping the events table where it was left, so leaving the events tab and coming back
+    /// returns to the page and order it was read at rather than to the first one.
+    /// </summary>
+    private string TabLink(string tab) => DetailLink(tab, Descending, Page);
+
+    private string EventsLink(bool descending, int page, bool toTable = true) =>
+        DetailLink(EventsTab, descending, page, toTable);
+
+    /// <summary>
+    /// The table as it stands, with the payloads turned the other way. It stays on the page the
+    /// reader is on: this changes how the rows are looked at, not which of them are.
+    /// </summary>
+    private string FoldLink =>
+        DetailLink(EventsTab, Descending, Events.Page, toTable: true, open: !PayloadsOpen);
+
+    /// <summary>
+    /// One way back to the whole history, because that is the one thing a reader wants from here.
+    /// Back to the first page too, since the page they were on was a page of the narrowed table.
+    /// </summary>
+    private string ClearLink =>
+        DetailLink(EventsTab, Descending, page: 1, toTable: true, clearEvent: true, clearText: true);
+
+    /// <summary>
+    /// What the page is, for the heading and the title. Unlike the pages that list, this one is
+    /// about one stored model, so the heading is the name of that model rather than the name of a
+    /// section — and the bare word when the address names nothing that is registered.
+    /// </summary>
+    private string Heading =>
+        Projection is null ? "Projection" : DomainTypeDescriber.LabelOf(Projection);
+
+    /// <summary>
+    /// Which one, for the browser tab: the id it was addressed by, which is what tells two of these
+    /// apart where the heading cannot.
+    /// </summary>
+    private string Title => Stored?.AddressedId ?? string.Empty;
+
+    /// <summary>
+    /// Back to the list this row was opened from, narrowed the way it was: the projection, and the
+    /// identifier when one addresses it.
+    /// </summary>
+    private string BackToList =>
+        $"streamed/projections/data?type={Uri.EscapeDataString(Projection?.FullName ?? string.Empty)}" +
+        (Identifier is { } identifier ? $"&id={Uri.EscapeDataString(identifier.FullName ?? identifier.Name)}" : string.Empty);
+
+    /// <summary>
+    /// What the stored model holds, a row each, with the insides of any value one holds in rows
+    /// under it.
+    /// </summary>
+    /// <remarks>
+    /// The same rows the types page lists the type's shape in, with the column this page has
+    /// something to put in. A nested property keeps its own row so that its value stays under the
+    /// value column, which is the column a reader came to this page for.
+    /// </remarks>
+    private RenderFragment<(IReadOnlyList<DomainPropertyValue> Properties, int Depth)> StateRows =>
+        rows =>
+        @<text>
+            @foreach (var property in rows.Properties)
+            {
+                <tr class="@Under(rows.Depth)">
+                    <td>@property.Name</td>
+                    <td><code>@property.TypeName</code></td>
+                    @* A value holding a shape has nothing of its own to show — what it holds is on
+                       the rows below — so the cell is left as empty rather than as unread. *@
+                    <td>@(property.Value ?? (property.Children.Count > 0 ? string.Empty : "—"))</td>
+                </tr>
+
+                @if (property.Children.Count > 0)
+                {
+                    @StateRows((property.Children, rows.Depth + 1))
+                }
+            }
+        </text>;
+
+    /// <summary>
+    /// What one event carries, as the pairs it is made of, with a value that has a shape inside it
+    /// opened under the name that holds it.
+    /// </summary>
+    /// <remarks>
+    /// Draws itself, because a payload nests as deep as the describer read it. Inside a cell rather
+    /// than as rows, unlike <see cref="StateRows"/>: here the whole payload is one column of a row
+    /// about the event, so there are no columns of its own to keep anything lined up with.
+    /// </remarks>
+    private RenderFragment<IReadOnlyList<DomainPropertyValue>> Pairs => properties =>
+        @<ul class="pairs">
+            @foreach (var property in properties)
+            {
+                <li>
+                    <span class="pair-name">@property.Name</span>
+
+                    @if (property.Children.Count == 0)
+                    {
+                        <span class="pair-value">@(property.Value ?? "—")</span>
+                    }
+                    else
+                    {
+                        @* How many there are, when it is a list. A single shape says nothing here
+                           that the pairs under it do not say better. *@
+                        @if (property.Value is not null)
+                        {
+                            <span class="pair-value">@property.Value</span>
+                        }
+
+                        @Pairs(property.Children)
+                    }
+                </li>
+            }
+        </ul>;
+
+    /// <summary>
+    /// How far under something a row sits, as a class rather than a measurement, so how wide a step
+    /// is stays the stylesheet's to say. A row at the top is not under anything and carries none.
+    /// </summary>
+    private static string? Under(int depth) => depth == 0 ? null : $"under-{Math.Min(depth, 3)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+
+        string? Value(string name) =>
+            query.TryGetValue(name, out var found) ? found.LastOrDefault() : null;
+
+        // Matched against the ones the page has, so an unknown name in the address opens the one it
+        // opens with rather than a blank page — and so does the update tab against a store that has
+        // no write to offer, which is a view this page is not showing rather than an unknown one.
+        Tab = (Value("tab") ?? string.Empty).ToLowerInvariant() switch
+        {
+            StateTab => StateTab,
+            EventsTab => EventsTab,
+            UpdateTab when Capabilities.CanUpdate => UpdateTab,
+            _ => InfoTab,
+        };
+
+        // Matched against what is registered, so a name in the address can only ever reach a type
+        // this application already knows about. The two ids are not: they are the store's, and a
+        // row addressed by something no uploaded type describes is still the store's own row.
+        Projection = DomainTypeDescriber.Select(Types.Current.StreamedProjections, Value("type"));
+        StreamId = Value("stream") is { Length: > 0 } stream ? stream : null;
+        StoreId = Value("id") is { Length: > 0 } id ? id : null;
+
+        if (Projection is null || StreamId is null || StoreId is null)
+        {
+            return;
+        }
+
+        // The stream and the identifier behind the two ids the store keyed this row by, worked out
+        // before it is read: the events tab narrows by what the identifier claims, the update tab
+        // hands the pair to the store, and neither depends on a row being found.
+        Identity = StreamedIdentity.Of(Types.Current, Kind, Projection, StreamId, AddressedId);
+
+        var read = await Store.Model(new StreamedModelAddress(Kind, StreamId, StoreId));
+
+        Stored = read.Snapshot;
+        Error = read.Error;
+
+        if (Stored is not null)
+        {
+            var opened = ModelReader.Open(Projection, Stored.Data);
+
+            Loaded = opened.Model;
+            Unreadable = opened.Error;
+            State = Loaded is null ? [] : DomainTypeDescriber.ReadState(Loaded);
+        }
+
+        // Read once, because two things want it: the store, which narrows the history to these, and
+        // the dropdown above the table, which offers those same types to narrow that history by.
+        Applies = BoundaryEvents.AppliedBy(Projection, Loaded);
+
+        Descending = string.Equals(Value("dir"), "desc", StringComparison.OrdinalIgnoreCase);
+        PageSize = InstanceQuery.PageSizeOf(Value("size"));
+        Page = int.TryParse(Value("page"), out var asked) ? asked : 1;
+        PayloadsOpen = string.Equals(Value("payloads"), Open, StringComparison.OrdinalIgnoreCase);
+
+        // Only when they are the view being shown. The tab labels report no counts, so nothing on
+        // the other two needs the events read, and reading them anyway would cost the info and
+        // state tabs a count and a page of rows each to render nothing from.
+        if (Tab != EventsTab)
+        {
+            return;
+        }
+
+        // A name in the address is matched against what the projection applies, so it can only ever
+        // reach a type this history could hold.
+        Choice = TypeChoice.Of(EventTypes, Value("event"));
+        Text = Value("text");
+
+        // A choice with nothing to look for is not asked about. Its key is null, and null narrows
+        // to everything rather than to nothing — so asking would answer the name of one type with
+        // the whole history.
+        if (Choice.ShowsNothing)
+        {
+            Events = new StoredStreamEvents([], Total: 0, Page: 1, TotalPages: 1, Error: null);
+
+            return;
+        }
+
+        Events = await Store.Events(new StreamedEventFilter(
+            // The id itself as the pattern, which is a pattern matching one stream: this page is
+            // about a row that came out of that stream and no other.
+            StreamId,
+            Choice.Key,
+            Text,
+            Descending,
+            Page,
+            PageSize)
+        {
+            EventTypes = Keys(Applies),
+            Properties = Claim
+        });
+    }
+
+    /// <summary>
+    /// The keys the store wrote a set of types under, which is the only thing a row and a type have
+    /// in common. Null stays null: a model applying everything narrows by nothing.
+    /// </summary>
+    private static IReadOnlyList<string>? Keys(Type[]? types) =>
+        types is null
+            ? null
+            : [.. types.Select(type => DomainTypeDescriber.BindingOf(type)?.Key).OfType<string>()];
+
+}

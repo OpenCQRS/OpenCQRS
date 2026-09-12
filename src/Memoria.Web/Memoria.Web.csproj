@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Memoria\Memoria.csproj" />
+        <ProjectReference Include="..\Memoria.EventSourcing\Memoria.EventSourcing.csproj" />
+        <ProjectReference Include="..\Memoria.EventSourcing.Store.EntityFrameworkCore\Memoria.EventSourcing.Store.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\Memoria.EventSourcing.Dcb\Memoria.EventSourcing.Dcb.csproj" />
+        <ProjectReference Include="..\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore\Memoria.EventSourcing.Dcb.Store.EntityFrameworkCore.csproj" />
+        <!-- For the document types and container contract the Cosmos store writes. The tool reads
+             those documents with the same SDK rather than describing them a second time. -->
+        <ProjectReference Include="..\Memoria.EventSourcing.Store.Cosmos\Memoria.EventSourcing.Store.Cosmos.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+        <!-- Pinned ahead of the provider's transitive version, which carries GHSA-2m69-gcr7-jv3q. -->
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Memoria.Web.Tests" />
+    </ItemGroup>
+
+</Project>

@@ -68,13 +68,13 @@ public class SqlServerSchemaTests(SqlServerFixture fixture)
     public async Task UnboundedStringKeysBecomeTheProviderDefaultWidth() =>
         await WithFreshSchema(async dbContext =>
         {
-            var events = await ColumnMetadata.ReadAsync(dbContext, "events");
+            var events = await ColumnMetadata.ReadAsync(dbContext, "DomainEvents");
 
             using (new AssertionScope())
             {
                 // EventEntity.Id has no MaxLength, so SQL Server falls back to its default width for
                 // a string key: nvarchar(450), i.e. 900 bytes — exactly the clustered index limit,
-                // and PK_events spans this column alone.
+                // and PK_DomainEvents spans this column alone.
                 events["Id"].ToString().Should().Be("nvarchar(450)");
                 events["StreamId"].ToString().Should().Be("nvarchar(255)");
             }

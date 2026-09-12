@@ -1,0 +1,32 @@
+@page "/streamed/projections"
+
+<PageTitle>Streamed @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <a href="streamed">Streamed</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Projections</span>
+</nav>
+
+<h1>@Heading</h1>
+<p class="lede">
+    The streamed read models, and what has been stored of them.
+</p>
+
+<SectionTiles TypesHref="streamed/projections/types" DataHref="streamed/projections/data">
+    <TypesDetail>The read models the model declares, and what they are built from.</TypesDetail>
+    <DataDetail>The projections that have been stored, read one identifier at a time.</DataDetail>
+</SectionTiles>
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Projections";
+
+}

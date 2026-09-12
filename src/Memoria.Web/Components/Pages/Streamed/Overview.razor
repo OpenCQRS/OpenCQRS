@@ -1,0 +1,93 @@
+@page "/streamed"
+@using Memoria.Web.Extensibility
+@inject DomainTypeRegistry Types
+
+<PageTitle>Streamed @Heading</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="">Home</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Streamed</span>
+</nav>
+
+<h1>@Heading</h1>
+<p class="lede">
+    The types uploaded through <a href="settings">settings</a> that belong to the streamed model,
+    and the streams they are held in.
+</p>
+
+@* One tile a section, each the way into it and each the same shape — which is the shape the pages
+   under it are entered by too, so a reader crossing from here to a section meets the same tile
+   twice rather than two arrangements of the same four words. What the section holds is counted on
+   it: the same fact whichever of the pages under it you go on to open. *@
+<ul class="tiles">
+    <li>
+        <a href="streamed/events">
+            <SectionMark Kind="SectionKind.Events"/>
+            <span class="body">
+                <span class="name">Events</span>
+                <span class="detail">@Count(Catalogue.StreamedEvents.Count, "event") the model can apply.</span>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="streamed/aggregates">
+            <SectionMark Kind="SectionKind.Aggregates"/>
+            <span class="body">
+                <span class="name">Aggregates</span>
+                <span class="detail">
+                    @Count(Catalogue.StreamedAggregates.Count, "aggregate"), addressed by
+                    @Count(Catalogue.StreamedAggregateIds.Count, "identifier").
+                </span>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="streamed/projections">
+            <SectionMark Kind="SectionKind.Projections"/>
+            <span class="body">
+                <span class="name">Projections</span>
+                <span class="detail">
+                    @Count(Catalogue.StreamedProjections.Count, "projection"), addressed by
+                    @Count(Catalogue.StreamedProjectionIds.Count, "identifier").
+                </span>
+            </span>
+        </a>
+    </li>
+    @* Last of the four, and the one the DCB overview has no answer to: a boundary there is a query
+       over tags rather than a place events are kept. Nothing else is stored of a stream, so this
+       tile is the whole of the section and there are no pages under it. *@
+    <li>
+        <a href="streamed/streams">
+            <SectionMark Kind="SectionKind.Streams"/>
+            <span class="body">
+                <span class="name">Streams</span>
+                <span class="detail">@Count(Catalogue.StreamedStreamIds.Count, "stream") the events are held in.</span>
+            </span>
+        </a>
+    </li>
+</ul>
+
+@if (Catalogue.Count == 0)
+{
+    <p class="lede">
+        Nothing is registered yet. Upload a zip of assemblies on the
+        <a href="settings">settings</a> page.
+    </p>
+}
+
+@code {
+
+    /// <summary>
+    /// What the page is, for the heading and the title. One value for both, so they cannot drift
+    /// apart; the tab puts the section in front of it, because a tab is read away from the
+    /// breadcrumb that says which section this is.
+    /// </summary>
+    private const string Heading = "Overview";
+
+    private DomainTypeCatalogue Catalogue => Types.Current;
+
+    private static string Count(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+}

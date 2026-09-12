@@ -24,7 +24,23 @@ public static partial class DcbDbContextExtensions
     /// <summary>
     /// Gets the stored events inside a boundary, in position order.
     /// </summary>
-    private static Task<List<DcbEventEntity>> GetEventEntities(this IDcbDbContext dcbDbContext,
+    /// <param name="dcbDbContext">The context.</param>
+    /// <param name="query">The consistency boundary.</param>
+    /// <param name="eventTypeFilter">An optional filter on event type.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>The stored rows, oldest first.</returns>
+    /// <remarks>
+    /// The rows rather than the events, unlike <see cref="GetEvents"/>: a caller wanting to show or
+    /// audit a boundary needs each event's position, type binding key and append date, and those
+    /// belong to the log rather than to the payload, so deserialising loses them. It is public for
+    /// that reason and no other — a fold should ask for the events.
+    /// <para>
+    /// The whole boundary is read. There is no first-<c>n</c> variant because no read inside this
+    /// store wants one: a fold needs every event it is entitled to, and the position and date
+    /// overloads bound a boundary by where a caller already knows to look.
+    /// </para>
+    /// </remarks>
+    public static Task<List<DcbEventEntity>> GetEventEntities(this IDcbDbContext dcbDbContext,
         TagQuery query, Type[]? eventTypeFilter = null, CancellationToken cancellationToken = default) =>
         dcbDbContext.Inside(query)
             .ApplyEventTypeFilter(eventTypeFilter)
