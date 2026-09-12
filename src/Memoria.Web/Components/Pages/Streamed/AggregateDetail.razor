@@ -1284,6 +1284,35 @@ else
                 Aggregate, Identity, StreamId, Keys(Applies), Value("from"), Value("to")));
         }
 
+        // The info tab reports no counts either, but it does report the version, and a version only
+        // means something against the history behind it — so the one thing asked for here is how
+        // many events there are. A page of one, because the rows themselves are the events tab's;
+        // the total is the whole count whatever page is asked for, which is what is wanted.
+        //
+        // Only when the identifier's claim is known. Without it the stream is narrowed by type
+        // alone, which on a stream several models share counts events that are not this one's — and
+        // a warning that the row is behind a history it was never folded from would be worse than no
+        // warning. The events tab says as much above its table; here there is nothing to say.
+        if (Tab == InfoTab && Stored is not null && Claim is not null)
+        {
+            var history = await Store.Events(new StreamedEventFilter(
+                StreamPattern: StreamId,
+                EventType: null,
+                Text: null,
+                Descending: false,
+                Page: 1,
+                Size: 1)
+            {
+                EventTypes = Keys(Applies),
+                Properties = Claim
+            });
+
+            // A count that failed says nothing rather than nothing found: a stream the store could
+            // not read is not a stream holding no events, and either would leave the warning
+            // undrawn — but only one of them would be honest about it.
+            Lag = SnapshotLag.Of(Stored.Version, history.Error is null ? history.Total : null);
+        }
+
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
         // the other tabs needs the events read, and reading them anyway would cost the state and
         // json tabs a count and a page of rows each to render nothing from.
