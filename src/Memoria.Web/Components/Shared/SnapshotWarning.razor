@@ -1,0 +1,45 @@
+@using Memoria.Web.Extensibility
+
+@* The note beside a stored version saying that events have been appended since the row was
+   written. One component rather than a copy on each of the four detail pages: the same fact is
+   true of a streamed aggregate, a streamed projection, a DCB aggregate and a DCB projection, and a
+   reader who meets it on one of them should meet the same sentence and the same mark on the next.
+
+   Inline and beside the value it is about rather than a banner above the panel. What has come
+   apart is one number on one row, and a note at the top of the tab would leave a reader looking
+   down the list for which of a dozen facts it meant.
+
+   A caution in the page's own sense of the word: nothing failed and nothing is wrong with the row.
+   A snapshot is a fold of the history as it stood, and a history that has moved on since is the
+   ordinary working state of an event-sourced store rather than a fault in it. *@
+<span class="behind">
+    @* Built to the box, stroke and linecap every other mark here is built to, so a warning beside a
+       value is drawn at the weight of the marks beside the headings. Hidden from screen readers:
+       the sentence after it says what it means, and read out it would be the same thing twice. *@
+    <svg class="glyph" viewBox="0 0 20 20" aria-hidden="true" focusable="false"
+         fill="none" stroke="currentColor" stroke-width="1.6"
+         stroke-linecap="round" stroke-linejoin="round">
+        @* A triangle with a mark in it, which is the one drawing that reads as a warning without a
+           word beside it. *@
+        <path d="M10 3.4 17.6 16.6H2.4z"/>
+        <path d="M10 8.2v3.4"/>
+        @* A zero-length stroke with a round cap, which is how the rest of this set would draw a
+           dot. *@
+        <path d="M10 14.2h.01"/>
+    </svg>
+    @Lag.Text
+</span>
+
+@code {
+
+    /// <summary>How far behind the stored row is, and the sentence that says so.</summary>
+    /// <remarks>
+    /// A lag rather than the two numbers it is worked out from: whether there is anything to warn
+    /// about is <see cref="SnapshotLag.Of"/>'s answer, so a page that has one of these has already
+    /// established that it has something to say — and this draws it without deciding it again.
+    /// </remarks>
+    [Parameter]
+    [EditorRequired]
+    public SnapshotLag Lag { get; set; } = new(Version: 0, Events: 0);
+
+}

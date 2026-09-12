@@ -149,7 +149,17 @@ else
                     <dd><code>@DomainTypeDescriber.LabelOfKey(Stored.ModelType)</code></dd>
 
                     <dt>Version</dt>
-                    <dd>@Stored.Version</dd>
+                    <dd>
+                        @Stored.Version
+
+                        @* Said where the number it is about is read, and only when the two have come
+                           apart: a version below the count of the events the aggregate applies is a
+                           row the log has moved on from since it was written. *@
+                        @if (Lag is { } lag)
+                        {
+                            <SnapshotWarning Lag="lag"/>
+                        }
+                    </dd>
 
                     <dt>Latest position</dt>
                     <dd>@Stored.LatestPosition</dd>
@@ -658,6 +668,17 @@ else
     private StoredEvents Events { get; set; } = new([], Total: 0, Page: 1, TotalPages: 1, Error: null);
 
     /// <summary>
+    /// How far the stored version has fallen behind the events the aggregate applies, or null when
+    /// it has not, when there is no row to say it of, or when the history could not be counted.
+    /// </summary>
+    /// <remarks>
+    /// Worked out for the info tab alone, which is the only tab with anywhere to say it: the others
+    /// are a fold of the same row, the text it was written from, and the history itself, and a count
+    /// read for them would be a round trip spent on something none of them draws.
+    /// </remarks>
+    private SnapshotLag? Lag { get; set; }
+
+    /// <summary>
     /// The event types this aggregate applies, or null when it applies everything inside its
     /// boundary. What the store selects the history on, and what the dropdown above the table offers.
     /// </summary>
@@ -1100,9 +1121,31 @@ else
         PayloadsOpen = string.Equals(
             Values.GetValueOrDefault("payloads"), Open, StringComparison.OrdinalIgnoreCase);
 
+        // The info tab reports no counts either, but it does report the version, and a version only
+        // means something against the history behind it — so the one thing asked for here is how
+        // many events there are. A page of one, because the rows themselves are the events tab's;
+        // the total is the whole count whatever page is asked for, which is what is wanted.
+        if (Tab == InfoTab && Stored is not null)
+        {
+            var history = await BoundaryEvents.Load(
+                StoreContext,
+                aggregateId.Boundary,
+                Applies,
+                eventType: null,
+                text: null,
+                descending: false,
+                page: 1,
+                size: 1);
+
+            // A count that failed says nothing rather than nothing found: a boundary the store could
+            // not read is not a boundary holding no events, and either would leave the warning
+            // undrawn — but only one of them would be honest about it.
+            Lag = SnapshotLag.Of(Stored.Version, history.Error is null ? history.Total : null);
+        }
+
         // Only when they are the view being shown. The tab labels report no counts, so nothing on
-        // the other tabs needs the events read, and reading them anyway would cost the info, state
-        // and json tabs a count and a page of rows each to render nothing from.
+        // the other tabs needs the events read, and reading them anyway would cost the state and
+        // json tabs a count and a page of rows each to render nothing from.
         if (Tab == EventsTab)
         {
             // A name in the address is matched against what the aggregate applies, so it can only

@@ -718,6 +718,25 @@ h2:focus {
     text-decoration: none;
 }
 
+/* A caution about one value, said beside it: the stored version of a model the log has moved on
+   from. The caution ink without the caution's ground and rule — a banded block inside a table cell
+   would read as a row that had broken rather than as a note about the number in front of it, and
+   the ink alone is enough to set a warning apart from the value it follows.
+
+   Inline rather than a flex row, so a long sentence wraps like the prose it is and the mark hangs
+   at the start of it instead of being centred against a block of two lines. */
+.behind {
+    color: var(--caution-ink);
+}
+
+    /* Sized to the text rather than in rem like the marks that sit beside headings, because this one
+       sits inside a sentence and should ride whatever size the cell around it is set at. */
+    .behind .glyph {
+        height: 0.95em;
+        vertical-align: -0.15em;
+        width: 0.95em;
+    }
+
 /* Something went right and the page is saying so. */
 .notice {
     background: var(--notice-ground);
@@ -1202,6 +1221,22 @@ h2:focus {
             .tab-panel .facts dd .hint {
                 font-size: inherit;
                 margin-left: 0.5rem;
+            }
+
+            /* A warning set beside a value the same way, and spaced the same way for the same
+               reason: the block that draws it is conditional, and a space written in the markup
+               around one is swallowed. Its own rule rather than sharing the one above, because what
+               follows the version is a sentence and not a word — so it is allowed to wrap onto its
+               own line rather than squeezing the value it is about.
+
+               In the prose face rather than the one every value here is set in, for the reason the
+               line saying a value is missing is: this is the page talking about the number beside
+               it, not another thing the store said. */
+            .tab-panel .facts dd .behind {
+                display: inline-block;
+                font-family: var(--font);
+                font-size: inherit;
+                margin-left: 0.75rem;
             }
 
         /* The last row's rule and the card's bottom edge are the same line drawn twice. */
