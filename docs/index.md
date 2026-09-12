@@ -40,6 +40,13 @@ Memoria is a .NET framework that can be used as a simple mediator or as an Event
 - [Tune the Cosmos DB container](guides/tune-the-cosmos-container.md)
 - [Upgrade to 1.9.0](guides/upgrade-1.9.0.md) · [Upgrade to 1.8.0](guides/upgrade-1.8.0.md) · [Upgrade to 1.7.0](guides/upgrade-1.7.0.md) · [Upgrade to 1.6.0](guides/upgrade-1.6.0.md) · [Upgrade to 1.5.0](guides/upgrade-1.5.0.md)
 
+### Tools
+
+- [Memoria Web](tools/memoria-web.md) — a browser tool for reading a Memoria store through your own domain types
+  - [Configuration](tools/memoria-web-configuration.md)
+  - [Deployment](tools/memoria-web-deployment.md)
+  - [Try it with sample data](tools/memoria-web-samples.md)
+
 ### Reference
 
 - [Domain Service](reference/domain-service.md)

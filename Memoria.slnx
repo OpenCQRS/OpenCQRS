@@ -47,6 +47,10 @@
     <File Path="docs/reference/configuration/messaging-rabbitmq.md" />
     <File Path="docs/reference/configuration/messaging-servicebus.md" />
     <File Path="docs/reference/configuration/validation.md" />
+    <File Path="docs/tools/memoria-web.md" />
+    <File Path="docs/tools/memoria-web-configuration.md" />
+    <File Path="docs/tools/memoria-web-deployment.md" />
+    <File Path="docs/tools/memoria-web-samples.md" />
     <File Path="docs/reference/domain-service.md" />
     <File Path="docs/reference/ef-core-extensions.md" />
     <File Path="docs/Release-Notes.md" />

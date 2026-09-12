@@ -14,17 +14,14 @@ dotnet run --project src/Memoria.Web.Samples
 
 ```
 Memoria.Web.Samples
-  store    : Cosmos
-  writing  : memoria_samples/Domain
+  store    : Npgsql
+  writing  : memoria_samples
   bound    : 28 events, 4+4 aggregates, 3+5 projections (streamed+dcb)
   schema   : installed
 ```
 
-Out of the box this is the local Azure Cosmos DB emulator, database `memoria_samples`,
-container `Domain` — start the emulator first, or the run stops with "Could not reach
-the database" before asking anything. See [Point it at a store](#point-it-at-a-store)
-for PostgreSQL, SQL Server and SQLite; `appsettings.json` carries the PostgreSQL
-string as a comment, ready to swap in.
+The default store is PostgreSQL on `localhost:5432`, database `memoria_samples` —
+see [Point it at a store](#point-it-at-a-store) for the others.
 
 ## What it asks
 
@@ -120,6 +117,9 @@ to, so an account installed under those names needs no settings at all.
 
 Set them to the same values [Memoria.Web](../Memoria.Web) is given, or the seeder
 fills a container the tool does not open.
+
+Against the local emulator, start it before the run — otherwise the run stops with
+"Could not reach the database" before asking anything.
 
 ### Running against another store without editing settings
 
